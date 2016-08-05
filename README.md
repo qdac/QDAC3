@@ -1,8 +1,8 @@
 # QDAC
 QDAC 项目在Github 上的一个备份，详情请见官网：http://www.qdac.cc/ 以及官方SVN：svn://www.qdac.cc/
 
-QDAC项目简介
-2014-12-22 • C++ Builder、Delphi、QDAC • 9条评论 • swish •浏览 7,312 次
+# QDAC项目简介
+
 QDAC 是由 QDAC 开发组为大家提供的一套 Delphi/C++ Builder 跨平台开源组件库，名称取自英文 Quick Data Access Components 的首字母。它支持 Delphi/C++ Builder 2007 以上的版本的开发环境，目标是为大家提供一套高效稳定的跨平台快速数据访问组件，替代系统实现的低效组件。
 
 既然是快速数据访问组件，QDAC 对速度会比较重视，但出于跨平台的考虑，QDAC 是用纯 Pascal 源码编写，没有使用任何汇编代码，所以性能上，理论上不会比使用纯汇编优化的版本强，但也远远高于一般的实现。同时，QDAC 也很重视稳定性，希望大家多多参与测试，保证在速度优化的同时，稳定性上不会存在问题。
