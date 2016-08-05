@@ -1,0 +1,18 @@
+{
+"BaseTypes":{
+	"string":"This is string value",
+	"Integer":123,
+	"Float":12.3,
+	"Boolean_True":True,
+	"Boolean_False":False,
+	"Null":null,
+	"Array":[1,"abc",3.0,true,false,null],
+	},
+"ExtTypes":{
+	"Date":"2014-4-1",
+	"Time":"1:2:3.456",
+	"DateTime":"2014-5-1 12:34.56",
+	"JsonDateTime":"/DATE(98788888882+0008)/",
+	"WebDateTime":"Sun, 16 Oct 2016 05:43:02 GMT"
+	}
+}

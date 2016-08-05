@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<!-- saved from url=(0066)https://github.com/msgpack/msgpack/blob/master/spec.md#formats-map -->
+<html lang="en" class=""><head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# object: http://ogp.me/ns/object# article: http://ogp.me/ns/article# profile: http://ogp.me/ns/profile#"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Content-Language" content="en">
+    
+    
+    <title>msgpack/spec.md at master · msgpack/msgpack · GitHub</title>
+    <link rel="search" type="application/opensearchdescription+xml" href="https://github.com/opensearch.xml" title="GitHub">
+    <link rel="fluid-icon" href="https://github.com/fluidicon.png" title="GitHub">
+    <link rel="apple-touch-icon" sizes="57x57" href="https://github.com/apple-touch-icon-114.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="https://github.com/apple-touch-icon-114.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="https://github.com/apple-touch-icon-144.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="https://github.com/apple-touch-icon-144.png">
+    <meta property="fb:app_id" content="1401488693436528">
+
+      <meta content="@github" name="twitter:site"><meta content="summary" name="twitter:card"><meta content="msgpack/msgpack" name="twitter:title"><meta content="msgpack - MessagePack is an extremely efficient object serialization library. It&amp;#39;s like JSON, but very fast and small." name="twitter:description"><meta content="https://avatars3.githubusercontent.com/u/198264?v=3&amp;s=400" name="twitter:image:src">
+<meta content="GitHub" property="og:site_name"><meta content="object" property="og:type"><meta content="https://avatars3.githubusercontent.com/u/198264?v=3&amp;s=400" property="og:image"><meta content="msgpack/msgpack" property="og:title"><meta content="https://github.com/msgpack/msgpack" property="og:url"><meta content="msgpack - MessagePack is an extremely efficient object serialization library. It&#39;s like JSON, but very fast and small." property="og:description">
+
+      <meta name="browser-stats-url" content="/_stats">
+    <link rel="assets" href="https://assets-cdn.github.com/">
+    <link rel="conduit-xhr" href="https://ghconduit.com:25035/">
+    
+    <meta name="pjax-timeout" content="1000">
+    
+
+    <meta name="msapplication-TileImage" content="/windows-tile.png">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="selected-link" value="repo_source" data-pjax-transient="">
+      <meta name="google-analytics" content="UA-3769691-2">
+
+    <meta content="collector.githubapp.com" name="octolytics-host"><meta content="collector-cdn.github.com" name="octolytics-script-host"><meta content="github" name="octolytics-app-id"><meta content="7733733D:72C8:A083AA2:54CE4462" name="octolytics-dimension-request_id">
+    
+    <meta content="Rails, view, blob#show" name="analytics-event">
+
+    
+    
+    <link rel="icon" type="image/x-icon" href="https://assets-cdn.github.com/favicon.ico">
+
+
+    <meta content="authenticity_token" name="csrf-param">
+<meta content="eH7aDMkeGXImQE9PX8z86yhwlJb3rwROsAfbC/qlNpTSj3assErHytnE6VTgZjDqFp3CviWR1MPLbW9xD59VtA==" name="csrf-token">
+
+    <link href="./msgpack spec_files/github-e3321d79480f0738576ff81cb2f3f717fdbb0bf35ea5938c30005a3349371133.css" media="all" rel="stylesheet" type="text/css">
+    <link href="./msgpack spec_files/github2-dde0fad02eec63beeeea358c4fcea2f224cb2d4fcf094f9cf9d9dd6bd5c5eece.css" media="all" rel="stylesheet" type="text/css">
+    
+    
+
+
+    <meta http-equiv="x-pjax-version" content="47acc7b6a71679710fe333073bd18058">
+
+      
+  <meta name="description" content="msgpack - MessagePack is an extremely efficient object serialization library. It&#39;s like JSON, but very fast and small.">
+  <meta name="go-import" content="github.com/msgpack/msgpack git https://github.com/msgpack/msgpack.git">
+
+  <meta content="198264" name="octolytics-dimension-user_id"><meta content="msgpack" name="octolytics-dimension-user_login"><meta content="569267" name="octolytics-dimension-repository_id"><meta content="msgpack/msgpack" name="octolytics-dimension-repository_nwo"><meta content="true" name="octolytics-dimension-repository_public"><meta content="false" name="octolytics-dimension-repository_is_fork"><meta content="569267" name="octolytics-dimension-repository_network_root_id"><meta content="msgpack/msgpack" name="octolytics-dimension-repository_network_root_nwo">
+  <link href="https://github.com/msgpack/msgpack/commits/master.atom" rel="alternate" title="Recent Commits to msgpack:master" type="application/atom+xml">
+
+  <script type="text/javascript" async="" src="./msgpack spec_files/api.js"></script><noscript>&lt;img width="0" height="0" src="http://counter.kds.iciba.com/ds2rd.php?p=2367" style="border:none"&gt;</noscript><script src="./msgpack spec_files/kds2_record.js" type="text/javascript" charset="utf-8"></script><script>var _kds2_p = 2367;</script></head>
+
+
+  <body class="logged_out  env-production windows vis-public page-blob" style="margin-top: 38px !important; position: relative !important;">
+    <a href="https://github.com/msgpack/msgpack/blob/master/spec.md#start-of-content" tabindex="1" class="accessibility-aid js-skip-to-content">Skip to content</a>
+    <div class="wrapper">
+      
+      
+      
+      
+
+
+      
+      <div class="header header-logged-out" role="banner">
+  <div class="container clearfix">
+
+    <a class="header-logo-wordmark" href="https://github.com/" ga-data-click="(Logged out) Header, go to homepage, icon:logo-wordmark">
+      <span class="mega-octicon octicon-logo-github"></span>
+    </a>
+
+    <div class="header-actions" role="navigation">
+        <a class="button primary" href="https://github.com/join" data-ga-click="(Logged out) Header, clicked Sign up, text:sign-up">Sign up</a>
+      <a class="button" href="https://github.com/login?return_to=%2Fmsgpack%2Fmsgpack%2Fblob%2Fmaster%2Fspec.md" data-ga-click="(Logged out) Header, clicked Sign in, text:sign-in">Sign in</a>
+    </div>
+
+    <div class="site-search repo-scope js-site-search" role="search">
+      <form accept-charset="UTF-8" action="https://github.com/msgpack/msgpack/search" class="js-site-search-form" data-global-search-url="/search" data-repo-search-url="/msgpack/msgpack/search" method="get"><div style="margin:0;padding:0;display:inline"><input name="utf8" type="hidden" value="✓"></div>
+  <input type="text" class="js-site-search-field is-clearable" data-hotkey="s" name="q" placeholder="Search" data-global-scope-placeholder="Search GitHub" data-repo-scope-placeholder="Search" tabindex="1" autocapitalize="off">
+  <div class="scope-badge">This repository</div>
+</form>
+    </div>
+
+      <ul class="header-nav left" role="navigation">
+          <li class="header-nav-item">
+            <a class="header-nav-link" href="https://github.com/explore" data-ga-click="(Logged out) Header, go to explore, text:explore">Explore</a>
+          </li>
+          <li class="header-nav-item">
+            <a class="header-nav-link" href="https://github.com/features" data-ga-click="(Logged out) Header, go to features, text:features">Features</a>
+          </li>
+          <li class="header-nav-item">
+            <a class="header-nav-link" href="https://enterprise.github.com/" data-ga-click="(Logged out) Header, go to enterprise, text:enterprise">Enterprise</a>
+          </li>
+          <li class="header-nav-item">
+            <a class="header-nav-link" href="https://github.com/blog" data-ga-click="(Logged out) Header, go to blog, text:blog">Blog</a>
+          </li>
+      </ul>
+
+  </div>
+</div>
+
+
+
+      <div id="start-of-content" class="accessibility-aid"></div>
+          <div class="site" itemscope="" itemtype="http://schema.org/WebPage">
+    <div id="js-flash-container">
+      
+    </div>
+    <div class="pagehead repohead instapaper_ignore readability-menu">
+      <div class="container">
+        
+<ul class="pagehead-actions">
+
+
+  <li>
+      <a href="https://github.com/login?return_to=%2Fmsgpack%2Fmsgpack" class="minibutton with-count star-button tooltipped tooltipped-n" aria-label="You must be signed in to star a repository" rel="nofollow">
+    <span class="octicon octicon-star"></span>
+    Star
+  </a>
+
+    <a class="social-count js-social-count" href="https://github.com/msgpack/msgpack/stargazers">
+      2,096
+    </a>
+
+  </li>
+
+    <li>
+      <a href="https://github.com/login?return_to=%2Fmsgpack%2Fmsgpack" class="minibutton with-count js-toggler-target fork-button tooltipped tooltipped-n" aria-label="You must be signed in to fork a repository" rel="nofollow">
+        <span class="octicon octicon-repo-forked"></span>
+        Fork
+      </a>
+      <a href="https://github.com/msgpack/msgpack/network" class="social-count">
+        194
+      </a>
+    </li>
+</ul>
+
+        <h1 itemscope="" itemtype="http://data-vocabulary.org/Breadcrumb" class="entry-title public">
+          <span class="mega-octicon octicon-repo"></span>
+          <span class="author"><a href="https://github.com/msgpack" class="url fn" itemprop="url" rel="author"><span itemprop="title">msgpack</span></a></span><!--
+       --><span class="path-divider">/</span><!--
+       --><strong><a href="https://github.com/msgpack/msgpack" class="js-current-repository" data-pjax="#js-repo-pjax-container">msgpack</a></strong>
+
+          <span class="page-context-loader">
+            <img alt="" height="16" src="./msgpack spec_files/octocat-spinner-32.gif" width="16">
+          </span>
+
+        </h1>
+      </div><!-- /.container -->
+    </div><!-- /.repohead -->
+
+    <div class="container">
+      <div class="repository-with-sidebar repo-container new-discussion-timeline">
+        <div class="repository-sidebar clearfix">
+            
+<nav class="sunken-menu repo-nav js-repo-nav js-sidenav-container-pjax js-octicon-loaders" role="navigation" data-pjax="#js-repo-pjax-container" data-issue-count-url="/msgpack/msgpack/issues/counts">
+  <ul class="sunken-menu-group">
+    <li class="tooltipped tooltipped-w" aria-label="Code">
+      <a href="https://github.com/msgpack/msgpack" aria-label="Code" class="selected js-selected-navigation-item sunken-menu-item" data-hotkey="g c" data-selected-links="repo_source repo_downloads repo_commits repo_releases repo_tags repo_branches /msgpack/msgpack">
+        <span class="octicon octicon-code"></span> <span class="full-word">Code</span>
+        <img alt="" class="mini-loader" height="16" src="./msgpack spec_files/octocat-spinner-32.gif" width="16">
+</a>    </li>
+
+      <li class="tooltipped tooltipped-w" aria-label="Issues">
+        <a href="https://github.com/msgpack/msgpack/issues" aria-label="Issues" class="js-selected-navigation-item sunken-menu-item" data-hotkey="g i" data-selected-links="repo_issues repo_labels repo_milestones /msgpack/msgpack/issues">
+          <span class="octicon octicon-issue-opened"></span> <span class="full-word">Issues</span>
+          <span class="js-issue-replace-counter"></span>
+          <img alt="" class="mini-loader" height="16" src="./msgpack spec_files/octocat-spinner-32.gif" width="16">
+</a>      </li>
+
+    <li class="tooltipped tooltipped-w" aria-label="Pull Requests">
+      <a href="https://github.com/msgpack/msgpack/pulls" aria-label="Pull Requests" class="js-selected-navigation-item sunken-menu-item" data-hotkey="g p" data-selected-links="repo_pulls /msgpack/msgpack/pulls">
+          <span class="octicon octicon-git-pull-request"></span> <span class="full-word">Pull Requests</span>
+          <span class="js-pull-replace-counter"></span>
+          <img alt="" class="mini-loader" height="16" src="./msgpack spec_files/octocat-spinner-32.gif" width="16">
+</a>    </li>
+
+
+  </ul>
+  <div class="sunken-menu-separator"></div>
+  <ul class="sunken-menu-group">
+
+    <li class="tooltipped tooltipped-w" aria-label="Pulse">
+      <a href="https://github.com/msgpack/msgpack/pulse" aria-label="Pulse" class="js-selected-navigation-item sunken-menu-item" data-selected-links="pulse /msgpack/msgpack/pulse">
+        <span class="octicon octicon-pulse"></span> <span class="full-word">Pulse</span>
+        <img alt="" class="mini-loader" height="16" src="./msgpack spec_files/octocat-spinner-32.gif" width="16">
+</a>    </li>
+
+    <li class="tooltipped tooltipped-w" aria-label="Graphs">
+      <a href="https://github.com/msgpack/msgpack/graphs" aria-label="Graphs" class="js-selected-navigation-item sunken-menu-item" data-selected-links="repo_graphs repo_contributors /msgpack/msgpack/graphs">
+        <span class="octicon octicon-graph"></span> <span class="full-word">Graphs</span>
+        <img alt="" class="mini-loader" height="16" src="./msgpack spec_files/octocat-spinner-32.gif" width="16">
+</a>    </li>
+  </ul>
+
+
+</nav>
+
+              <div class="only-with-full-nav">
+                
+  
+<div class="clone-url open" data-protocol-type="http" data-url="/users/set_protocol?protocol_selector=http&amp;protocol_type=clone">
+  <h3><span class="text-emphasized">HTTPS</span> clone URL</h3>
+  <div class="input-group js-zeroclipboard-container">
+    <input type="text" class="input-mini input-monospace js-url-field js-zeroclipboard-target" value="https://github.com/msgpack/msgpack.git" readonly="readonly">
+    <span class="input-group-button">
+      <button aria-label="Copy to clipboard" class="js-zeroclipboard minibutton zeroclipboard-button" data-copied-hint="Copied!" type="button"><span class="octicon octicon-clippy"></span></button>
+    </span>
+  </div>
+</div>
+
+  
+<div class="clone-url " data-protocol-type="subversion" data-url="/users/set_protocol?protocol_selector=subversion&amp;protocol_type=clone">
+  <h3><span class="text-emphasized">Subversion</span> checkout URL</h3>
+  <div class="input-group js-zeroclipboard-container">
+    <input type="text" class="input-mini input-monospace js-url-field js-zeroclipboard-target" value="https://github.com/msgpack/msgpack" readonly="readonly">
+    <span class="input-group-button">
+      <button aria-label="Copy to clipboard" class="js-zeroclipboard minibutton zeroclipboard-button" data-copied-hint="Copied!" type="button"><span class="octicon octicon-clippy"></span></button>
+    </span>
+  </div>
+</div>
+
+
+
+<p class="clone-options">You can clone with
+  <a href="https://github.com/msgpack/msgpack/blob/master/spec.md#" class="js-clone-selector" data-protocol="http">HTTPS</a> or <a href="https://github.com/msgpack/msgpack/blob/master/spec.md#" class="js-clone-selector" data-protocol="subversion">Subversion</a>.
+  <a href="https://help.github.com/articles/which-remote-url-should-i-use" class="help tooltipped tooltipped-n" aria-label="Get help on which URL is right for you.">
+    <span class="octicon octicon-question"></span>
+  </a>
+</p>
+
+
+  <a href="http://windows.github.com/" class="minibutton sidebar-button" title="Save msgpack/msgpack to your computer and use it in GitHub Desktop." aria-label="Save msgpack/msgpack to your computer and use it in GitHub Desktop.">
+    <span class="octicon octicon-device-desktop"></span>
+    Clone in Desktop
+  </a>
+
+                <a href="https://github.com/msgpack/msgpack/archive/master.zip" class="minibutton sidebar-button" aria-label="Download the contents of msgpack/msgpack as a zip file" title="Download the contents of msgpack/msgpack as a zip file" rel="nofollow">
+                  <span class="octicon octicon-cloud-download"></span>
+                  Download ZIP
+                </a>
+              </div>
+        </div><!-- /.repository-sidebar -->
+
+        <div id="js-repo-pjax-container" class="repository-content context-loader-container" data-pjax-container="">
+          
+
+<a href="https://github.com/msgpack/msgpack/blob/7498cf31d1110170e4901d47951fe880d169f327/spec.md" class="hidden js-permalink-shortcut" data-hotkey="y">Permalink</a>
+
+<!-- blob contrib key: blob_contributors:v21:4f0518daf38a1e30fed1e72eab857ad2 -->
+
+<div class="file-navigation js-zeroclipboard-container">
+  
+<div class="select-menu js-menu-container js-select-menu left">
+  <span class="minibutton select-menu-button js-menu-target css-truncate" data-hotkey="w" data-master-branch="master" data-ref="master" title="master" role="button" aria-label="Switch branches or tags" tabindex="0" aria-haspopup="true">
+    <span class="octicon octicon-git-branch"></span>
+    <i>branch:</i>
+    <span class="js-select-button css-truncate-target">master</span>
+  </span>
+
+  <div class="select-menu-modal-holder js-menu-content js-navigation-container" data-pjax="" aria-hidden="true">
+
+    <div class="select-menu-modal">
+      <div class="select-menu-header">
+        <span class="select-menu-title">Switch branches/tags</span>
+        <span class="octicon octicon-x js-menu-close" role="button" aria-label="Close"></span>
+      </div> <!-- /.select-menu-header -->
+
+      <div class="select-menu-filters">
+        <div class="select-menu-text-filter">
+          <input type="text" aria-label="Filter branches/tags" id="context-commitish-filter-field" class="js-filterable-field js-navigation-enable" placeholder="Filter branches/tags">
+        </div>
+        <div class="select-menu-tabs">
+          <ul>
+            <li class="select-menu-tab">
+              <a href="https://github.com/msgpack/msgpack/blob/master/spec.md#" data-tab-filter="branches" class="js-select-menu-tab">Branches</a>
+            </li>
+            <li class="select-menu-tab">
+              <a href="https://github.com/msgpack/msgpack/blob/master/spec.md#" data-tab-filter="tags" class="js-select-menu-tab">Tags</a>
+            </li>
+          </ul>
+        </div><!-- /.select-menu-tabs -->
+      </div><!-- /.select-menu-filters -->
+
+      <div class="select-menu-list select-menu-tab-bucket js-select-menu-tab-bucket" data-tab-filter="branches">
+
+        <div data-filterable-for="context-commitish-filter-field" data-filterable-type="substring">
+
+
+            <div class="select-menu-item js-navigation-item selected">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/blob/master/spec.md" data-name="master" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="master">master</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/blob/perl-utf8-mode/spec.md" data-name="perl-utf8-mode" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-utf8-mode">perl-utf8-mode</a>
+            </div> <!-- /.select-menu-item -->
+        </div>
+
+          <div class="select-menu-no-results">Nothing to show</div>
+      </div> <!-- /.select-menu-list -->
+
+      <div class="select-menu-list select-menu-tab-bucket js-select-menu-tab-bucket" data-tab-filter="tags">
+        <div data-filterable-for="context-commitish-filter-field" data-filterable-type="substring">
+
+
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/tag1/spec.md" data-name="tag1" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="tag1">tag1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/ruby-0.4.5/spec.md" data-name="ruby-0.4.5" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="ruby-0.4.5">ruby-0.4.5</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/ruby-0.4.4/spec.md" data-name="ruby-0.4.4" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="ruby-0.4.4">ruby-0.4.4</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/ruby-0.4.3/spec.md" data-name="ruby-0.4.3" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="ruby-0.4.3">ruby-0.4.3</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/ruby-0.4.2/spec.md" data-name="ruby-0.4.2" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="ruby-0.4.2">ruby-0.4.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/ruby-0.4.1/spec.md" data-name="ruby-0.4.1" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="ruby-0.4.1">ruby-0.4.1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/ruby-0.4.0/spec.md" data-name="ruby-0.4.0" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="ruby-0.4.0">ruby-0.4.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/ruby-0.3.9/spec.md" data-name="ruby-0.3.9" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="ruby-0.3.9">ruby-0.3.9</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/ruby-0.3.8/spec.md" data-name="ruby-0.3.8" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="ruby-0.3.8">ruby-0.3.8</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/ruby-0.3.7/spec.md" data-name="ruby-0.3.7" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="ruby-0.3.7">ruby-0.3.7</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/ruby-0.3.6/spec.md" data-name="ruby-0.3.6" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="ruby-0.3.6">ruby-0.3.6</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/ruby-0.3.5/spec.md" data-name="ruby-0.3.5" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="ruby-0.3.5">ruby-0.3.5</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/ruby-0.3.4/spec.md" data-name="ruby-0.3.4" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="ruby-0.3.4">ruby-0.3.4</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/ruby-0.3.3/spec.md" data-name="ruby-0.3.3" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="ruby-0.3.3">ruby-0.3.3</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/ruby-0.3.2/spec.md" data-name="ruby-0.3.2" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="ruby-0.3.2">ruby-0.3.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/python-0.1.7/spec.md" data-name="python-0.1.7" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="python-0.1.7">python-0.1.7</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/python-0.1.6/spec.md" data-name="python-0.1.6" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="python-0.1.6">python-0.1.6</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/python-0.1.5/spec.md" data-name="python-0.1.5" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="python-0.1.5">python-0.1.5</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/python-0.1.3/spec.md" data-name="python-0.1.3" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="python-0.1.3">python-0.1.3</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/python-0.1.2/spec.md" data-name="python-0.1.2" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="python-0.1.2">python-0.1.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/php-0.4.0/spec.md" data-name="php-0.4.0" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="php-0.4.0">php-0.4.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/php-0.3.4/spec.md" data-name="php-0.3.4" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="php-0.3.4">php-0.3.4</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/php-0.3.3/spec.md" data-name="php-0.3.3" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="php-0.3.3">php-0.3.3</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.34/spec.md" data-name="perl-0.34" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.34">perl-0.34</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.33/spec.md" data-name="perl-0.33" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.33">perl-0.33</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.32/spec.md" data-name="perl-0.32" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.32">perl-0.32</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.31/spec.md" data-name="perl-0.31" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.31">perl-0.31</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.30/spec.md" data-name="perl-0.30" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.30">perl-0.30</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.29/spec.md" data-name="perl-0.29" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.29">perl-0.29</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.28/spec.md" data-name="perl-0.28" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.28">perl-0.28</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.27/spec.md" data-name="perl-0.27" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.27">perl-0.27</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.26/spec.md" data-name="perl-0.26" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.26">perl-0.26</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.25/spec.md" data-name="perl-0.25" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.25">perl-0.25</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.24/spec.md" data-name="perl-0.24" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.24">perl-0.24</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.23/spec.md" data-name="perl-0.23" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.23">perl-0.23</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.22/spec.md" data-name="perl-0.22" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.22">perl-0.22</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.21/spec.md" data-name="perl-0.21" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.21">perl-0.21</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.20/spec.md" data-name="perl-0.20" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.20">perl-0.20</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.16_04/spec.md" data-name="perl-0.16_04" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.16_04">perl-0.16_04</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.16_03/spec.md" data-name="perl-0.16_03" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.16_03">perl-0.16_03</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.16_02/spec.md" data-name="perl-0.16_02" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.16_02">perl-0.16_02</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.16_01/spec.md" data-name="perl-0.16_01" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.16_01">perl-0.16_01</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.16/spec.md" data-name="perl-0.16" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.16">perl-0.16</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.14/spec.md" data-name="perl-0.14" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.14">perl-0.14</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.12/spec.md" data-name="perl-0.12" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.12">perl-0.12</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.11/spec.md" data-name="perl-0.11" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.11">perl-0.11</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.10/spec.md" data-name="perl-0.10" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.10">perl-0.10</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.09_01/spec.md" data-name="perl-0.09_01" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.09_01">perl-0.09_01</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.09/spec.md" data-name="perl-0.09" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.09">perl-0.09</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.08/spec.md" data-name="perl-0.08" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.08">perl-0.08</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.07/spec.md" data-name="perl-0.07" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.07">perl-0.07</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.06/spec.md" data-name="perl-0.06" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.06">perl-0.06</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.05/spec.md" data-name="perl-0.05" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.05">perl-0.05</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.04/spec.md" data-name="perl-0.04" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.04">perl-0.04</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.03/spec.md" data-name="perl-0.03" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.03">perl-0.03</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.02/spec.md" data-name="perl-0.02" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.02">perl-0.02</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/perl-0.01/spec.md" data-name="perl-0.01" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="perl-0.01">perl-0.01</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/java-0.5.2/spec.md" data-name="java-0.5.2" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="java-0.5.2">java-0.5.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/java-0.5.1/spec.md" data-name="java-0.5.1" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="java-0.5.1">java-0.5.1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/java-0.5.0/spec.md" data-name="java-0.5.0" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="java-0.5.0">java-0.5.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/java-0.4.3/spec.md" data-name="java-0.4.3" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="java-0.4.3">java-0.4.3</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/java-0.4.2/spec.md" data-name="java-0.4.2" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="java-0.4.2">java-0.4.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/java-0.4.1/spec.md" data-name="java-0.4.1" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="java-0.4.1">java-0.4.1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/java-0.4.0/spec.md" data-name="java-0.4.0" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="java-0.4.0">java-0.4.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/erlang-0.1.0/spec.md" data-name="erlang-0.1.0" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="erlang-0.1.0">erlang-0.1.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/cpp-0.5.6/spec.md" data-name="cpp-0.5.6" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="cpp-0.5.6">cpp-0.5.6</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/cpp-0.5.5/spec.md" data-name="cpp-0.5.5" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="cpp-0.5.5">cpp-0.5.5</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/cpp-0.5.4/spec.md" data-name="cpp-0.5.4" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="cpp-0.5.4">cpp-0.5.4</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/cpp-0.5.3/spec.md" data-name="cpp-0.5.3" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="cpp-0.5.3">cpp-0.5.3</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/cpp-0.5.2/spec.md" data-name="cpp-0.5.2" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="cpp-0.5.2">cpp-0.5.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/cpp-0.5.1/spec.md" data-name="cpp-0.5.1" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="cpp-0.5.1">cpp-0.5.1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/cpp-0.5.0/spec.md" data-name="cpp-0.5.0" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="cpp-0.5.0">cpp-0.5.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/cpp-0.4.3/spec.md" data-name="cpp-0.4.3" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="cpp-0.4.3">cpp-0.4.3</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/cpp-0.4.2/spec.md" data-name="cpp-0.4.2" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="cpp-0.4.2">cpp-0.4.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/cpp-0.4.1/spec.md" data-name="cpp-0.4.1" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="cpp-0.4.1">cpp-0.4.1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/cpp-0.4.0/spec.md" data-name="cpp-0.4.0" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="cpp-0.4.0">cpp-0.4.0</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/cpp-0.3.8/spec.md" data-name="cpp-0.3.8" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="cpp-0.3.8">cpp-0.3.8</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/cpp-0.3.7/spec.md" data-name="cpp-0.3.7" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="cpp-0.3.7">cpp-0.3.7</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/cpp-0.3.6/spec.md" data-name="cpp-0.3.6" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="cpp-0.3.6">cpp-0.3.6</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/cpp-0.3.5/spec.md" data-name="cpp-0.3.5" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="cpp-0.3.5">cpp-0.3.5</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/cpp-0.3.4/spec.md" data-name="cpp-0.3.4" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="cpp-0.3.4">cpp-0.3.4</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/0.3.3/spec.md" data-name="0.3.3" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="0.3.3">0.3.3</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/0.3.2/spec.md" data-name="0.3.2" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="0.3.2">0.3.2</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/0.3.1/spec.md" data-name="0.3.1" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="0.3.1">0.3.1</a>
+            </div> <!-- /.select-menu-item -->
+            <div class="select-menu-item js-navigation-item ">
+              <span class="select-menu-item-icon octicon octicon-check"></span>
+              <a href="https://github.com/msgpack/msgpack/tree/0.3.0/spec.md" data-name="0.3.0" data-skip-pjax="true" rel="nofollow" class="js-navigation-open select-menu-item-text css-truncate-target" title="0.3.0">0.3.0</a>
+            </div> <!-- /.select-menu-item -->
+        </div>
+
+        <div class="select-menu-no-results">Nothing to show</div>
+      </div> <!-- /.select-menu-list -->
+
+    </div> <!-- /.select-menu-modal -->
+  </div> <!-- /.select-menu-modal-holder -->
+</div> <!-- /.select-menu -->
+
+  <div class="button-group right">
+    <a href="https://github.com/msgpack/msgpack/find/master" class="js-show-file-finder minibutton empty-icon tooltipped tooltipped-s" data-pjax="" data-hotkey="t" aria-label="Quickly jump between files">
+      <span class="octicon octicon-list-unordered"></span>
+    </a>
+    <button aria-label="Copy file path to clipboard" class="js-zeroclipboard minibutton zeroclipboard-button" data-copied-hint="Copied!" type="button"><span class="octicon octicon-clippy"></span></button>
+  </div>
+
+  <div class="breadcrumb js-zeroclipboard-target">
+    <span class="repo-root js-repo-root"><span itemscope="" itemtype="http://data-vocabulary.org/Breadcrumb"><a href="https://github.com/msgpack/msgpack" class="" data-branch="master" data-direction="back" data-pjax="true" itemscope="url"><span itemprop="title">msgpack</span></a></span></span><span class="separator">/</span><strong class="final-path">spec.md</strong>
+  </div>
+</div>
+
+
+  <div class="commit file-history-tease">
+    <div class="file-history-tease-header">
+        <img alt="Yuichi TANIKAWA" class="avatar" data-user="1145226" height="24" src="./msgpack spec_files/1145226" width="24">
+        <span class="author"><a href="https://github.com/itiut" rel="contributor">itiut</a></span>
+        <time datetime="2014-08-12T03:44:46Z" is="relative-time" title="2014年8月12日 上午11:44 格林尼治标准时间+0800">on 12 Aug 2014</time>
+        <div class="commit-title">
+            <a href="https://github.com/msgpack/msgpack/commit/2fb4eaa9688888b74bdabb2222f0e0f42712b6b1" class="message" data-pjax="true" title="Fix a typo">Fix a typo</a>
+        </div>
+    </div>
+
+    <div class="participation">
+      <p class="quickstat">
+        <a href="https://github.com/msgpack/msgpack/blob/master/spec.md#blob_contributors_box" rel="facebox">
+          <strong>6</strong>
+           contributors
+        </a>
+      </p>
+          <a class="avatar-link tooltipped tooltipped-s" aria-label="frsyuki" href="https://github.com/msgpack/msgpack/commits/master/spec.md?author=frsyuki"><img alt="FURUHASHI Sadayuki" class="avatar" data-user="40720" height="20" src="./msgpack spec_files/40720" width="20"></a>
+    <a class="avatar-link tooltipped tooltipped-s" aria-label="mythmon" href="https://github.com/msgpack/msgpack/commits/master/spec.md?author=mythmon"><img alt="Mike Cooper" class="avatar" data-user="305049" height="20" src="./msgpack spec_files/305049" width="20"></a>
+    <a class="avatar-link tooltipped tooltipped-s" aria-label="sfriesel" href="https://github.com/msgpack/msgpack/commits/master/spec.md?author=sfriesel"><img alt="Stefan Friesel" class="avatar" data-user="462730" height="20" src="./msgpack spec_files/462730" width="20"></a>
+    <a class="avatar-link tooltipped tooltipped-s" aria-label="kuenishi" href="https://github.com/msgpack/msgpack/commits/master/spec.md?author=kuenishi"><img alt="UENISHI Kota" class="avatar" data-user="11440" height="20" src="./msgpack spec_files/11440" width="20"></a>
+    <a class="avatar-link tooltipped tooltipped-s" aria-label="itiut" href="https://github.com/msgpack/msgpack/commits/master/spec.md?author=itiut"><img alt="Yuichi TANIKAWA" class="avatar" data-user="1145226" height="20" src="./msgpack spec_files/1145226(1)" width="20"></a>
+    <a class="avatar-link tooltipped tooltipped-s" aria-label="bmaeser" href="https://github.com/msgpack/msgpack/commits/master/spec.md?author=bmaeser"><img alt="Bernhard Mäser" class="avatar" data-user="98921" height="20" src="./msgpack spec_files/98921" width="20"></a>
+
+
+    </div>
+    <div id="blob_contributors_box" style="display:none">
+      <h2 class="facebox-header">Users who have contributed to this file</h2>
+      <ul class="facebox-user-list">
+          <li class="facebox-user-list-item">
+            <img alt="FURUHASHI Sadayuki" data-user="40720" height="24" src="./msgpack spec_files/40720(1)" width="24">
+            <a href="https://github.com/frsyuki">frsyuki</a>
+          </li>
+          <li class="facebox-user-list-item">
+            <img alt="Mike Cooper" data-user="305049" height="24" src="./msgpack spec_files/305049(1)" width="24">
+            <a href="https://github.com/mythmon">mythmon</a>
+          </li>
+          <li class="facebox-user-list-item">
+            <img alt="Stefan Friesel" data-user="462730" height="24" src="./msgpack spec_files/462730(1)" width="24">
+            <a href="https://github.com/sfriesel">sfriesel</a>
+          </li>
+          <li class="facebox-user-list-item">
+            <img alt="UENISHI Kota" data-user="11440" height="24" src="./msgpack spec_files/11440(1)" width="24">
+            <a href="https://github.com/kuenishi">kuenishi</a>
+          </li>
+          <li class="facebox-user-list-item">
+            <img alt="Yuichi TANIKAWA" data-user="1145226" height="24" src="./msgpack spec_files/1145226" width="24">
+            <a href="https://github.com/itiut">itiut</a>
+          </li>
+          <li class="facebox-user-list-item">
+            <img alt="Bernhard Mäser" data-user="98921" height="24" src="./msgpack spec_files/98921(1)" width="24">
+            <a href="https://github.com/bmaeser">bmaeser</a>
+          </li>
+      </ul>
+    </div>
+  </div>
+
+<div class="file-box">
+  <div class="file">
+    <div class="meta clearfix">
+      <div class="info file-name">
+          <span>500 lines (389 sloc)</span>
+          <span class="meta-divider"></span>
+        <span>20.786 kb</span>
+      </div>
+      <div class="actions">
+        <div class="button-group">
+          <a href="https://github.com/msgpack/msgpack/raw/master/spec.md" class="minibutton " id="raw-url">Raw</a>
+            <a href="https://github.com/msgpack/msgpack/blame/master/spec.md" class="minibutton js-update-url-with-hash">Blame</a>
+          <a href="https://github.com/msgpack/msgpack/commits/master/spec.md" class="minibutton " rel="nofollow">History</a>
+        </div><!-- /.button-group -->
+
+          <a class="octicon-button tooltipped tooltipped-nw" href="http://windows.github.com/" aria-label="Open this file in GitHub for Windows">
+              <span class="octicon octicon-device-desktop"></span>
+          </a>
+
+            <a class="octicon-button disabled tooltipped tooltipped-w" href="https://github.com/msgpack/msgpack/blob/master/spec.md#" aria-label="You must be signed in to make or propose changes"><span class="octicon octicon-pencil"></span></a>
+
+          <a class="octicon-button danger disabled tooltipped tooltipped-w" href="https://github.com/msgpack/msgpack/blob/master/spec.md#" aria-label="You must be signed in to make or propose changes">
+          <span class="octicon octicon-trashcan"></span>
+        </a>
+      </div><!-- /.actions -->
+    </div>
+    
+  <div id="readme" class="blob instapaper_body">
+    <article class="markdown-body entry-content" itemprop="mainContentOfPage"><h1>
+<a id="user-content-messagepack-specification" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#messagepack-specification" aria-hidden="true"><span class="octicon octicon-link"></span></a>MessagePack specification</h1>
+
+<p>MessagePack is an object serialization specification like JSON.</p>
+
+<p>MessagePack has two concepts: <strong>type system</strong> and <strong>formats</strong>.</p>
+
+<p>Serialization is conversion from application objects into MessagePack formats via MessagePack type system.</p>
+
+<p>Deserialization is conversion from MessagePack formats into application objects via MessagePack type system.</p>
+
+<pre><code>Serialization:
+    Application objects
+    --&gt;  MessagePack type system
+    --&gt;  MessagePack formats (byte array)
+
+Deserialization:
+    MessagePack formats (byte array)
+    --&gt;  MessagePack type system
+    --&gt;  Application objects
+</code></pre>
+
+<p>This document describes the MessagePack type system, MessagePack formats and conversion of them.</p>
+
+<h2>
+<a id="user-content-table-of-contents" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#table-of-contents" aria-hidden="true"><span class="octicon octicon-link"></span></a>Table of contents</h2>
+
+<ul class="task-list">
+<li>MessagePack specification
+
+<ul class="task-list">
+<li>
+<a href="https://github.com/msgpack/msgpack/blob/master/spec.md#types">Type system</a>
+
+<ul class="task-list">
+<li><a href="https://github.com/msgpack/msgpack/blob/master/spec.md#types-limitation">Limitation</a></li>
+<li><a href="https://github.com/msgpack/msgpack/blob/master/spec.md#types-extension-type">Extension type</a></li>
+</ul>
+</li>
+<li>
+<a href="https://github.com/msgpack/msgpack/blob/master/spec.md#formats">Formats</a>
+
+<ul class="task-list">
+<li><a href="https://github.com/msgpack/msgpack/blob/master/spec.md#formats-overview">Overview</a></li>
+<li><a href="https://github.com/msgpack/msgpack/blob/master/spec.md#formats-notation">Notation in diagrams</a></li>
+<li><a href="https://github.com/msgpack/msgpack/blob/master/spec.md#formats-nil">nil format family</a></li>
+<li><a href="https://github.com/msgpack/msgpack/blob/master/spec.md#formats-bool">bool format family</a></li>
+<li><a href="https://github.com/msgpack/msgpack/blob/master/spec.md#formats-int">int format family</a></li>
+<li><a href="https://github.com/msgpack/msgpack/blob/master/spec.md#formats-float">float format family</a></li>
+<li><a href="https://github.com/msgpack/msgpack/blob/master/spec.md#formats-str">str format family</a></li>
+<li><a href="https://github.com/msgpack/msgpack/blob/master/spec.md#formats-bin">bin format family</a></li>
+<li><a href="https://github.com/msgpack/msgpack/blob/master/spec.md#formats-array">array format family</a></li>
+<li><a href="./msgpack spec_files/msgpack spec.htm">map format family</a></li>
+<li><a href="https://github.com/msgpack/msgpack/blob/master/spec.md#formats-ext">ext format family</a></li>
+</ul>
+</li>
+<li><a href="https://github.com/msgpack/msgpack/blob/master/spec.md#serialization">Serialization: type to format conversion</a></li>
+<li><a href="https://github.com/msgpack/msgpack/blob/master/spec.md#deserialization">Deserialization: format to type conversion</a></li>
+<li>
+<a href="https://github.com/msgpack/msgpack/blob/master/spec.md#future">Future discussion</a>
+
+<ul class="task-list">
+<li><a href="https://github.com/msgpack/msgpack/blob/master/spec.md#future-profiles">Profile</a></li>
+</ul>
+</li>
+<li>
+<a href="https://github.com/msgpack/msgpack/blob/master/spec.md#impl">Implementation guidelines</a>
+
+<ul class="task-list">
+<li><a href="https://github.com/msgpack/msgpack/blob/master/spec.md#impl-upgrade">Upgrade MessagePack specification</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<p><a name="user-content-types"></a></p>
+
+<h2>
+<a id="user-content-type-system" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#type-system" aria-hidden="true"><span class="octicon octicon-link"></span></a>Type system</h2>
+
+<ul class="task-list">
+<li>Types
+
+<ul class="task-list">
+<li>
+<strong>Integer</strong> represents an integer</li>
+<li>
+<strong>Nil</strong> represents nil</li>
+<li>
+<strong>Boolean</strong> represents true or false</li>
+<li>
+<strong>Float</strong> represents a floating point number</li>
+<li>
+<strong>Raw</strong>
+
+<ul class="task-list">
+<li>
+<strong>String</strong> extending Raw type represents a UTF-8 string</li>
+<li>
+<strong>Binary</strong> extending Raw type represents a byte array</li>
+</ul>
+</li>
+<li>
+<strong>Array</strong> represents a sequence of objects</li>
+<li>
+<strong>Map</strong> represents key-value pairs of objects</li>
+<li>
+<strong>Extended</strong> implements Extension interface: represents a tuple of type information and a byte array where type information is an integer whose meaning is defined by applications</li>
+</ul>
+</li>
+<li>Interfaces
+
+<ul class="task-list">
+<li>
+<strong>Extension</strong> represents a tuple of an integer and a byte array where the integer represents type information and the byte array represents data. The format of the data is defined by concrete types</li>
+</ul>
+</li>
+</ul>
+
+<p><a name="user-content-types-limitation"></a></p>
+
+<h3>
+<a id="user-content-limitation" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#limitation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Limitation</h3>
+
+<ul class="task-list">
+<li>a value of an Integer object is limited from <code>-(2^63)</code> upto <code>(2^64)-1</code>
+</li>
+<li>a value of a Float object is IEEE 754 single or double precision floating-point number</li>
+<li>maximum length of a Binary object is <code>(2^32)-1</code>
+</li>
+<li>maximum byte size of a String object is <code>(2^32)-1</code>
+</li>
+<li>String objects may contain invalid byte sequence and the behavior of a deserializer depends on the actual implementation when it received invalid byte sequence
+
+<ul class="task-list">
+<li>Deserializers should provide functionality to get the original byte array so that applications can decide how to handle the object</li>
+</ul>
+</li>
+<li>maximum number of elements of an Array object is <code>(2^32)-1</code>
+</li>
+<li>maximum number of key-value associations of a Map object is <code>(2^32)-1</code>
+</li>
+</ul>
+
+<p><a name="user-content-types-extension-type"></a></p>
+
+<h3>
+<a id="user-content-extension-type" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#extension-type" aria-hidden="true"><span class="octicon octicon-link"></span></a>Extension type</h3>
+
+<p>MessagePack allows applications to define application-specific types using the Extended type.
+Extended type consists of an integer and a byte array where the integer represents a kind of types and the byte array represents data.</p>
+
+<p>Applications can assign <code>0</code> to <code>127</code> to store application-specific type information.</p>
+
+<p>MessagePack reserves <code>-1</code> to <code>-128</code> for future extension to add predefined types which will be described in separated documents.</p>
+
+<pre><code>[0, 127]: application-specific types
+[-1, -128]: reserved for predefined types
+</code></pre>
+
+<p><a name="user-content-formats"></a></p>
+
+<h2>
+<a id="user-content-formats" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#formats" aria-hidden="true"><span class="octicon octicon-link"></span></a>Formats</h2>
+
+<p><a name="user-content-formats-overview"></a></p>
+
+<h3>
+<a id="user-content-overview" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#overview" aria-hidden="true"><span class="octicon octicon-link"></span></a>Overview</h3>
+
+<table>
+  <tbody><tr>
+<th>format name</th>
+<th>first byte (in binary)</th>
+<th>first byte (in hex)</th>
+</tr>
+  <tr>
+<td>positive fixint</td>
+<td>0xxxxxxx</td>
+<td>0x00 - 0x7f</td>
+</tr>
+  <tr>
+<td>fixmap</td>
+<td>1000xxxx</td>
+<td>0x80 - 0x8f</td>
+</tr>
+  <tr>
+<td>fixarray</td>
+<td>1001xxxx</td>
+<td>0x90 - 0x9f</td>
+</tr>
+  <tr>
+<td>fixstr</td>
+<td>101xxxxx</td>
+<td>0xa0 - 0xbf</td>
+</tr>
+  <tr>
+<td>nil</td>
+<td>11000000</td>
+<td>0xc0</td>
+</tr>
+  <tr>
+<td>(never used)</td>
+<td>11000001</td>
+<td>0xc1</td>
+</tr>
+  <tr>
+<td>false</td>
+<td>11000010</td>
+<td>0xc2</td>
+</tr>
+  <tr>
+<td>true</td>
+<td>11000011</td>
+<td>0xc3</td>
+</tr>
+  <tr>
+<td>bin 8</td>
+<td>11000100</td>
+<td>0xc4</td>
+</tr>
+  <tr>
+<td>bin 16</td>
+<td>11000101</td>
+<td>0xc5</td>
+</tr>
+  <tr>
+<td>bin 32</td>
+<td>11000110</td>
+<td>0xc6</td>
+</tr>
+  <tr>
+<td>ext 8</td>
+<td>11000111</td>
+<td>0xc7</td>
+</tr>
+  <tr>
+<td>ext 16</td>
+<td>11001000</td>
+<td>0xc8</td>
+</tr>
+  <tr>
+<td>ext 32</td>
+<td>11001001</td>
+<td>0xc9</td>
+</tr>
+  <tr>
+<td>float 32</td>
+<td>11001010</td>
+<td>0xca</td>
+</tr>
+  <tr>
+<td>float 64</td>
+<td>11001011</td>
+<td>0xcb</td>
+</tr>
+  <tr>
+<td>uint 8</td>
+<td>11001100</td>
+<td>0xcc</td>
+</tr>
+  <tr>
+<td>uint 16</td>
+<td>11001101</td>
+<td>0xcd</td>
+</tr>
+  <tr>
+<td>uint 32</td>
+<td>11001110</td>
+<td>0xce</td>
+</tr>
+  <tr>
+<td>uint 64</td>
+<td>11001111</td>
+<td>0xcf</td>
+</tr>
+  <tr>
+<td>int 8</td>
+<td>11010000</td>
+<td>0xd0</td>
+</tr>
+  <tr>
+<td>int 16</td>
+<td>11010001</td>
+<td>0xd1</td>
+</tr>
+  <tr>
+<td>int 32</td>
+<td>11010010</td>
+<td>0xd2</td>
+</tr>
+  <tr>
+<td>int 64</td>
+<td>11010011</td>
+<td>0xd3</td>
+</tr>
+  <tr>
+<td>fixext 1</td>
+<td>11010100</td>
+<td>0xd4</td>
+</tr>
+  <tr>
+<td>fixext 2</td>
+<td>11010101</td>
+<td>0xd5</td>
+</tr>
+  <tr>
+<td>fixext 4</td>
+<td>11010110</td>
+<td>0xd6</td>
+</tr>
+  <tr>
+<td>fixext 8</td>
+<td>11010111</td>
+<td>0xd7</td>
+</tr>
+  <tr>
+<td>fixext 16</td>
+<td>11011000</td>
+<td>0xd8</td>
+</tr>
+  <tr>
+<td>str 8</td>
+<td>11011001</td>
+<td>0xd9</td>
+</tr>
+  <tr>
+<td>str 16</td>
+<td>11011010</td>
+<td>0xda</td>
+</tr>
+  <tr>
+<td>str 32</td>
+<td>11011011</td>
+<td>0xdb</td>
+</tr>
+  <tr>
+<td>array 16</td>
+<td>11011100</td>
+<td>0xdc</td>
+</tr>
+  <tr>
+<td>array 32</td>
+<td>11011101</td>
+<td>0xdd</td>
+</tr>
+  <tr>
+<td>map 16</td>
+<td>11011110</td>
+<td>0xde</td>
+</tr>
+  <tr>
+<td>map 32</td>
+<td>11011111</td>
+<td>0xdf</td>
+</tr>
+  <tr>
+<td>negative fixint</td>
+<td>111xxxxx</td>
+<td>0xe0 - 0xff</td>
+</tr>
+</tbody></table>
+
+<p><a name="user-content-formats-notation"></a></p>
+
+<h3>
+<a id="user-content-notation-in-diagrams" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#notation-in-diagrams" aria-hidden="true"><span class="octicon octicon-link"></span></a>Notation in diagrams</h3>
+
+<pre><code>one byte:
++--------+
+|        |
++--------+
+
+a variable number of bytes:
++========+
+|        |
++========+
+
+variable number of objects stored in MessagePack format:
++~~~~~~~~~~~~~~~~~+
+|                 |
++~~~~~~~~~~~~~~~~~+
+</code></pre>
+
+<p><code>X</code>, <code>Y</code>, <code>Z</code> and <code>A</code> are the symbols that will be replaced by an actual bit.</p>
+
+<p><a name="user-content-formats-nil"></a></p>
+
+<h3>
+<a id="user-content-nil-format" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#nil-format" aria-hidden="true"><span class="octicon octicon-link"></span></a>nil format</h3>
+
+<p>Nil format stores nil in 1 byte.</p>
+
+<pre><code>nil:
++--------+
+|  0xc0  |
++--------+
+</code></pre>
+
+<p><a name="user-content-formats-bool"></a></p>
+
+<h3>
+<a id="user-content-bool-format-family" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#bool-format-family" aria-hidden="true"><span class="octicon octicon-link"></span></a>bool format family</h3>
+
+<p>Bool format family stores false or true in 1 byte.</p>
+
+<pre><code>false:
++--------+
+|  0xc2  |
++--------+
+
+true:
++--------+
+|  0xc3  |
++--------+
+</code></pre>
+
+<p><a name="user-content-formats-int"></a></p>
+
+<h3>
+<a id="user-content-int-format-family" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#int-format-family" aria-hidden="true"><span class="octicon octicon-link"></span></a>int format family</h3>
+
+<p>Int format family stores an integer in 1, 2, 3, 5, or 9 bytes.</p>
+
+<pre><code>positive fixnum stores 7-bit positive integer
++--------+
+|0XXXXXXX|
++--------+
+
+negative fixnum stores 5-bit negative integer
++--------+
+|111YYYYY|
++--------+
+
+* 0XXXXXXX is 8-bit unsigned integer
+* 111YYYYY is 8-bit signed integer
+
+uint 8 stores a 8-bit unsigned integer
++--------+--------+
+|  0xcc  |ZZZZZZZZ|
++--------+--------+
+
+uint 16 stores a 16-bit big-endian unsigned integer
++--------+--------+--------+
+|  0xcd  |ZZZZZZZZ|ZZZZZZZZ|
++--------+--------+--------+
+
+uint 32 stores a 32-bit big-endian unsigned integer
++--------+--------+--------+--------+--------+
+|  0xce  |ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ
++--------+--------+--------+--------+--------+
+
+uint 64 stores a 64-bit big-endian unsigned integer
++--------+--------+--------+--------+--------+--------+--------+--------+--------+
+|  0xcf  |ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|
++--------+--------+--------+--------+--------+--------+--------+--------+--------+
+
+int 8 stores a 8-bit signed integer
++--------+--------+
+|  0xd0  |ZZZZZZZZ|
++--------+--------+
+
+int 16 stores a 16-bit big-endian signed integer
++--------+--------+--------+
+|  0xd1  |ZZZZZZZZ|ZZZZZZZZ|
++--------+--------+--------+
+
+int 32 stores a 32-bit big-endian signed integer
++--------+--------+--------+--------+--------+
+|  0xd2  |ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|
++--------+--------+--------+--------+--------+
+
+int 64 stores a 64-bit big-endian signed integer
++--------+--------+--------+--------+--------+--------+--------+--------+--------+
+|  0xd3  |ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|
++--------+--------+--------+--------+--------+--------+--------+--------+--------+
+</code></pre>
+
+<p><a name="user-content-formats-float"></a></p>
+
+<h3>
+<a id="user-content-float-format-family" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#float-format-family" aria-hidden="true"><span class="octicon octicon-link"></span></a>float format family</h3>
+
+<p>Float format family stores a floating point number in 5 bytes or 9 bytes.</p>
+
+<pre><code>float 32 stores a floating point number in IEEE 754 single precision floating point number format:
++--------+--------+--------+--------+--------+
+|  0xca  |XXXXXXXX|XXXXXXXX|XXXXXXXX|XXXXXXXX
++--------+--------+--------+--------+--------+
+
+float 64 stores a floating point number in IEEE 754 double precision floating point number format:
++--------+--------+--------+--------+--------+--------+--------+--------+--------+
+|  0xcb  |YYYYYYYY|YYYYYYYY|YYYYYYYY|YYYYYYYY|YYYYYYYY|YYYYYYYY|YYYYYYYY|YYYYYYYY|
++--------+--------+--------+--------+--------+--------+--------+--------+--------+
+
+where
+* XXXXXXXX_XXXXXXXX_XXXXXXXX_XXXXXXXX is a big-endian IEEE 754 single precision floating point number
+* YYYYYYYY_YYYYYYYY_YYYYYYYY_YYYYYYYY_YYYYYYYY_YYYYYYYY_YYYYYYYY_YYYYYYYY is a big-endian
+  IEEE 754 double precision floating point number
+</code></pre>
+
+<p><a name="user-content-formats-str"></a></p>
+
+<h3>
+<a id="user-content-str-format-family" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#str-format-family" aria-hidden="true"><span class="octicon octicon-link"></span></a>str format family</h3>
+
+<p>Str format family stores an byte array in 1, 2, 3, or 5 bytes of extra bytes in addition to the size of the byte array.</p>
+
+<pre><code>fixstr stores a byte array whose length is upto 31 bytes:
++--------+========+
+|101XXXXX|  data  |
++--------+========+
+
+str 8 stores a byte array whose length is upto (2^8)-1 bytes:
++--------+--------+========+
+|  0xd9  |YYYYYYYY|  data  |
++--------+--------+========+
+
+str 16 stores a byte array whose length is upto (2^16)-1 bytes:
++--------+--------+--------+========+
+|  0xda  |ZZZZZZZZ|ZZZZZZZZ|  data  |
++--------+--------+--------+========+
+
+str 32 stores a byte array whose length is upto (2^32)-1 bytes:
++--------+--------+--------+--------+--------+========+
+|  0xdb  |AAAAAAAA|AAAAAAAA|AAAAAAAA|AAAAAAAA|  data  |
++--------+--------+--------+--------+--------+========+
+
+where
+* XXXXX is a 5-bit unsigned integer which represents N
+* YYYYYYYY is a 8-bit unsigned integer which represents N
+* ZZZZZZZZ_ZZZZZZZZ is a 16-bit big-endian unsigned integer which represents N
+* AAAAAAAA_AAAAAAAA_AAAAAAAA_AAAAAAAA is a 32-bit big-endian unsigned integer which represents N
+* N is the length of data
+</code></pre>
+
+<p><a name="user-content-formats-bin"></a></p>
+
+<h3>
+<a id="user-content-bin-format-family" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family" aria-hidden="true"><span class="octicon octicon-link"></span></a>bin format family</h3>
+
+<p>Bin format family stores an byte array in 2, 3, or 5 bytes of extra bytes in addition to the size of the byte array.</p>
+
+<pre><code>bin 8 stores a byte array whose length is upto (2^8)-1 bytes:
++--------+--------+========+
+|  0xc4  |XXXXXXXX|  data  |
++--------+--------+========+
+
+bin 16 stores a byte array whose length is upto (2^16)-1 bytes:
++--------+--------+--------+========+
+|  0xc5  |YYYYYYYY|YYYYYYYY|  data  |
++--------+--------+--------+========+
+
+bin 32 stores a byte array whose length is upto (2^32)-1 bytes:
++--------+--------+--------+--------+--------+========+
+|  0xc6  |ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|  data  |
++--------+--------+--------+--------+--------+========+
+
+where
+* XXXXXXXX is a 8-bit unsigned integer which represents N
+* YYYYYYYY_YYYYYYYY is a 16-bit big-endian unsigned integer which represents N
+* ZZZZZZZZ_ZZZZZZZZ_ZZZZZZZZ_ZZZZZZZZ is a 32-bit big-endian unsigned integer which represents N
+* N is the length of data
+</code></pre>
+
+<p><a name="user-content-formats-array"></a></p>
+
+<h3>
+<a id="user-content-array-format-family" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#array-format-family" aria-hidden="true"><span class="octicon octicon-link"></span></a>array format family</h3>
+
+<p>Array format family stores a sequence of elements in 1, 3, or 5 bytes of extra bytes in addition to the elements.</p>
+
+<pre><code>fixarray stores an array whose length is upto 15 elements:
++--------+~~~~~~~~~~~~~~~~~+
+|1001XXXX|    N objects    |
++--------+~~~~~~~~~~~~~~~~~+
+
+array 16 stores an array whose length is upto (2^16)-1 elements:
++--------+--------+--------+~~~~~~~~~~~~~~~~~+
+|  0xdc  |YYYYYYYY|YYYYYYYY|    N objects    |
++--------+--------+--------+~~~~~~~~~~~~~~~~~+
+
+array 32 stores an array whose length is upto (2^32)-1 elements:
++--------+--------+--------+--------+--------+~~~~~~~~~~~~~~~~~+
+|  0xdd  |ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|    N objects    |
++--------+--------+--------+--------+--------+~~~~~~~~~~~~~~~~~+
+
+where
+* XXXX is a 4-bit unsigned integer which represents N
+* YYYYYYYY_YYYYYYYY is a 16-bit big-endian unsigned integer which represents N
+* ZZZZZZZZ_ZZZZZZZZ_ZZZZZZZZ_ZZZZZZZZ is a 32-bit big-endian unsigned integer which represents N
+    N is the size of a array
+</code></pre>
+
+<p><a name="user-content-formats-map"></a></p>
+
+<h3>
+<a id="user-content-map-format-family" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#map-format-family" aria-hidden="true"><span class="octicon octicon-link"></span></a>map format family</h3>
+
+<p>Map format family stores a sequence of key-value pairs in 1, 3, or 5 bytes of extra bytes in addition to the key-value pairs.</p>
+
+<pre><code>fixmap stores a map whose length is upto 15 elements
++--------+~~~~~~~~~~~~~~~~~+
+|1000XXXX|   N*2 objects   |
++--------+~~~~~~~~~~~~~~~~~+
+
+map 16 stores a map whose length is upto (2^16)-1 elements
++--------+--------+--------+~~~~~~~~~~~~~~~~~+
+|  0xde  |YYYYYYYY|YYYYYYYY|   N*2 objects   |
++--------+--------+--------+~~~~~~~~~~~~~~~~~+
+
+map 32 stores a map whose length is upto (2^32)-1 elements
++--------+--------+--------+--------+--------+~~~~~~~~~~~~~~~~~+
+|  0xdf  |ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|   N*2 objects   |
++--------+--------+--------+--------+--------+~~~~~~~~~~~~~~~~~+
+
+where
+* XXXX is a 4-bit unsigned integer which represents N
+* YYYYYYYY_YYYYYYYY is a 16-bit big-endian unsigned integer which represents N
+* ZZZZZZZZ_ZZZZZZZZ_ZZZZZZZZ_ZZZZZZZZ is a 32-bit big-endian unsigned integer which represents N
+* N is the size of a map
+* odd elements in objects are keys of a map
+* the next element of a key is its associated value
+</code></pre>
+
+<p><a name="user-content-formats-ext"></a></p>
+
+<h3>
+<a id="user-content-ext-format-family" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#ext-format-family" aria-hidden="true"><span class="octicon octicon-link"></span></a>ext format family</h3>
+
+<p>Ext format family stores a tuple of an integer and a byte array.</p>
+
+<pre><code>fixext 1 stores an integer and a byte array whose length is 1 byte
++--------+--------+--------+
+|  0xd4  |  type  |  data  |
++--------+--------+--------+
+
+fixext 2 stores an integer and a byte array whose length is 2 bytes
++--------+--------+--------+--------+
+|  0xd5  |  type  |       data      |
++--------+--------+--------+--------+
+
+fixext 4 stores an integer and a byte array whose length is 4 bytes
++--------+--------+--------+--------+--------+--------+
+|  0xd6  |  type  |                data               |
++--------+--------+--------+--------+--------+--------+
+
+fixext 8 stores an integer and a byte array whose length is 8 bytes
++--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+|  0xd7  |  type  |                                  data                                 |
++--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+
+fixext 16 stores an integer and a byte array whose length is 16 bytes
++--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
+|  0xd8  |  type  |                                  data                                  
++--------+--------+--------+--------+--------+--------+--------+--------+--------+--------+
++--------+--------+--------+--------+--------+--------+--------+--------+
+                              data (cont.)                              |
++--------+--------+--------+--------+--------+--------+--------+--------+
+
+ext 8 stores an integer and a byte array whose length is upto (2^8)-1 bytes:
++--------+--------+--------+========+
+|  0xc7  |XXXXXXXX|  type  |  data  |
++--------+--------+--------+========+
+
+ext 16 stores an integer and a byte array whose length is upto (2^16)-1 bytes:
++--------+--------+--------+--------+========+
+|  0xc8  |YYYYYYYY|YYYYYYYY|  type  |  data  |
++--------+--------+--------+--------+========+
+
+ext 32 stores an integer and a byte array whose length is upto (2^32)-1 bytes:
++--------+--------+--------+--------+--------+--------+========+
+|  0xc9  |ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|ZZZZZZZZ|  type  |  data  |
++--------+--------+--------+--------+--------+--------+========+
+
+where
+* XXXXXXXX is a 8-bit unsigned integer which represents N
+* YYYYYYYY_YYYYYYYY is a 16-bit big-endian unsigned integer which represents N
+* ZZZZZZZZ_ZZZZZZZZ_ZZZZZZZZ_ZZZZZZZZ is a big-endian 32-bit unsigned integer which represents N
+* N is a length of data
+* type is a signed 8-bit signed integer
+* type &lt; 0 is reserved for future extension including 2-byte type information
+</code></pre>
+
+<p><a name="user-content-serialization"></a></p>
+
+<h2>
+<a id="user-content-serialization-type-to-format-conversion" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#serialization-type-to-format-conversion" aria-hidden="true"><span class="octicon octicon-link"></span></a>Serialization: type to format conversion</h2>
+
+<p>MessagePack serializers convert MessagePack types into formats as following:</p>
+
+<table>
+  <tbody><tr>
+<th>source types</th>
+<th>output format</th>
+</tr>
+  <tr>
+<td>Integer</td>
+<td>int format family (positive fixint, negative fixint, int 8/16/32/64 or uint 8/16/32/64)</td>
+</tr>
+  <tr>
+<td>Nil</td>
+<td>nil</td>
+</tr>
+  <tr>
+<td>Boolean</td>
+<td>bool format family (false or true)</td>
+</tr>
+  <tr>
+<td>Float</td>
+<td>float format family (float 32/64)</td>
+</tr>
+  <tr>
+<td>String</td>
+<td>str format family (fixstr or str 8/16/32)</td>
+</tr>
+  <tr>
+<td>Binary</td>
+<td>bin format family (bin 8/16/32)</td>
+</tr>
+  <tr>
+<td>Array</td>
+<td>array format family (fixarray or array 16/32)</td>
+</tr>
+  <tr>
+<td>Map</td>
+<td>map format family (fixmap or map 16/32)</td>
+</tr>
+  <tr>
+<td>Extended</td>
+<td>ext format family (fixext or ext 8/16/32)</td>
+</tr>
+</tbody></table>
+
+<p>If an object can be represented in multiple possible output formats, serializers SHOULD use the format which represents the data in the smallest number of bytes.</p>
+
+<p><a name="user-content-deserialization"></a></p>
+
+<h2>
+<a id="user-content-deserialization-format-to-type-conversion" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#deserialization-format-to-type-conversion" aria-hidden="true"><span class="octicon octicon-link"></span></a>Deserialization: format to type conversion</h2>
+
+<p>MessagePack deserializers convert MessagePack formats into types as following:</p>
+
+<table>
+  <tbody><tr>
+<th>source formats</th>
+<th>output type</th>
+</tr>
+  <tr>
+<td>positive fixint, negative fixint, int 8/16/32/64 and uint 8/16/32/64</td>
+<td>Integer</td>
+</tr>
+  <tr>
+<td>nil</td>
+<td>Nil</td>
+</tr>
+  <tr>
+<td>false and true</td>
+<td>Boolean</td>
+</tr>
+  <tr>
+<td>float 32/64</td>
+<td>Float</td>
+</tr>
+  <tr>
+<td>fixstr and str 8/16/32</td>
+<td>String</td>
+</tr>
+  <tr>
+<td>bin 8/16/32</td>
+<td>Binary</td>
+</tr>
+  <tr>
+<td>fixarray and array 16/32</td>
+<td>Array</td>
+</tr>
+  <tr>
+<td>fixmap map 16/32</td>
+<td>Map</td>
+</tr>
+  <tr>
+<td>fixext and ext 8/16/32</td>
+<td>Extended</td>
+</tr>
+</tbody></table>
+
+<p><a name="user-content-future"></a></p>
+
+<h2>
+<a id="user-content-future-discussion" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#future-discussion" aria-hidden="true"><span class="octicon octicon-link"></span></a>Future discussion</h2>
+
+<p><a name="user-content-future-profiles"></a></p>
+
+<h3>
+<a id="user-content-profile" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#profile" aria-hidden="true"><span class="octicon octicon-link"></span></a>Profile</h3>
+
+<p>Profile is an idea that Applications restrict the semantics of MessagePack while sharing the same syntax to adapt MessagePack for certain use cases.</p>
+
+<p>For example, applications may remove Binary type, restrict keys of map objects to be String type, and put some restrictions to make the semantics compatible with JSON. Applications which use schema may remove String and Binary types and deal with byte arrays as Raw type. Applications which use hash (digest) of serialized data may sort keys of maps to make the serialized data deterministic.</p>
+
+<p><a name="user-content-impl"></a></p>
+
+<h2>
+<a id="user-content-implementation-guidelines" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#implementation-guidelines" aria-hidden="true"><span class="octicon octicon-link"></span></a>implementation guidelines</h2>
+
+<p><a name="user-content-impl-upgrade"></a></p>
+
+<h3>
+<a id="user-content-upgrading-messagepack-specification" class="anchor" href="https://github.com/msgpack/msgpack/blob/master/spec.md#upgrading-messagepack-specification" aria-hidden="true"><span class="octicon octicon-link"></span></a>Upgrading MessagePack specification</h3>
+
+<p>MessagePack specification is changed at this time.
+Here is a guideline to upgrade existent MessagePack implementations:</p>
+
+<ul class="task-list">
+<li>In a minor release, deserializers support the bin format family and str 8 format. The type of deserialized objects should be same with raw 16 (== str 16) or raw 32 (== str 32)</li>
+<li>In a major release, serializers distinguish Binary type and String type using bin format family and str format family
+
+<ul class="task-list">
+<li>At the same time, serializers should offer "compatibility mode" which doesn't use bin format family and str 8 format</li>
+</ul>
+</li>
+</ul>
+
+<hr>
+
+<pre><code>MessagePack specification
+Last modified at 2013-04-21 21:52:33 -0700
+Sadayuki Furuhashi © 2013-04-21 21:52:33 -0700
+</code></pre>
+</article>
+  </div>
+
+  </div>
+</div>
+
+<a href="https://github.com/msgpack/msgpack/blob/master/spec.md#jump-to-line" rel="facebox[.linejump]" data-hotkey="l" style="display:none">Jump to Line</a>
+<div id="jump-to-line" style="display:none">
+  <form accept-charset="UTF-8" class="js-jump-to-line-form">
+    <input class="linejump-input js-jump-to-line-field" type="text" placeholder="Jump to line…" autofocus="">
+    <button type="submit" class="button">Go</button>
+  </form>
+</div>
+
+        </div>
+
+      </div><!-- /.repo-container -->
+      <div class="modal-backdrop"></div>
+    </div><!-- /.container -->
+  </div><!-- /.site -->
+
+
+    </div><!-- /.wrapper -->
+
+      <div class="container">
+  <div class="site-footer" role="contentinfo">
+    <ul class="site-footer-links right">
+      <li><a href="https://status.github.com/">Status</a></li>
+      <li><a href="https://developer.github.com/">API</a></li>
+      <li><a href="http://training.github.com/">Training</a></li>
+      <li><a href="http://shop.github.com/">Shop</a></li>
+      <li><a href="https://github.com/blog">Blog</a></li>
+      <li><a href="https://github.com/about">About</a></li>
+
+    </ul>
+
+    <a href="https://github.com/" aria-label="Homepage">
+      <span class="mega-octicon octicon-mark-github" title="GitHub"></span>
+    </a>
+
+    <ul class="site-footer-links">
+      <li>© 2015 <span title="0.02697s from github-fe116-cp1-prd.iad.github.net">GitHub</span>, Inc.</li>
+        <li><a href="https://github.com/site/terms">Terms</a></li>
+        <li><a href="https://github.com/site/privacy">Privacy</a></li>
+        <li><a href="https://github.com/security">Security</a></li>
+        <li><a href="https://github.com/contact">Contact</a></li>
+    </ul>
+  </div><!-- /.site-footer -->
+</div><!-- /.container -->
+
+
+    <div class="fullscreen-overlay js-fullscreen-overlay" id="fullscreen_overlay">
+  <div class="fullscreen-container js-suggester-container">
+    <div class="textarea-wrap">
+      <textarea name="fullscreen-contents" id="fullscreen-contents" class="fullscreen-contents js-fullscreen-contents" placeholder=""></textarea>
+      <div class="suggester-container">
+        <div class="suggester fullscreen-suggester js-suggester js-navigation-container"></div>
+      </div>
+    </div>
+  </div>
+  <div class="fullscreen-sidebar">
+    <a href="https://github.com/msgpack/msgpack/blob/master/spec.md#" class="exit-fullscreen js-exit-fullscreen tooltipped tooltipped-w" aria-label="Exit Zen Mode">
+      <span class="mega-octicon octicon-screen-normal"></span>
+    </a>
+    <a href="https://github.com/msgpack/msgpack/blob/master/spec.md#" class="theme-switcher js-theme-switcher tooltipped tooltipped-w" aria-label="Switch themes">
+      <span class="octicon octicon-color-mode"></span>
+    </a>
+  </div>
+</div>
+
+
+
+    <div id="ajax-error-message" class="flash flash-error">
+      <span class="octicon octicon-alert"></span>
+      <a href="https://github.com/msgpack/msgpack/blob/master/spec.md#" class="octicon octicon-x flash-close js-ajax-error-dismiss" aria-label="Dismiss error"></a>
+      Something went wrong with that request. Please try again.
+    </div>
+
+
+      <script crossorigin="anonymous" src="./msgpack spec_files/frameworks-af95b05cb14b7a29b0457c26b4a1d24151f4a47842c8e74bd556622f347b9d3d.js" type="text/javascript"></script>
+      <script async="async" crossorigin="anonymous" src="./msgpack spec_files/github-095c6fbcc5976c22018626149d313ec01de23839bd4f1e04be845664c06f00c4.js" type="text/javascript"></script>
+      
+      
+  
+
+
+<div id="global-zeroclipboard-html-bridge" class="global-zeroclipboard-container" style="position: absolute; left: 0px; top: -9999px; width: 1px; height: 1px; z-index: 999999999;"><object id="global-zeroclipboard-flash-bridge" name="global-zeroclipboard-flash-bridge" width="100%" height="100%" type="application/x-shockwave-flash" data="https://assets-cdn.github.com/flash/ZeroClipboard.v2.1.6.swf"><param name="allowScriptAccess" value="always"><param name="allowNetworking" value="all"><param name="menu" value="false"><param name="wmode" value="transparent"><param name="flashvars" value="trustedOrigins=github.com%2C%2F%2Fgithub.com%2Chttps%3A%2F%2Fgithub.com&amp;swfObjectId=global-zeroclipboard-flash-bridge"></object></div>    <div class="facebox" id="facebox" style="display:none;">       <div class="facebox-popup">         <div class="facebox-content">         </div>         <button type="button" class="facebox-close js-facebox-close" aria-label="Close modal">           <span class="octicon octicon-remove-close"></span>         </button>       </div>     </div><div style="width: 0px !important; height: 0px !important; padding: 0px !important; margin: 0px !important; z-index: 9999999999 !important;"></div><div style="width: 0px !important; height: 0px !important; padding: 0px !important; margin: 0px !important; z-index: 9999999999 !important;"></div></body></html>

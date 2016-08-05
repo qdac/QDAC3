@@ -1,0 +1,319 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN">
+<html>
+<head>
+<title>qmsgpack 命名空间</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="generator" content="Doc-O-Matic" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <link rel="STYLESHEET" href="default.css" type="text/css" />
+
+<script type="text/javascript" src="scripts.js"></script>
+</head>
+<body class="Element700" onload="onBodyLoadEx('frames.html', 'topic', 'qmsgpack.html');" onmousedown="onBodyMouseDown();">
+
+<!-- Begin Popups -->
+
+<!-- End Popups -->
+
+<!-- Begin Page Header -->
+<div class="Element710" id="areafixed">
+<div class="Element94">
+<em>当前位置:</em> <a href="!!SYMREF.html" target="topic">符号引用</a> &gt; <a href="qmsgpack.html" target="topic">qmsgpack 命名空间</a></div>
+<div class="Element92">
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr><td width="33%">
+<div class="Element1">
+QDAC3.0</div>
+</td><td width="34%">
+<div class="Element2">
+<a href="contents.html" target="tocidx"><img src="btn_globals_contents_midblue.gif" border="0" alt="内容" title="内容" onmouseover="switchImage(this, 'btn_globals_contents_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_contents_midblue.gif');"></a><a href="idx.html" target="tocidx"><img src="btn_globals_index_midblue.gif" border="0" alt="索引" title="索引" onmouseover="switchImage(this, 'btn_globals_index_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_index_midblue.gif');"></a><a href="!!SYMREF.html" target="topic"><img src="btn_globals_reference_midblue.gif" border="0" alt="引用" title="引用" onmouseover="switchImage(this, 'btn_globals_reference_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_reference_midblue.gif');"></a><a href="index.html" target="topic"><img src="btn_globals_home_midblue.gif" border="0" alt="首页" title="首页" onmouseover="switchImage(this, 'btn_globals_home_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_home_midblue.gif');"></a></div>
+</td><td width="33%">
+<div class="Element90">
+<a href="qmemstatics_ResizeMaxBlockSize.html" target="topic"><img src="btn_prev_midblue.gif" border="0" alt="前一页" title="前一页" onmouseover="switchImage(this, 'btn_prev_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_prev_midblue.gif');"></a><a href="!!SYMREF.html" target="topic"><img src="btn_up_midblue.gif" border="0" alt="向上" title="向上" onmouseover="switchImage(this, 'btn_up_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_up_midblue.gif');"></a><a href="!!CLASSES_qmsgpack.html" target="topic"><img src="btn_next_midblue.gif" border="0" alt="下一页" title="下一页" onmouseover="switchImage(this, 'btn_next_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_next_midblue.gif');"></a></div>
+</td></tr></table><div class="Element5">
+qmsgpack 命名空间</div>
+<div class="Element7">
+<a href="!!SYMREF.html" target="topic">符号引用</a> | <a href="_qmsgpack_14_Legend.html" target="topic">图例</a> | <a href="_qmsgpack_14_Topics.html" target="topic">主题</a> | <a href="_qmsgpack_14_变量_(AutoDoc_Folder).html" target="topic">变量</a> | <a href="_qmsgpack_14_结构体、记录、枚举_(AutoDoc_Folder).html" target="topic">结构体、记录、枚举</a> | <a href="_qmsgpack_14_类_(AutoDoc_Folder).html" target="topic">类</a> | <a href="_qmsgpack_14_类型_(AutoDoc_Folder).html" target="topic">类型</a></div>
+<div class="Element731">
+<div class="Element730">
+<a href="#" onclick="ToggleAllElements('E7B1BB,E4B8BBE9A298,E7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE,E7B1BBE59E8B,E58F98E9878F,E58886E7BB84,E993BEE68EA5', 'linkToggleAllElements', 'imgToggleAllElements', '全部折叠', '全部展开');"><img src="btn_collapse.gif" border="0" alt="" title="" id="imgToggleAllElements"></a><a href="#" id="linkToggleAllElements" onclick="ToggleAllElements('E7B1BB,E4B8BBE9A298,E7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE,E7B1BBE59E8B,E58F98E9878F,E58886E7BB84,E993BEE68EA5', 'linkToggleAllElements', 'imgToggleAllElements', '全部折叠', '全部展开');">全部折叠</a></div>
+</div>
+</div>
+</div>
+
+<!-- End Page Header -->
+
+<!-- Begin Client Area -->
+<div class="Element720" id="areascroll">
+<div class="Element721">
+
+<!-- Begin Page Content -->
+<div class="Element58">
+<a name="E68F8FE8BFB0"></a><div class="Element11">
+<div class="Element10">
+<p class="Element10">
+QMsgPack 是 QDAC 项目组对 MessagePack 协议的封装实现，支持MessagePack官方规格表（<a href="#" onclick="openExternalLink('https://github.com/msgpack/msgpack/blob/master/spec.md');"><img src="indicator_external_link.gif" border="0" alt="" title="">链接</a>）的所有数据类型，包括扩展类型。&nbsp;</p>
+<p class="Element10">
+由于Delphi下MessagePack协议的实现较少，所以没有什么啥速度比较。我们目前提供了一个Demo供大家测试其性能，该文件位于 Demos\Delphi\VCL\QMsgPack 目录下，编译Demo，然后运行打开或保存时都会进行一个简单的性能评估，给您做参考。在我的计算机上，加载一个30多M的文件，用时不到1秒，参考下图： </p><p class="Element10" style="text-align: center;">
+<img src="QMsgPackLoadSpeed.png" border="0" alt="" title=""></p><p class="Element10">
+&nbsp;</p>
+<p class="Element10">
+QMsgPack单元使用需要以下文件支持：&nbsp;</p>
+<p class="Element10">
+● <a href="qdac_inc.html" target="topic">qdac.inc</a> - 公共编译选项配置文件&nbsp;</p>
+<p class="Element10">
+● <a href="qstring_pas.html" target="topic">qstring.pas</a> - QDAC 字符串及辅助函数单元&nbsp;</p>
+<p class="Element10">
+● <a href="qrbtree_pas.html" target="topic">qrbtree.pas</a> - 红黑树及哈希表实现单元&nbsp;</p>
+<p class="Element10">
+● <a href="qmsgpack_pas.html" target="topic">qmsgpack.pas</a> - QMsgPack主实现单元，它包括两个类：TQMsgPack和TQHashedMsgPack，两者的区别在于前者没有使用哈希针对查询进行全面优化，理论上查询性能要弱于后者，但相应的其它方面的开销也要小于后者。&nbsp;</p>
+<p class="Element10">
+QMsgPack的接口和QJSON几乎完全一致，您熟悉一个，另一个几乎不用学习就可以直接使用。而QXML的接口也与它们保持了基本一致，三个的学习一个，剩下的两个都可以触类旁通。</p></div>
+</div>
+<a name="E58886E7BB84"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E58886E7BB84');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE58886E7BB84">分组</a></div>
+<div id="divE58886E7BB84">
+<div class="Element11">
+<div class="Element10">
+<p class="Element10">
+<a href="!!SYMREF.html" target="topic">符号引用</a></p></div>
+</div>
+</div>
+<a name="E4B8BBE9A298"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E4B8BBE9A298');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE4B8BBE9A298">主题</a></div>
+<div id="divE4B8BBE9A298">
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="50%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="!!CLASSES_qmsgpack.html" target="topic">类</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+下表列出了本文档中的 类 。&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="!!RECORDS_qmsgpack.html" target="topic">结构体、记录、枚举</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+下表列出了本文档中的 结构体、记录、枚举 。&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="!!TYPES_qmsgpack.html" target="topic">类型</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+下表列出了本文档中的 类型 。&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="!!VARIABLES_qmsgpack.html" target="topic">变量</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+下表列出了本文档中的 变量 。&nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<a name="E58F98E9878F"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E58F98E9878F');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE58F98E9878F">变量</a></div>
+<div id="divE58F98E9878F">
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="50%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack_MsgPackCaseSensitive.html" target="topic">MsgPackCaseSensitive</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+在ItemByName/ItemByPath/ValueByName/ValueByPath等函数的判断中，是否区分名称大小写&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack_MsgPackDateFormat.html" target="topic">MsgPackDateFormat</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+日期类型转换为字符串时，这个变量控制如何格式化&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack_MsgPackDateTimeFormat.html" target="topic">MsgPackDateTimeFormat</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+日期时间类型转换为字符串时，这个变量控制如何格式化&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack_MsgPackRttiEnumAsInt.html" target="topic">MsgPackRttiEnumAsInt</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+指定如何处理RTTI中的枚举和集合类型&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack_MsgPackTimeFormat.html" target="topic">MsgPackTimeFormat</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+时间类型转换为字符串时，这个变量控制如何格式化&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack_OnQMsgPackCreate.html" target="topic">OnQMsgPackCreate</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+在需要新建一个TQMsgPack对象时触发&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack_OnQMsgPackFree.html" target="topic">OnQMsgPackFree</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+在需要释放一个TQMsgPack对象时触发&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack_QMsgPackPathDelimiter.html" target="topic">QMsgPackPathDelimiter</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+未提供变量 qmsgpack.QMsgPackPathDelimiter 的相关说明。&nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<a name="E7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE">结构体、记录、枚举</a></div>
+<div id="divE7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE">
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element201">
+ &nbsp;</div></td><td class="Element200" valign="top" width="40%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_enum.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qmsgpack_TQMsgPackType.html" target="topic">TQMsgPackType</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+MessagePack 结点数据类型列表&nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<a name="E7B1BB"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E7B1BB');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE7B1BB">类</a></div>
+<div id="divE7B1BB">
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element201">
+ &nbsp;</div></td><td class="Element200" valign="top" width="40%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_class.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qmsgpack_TQHashedMsgPack.html" target="topic">TQHashedMsgPack</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+未提供类 qmsgpack.TQHashedMsgPack 相关说明。&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_class.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qmsgpack_TQMsgPack.html" target="topic">TQMsgPack</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+未提供类 qmsgpack.TQMsgPack 相关说明。&nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<a name="E7B1BBE59E8B"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E7B1BBE59E8B');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE7B1BBE59E8B">类型</a></div>
+<div id="divE7B1BBE59E8B">
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="50%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack_PQMsgPack.html" target="topic">PQMsgPack</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+未提供类型 qmsgpack.PQMsgPack 的相关说明。&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack_TQMsgPackCreateEvent.html" target="topic">TQMsgPackCreateEvent</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+用于外部支持对象池的函数，创建一个新的TQMsgPack对象，注意从池中创建的对象&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack_TQMsgPackFilterEvent.html" target="topic">TQMsgPackFilterEvent</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+结点过滤处理函数，以在XE6上支持匿名函数 &nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack_TQMsgPackFilterEventA.html" target="topic">TQMsgPackFilterEventA</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+结点过滤处理函数，以在XE6上支持匿名函数 &nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack_TQMsgPackFreeEvent.html" target="topic">TQMsgPackFreeEvent</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+用于外部将对象缓存，以便重用对象&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack_TQMsgPackList.html" target="topic">TQMsgPackList</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+未提供类型 qmsgpack.TQMsgPackList 的相关说明。&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack_TQMsgPackRttiFilterEvent.html" target="topic">TQMsgPackRttiFilterEvent</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+RTTI信息过滤回调函数，在XE6上支持匿名函数，在XE及以前的版本采用事件回调 &nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack_TQMsgPackRttiFilterEventA.html" target="topic">TQMsgPackRttiFilterEventA</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+RTTI信息过滤回调函数，在XE6上支持匿名函数，在XE及以前的版本采用事件回调 &nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<a name="4C696E6B73"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E993BEE68EA5');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE993BEE68EA5">链接</a></div>
+<div id="divE993BEE68EA5">
+<div class="Element11">
+<div class="Element10">
+<a href="!!SYMREF.html" target="topic">符号引用</a>, <a href="_qmsgpack_14_Legend.html" target="topic">图例</a>, <a href="_qmsgpack_14_Topics.html" target="topic">主题</a>, <a href="_qmsgpack_14_变量_(AutoDoc_Folder).html" target="topic">变量</a>, <a href="_qmsgpack_14_结构体、记录、枚举_(AutoDoc_Folder).html" target="topic">结构体、记录、枚举</a>, <a href="_qmsgpack_14_类_(AutoDoc_Folder).html" target="topic">类</a>, <a href="_qmsgpack_14_类型_(AutoDoc_Folder).html" target="topic">类型</a></div>
+</div>
+</div>
+</div>
+<!-- End Page Content -->
+
+<!-- Begin Page Footer -->
+<div class="Element93">
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr><td width="100%">
+<div class="Element3">
+ (c) 2012-2014  版权所有，QDAC开发组</div>
+</td></tr><tr><td width="100%">
+<div class="Element97">
+你对此主题有何想法? <a href="#" onclick="sendFeedback('chinawsb@sina.com', '文档反馈', 'Project: QDAC3.0%0ATopic ID: qmsgpack%0ATitle: qmsgpack 命名空间');">  发送反馈! </a></div>
+</td></tr></table></div>
+
+<!-- End Page Footer -->
+</div>
+</div>
+
+<!-- End Client Area -->
+</body></html>

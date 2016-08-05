@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899-12-30 00:00:00.000.316,E:\WG\BCB\命令行编译\Unit1.dfm=E:\WG\我的文档\Documents\Embarcadero\Studio\Projects\Unit1.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.316,E:\WG\BCB\命令行编译\Unit1.h=E:\WG\我的文档\Documents\Embarcadero\Studio\Projects\Unit1.h</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.672,E:\WG\BCB\命令行编译\CompilerTool.cbproj=E:\WG\我的文档\Documents\Embarcadero\Studio\Projects\Project1.cbproj</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.740,E:\WG\BCB\命令行编译\Unit2.h=E:\WG\我的文档\Documents\Embarcadero\Studio\Projects\Unit2.h</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.355,E:\WG\BCB\命令行编译\Unit3.dfm=E:\WG\我的文档\Documents\Embarcadero\Studio\Projects\Unit3.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.740,E:\WG\BCB\命令行编译\Unit2.dfm=E:\WG\我的文档\Documents\Embarcadero\Studio\Projects\Unit2.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.355,E:\WG\BCB\命令行编译\Unit3.h=E:\WG\我的文档\Documents\Embarcadero\Studio\Projects\Unit3.h</Transaction>
+  </Transactions>
+</BorlandProject>

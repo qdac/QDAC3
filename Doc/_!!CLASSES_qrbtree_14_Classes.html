@@ -1,0 +1,107 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN">
+<html>
+<head>
+<title>类 类</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="generator" content="Doc-O-Matic" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <link rel="STYLESHEET" href="default.css" type="text/css" />
+
+<script type="text/javascript" src="scripts.js"></script>
+</head>
+<body class="Element700" onload="onBodyLoadEx('frames.html', 'topic', '_!!CLASSES_qrbtree_14_Classes.html');" onmousedown="onBodyMouseDown();">
+
+<!-- Begin Popups -->
+
+<!-- End Popups -->
+
+<!-- Begin Page Header -->
+<div class="Element710" id="areafixed">
+<div class="Element94">
+<em>当前位置:</em> <a href="!!SYMREF.html" target="topic">符号引用</a> &gt; <a href="qrbtree.html" target="topic">qrbtree 命名空间</a> &gt; <a href="!!CLASSES_qrbtree.html" target="topic">类</a></div>
+<div class="Element92">
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr><td width="33%">
+<div class="Element1">
+QDAC3.0</div>
+</td><td width="34%">
+<div class="Element2">
+<a href="contents.html" target="tocidx"><img src="btn_globals_contents_midblue.gif" border="0" alt="内容" title="内容" onmouseover="switchImage(this, 'btn_globals_contents_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_contents_midblue.gif');"></a><a href="idx.html" target="tocidx"><img src="btn_globals_index_midblue.gif" border="0" alt="索引" title="索引" onmouseover="switchImage(this, 'btn_globals_index_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_index_midblue.gif');"></a><a href="!!SYMREF.html" target="topic"><img src="btn_globals_reference_midblue.gif" border="0" alt="引用" title="引用" onmouseover="switchImage(this, 'btn_globals_reference_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_reference_midblue.gif');"></a><a href="index.html" target="topic"><img src="btn_globals_home_midblue.gif" border="0" alt="首页" title="首页" onmouseover="switchImage(this, 'btn_globals_home_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_home_midblue.gif');"></a></div>
+</td><td width="33%">
+</td></tr></table><div class="Element27">
+类 类</div>
+<div class="Element28">
+<a href="!!CLASSES_qrbtree.html" target="topic">类</a> | <a href="_!!CLASSES_qrbtree_14_Classes_Classes.html" target="topic">图例</a></div>
+</div>
+</div>
+
+<!-- End Page Header -->
+
+<!-- Begin Client Area -->
+<div class="Element720" id="areascroll">
+<div class="Element721">
+
+<!-- Begin Page Content -->
+<div class="Element58">
+<div class="Element14">
+类</div>
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element201">
+ &nbsp;</div></td><td class="Element200" valign="top" width="40%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_class.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qrbtree_TQHashTable.html" target="topic">TQHashTable</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+哈希表用于存贮一些用于查询的散列数据，哈希表的效率取决于合适的桶大小和合适 的哈希函数，理想情况下的最佳效率是O(1)。 1.添加 调用Add函数添加一个元素进去，如果要防止重复添加先调用Find函数检查下。 2.删除 调用Delete函数完成删除 3.查找 查找是哈希表的最重要函数，查找之前请设置OnCompare函数，以便比较Data关联的内容 的值，否则，系统将只比较Data指针的地址是否一致。&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_class.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qrbtree_TQHashTableIterator.html" target="topic">TQHashTableIterator</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+未提供类 qrbtree.TQHashTableIterator 相关说明。&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_class.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qrbtree_TQRBNode.html" target="topic">TQRBNode</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+TQRBNode是一个红黑树结点记录，与Linux代码相比，增加了一个Data成员 来直接保存外部数据指针，原打算象VirtualTreeView一样设置一个DataSize，后来 觉得反正要分配两次内存，没多大区别就放弃了，当然，如果改成record的话，应该 能少一次内存分配，暂时先不做此优化，将来再说(record+record helper)。 &nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_class.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qrbtree_TQRBTree.html" target="topic">TQRBTree</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+红黑树Delphi对象封装&nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<!-- End Page Content -->
+
+<!-- Begin Page Footer -->
+<div class="Element93">
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr><td width="100%">
+<div class="Element3">
+ (c) 2012-2014  版权所有，QDAC开发组</div>
+</td></tr></table></div>
+
+<!-- End Page Footer -->
+</div>
+</div>
+
+<!-- End Client Area -->
+</body></html>

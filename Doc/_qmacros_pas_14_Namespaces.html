@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN">
+<html>
+<head>
+<title>qmacros.pas 命名空间</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="generator" content="Doc-O-Matic" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <link rel="STYLESHEET" href="default.css" type="text/css" />
+
+<script type="text/javascript" src="scripts.js"></script>
+</head>
+<body class="Element700" onload="onBodyLoadEx('frames.html', 'topic', '_qmacros_pas_14_Namespaces.html');" onmousedown="onBodyMouseDown();">
+
+<!-- Begin Popups -->
+
+<!-- End Popups -->
+
+<!-- Begin Page Header -->
+<div class="Element710" id="areafixed">
+<div class="Element94">
+<em>当前位置:</em> <a href="!!SYMREF.html" target="topic">符号引用</a> &gt; <a href="!!FILES.html" target="topic">文件</a> &gt; <a href="qmacros_pas.html" target="topic">qmacros.pas</a></div>
+<div class="Element92">
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr><td width="33%">
+<div class="Element1">
+QDAC3.0</div>
+</td><td width="34%">
+<div class="Element2">
+<a href="contents.html" target="tocidx"><img src="btn_globals_contents_midblue.gif" border="0" alt="内容" title="内容" onmouseover="switchImage(this, 'btn_globals_contents_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_contents_midblue.gif');"></a><a href="idx.html" target="tocidx"><img src="btn_globals_index_midblue.gif" border="0" alt="索引" title="索引" onmouseover="switchImage(this, 'btn_globals_index_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_index_midblue.gif');"></a><a href="!!SYMREF.html" target="topic"><img src="btn_globals_reference_midblue.gif" border="0" alt="引用" title="引用" onmouseover="switchImage(this, 'btn_globals_reference_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_reference_midblue.gif');"></a><a href="index.html" target="topic"><img src="btn_globals_home_midblue.gif" border="0" alt="首页" title="首页" onmouseover="switchImage(this, 'btn_globals_home_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_home_midblue.gif');"></a></div>
+</td><td width="33%">
+</td></tr></table><div class="Element27">
+qmacros.pas 命名空间</div>
+<div class="Element28">
+<a href="qmacros_pas.html" target="topic">qmacros.pas</a></div>
+</div>
+</div>
+
+<!-- End Page Header -->
+
+<!-- Begin Client Area -->
+<div class="Element720" id="areascroll">
+<div class="Element721">
+
+<!-- Begin Page Content -->
+<div class="Element58">
+<div class="Element14">
+命名空间</div>
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="50%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmacros.html" target="topic">qmacros</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+QMacros是QDAC的一个新的组成部分，采用宏定义的方式来快速替换复杂的文本内容模板。如下面的一句话：<br>My Name is &lt;%Name%&gt;,Please call me &lt;%FirstName%&gt;<br>我们定义如下宏：<br>Name =&gt;Jone Stand<br>FirstName =&gt; Jone<br>使用QMacros执行下面的替换操作后：<br><span class="Element146">AMacroMgr := TQMacroManager.Create;</span><br><span class="Element146">AMacroMgr.Push('Name',Jone Stand');</span><br><span class="Element146">AMacroMgr.Push('FirstName','Jone');</span><br><span class="Element146">S:=AMacroMgr.Replace('My Name is &lt;%Name%&gt;,Please call me &lt;%FirstName%&gt;', '&lt;%','%&gt;',0);</span><br><span class="Element146"> </span>此时字符串S的值即为：<br>My Name is Jone Stand,Please call me Jone<br>QMacros的特色在于：<br>● 支持在替换时自定义宏的起始和结束字符串，两者可以一样，也可以不一样，但一定要保证宏定义中间不会出现该字符；<br>● 采用栈式管理，使用使用宏最后入栈的值替换，当不使用新值时，可以出栈恢复末次的值；<br>● 支持保存点功能，可以设置保存点并在其后多次入栈新的宏定义，只需要在最后还原到保存的保存点，就可以恢复所有保存点保存时的宏定义原状；<br>● 支持大小写区分和忽略大小写两种处理模式；<br>● 支持动态取值宏定义（相当于简单的函数），可以让宏定义每次替换时对应不同的值；<br>● 使用二分法查找宏定义名称，更快的解析替换速度；<br>● 支持模板预编译，方便一次编译，多次替换；&nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<!-- End Page Content -->
+
+<!-- Begin Page Footer -->
+<div class="Element93">
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr><td width="100%">
+<div class="Element3">
+ (c) 2012-2014  版权所有，QDAC开发组</div>
+</td></tr></table></div>
+
+<!-- End Page Footer -->
+</div>
+</div>
+
+<!-- End Client Area -->
+</body></html>

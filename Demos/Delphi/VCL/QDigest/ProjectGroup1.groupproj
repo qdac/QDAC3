@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{172FB917-4E88-4C20-B935-02BFBBE3770C}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="digestdemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="C:\temp\Project2.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="digestdemo">
+        <MSBuild Projects="digestdemo.dproj"/>
+    </Target>
+    <Target Name="digestdemo:Clean">
+        <MSBuild Projects="digestdemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="digestdemo:Make">
+        <MSBuild Projects="digestdemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Project2">
+        <MSBuild Projects="C:\temp\Project2.dproj"/>
+    </Target>
+    <Target Name="Project2:Clean">
+        <MSBuild Projects="C:\temp\Project2.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Project2:Make">
+        <MSBuild Projects="C:\temp\Project2.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="digestdemo;Project2"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="digestdemo:Clean;Project2:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="digestdemo:Make;Project2:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

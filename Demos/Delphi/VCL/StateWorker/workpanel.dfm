@@ -1,0 +1,37 @@
+object frmWork: TfrmWork
+  Left = 0
+  Top = 0
+  BorderStyle = bsNone
+  Caption = #24037#20316#38754#26495
+  ClientHeight = 48
+  ClientWidth = 463
+  Color = clBackground
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Label1: TLabel
+    AlignWithMargins = True
+    Left = 3
+    Top = 3
+    Width = 457
+    Height = 42
+    Align = alClient
+    Caption = #24403#21069#26102#38388':'
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clYellow
+    Font.Height = -19
+    Font.Name = #24494#36719#38597#40657
+    Font.Style = []
+    ParentFont = False
+    Layout = tlCenter
+    ExplicitWidth = 81
+    ExplicitHeight = 25
+  end
+end

@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN">
+<html>
+<head>
+<title>引言</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="generator" content="Doc-O-Matic" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <link rel="STYLESHEET" href="default.css" type="text/css" />
+
+<script type="text/javascript" src="scripts.js"></script>
+</head>
+<body class="Element700" onload="onBodyLoadEx('frames.html', 'topic', '引言.html');" onmousedown="onBodyMouseDown();">
+
+<!-- Begin Popups -->
+
+<!-- End Popups -->
+
+<!-- Begin Page Header -->
+<div class="Element710" id="areafixed">
+<div class="Element94">
+<em>当前位置:</em> <a href="!!SYMREF.html" target="topic">符号引用</a> &gt; <a href="qworker.html" target="topic">qworker 命名空间</a> &gt; <a href="QuickStart.html" target="topic">快速入门指南</a> &gt; <a href="引言.html" target="topic">引言</a></div>
+<div class="Element92">
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr><td width="33%">
+<div class="Element1">
+QDAC3.0</div>
+</td><td width="34%">
+<div class="Element2">
+<a href="contents.html" target="tocidx"><img src="btn_globals_contents_midblue.gif" border="0" alt="内容" title="内容" onmouseover="switchImage(this, 'btn_globals_contents_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_contents_midblue.gif');"></a><a href="idx.html" target="tocidx"><img src="btn_globals_index_midblue.gif" border="0" alt="索引" title="索引" onmouseover="switchImage(this, 'btn_globals_index_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_index_midblue.gif');"></a><a href="!!SYMREF.html" target="topic"><img src="btn_globals_reference_midblue.gif" border="0" alt="引用" title="引用" onmouseover="switchImage(this, 'btn_globals_reference_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_reference_midblue.gif');"></a><a href="index.html" target="topic"><img src="btn_globals_home_midblue.gif" border="0" alt="首页" title="首页" onmouseover="switchImage(this, 'btn_globals_home_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_home_midblue.gif');"></a></div>
+</td><td width="33%">
+<div class="Element90">
+<a href="QuickStart.html" target="topic"><img src="btn_prev_midblue.gif" border="0" alt="前一页" title="前一页" onmouseover="switchImage(this, 'btn_prev_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_prev_midblue.gif');"></a><a href="QuickStart.html" target="topic"><img src="btn_up_midblue.gif" border="0" alt="向上" title="向上" onmouseover="switchImage(this, 'btn_up_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_up_midblue.gif');"></a><a href="qxml.html" target="topic"><img src="btn_next_midblue.gif" border="0" alt="下一页" title="下一页" onmouseover="switchImage(this, 'btn_next_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_next_midblue.gif');"></a></div>
+</td></tr></table><div class="Element5">
+引言</div>
+<div class="Element7">
+<a href="QuickStart.html" target="topic">快速入门指南</a></div>
+<div class="Element731">
+<div class="Element730">
+<a href="#" onclick="ToggleAllElements('E58886E7BB84,E993BEE68EA5', 'linkToggleAllElements', 'imgToggleAllElements', '全部折叠', '全部展开');"><img src="btn_collapse.gif" border="0" alt="" title="" id="imgToggleAllElements"></a><a href="#" id="linkToggleAllElements" onclick="ToggleAllElements('E58886E7BB84,E993BEE68EA5', 'linkToggleAllElements', 'imgToggleAllElements', '全部折叠', '全部展开');">全部折叠</a></div>
+</div>
+</div>
+</div>
+
+<!-- End Page Header -->
+
+<!-- Begin Client Area -->
+<div class="Element720" id="areascroll">
+<div class="Element721">
+
+<!-- Begin Page Content -->
+<div class="Element58">
+<a name="E68F8FE8BFB0"></a><div class="Element11">
+<div class="Element10">
+<p class="Element10">
+QWorker 是 QDAC 项目带给大家的一套多线程并行编程框架。它基于作业的视角来规划作业多线程编程，简化多线程编程的步骤和方法和交互手法。&nbsp;</p>
+<p class="Element10">
+首先，我们要明白我们为什么需要多线程并行编程？&nbsp;</p>
+<p class="Element10">
+我们之所以使用多线程编程，一般目的不外乎下面两个：&nbsp;</p>
+<p class="Element10">
+1、避免程序界面假死带来的恶劣用户体验。&nbsp;</p>
+<p class="Element10">
+2、充分利用现代计算机的处理资源，来加快业务的处理速度。&nbsp;</p>
+<p class="Element10">
+当然，您可能有更好更多的理由来做多线程编程，但上面的这两个理由对于一般的人来说足够了。&nbsp;</p>
+<p class="Element10">
+接下来，一个新的问题来了，我们为什么要什么 QWorker 而不是系统自带的多线程框架来编程？&nbsp;</p>
+<p class="Element10">
+这个理由实际上很简单，使用 QWorker 会进一步简化你的编程逻辑的设计，使你更专注于业务流程的规划和实现，而不去管理线程池及处理资源的调度问题。&nbsp;</p>
+<p class="Element10">
+那么，什么是作业？&nbsp;</p>
+<p class="Element10">
+在 QWorker 中，所谓的作业就是一个逻辑上的业务处理单元。我们要实现一个复杂的任务时，可以将其分解成一到多个小的任务，每个任务由一个函数来管理，这个函数我们就可以将其理解为一项作业，而这些函数的组合就构成了一个作业分组。作业我们可以让其运行在主线程或者后台线程，注意一点，主线程不适合进行长时间作业，那样会造成主线程阻塞，造成假死的现象，影响用户体验。&nbsp;</p>
+<p class="Element10">
+现在看看，QWorker 为我们提供了什么呢？&nbsp;</p>
+<p class="Element10">
+1、一个跨平台的异步执行体系&nbsp;</p>
+<p class="Element10">
+一旦我们通过 Workers.Post 直接来投寄一个异步作业，这个作业将在后台被计划执行。&nbsp;</p>
+<p class="Element10">
+2、一个跨平台的计划任务框架&nbsp;</p>
+<p class="Element10">
+通过 At 函数，可以满足作业定时执行的需求。&nbsp;</p>
+<p class="Element10">
+3、一个高精度的后台线程定时器&nbsp;</p>
+<p class="Element10">
+通过 Post 时设置重复间隔，可以简单的生成一个定时重复作业，实现后台线程定时器的效果。&nbsp;</p>
+<p class="Element10">
+4、一个松散耦合的业务框架&nbsp;</p>
+<p class="Element10">
+通过信号建立不同模块的不同单元的联系，可以很好的实现模块间的松散耦合和自动触发。&nbsp;</p>
+<p class="Element10">
+5、一个流程管理框架&nbsp;</p>
+<p class="Element10">
+通过作业组（TQJobGroup）可以将多个作业管理在一起，然后串行或并行执行，并在全部作业执行完成时，得到相应的事件通知，当然也可以等待全部作业执行完成。&nbsp;</p>
+<p class="Element10">
+6、一个并行操作引擎&nbsp;</p>
+<p class="Element10">
+通过 Workers.For 可以并行循环执行同一个过程，而直接Post到后台的作业，也会被计划成并行执行。&nbsp;</p>
+<p class="Element10">
+7、一个线程池&nbsp;</p>
+<p class="Element10">
+QWorker 提供了一个自动管理线程生命周期的线程池。当然如上所述，它的功能远不止于此。&nbsp;</p>
+<p class="Element10">
+我们接下来，从现实的逻辑上来对比以加深 QWorker 体系的理解。我们先将其中的触角分配一下：&nbsp;</p>
+<p class="Element10">
+作业（JOB） – 用户交付要完成的任务&nbsp;</p>
+<p class="Element10">
+工作者（Worker）- 完成任务的工人&nbsp;</p>
+<p class="Element10">
+作业管理器（Workers）- 包工头&nbsp;</p>
+<p class="Element10">
+首先，包工头会雇佣少数固定工人以完成基本的工作，它的数量，在 QWorker 中，由 Workers.MinWorkers 决定，默认值为2，不能小于1。没有这些工人，一旦有作业过来，包工头得现招人，显然很浪费时间，而如果始终养着一帮工人，对于包工头来说，显然投资（资源占用）太大。一旦作业多了，忙不过来怎么办，那就需要招聘新工人来解决了所有工人的数量由 Workers.MaxWorkers属性来决定，默认是CPU 核心数*2+1。但长期养着那么多临时工是不可能的，但立即解雇显然也不好（万一后面紧接着有新作业到来还得现雇），所以包工头会在一段时间没活后，将尽量解雇工人直到达到 Workers.MinWorkers 指定的限制，以减少投资。这个时间，由 Workers.FireTimeout 来决定，默认是15秒。&nbsp;</p>
+<p class="Element10">
+当作业被用户交付给包工头后，根据作业的不同，需要包工头在不同的时间点安排工人去执行。到了执行的时候，包工头会从现在雇佣的工人中，找有没有空闲的工人，如果有，直接交付处理，如果没有，则雇佣新的工人来完成作业。&nbsp;</p>
+<p class="Element10">
+在后面的章节，我们将进一步分析和了解如何使用 QWorker 进行多线程编程。</p></div>
+</div>
+<a name="E58886E7BB84"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E58886E7BB84');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE58886E7BB84">分组</a></div>
+<div id="divE58886E7BB84">
+<div class="Element11">
+<div class="Element10">
+<p class="Element10">
+<a href="QuickStart.html" target="topic">快速入门指南</a></p></div>
+</div>
+</div>
+<a name="4C696E6B73"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E993BEE68EA5');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE993BEE68EA5">链接</a></div>
+<div id="divE993BEE68EA5">
+<div class="Element11">
+<div class="Element10">
+<a href="QuickStart.html" target="topic">快速入门指南</a></div>
+</div>
+</div>
+</div>
+<!-- End Page Content -->
+
+<!-- Begin Page Footer -->
+<div class="Element93">
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr><td width="100%">
+<div class="Element3">
+ (c) 2012-2014  版权所有，QDAC开发组</div>
+</td></tr><tr><td width="100%">
+<div class="Element97">
+你对此主题有何想法? <a href="#" onclick="sendFeedback('chinawsb@sina.com', '文档反馈', 'Project: QDAC3.0%0ATopic ID: 引言%0ATitle: 引言');">  发送反馈! </a></div>
+</td></tr></table></div>
+
+<!-- End Page Footer -->
+</div>
+</div>
+
+<!-- End Client Area -->
+</body></html>

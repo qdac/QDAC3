@@ -1,0 +1,350 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN">
+<html>
+<head>
+<title>qaes 命名空间</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="generator" content="Doc-O-Matic" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <link rel="STYLESHEET" href="default.css" type="text/css" />
+
+<script type="text/javascript" src="scripts.js"></script>
+</head>
+<body class="Element700" onload="onBodyLoadEx('frames.html', 'topic', 'qaes.html');" onmousedown="onBodyMouseDown();">
+
+<!-- Begin Popups -->
+
+<!-- End Popups -->
+
+<!-- Begin Page Header -->
+<div class="Element710" id="areafixed">
+<div class="Element94">
+<em>当前位置:</em> <a href="!!SYMREF.html" target="topic">符号引用</a> &gt; <a href="qaes.html" target="topic">qaes 命名空间</a></div>
+<div class="Element92">
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr><td width="33%">
+<div class="Element1">
+QDAC3.0</div>
+</td><td width="34%">
+<div class="Element2">
+<a href="contents.html" target="tocidx"><img src="btn_globals_contents_midblue.gif" border="0" alt="内容" title="内容" onmouseover="switchImage(this, 'btn_globals_contents_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_contents_midblue.gif');"></a><a href="idx.html" target="tocidx"><img src="btn_globals_index_midblue.gif" border="0" alt="索引" title="索引" onmouseover="switchImage(this, 'btn_globals_index_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_index_midblue.gif');"></a><a href="!!SYMREF.html" target="topic"><img src="btn_globals_reference_midblue.gif" border="0" alt="引用" title="引用" onmouseover="switchImage(this, 'btn_globals_reference_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_reference_midblue.gif');"></a><a href="index.html" target="topic"><img src="btn_globals_home_midblue.gif" border="0" alt="首页" title="首页" onmouseover="switchImage(this, 'btn_globals_home_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_home_midblue.gif');"></a></div>
+</td><td width="33%">
+<div class="Element90">
+<a href="!!SYMREF.html" target="topic"><img src="btn_prev_midblue.gif" border="0" alt="前一页" title="前一页" onmouseover="switchImage(this, 'btn_prev_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_prev_midblue.gif');"></a><a href="!!SYMREF.html" target="topic"><img src="btn_up_midblue.gif" border="0" alt="向上" title="向上" onmouseover="switchImage(this, 'btn_up_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_up_midblue.gif');"></a><a href="!!CLASSES_qaes.html" target="topic"><img src="btn_next_midblue.gif" border="0" alt="下一页" title="下一页" onmouseover="switchImage(this, 'btn_next_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_next_midblue.gif');"></a></div>
+</td></tr></table><div class="Element5">
+qaes 命名空间</div>
+<div class="Element7">
+<a href="!!SYMREF.html" target="topic">符号引用</a> | <a href="_qaes_14_Legend.html" target="topic">图例</a> | <a href="_qaes_14_Topics.html" target="topic">主题</a> | <a href="_qaes_14_变量_(AutoDoc_Folder).html" target="topic">变量</a> | <a href="_qaes_14_函数_(AutoDoc_Folder).html" target="topic">函数</a> | <a href="_qaes_14_结构体、记录、枚举_(AutoDoc_Folder).html" target="topic">结构体、记录、枚举</a> | <a href="_qaes_14_类_(AutoDoc_Folder).html" target="topic">类</a></div>
+<div class="Element731">
+<div class="Element730">
+<a href="#" onclick="ToggleAllElements('E7B1BB,E4B8BBE9A298,E587BDE695B0,E7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE,E58F98E9878F,E58886E7BB84,E993BEE68EA5', 'linkToggleAllElements', 'imgToggleAllElements', '全部折叠', '全部展开');"><img src="btn_collapse.gif" border="0" alt="" title="" id="imgToggleAllElements"></a><a href="#" id="linkToggleAllElements" onclick="ToggleAllElements('E7B1BB,E4B8BBE9A298,E587BDE695B0,E7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE,E58F98E9878F,E58886E7BB84,E993BEE68EA5', 'linkToggleAllElements', 'imgToggleAllElements', '全部折叠', '全部展开');">全部折叠</a></div>
+</div>
+</div>
+</div>
+
+<!-- End Page Header -->
+
+<!-- Begin Client Area -->
+<div class="Element720" id="areascroll">
+<div class="Element721">
+
+<!-- Begin Page Content -->
+<div class="Element58">
+<a name="E68F8FE8BFB0"></a><div class="Element11">
+<div class="Element10">
+<p class="Element10">
+本单元基于EldoS, Alexander Ionov的EIAES重装封装改动而来，特别感谢！&nbsp;</p>
+<p class="Element10">
+AES加密是一种对称加密，理论上密文与原文长度一致，但由于AES是基于块加密的，所以产生的密文长度实际上是16的整数倍，不足的部分被填充为#0。所以如果要准确还原加密 前的数据，你在保存时，应保存下其原始长度，以便解密后，对长度进行截断。 为了方便上层用户，本单元提供了一个全局变量AlignAESBlockSize，为False时，将自动截断。&nbsp;</p>
+<p class="Element10">
+&nbsp;</p>
+<p class="Element10">
+关于CBC和EBC&nbsp;</p>
+<p class="Element10">
+EBC是最原始的加密方法，CBC引入了初始化向量来与原始数据先异或再执行EBC相同的加密&nbsp;</p>
+<p class="Element10">
+操作，理论上CBC更安全一点点。</p></div>
+</div>
+<a name="E58886E7BB84"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E58886E7BB84');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE58886E7BB84">分组</a></div>
+<div id="divE58886E7BB84">
+<div class="Element11">
+<div class="Element10">
+<p class="Element10">
+<a href="!!SYMREF.html" target="topic">符号引用</a></p></div>
+</div>
+</div>
+<a name="E4B8BBE9A298"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E4B8BBE9A298');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE4B8BBE9A298">主题</a></div>
+<div id="divE4B8BBE9A298">
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="50%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="!!CLASSES_qaes.html" target="topic">类</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+下表列出了本文档中的 类 。&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="!!FUNCTIONS_qaes.html" target="topic">函数</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+下表列出了本文档中的 函数 。&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="!!RECORDS_qaes.html" target="topic">结构体、记录、枚举</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+下表列出了本文档中的 结构体、记录、枚举 。&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="!!VARIABLES_qaes.html" target="topic">变量</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+下表列出了本文档中的 变量 。&nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<a name="E58F98E9878F"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E58F98E9878F');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE58F98E9878F">变量</a></div>
+<div id="divE58F98E9878F">
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="50%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qaes_AESEmptyBuffer.html" target="topic">AESEmptyBuffer</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+全局的空白的TQAESBuffer类型的缓冲区，用于为参数提供默认值&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qaes_AlignAESBlockSize.html" target="topic">AlignAESBlockSize</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+是否对齐AES块大小，如果对齐，则输出加密结果时，目标数据的长度会变为大于原始长度的最小的16的整数部，否则，和原始数据长度一致。&nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<a name="E587BDE695B0"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E587BDE695B0');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE587BDE695B0">函数</a></div>
+<div id="divE587BDE695B0">
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element201">
+ &nbsp;</div></td><td class="Element200" valign="top" width="40%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_method.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_AESDecrypt@QStringW@QStringW@TQAESBuffer@QStringW@TQAESKeyType@TQAESEncryptMode.html" target="topic">AESDecrypt</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This is function qaes.AESDecrypt.&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_method.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_AESDecrypt@TBytes@TQAESBuffer@QStringW@TQAESKeyType@TQAESEncryptMode@Boolean.html" target="topic">AESDecrypt</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This is function qaes.AESDecrypt.&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_method.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_AESDecrypt@TBytes@TQAESBuffer@TBytes@QStringW@TQAESKeyType@TQAESEncryptMode.html" target="topic">AESDecrypt</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This is function qaes.AESDecrypt.&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_method.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_AESDecrypt@TBytes@TQAESBuffer@TBytes@TQAESKey@TQAESEncryptMode.html" target="topic">AESDecrypt</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+解密函数&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_method.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_AESDecrypt@TStream@TStream@TQAESBuffer@QStringW@TQAESKeyType@TQAESEncryptMode.html" target="topic">AESDecrypt</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This is function qaes.AESDecrypt.&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_method.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_AESEncrypt@Pointer@Integer@TQAESBuffer@TBytes@QStringW@TQAESKeyType@TQAESEncryptMode.html" target="topic">AESEncrypt</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This is function qaes.AESEncrypt.&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_method.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_AESEncrypt@QStringW@QStringW@TQAESBuffer@QStringW@TQAESKeyType@TQAESEncryptMode.html" target="topic">AESEncrypt</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This is function qaes.AESEncrypt.&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_method.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_AESEncrypt@QStringW@TQAESBuffer@TBytes@QStringW@TQAESKeyType@TQAESEncryptMode.html" target="topic">AESEncrypt</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This is function qaes.AESEncrypt.&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_method.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_AESEncrypt@TBytes@TQAESBuffer@TBytes@QStringW@TQAESKeyType@TQAESEncryptMode.html" target="topic">AESEncrypt</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This is function qaes.AESEncrypt.&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_method.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_AESEncrypt@TStream@TStream@TQAESBuffer@QStringW@TQAESKeyType@TQAESEncryptMode.html" target="topic">AESEncrypt</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This is function qaes.AESEncrypt.&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_method.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_AESEncrypt@TStream@TStream@TQAESBuffer@TQAESKey@TQAESEncryptMode.html" target="topic">AESEncrypt</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+加密函数,AInitVector(初始化向量)只是用于CBC模式，如果是ECB模式，它被忽略， 直接传AESEmptyBuffer就可以。在CBC模式下，加密和解决的初始化向量必需一致&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_method.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_AESEncryptSize@Int64.html" target="topic">AESEncryptSize</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+计算加密后的内容大小，由于AES属于对称加密算法，但约定尺寸必是16的整数倍 返回结果为((ASize/16)+1)*16&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_method.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_KeyFromBytes@Pointer@Integer@TQAESKeyType@TQAESKey.html" target="topic">KeyFromBytes</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+密钥转换函数&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_method.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_KeyFromBytes@TBytes@TQAESKeyType.html" target="topic">KeyFromBytes</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This is function qaes.KeyFromBytes.&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_method.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_KeyFromString@QStringW@TQAESKeyType.html" target="topic">KeyFromString</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+This is function qaes.KeyFromString.&nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<a name="E7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE">结构体、记录、枚举</a></div>
+<div id="divE7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE">
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element201">
+ &nbsp;</div></td><td class="Element200" valign="top" width="40%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_enum.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_TQAESEncryptMode.html" target="topic">TQAESEncryptMode</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+AES加密模式&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_enum.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_TQAESKeyType.html" target="topic">TQAESKeyType</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+AES加密的密钥强度类型&nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<a name="E7B1BB"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E7B1BB');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE7B1BB">类</a></div>
+<div id="divE7B1BB">
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element201">
+ &nbsp;</div></td><td class="Element200" valign="top" width="40%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_structure.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qaes_TQAES.html" target="topic">TQAES</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+用于简化AES加密和解密操作而封装的记录&nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<a name="4C696E6B73"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E993BEE68EA5');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE993BEE68EA5">链接</a></div>
+<div id="divE993BEE68EA5">
+<div class="Element11">
+<div class="Element10">
+<a href="!!SYMREF.html" target="topic">符号引用</a>, <a href="_qaes_14_Legend.html" target="topic">图例</a>, <a href="_qaes_14_Topics.html" target="topic">主题</a>, <a href="_qaes_14_变量_(AutoDoc_Folder).html" target="topic">变量</a>, <a href="_qaes_14_函数_(AutoDoc_Folder).html" target="topic">函数</a>, <a href="_qaes_14_结构体、记录、枚举_(AutoDoc_Folder).html" target="topic">结构体、记录、枚举</a>, <a href="_qaes_14_类_(AutoDoc_Folder).html" target="topic">类</a></div>
+</div>
+</div>
+</div>
+<!-- End Page Content -->
+
+<!-- Begin Page Footer -->
+<div class="Element93">
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr><td width="100%">
+<div class="Element3">
+ (c) 2012-2014  版权所有，QDAC开发组</div>
+</td></tr><tr><td width="100%">
+<div class="Element97">
+你对此主题有何想法? <a href="#" onclick="sendFeedback('chinawsb@sina.com', '文档反馈', 'Project: QDAC3.0%0ATopic ID: qaes%0ATitle: qaes 命名空间');">  发送反馈! </a></div>
+</td></tr></table></div>
+
+<!-- End Page Footer -->
+</div>
+</div>
+
+<!-- End Client Area -->
+</body></html>

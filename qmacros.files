@@ -1,0 +1,7 @@
+"Source\QDAC.INC"
+"Source\QString.pas"
+"Source\PerlRegEx.pas"
+"Source\MSVCRT.LIB"
+"Source\pcre.pas"
+"Source\pcre\*.*"
+"Source\qmacros.pas"

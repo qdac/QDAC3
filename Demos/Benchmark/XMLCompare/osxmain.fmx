@@ -1,0 +1,80 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'QXML Mac OSX '#27979#35797'-201405051935'
+  ClientHeight = 480
+  ClientWidth = 640
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop, iPhone, iPad]
+  DesignerMobile = False
+  DesignerWidth = 0
+  DesignerHeight = 0
+  DesignerDeviceName = ''
+  DesignerOrientation = 0
+  DesignerOSVersion = ''
+  object Panel1: TPanel
+    Align = Top
+    Height = 49.000000000000000000
+    Width = 640.000000000000000000
+    TabOrder = 1
+    object chkLoad: TCheckBox
+      Height = 19.000000000000000000
+      IsChecked = True
+      Position.X = 24.000000000000000000
+      Position.Y = 24.000000000000000000
+      TabOrder = 4
+      Text = #21152#36733#27979#35797
+      Width = 120.000000000000000000
+    end
+    object chkSave: TCheckBox
+      Height = 19.000000000000000000
+      IsChecked = True
+      Position.X = 146.000000000000000000
+      Position.Y = 24.000000000000000000
+      TabOrder = 3
+      Text = #20445#23384#27979#35797
+      Width = 120.000000000000000000
+    end
+    object chkIO: TCheckBox
+      Height = 19.000000000000000000
+      IsChecked = True
+      Position.X = 269.000000000000000000
+      Position.Y = 24.000000000000000000
+      TabOrder = 2
+      Text = #20445#23384'+'#21152#36733#27979#35797
+      Width = 120.000000000000000000
+    end
+    object chkCreate: TCheckBox
+      Height = 19.000000000000000000
+      IsChecked = True
+      Position.X = 392.000000000000000000
+      Position.Y = 24.000000000000000000
+      TabOrder = 1
+      Text = #21019#24314#27979#35797
+      Width = 120.000000000000000000
+    end
+    object btnGo: TButton
+      Height = 22.000000000000000000
+      Position.X = 552.000000000000000000
+      Position.Y = 16.000000000000000000
+      TabOrder = 5
+      Text = #24320#22987
+      Width = 80.000000000000000000
+      OnClick = btnGoClick
+    end
+    object lblItem: TLabel
+      Height = 17.000000000000000000
+      Position.X = 16.000000000000000000
+      Position.Y = 4.000000000000000000
+      Width = 497.000000000000000000
+    end
+  end
+  object mmResult: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    Align = Client
+    Height = 431.000000000000000000
+    TabOrder = 6
+    Width = 640.000000000000000000
+  end
+end

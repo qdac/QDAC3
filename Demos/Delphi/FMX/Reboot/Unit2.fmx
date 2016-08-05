@@ -1,0 +1,85 @@
+object Form2: TForm2
+  Left = 0
+  Top = 0
+  ClientHeight = 480
+  ClientWidth = 640
+  Fill.Color = claNull
+  Fill.Kind = Solid
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnKeyDown = FormKeyDown
+  DesignerMasterStyle = 3
+  object Panel2: TPanel
+    Align = Center
+    Size.Width = 193.000000000000000000
+    Size.Height = 289.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object rbShutdownNow: TRadioButton
+      IsChecked = True
+      Position.X = 24.000000000000000000
+      Position.Y = 16.000000000000000000
+      TabOrder = 1
+      Text = #31435#21363#20851#26426
+      OnClick = rbShutdownNowClick
+      object GlowEffect1: TGlowEffect
+        Softness = 0.400000005960464400
+        GlowColor = claGold
+        Opacity = 0.899999976158142100
+      end
+    end
+    object Label2: TLabel
+      Position.X = 24.000000000000000000
+      Position.Y = 56.000000000000000000
+      StyleLookup = 'listboxheaderlabel'
+      Text = #31245#20505#20851#26426
+    end
+    object rb30Min: TRadioButton
+      Tag = 30
+      Position.X = 40.000000000000000000
+      Position.Y = 96.000000000000000000
+      TabOrder = 6
+      Text = #21322#20010#23567#26102
+      OnClick = rbShutdownNowClick
+    end
+    object rb60Min: TRadioButton
+      Tag = 60
+      Position.X = 40.000000000000000000
+      Position.Y = 130.000000000000000000
+      TabOrder = 5
+      Text = #19968#20010#23567#26102
+      OnClick = rbShutdownNowClick
+    end
+    object rb90Min: TRadioButton
+      Tag = 90
+      Position.X = 40.000000000000000000
+      Position.Y = 164.000000000000000000
+      Size.Width = 161.000000000000000000
+      Size.Height = 19.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 4
+      Text = #19968#20010#21322#20010#23567#26102
+      OnClick = rbShutdownNowClick
+    end
+    object rb120Min: TRadioButton
+      Tag = 120
+      Position.X = 40.000000000000000000
+      Position.Y = 198.000000000000000000
+      TabOrder = 2
+      Text = #20004#20010#23567#26102
+      OnClick = rbShutdownNowClick
+    end
+    object rb150Min: TRadioButton
+      Tag = 150
+      Position.X = 40.000000000000000000
+      Position.Y = 232.000000000000000000
+      Size.Width = 153.000000000000000000
+      Size.Height = 19.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = #20004#20010#21322#20010#23567#26102
+      OnClick = rbShutdownNowClick
+    end
+  end
+end

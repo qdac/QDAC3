@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899-12-30 00:00:00.000.947,=F:\controls\QDAC3\Demos\Delphi\VCL\QDB\Sqlite\Unit2.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.293,=D:\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.091,=F:\controls\QDAC3\Demos\Delphi\VCL\QDB\Sqlite\Unit2.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.747,F:\controls\QDAC3\Source\qprov_sqlite.pas=F:\controls\QDAC3\Demos\Delphi\VCL\QDB\Sqlite\Unit2.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.413,F:\controls\QDAC3\Demos\Delphi\VCL\QDB\Sqlite\Project1.dproj=D:\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.341,=D:\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.574,F:\controls\QDAC3\Demos\Delphi\VCL\QDB\Sqlite\Unit1.dfm=D:\Documents\Embarcadero\Studio\Projects\Unit1.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.574,F:\controls\QDAC3\Demos\Delphi\VCL\QDB\Sqlite\Unit1.pas=D:\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.789,F:\controls\QDAC3\Source\Qprov_libraryBase.pas=F:\controls\QDAC3\Demos\Delphi\VCL\QDB\Sqlite\Unit2.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.321,=D:\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.128,F:\controls\QDAC3\Source\Qprov_libraryBase.pas=</Transaction>
+  </Transactions>
+</BorlandProject>

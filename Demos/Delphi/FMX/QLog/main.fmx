@@ -1,0 +1,81 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 567
+  ClientWidth = 384
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  DesignerMasterStyle = 3
+  object btnShortlog: TButton
+    Position.X = 40.000000000000000000
+    Position.Y = 24.000000000000000000
+    Size.Width = 121.000000000000000000
+    Size.Height = 44.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    Text = #30701#26085#24535
+    OnClick = btnShortlogClick
+  end
+  object btnLongLog: TButton
+    Position.X = 200.000000000000000000
+    Position.Y = 24.000000000000000000
+    Size.Width = 105.000000000000000000
+    Size.Height = 44.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 3
+    Text = #38271#26085#24535
+    OnClick = btnLongLogClick
+  end
+  object btnLoopLog: TButton
+    Position.X = 40.000000000000000000
+    Position.Y = 88.000000000000000000
+    Size.Width = 121.000000000000000000
+    Size.Height = 44.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 4
+    Text = #38271#26085#24535#215'1000'
+    OnClick = btnLoopLogClick
+  end
+  object Label1: TLabel
+    Align = Horizontal
+    Position.Y = 168.000000000000000000
+    Size.Width = 384.000000000000000000
+    Size.Height = 137.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Label1'
+  end
+  object cbxLogLevel: TComboBox
+    Items.Strings = (
+      '0 - '#32039#24613
+      '1 - '#35686#21578#65288'Alert'#65289
+      '2 - '#20005#37325
+      '3 - '#38169#35823
+      '4 - '#35686#21578#65288'Warn'#65289
+      '5 - '#25552#31034
+      '6 - '#20449#24687
+      '7 - '#35843#35797)
+    ItemIndex = 6
+    Position.X = 96.000000000000000000
+    Position.Y = 136.000000000000000000
+    Size.Width = 209.000000000000000000
+    Size.Height = 32.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 6
+  end
+  object Label2: TLabel
+    Position.X = 16.000000000000000000
+    Position.Y = 144.000000000000000000
+    Text = #26085#24535#31867#22411
+  end
+  object chkMode: TCheckBox
+    IsChecked = True
+    Position.X = 192.000000000000000000
+    Position.Y = 101.000000000000000000
+    TabOrder = 8
+    Text = #24322#27493#27169#24335
+    OnChange = chkModeChange
+  end
+end

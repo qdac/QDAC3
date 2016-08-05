@@ -1,0 +1,79 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 567
+  ClientWidth = 384
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  DesignerMasterStyle = 3
+  object Button1: TButton
+    Position.X = 48.000000000000000000
+    Position.Y = 32.000000000000000000
+    Size.Width = 129.000000000000000000
+    Size.Height = 44.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    Text = #25237#23492#32447#31243#20316#19994
+    OnClick = Button1Click
+  end
+  object Button2: TButton
+    Position.X = 48.000000000000000000
+    Position.Y = 88.000000000000000000
+    Size.Width = 129.000000000000000000
+    Size.Height = 44.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 3
+    Text = #25353'ID'#35302#21457#20449#21495
+    OnClick = Button2Click
+  end
+  object Label1: TLabel
+    Position.X = 8.000000000000000000
+    Position.Y = 224.000000000000000000
+    Size.Width = 345.000000000000000000
+    Size.Height = 33.000000000000000000
+    Size.PlatformDefault = False
+  end
+  object Label2: TLabel
+    Position.X = 8.000000000000000000
+    Position.Y = 272.000000000000000000
+    Size.Width = 345.000000000000000000
+    Size.Height = 23.000000000000000000
+    Size.PlatformDefault = False
+  end
+  object Button3: TButton
+    Position.X = 192.000000000000000000
+    Position.Y = 88.000000000000000000
+    Size.Width = 137.000000000000000000
+    Size.Height = 44.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    Text = #25353#21517#31216#35302#21457#20449#21495
+    OnClick = Button3Click
+  end
+  object Button4: TButton
+    Position.X = 192.000000000000000000
+    Position.Y = 33.000000000000000000
+    Size.Width = 137.000000000000000000
+    Size.Height = 41.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 6
+    Text = #36895#24230#27979#35797
+    OnClick = Button4Click
+  end
+  object Timer1: TTimer
+    OnTimer = Timer1Timer
+    Left = 168
+    Top = 344
+  end
+  object Button5: TButton
+    Position.X = 48.000000000000000000
+    Position.Y = 144.000000000000000000
+    TabOrder = 10
+    Text = 'Button5'
+    OnClick = Button5Click
+  end
+end

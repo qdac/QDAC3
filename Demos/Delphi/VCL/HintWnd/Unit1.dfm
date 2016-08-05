@@ -1,0 +1,37 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = #33258#23450#20041#25552#31034#31383#21475#31034#20363
+  ClientHeight = 201
+  ClientWidth = 447
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Label1: TLabel
+    Left = 40
+    Top = 24
+    Width = 369
+    Height = 129
+    Alignment = taCenter
+    AutoSize = False
+    Caption = #40736#26631#31227#20837#27492#21306#22495#26174#31034#25552#31034
+    Color = clBtnShadow
+    Font.Charset = GB2312_CHARSET
+    Font.Color = clYellow
+    Font.Height = -29
+    Font.Name = #23435#20307
+    Font.Style = []
+    ParentColor = False
+    ParentFont = False
+    Transparent = False
+    Layout = tlCenter
+    OnMouseEnter = Label1MouseEnter
+    OnMouseLeave = Label1MouseLeave
+  end
+end

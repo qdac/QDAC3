@@ -1,0 +1,16 @@
+﻿[Panel1]
+Coordinates=203,10,54,36
+
+[IdHTTP1]
+Coordinates=126,133,66,36
+
+[ListView1]
+Coordinates=10,10,107,168
+Visible=True
+
+[btnParse]
+Coordinates=127,10,66,58
+
+[]
+Coordinates=107,187,91,36
+

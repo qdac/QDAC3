@@ -1,0 +1,332 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN">
+<html>
+<head>
+<title>qmacros 命名空间</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="generator" content="Doc-O-Matic" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <link rel="STYLESHEET" href="default.css" type="text/css" />
+
+<script type="text/javascript" src="scripts.js"></script>
+</head>
+<body class="Element700" onload="onBodyLoadEx('frames.html', 'topic', 'qmacros.html');" onmousedown="onBodyMouseDown();">
+
+<!-- Begin Popups -->
+
+<!-- End Popups -->
+
+<!-- Begin Page Header -->
+<div class="Element710" id="areafixed">
+<div class="Element94">
+<em>当前位置:</em> <a href="!!SYMREF.html" target="topic">符号引用</a> &gt; <a href="qmacros.html" target="topic">qmacros 命名空间</a></div>
+<div class="Element92">
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr><td width="33%">
+<div class="Element1">
+QDAC3.0</div>
+</td><td width="34%">
+<div class="Element2">
+<a href="contents.html" target="tocidx"><img src="btn_globals_contents_midblue.gif" border="0" alt="内容" title="内容" onmouseover="switchImage(this, 'btn_globals_contents_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_contents_midblue.gif');"></a><a href="idx.html" target="tocidx"><img src="btn_globals_index_midblue.gif" border="0" alt="索引" title="索引" onmouseover="switchImage(this, 'btn_globals_index_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_index_midblue.gif');"></a><a href="!!SYMREF.html" target="topic"><img src="btn_globals_reference_midblue.gif" border="0" alt="引用" title="引用" onmouseover="switchImage(this, 'btn_globals_reference_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_reference_midblue.gif');"></a><a href="index.html" target="topic"><img src="btn_globals_home_midblue.gif" border="0" alt="首页" title="首页" onmouseover="switchImage(this, 'btn_globals_home_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_home_midblue.gif');"></a></div>
+</td><td width="33%">
+<div class="Element90">
+<a href="qlog_ELOG_WRITE_FAILURE.html" target="topic"><img src="btn_prev_midblue.gif" border="0" alt="前一页" title="前一页" onmouseover="switchImage(this, 'btn_prev_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_prev_midblue.gif');"></a><a href="!!SYMREF.html" target="topic"><img src="btn_up_midblue.gif" border="0" alt="向上" title="向上" onmouseover="switchImage(this, 'btn_up_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_up_midblue.gif');"></a><a href="!!CLASSES_qmacros.html" target="topic"><img src="btn_next_midblue.gif" border="0" alt="下一页" title="下一页" onmouseover="switchImage(this, 'btn_next_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_next_midblue.gif');"></a></div>
+</td></tr></table><div class="Element5">
+qmacros 命名空间</div>
+<div class="Element7">
+<a href="!!SYMREF.html" target="topic">符号引用</a> | <a href="_qmacros_14_Legend.html" target="topic">图例</a> | <a href="_qmacros_14_Topics.html" target="topic">主题</a> | <a href="_qmacros_14_常量_(AutoDoc_Folder).html" target="topic">常量</a> | <a href="_qmacros_14_结构体、记录、枚举_(AutoDoc_Folder).html" target="topic">结构体、记录、枚举</a> | <a href="_qmacros_14_类_(AutoDoc_Folder).html" target="topic">类</a> | <a href="_qmacros_14_类型_(AutoDoc_Folder).html" target="topic">类型</a></div>
+<div class="Element731">
+<div class="Element730">
+<a href="#" onclick="ToggleAllElements('E7B1BB,E4B8BBE9A298,E7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE,E7B1BBE59E8B,E5B8B8E9878F,E58886E7BB84,E993BEE68EA5', 'linkToggleAllElements', 'imgToggleAllElements', '全部折叠', '全部展开');"><img src="btn_collapse.gif" border="0" alt="" title="" id="imgToggleAllElements"></a><a href="#" id="linkToggleAllElements" onclick="ToggleAllElements('E7B1BB,E4B8BBE9A298,E7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE,E7B1BBE59E8B,E5B8B8E9878F,E58886E7BB84,E993BEE68EA5', 'linkToggleAllElements', 'imgToggleAllElements', '全部折叠', '全部展开');">全部折叠</a></div>
+</div>
+</div>
+</div>
+
+<!-- End Page Header -->
+
+<!-- Begin Client Area -->
+<div class="Element720" id="areascroll">
+<div class="Element721">
+
+<!-- Begin Page Content -->
+<div class="Element58">
+<a name="E68F8FE8BFB0"></a><div class="Element11">
+<div class="Element10">
+<p class="Element10">
+QMacros是QDAC的一个新的组成部分，采用宏定义的方式来快速替换复杂的文本内容模板。如下面的一句话：&nbsp;</p>
+<p class="Element10">
+My Name is &lt;%Name%&gt;,Please call me &lt;%FirstName%&gt;&nbsp;</p>
+<p class="Element10">
+我们定义如下宏：&nbsp;</p>
+<p class="Element10">
+Name =&gt;Jone Stand&nbsp;</p>
+<p class="Element10">
+FirstName =&gt; Jone&nbsp;</p>
+<p class="Element10">
+使用QMacros执行下面的替换操作后：&nbsp;</p>
+<p class="Element10">
+<span class="Element146">AMacroMgr := TQMacroManager.Create;</span>&nbsp;</p>
+<p class="Element10">
+<span class="Element146">AMacroMgr.Push('Name',Jone Stand');</span>&nbsp;</p>
+<p class="Element10">
+<span class="Element146">AMacroMgr.Push('FirstName','Jone');</span>&nbsp;</p>
+<p class="Element10">
+<span class="Element146">S:=AMacroMgr.Replace('My Name is &lt;%Name%&gt;,Please call me &lt;%FirstName%&gt;', '&lt;%','%&gt;',0);</span>&nbsp;</p>
+<p class="Element10">
+<span class="Element146"> </span>此时字符串S的值即为：&nbsp;</p>
+<p class="Element10">
+My Name is Jone Stand,Please call me Jone&nbsp;</p>
+<p class="Element10">
+QMacros的特色在于：&nbsp;</p>
+<p class="Element10">
+● 支持在替换时自定义宏的起始和结束字符串，两者可以一样，也可以不一样，但一定要保证宏定义中间不会出现该字符；&nbsp;</p>
+<p class="Element10">
+● 采用栈式管理，使用使用宏最后入栈的值替换，当不使用新值时，可以出栈恢复末次的值；&nbsp;</p>
+<p class="Element10">
+● 支持保存点功能，可以设置保存点并在其后多次入栈新的宏定义，只需要在最后还原到保存的保存点，就可以恢复所有保存点保存时的宏定义原状；&nbsp;</p>
+<p class="Element10">
+● 支持大小写区分和忽略大小写两种处理模式；&nbsp;</p>
+<p class="Element10">
+● 支持动态取值宏定义（相当于简单的函数），可以让宏定义每次替换时对应不同的值；&nbsp;</p>
+<p class="Element10">
+● 使用二分法查找宏定义名称，更快的解析替换速度；&nbsp;</p>
+<p class="Element10">
+● 支持模板预编译，方便一次编译，多次替换；</p></div>
+</div>
+<a name="E58886E7BB84"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E58886E7BB84');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE58886E7BB84">分组</a></div>
+<div id="divE58886E7BB84">
+<div class="Element11">
+<div class="Element10">
+<p class="Element10">
+<a href="!!SYMREF.html" target="topic">符号引用</a></p></div>
+</div>
+</div>
+<a name="E4B8BBE9A298"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E4B8BBE9A298');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE4B8BBE9A298">主题</a></div>
+<div id="divE4B8BBE9A298">
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="50%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="!!CLASSES_qmacros.html" target="topic">类</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+下表列出了本文档中的 类 。&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="!!RECORDS_qmacros.html" target="topic">结构体、记录、枚举</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+下表列出了本文档中的 结构体、记录、枚举 。&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="!!TYPES_qmacros.html" target="topic">类型</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+下表列出了本文档中的 类型 。&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="!!CONSTANTS_qmacros.html" target="topic">常量</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+下表列出了本文档中的 常量 。&nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<a name="E5B8B8E9878F"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E5B8B8E9878F');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE5B8B8E9878F">常量</a></div>
+<div id="divE5B8B8E9878F">
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="50%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmacros_MFF_FILETYPE.html" target="topic">MFF_FILETYPE</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+缓存文件标志符，用于区分其它文件&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmacros_MRF_DELAY_BINDING.html" target="topic">MRF_DELAY_BINDING</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+是否延迟绑定宏定义，如果是的话，则在第一次Replace之前会检查是否宏都已经绑定&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmacros_MRF_IN_DBL_QUOTER.html" target="topic">MRF_IN_DBL_QUOTER</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+是否替换双引号中间的内容&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmacros_MRF_IN_SINGLE_QUOTER.html" target="topic">MRF_IN_SINGLE_QUOTER</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+是否替换单引号中间的内容&nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<a name="E7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE">结构体、记录、枚举</a></div>
+<div id="divE7BB93E69E84E4BD93E38081E8AEB0E5BD95E38081E69E9AE4B8BE">
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element201">
+ &nbsp;</div></td><td class="Element200" valign="top" width="40%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_structure.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qmacros_TQMacroCompliedItem.html" target="topic">TQMacroCompliedItem</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+编译结果的单项定义&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_structure.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qmacros_TQMacroValue.html" target="topic">TQMacroValue</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+单个宏值定义&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_enum.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qmacros_TQMacroVolatile.html" target="topic">TQMacroVolatile</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+宏定义值的稳定性定义 &nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<a name="E7B1BB"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E7B1BB');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE7B1BB">类</a></div>
+<div id="divE7B1BB">
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element201">
+ &nbsp;</div></td><td class="Element200" valign="top" width="40%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_class.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qmacros_TQMacroComplied.html" target="topic">TQMacroComplied</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+TQMacroComplied用于保存解析后的要替换内容的信息，以加速多次替换&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_class.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qmacros_TQMacroItem.html" target="topic">TQMacroItem</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+单一宏项目&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="10%" style="white-space: nowrap;">
+<div class="Element203">
+<img src="indicator_class.gif" border="0" alt="" title="">&nbsp;</div></td><td class="Element202" valign="top" width="40%">
+<div class="Element203">
+<a href="qmacros_TQMacroManager.html" target="topic">TQMacroManager</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+TQMacroManager用于管理已知的宏定义，并提供各种基本的操作支持。 &nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<a name="E7B1BBE59E8B"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E7B1BBE59E8B');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE7B1BBE59E8B">类型</a></div>
+<div id="divE7B1BBE59E8B">
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="50%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmacros_PQMacroCompliedItem.html" target="topic">PQMacroCompliedItem</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+TQMacroCompliedItem的指针类型定义&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmacros_PQMacroValue.html" target="topic">PQMacroValue</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+TQMacroValue类型的指针类型定义&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmacros_TMacroList.html" target="topic">TMacroList</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+宏列表 &nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmacros_TQCompliedArray.html" target="topic">TQCompliedArray</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+TQMacroCompliedItem动态数组定义&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmacros_TQMacroMissEvent.html" target="topic">TQMacroMissEvent</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+指不到指定的宏时触发的事件&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmacros_TQMacroValueFetchEvent.html" target="topic">TQMacroValueFetchEvent</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+查找动态宏的值时的通过回调函数获取相应的值，返回值直接赋给AMacro.Value.Value即可。 &nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<a name="4C696E6B73"></a><div class="Element14">
+<a onclick="toggleVisibilityStored('E993BEE68EA5');" class="a_Element14"><img src="btn_collapse_large.gif" border="0" alt="" title="" id="imgE993BEE68EA5">链接</a></div>
+<div id="divE993BEE68EA5">
+<div class="Element11">
+<div class="Element10">
+<a href="!!SYMREF.html" target="topic">符号引用</a>, <a href="_qmacros_14_Legend.html" target="topic">图例</a>, <a href="_qmacros_14_Topics.html" target="topic">主题</a>, <a href="_qmacros_14_常量_(AutoDoc_Folder).html" target="topic">常量</a>, <a href="_qmacros_14_结构体、记录、枚举_(AutoDoc_Folder).html" target="topic">结构体、记录、枚举</a>, <a href="_qmacros_14_类_(AutoDoc_Folder).html" target="topic">类</a>, <a href="_qmacros_14_类型_(AutoDoc_Folder).html" target="topic">类型</a></div>
+</div>
+</div>
+</div>
+<!-- End Page Content -->
+
+<!-- Begin Page Footer -->
+<div class="Element93">
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr><td width="100%">
+<div class="Element3">
+ (c) 2012-2014  版权所有，QDAC开发组</div>
+</td></tr><tr><td width="100%">
+<div class="Element97">
+你对此主题有何想法? <a href="#" onclick="sendFeedback('chinawsb@sina.com', '文档反馈', 'Project: QDAC3.0%0ATopic ID: qmacros%0ATitle: qmacros 命名空间');">  发送反馈! </a></div>
+</td></tr></table></div>
+
+<!-- End Page Footer -->
+</div>
+</div>
+
+<!-- End Client Area -->
+</body></html>

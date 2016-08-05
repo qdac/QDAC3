@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN">
+<html>
+<head>
+<title>qmsgpack.pas 命名空间</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="generator" content="Doc-O-Matic" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <link rel="STYLESHEET" href="default.css" type="text/css" />
+
+<script type="text/javascript" src="scripts.js"></script>
+</head>
+<body class="Element700" onload="onBodyLoadEx('frames.html', 'topic', '_qmsgpack_pas_14_Namespaces.html');" onmousedown="onBodyMouseDown();">
+
+<!-- Begin Popups -->
+
+<!-- End Popups -->
+
+<!-- Begin Page Header -->
+<div class="Element710" id="areafixed">
+<div class="Element94">
+<em>当前位置:</em> <a href="!!SYMREF.html" target="topic">符号引用</a> &gt; <a href="!!FILES.html" target="topic">文件</a> &gt; <a href="qmsgpack_pas.html" target="topic">qmsgpack.pas</a></div>
+<div class="Element92">
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr><td width="33%">
+<div class="Element1">
+QDAC3.0</div>
+</td><td width="34%">
+<div class="Element2">
+<a href="contents.html" target="tocidx"><img src="btn_globals_contents_midblue.gif" border="0" alt="内容" title="内容" onmouseover="switchImage(this, 'btn_globals_contents_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_contents_midblue.gif');"></a><a href="idx.html" target="tocidx"><img src="btn_globals_index_midblue.gif" border="0" alt="索引" title="索引" onmouseover="switchImage(this, 'btn_globals_index_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_index_midblue.gif');"></a><a href="!!SYMREF.html" target="topic"><img src="btn_globals_reference_midblue.gif" border="0" alt="引用" title="引用" onmouseover="switchImage(this, 'btn_globals_reference_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_reference_midblue.gif');"></a><a href="index.html" target="topic"><img src="btn_globals_home_midblue.gif" border="0" alt="首页" title="首页" onmouseover="switchImage(this, 'btn_globals_home_midblue_hover.gif');" onmouseout="switchImage(this, 'btn_globals_home_midblue.gif');"></a></div>
+</td><td width="33%">
+</td></tr></table><div class="Element27">
+qmsgpack.pas 命名空间</div>
+<div class="Element28">
+<a href="qmsgpack_pas.html" target="topic">qmsgpack.pas</a></div>
+</div>
+</div>
+
+<!-- End Page Header -->
+
+<!-- Begin Client Area -->
+<div class="Element720" id="areascroll">
+<div class="Element721">
+
+<!-- Begin Page Content -->
+<div class="Element58">
+<div class="Element14">
+命名空间</div>
+<div class="Element11">
+<div class="Element10">
+<div class="Element212">
+<div class="TableDiv">
+<table cellspacing="0" class="Table0">
+<tr>
+<td class="Element200" valign="top" width="50%">
+<div class="Element201">
+名称&nbsp;</div></td><td class="Element204" valign="top" width="50%">
+<div class="Element205">
+描述&nbsp;</div></td></tr><tr>
+<td class="Element202" valign="top" width="50%">
+<div class="Element203">
+<a href="qmsgpack.html" target="topic">qmsgpack</a>&nbsp;</div></td><td class="Element206" valign="top" width="50%">
+<div class="Element207">
+QMsgPack 是 QDAC 项目组对 MessagePack 协议的封装实现，支持MessagePack官方规格表（<a href="#" onclick="openExternalLink('https://github.com/msgpack/msgpack/blob/master/spec.md');"><img src="indicator_external_link.gif" border="0" alt="" title="">链接</a>）的所有数据类型，包括扩展类型。<br>由于Delphi下MessagePack协议的实现较少，所以没有什么啥速度比较。我们目前提供了一个Demo供大家测试其性能，该文件位于 Demos\Delphi\VCL\QMsgPack 目录下，编译Demo，然后运行打开或保存时都会进行一个简单的性能评估，给您做参考。在我的计算机上，加载一个30多M的文件，用时不到1秒，参考下图： </p><p class="Element207" style="text-align: center;">
+<img src="QMsgPackLoadSpeed.png" border="0" alt="" title=""></p><p class="Element207">
+<br>QMsgPack单元使用需要以下文件支持：<br>● <a href="qdac_inc.html" target="topic">qdac.inc</a> - 公共编译选项配置文件<br>● <a href="qstring_pas.html" target="topic">qstring.pas</a> - QDAC 字符串及辅助函数单元<br>● <a href="qrbtree_pas.html" target="topic">qrbtree.pas</a> - 红黑树及哈希表实现单元<br>● qmsgpack.pas - QMsgPack主实现单元，它包括两个类：TQMsgPack和TQHashedMsgPack，两者的区别在于前者没有使用哈希针对查询进行全面优化，理论上查询性能要弱于后者，但相应的其它方面的开销也要小于后者。<br>QMsgPack的接口和QJSON几乎完全一致，您熟悉一个，另一个几乎不用学习就可以直接使用。而QXML的接口也与它们保持了基本一致，三个的学习一个，剩下的两个都可以触类旁通。&nbsp;</div></td></tr></table></div></div>
+</div>
+</div>
+</div>
+<!-- End Page Content -->
+
+<!-- Begin Page Footer -->
+<div class="Element93">
+<table width="100%" cellspacing="0" cellpadding="0">
+<tr><td width="100%">
+<div class="Element3">
+ (c) 2012-2014  版权所有，QDAC开发组</div>
+</td></tr></table></div>
+
+<!-- End Page Footer -->
+</div>
+</div>
+
+<!-- End Client Area -->
+</body></html>

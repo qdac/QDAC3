@@ -1,0 +1,100 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 359
+  ClientWidth = 598
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMobile = True
+  DesignerWidth = 598
+  DesignerHeight = 384
+  DesignerDeviceName = 'Google Nexus 4'
+  DesignerOrientation = 3
+  DesignerOSVersion = ''
+  object Button1: TButton
+    Height = 44.000000000000000000
+    Position.X = 464.000000000000000000
+    Position.Y = 16.000000000000000000
+    TabOrder = 1
+    Text = 'Start'
+    Width = 113.000000000000000000
+    OnClick = Button1Click
+  end
+  object Chart1: TChart
+    Height = 273.000000000000000000
+    Position.X = 8.000000000000000000
+    Position.Y = 56.000000000000000000
+    Width = 577.000000000000000000
+    Title.Text.Strings = (
+      'LockCompare('#36234#20302#36234#22909')')
+    View3D = False
+    Zoom.Brush.Kind = None
+    Zoom.Pen.Fill.Color = claSilver
+    TabOrder = 2
+    ColorPaletteIndex = 13
+    object Series1: TLineSeries
+      Legend.Text = 'SimpleLock'
+      LegendTitle = 'SimpleLock'
+      SeriesColor = claBlack
+      Brush.BackColor = x00FFFFFF
+      Pointer.InflateMargins = True
+      Pointer.Style = psRectangle
+      XValues.Name = 'X'
+      XValues.Order = loNone
+      YValues.Name = 'Y'
+      YValues.Order = loNone
+    end
+    object Series2: TLineSeries
+      Legend.Text = 'CriticalSection'
+      LegendTitle = 'CriticalSection'
+      Brush.BackColor = x00FFFFFF
+      Pointer.InflateMargins = True
+      Pointer.Style = psRectangle
+      XValues.Name = 'X'
+      XValues.Order = loNone
+      YValues.Name = 'Y'
+      YValues.Order = loNone
+    end
+    object Series3: TLineSeries
+      Legend.Text = 'SwzSingleList'
+      LegendTitle = 'SwzSingleList'
+      SeriesColor = xFF001DBA
+      Brush.BackColor = x00FFFFFF
+      Pointer.InflateMargins = True
+      Pointer.Style = psRectangle
+      XValues.Name = 'X'
+      XValues.Order = loNone
+      YValues.Name = 'Y'
+      YValues.Order = loNone
+    end
+  end
+  object Memo1: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    Height = 249.000000000000000000
+    Position.X = 8.000000000000000000
+    Position.Y = 72.000000000000000000
+    TabOrder = 4
+    Visible = False
+    Width = 577.000000000000000000
+  end
+  object Button2: TButton
+    Height = 44.000000000000000000
+    Position.X = 152.000000000000000000
+    Position.Y = 16.000000000000000000
+    TabOrder = 6
+    Text = 'Log'
+    Width = 129.000000000000000000
+    OnClick = Button2Click
+  end
+  object Chart: TButton
+    Height = 44.000000000000000000
+    Position.X = 308.000000000000000000
+    Position.Y = 16.000000000000000000
+    TabOrder = 5
+    Text = 'Chart'
+    Width = 129.000000000000000000
+    OnClick = ChartClick
+  end
+end
