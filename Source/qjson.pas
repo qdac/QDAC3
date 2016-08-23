@@ -6428,7 +6428,7 @@ begin
     AJson.FNameHash := HashName(AJson.Name);
     if Assigned(AJson.Parent) then
     begin
-      TQHashedJson(AJson.Parent).FHashTable.Add(Self, AJson.FNameHash);
+      TQHashedJson(AJson.Parent).FHashTable.Add(AJson, AJson.FNameHash);
     end;
   end
   else

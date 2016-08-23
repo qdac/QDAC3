@@ -3519,8 +3519,8 @@ begin
       SaveToStream(AStream, 'UTF-16', AWriteBom, AWriteHeader, AFormat);
     teUTF8:
       SaveToStream(AStream, 'UTF-8', AWriteBom, AWriteHeader, AFormat)
-    else
-      raise QException.Create(SBadXMLEncoding);
+  else
+    raise QException.Create(SBadXMLEncoding);
   end;
 end;
 
@@ -3759,7 +3759,9 @@ begin
       '''':
         StrCat(pd, '&apos;');
       '"':
-        StrCat(pd, '&quot;')
+        StrCat(pd, '&quot;');
+      ' ':
+        StrCat(pd, '&nbsp;')
     else
       begin
         pd^ := ps^;

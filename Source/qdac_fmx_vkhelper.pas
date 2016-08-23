@@ -94,6 +94,7 @@ type
   protected
     FLast: PAdjustItem;
     function GetAdjusted: Boolean;
+    procedure RemoveLast;
   public
     procedure Save(ACtrl: TControl);
     procedure Restore;
@@ -347,6 +348,8 @@ begin
   ALastY := AScrollBox.ViewportPosition.y;
   AScrollBox.ScrollBy(0, AVOffset);
   Result := ALastY - AScrollBox.ViewportPosition.y;
+  if IsZero(Result) then
+    FAdjustStack.RemoveLast;
 end;
 
 function TVKStateHandler.AdjustByScrollBox(AScrollBox: TCustomScrollBox;
@@ -364,15 +367,9 @@ procedure TVKStateHandler.AdjustCtrl(ACtrl: TControl;
   AVKBounds, ACtrlBounds: TRectF; AVKVisible: Boolean);
 var
   ACaretRect: TRectF;
-  /// 将指定的区域移动可视区
-  procedure ScrollInToRect;
-  var
-    AParent, ALastParent: TFMXObject;
-    AOffset: Single;
+  function TryByScrollBox(AParent: TFMXObject; var AOffset: Single): TFMXObject;
   begin
-    AParent := ACtrl;
-    ALastParent := AParent.Parent;
-    AOffset := AVKBounds.Top - ACaretRect.Bottom;
+    Result := AParent.Parent;
     // 父有滚动框，则尝试滚动解决
     while Assigned(AParent) and (AOffset < 0) do
     begin
@@ -387,11 +384,20 @@ var
       else if AParent is TCustomPresentedScrollBox then
         AOffset := AOffset - AdjustByPresentedScrollBox
           (AParent as TCustomPresentedScrollBox, AOffset);
-      ALastParent := AParent;
+      Result := AParent;
       AParent := AParent.Parent;
     end;
+  end;
+/// 将指定的区域移动可视区
+  procedure ScrollInToRect;
+  var
+    AParent: TFMXObject;
+    AOffset: Single;
+  begin
+    AOffset := AVKBounds.Top - ACaretRect.Bottom;
+    AParent := TryByScrollBox(ACtrl, AOffset);
     if AOffset < 0 then
-      AdjustByLayout(ALastParent, AOffset);
+      AdjustByLayout(AParent, AOffset);
   end;
   procedure AddNextHelper;
   var
@@ -454,6 +460,7 @@ begin
   TMessageManager.DefaultManager.Unsubscribe(TVKStateChangeMessage, FVKMsgId);
   TMessageManager.DefaultManager.Unsubscribe(TSizeChangedMessage, FSizeMsgId);
   TMessageManager.DefaultManager.Unsubscribe(TIdleMessage, FIdleMsgId);
+  FAdjustStack.Restore;
   inherited;
 end;
 
@@ -669,7 +676,17 @@ begin
     ACaretObj := ACaret.GetObject;
     ACaretRect.TopLeft := ACtrl.LocalToAbsolute(ACaretObj.Pos);
     ACaretRect.Right := ACaretRect.Left + ACaretObj.Size.cx + 1;
-    ACaretRect.Bottom := ACaretRect.Top + ACaretObj.Size.cy + 5; // 下面加点余量
+    ACaretRect.Bottom := ACaretRect.Top + ACaretObj.Size.cy+1; // 下面加点余量
+    if ACaretRect.Bottom > ACtrlBounds.Bottom then
+    begin
+      if ACtrl is TCustomPresentedScrollBox then
+      begin
+        AdjustByPresentedScrollBox(ACtrl as TCustomPresentedScrollBox,
+          ACtrlBounds.Bottom - ACaretRect.Bottom);
+        Result := false;
+        Exit;
+      end;
+    end;
     Result := ACaretRect.IntersectsWith(AVKBounds) or (ACaretRect.Top < 0) or
       (ACaretRect.Top > AVKBounds.Bottom);
   end
@@ -723,6 +740,18 @@ begin
       ACurrent := ANext.Prior;
     end;
     ACtrl.RemoveFreeNotification(VKHandler);
+  end;
+end;
+
+procedure TQAdjustStack.RemoveLast;
+var
+  APrior: PAdjustItem;
+begin
+ if Assigned(FLast) then
+  begin
+    APrior := FLast.Prior;
+    Dispose(FLast);
+    FLast := APrior;
   end;
 end;
 
@@ -853,7 +882,8 @@ EnableReturnKeyHook := True;
 finalization
 
 {$IF DEFINED(ANDROID)  OR DEFINED(IOS)}
-  FreeAndNil(VKHandler);
+  VKHandler.DisposeOf;
+VKHandler := nil;
 {$ENDIF}
 
 end.

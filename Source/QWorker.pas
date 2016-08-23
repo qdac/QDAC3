@@ -1021,36 +1021,37 @@ type
   /// <summary>工作者管理对象，用来管理工作者和作业</summary>
   TQWorkers = class
   protected
-    FWorkers: array of TQWorker;
+    FWorkers: array of TQWorker; // 工作者数组
     FDisableCount: Integer;
-    FMinWorkers: Integer;
-    FMaxWorkers: Integer;
-    FWorkerCount: Integer;
-    FBusyCount: Integer;
-    FFiringWorkerCount: Integer;
-    FFireTimeout: Cardinal;
+    // DisableWorkers 的调用次数，必需与 EnableWorkers 来匹配，否则作业将无法执行
+    FMinWorkers: Integer; // 最小工作者数量
+    FMaxWorkers: Integer; // 最大工作者数量
+    FWorkerCount: Integer; // 当前工作者总数
+    FBusyCount: Integer; // 当前活动工作者数
+    FFiringWorkerCount: Integer; // 当前正在解雇中的工作者数量
+    FFireTimeout: Cardinal; // 工作者解雇的基准超时（最小时间），单位毫秒
     FLongTimeWorkers: Integer; // 记录下长时间作业中的工作者，这种任务长时间不释放资源，可能会造成其它任务无法及时响应
     FMaxLongtimeWorkers: Integer; // 允许最多同时执行的长时间任务数，不允许超过MaxWorkers的一半
-    FLocker: TCriticalSection;
-    FSimpleJobs: TQSimpleJobs;
+    FLocker: TCriticalSection; // 锁
+    FSimpleJobs: TQSimpleJobs; // 简单作业列表
     FPlanJobs: TQSimpleJobs; // 计划任务，会每秒钟检查一次其中是否有需要执行的作业
-    FRepeatJobs: TQRepeatJobs;
-    FSignalJobs: array of PQSignal;
-    FSignalNameList: TList;
-    FMaxSignalId: Integer;
-    FTerminating: Boolean;
-    FStaticThread: TThread;
-    FPlanCheckJob: IntPtr;
-    FOnError: TWorkerErrorNotify;
-    FBeforeExecute: TQJobNotifyEvent;
-    FAfterExecute: TQJobNotifyEvent;
-    FBeforeCancel: TQJobNotifyEvent;
-    FLastWaitChain: PQJobWaitChain;
-    FSignalQueue: TQSignalQueue;
-    FOnCustomFreeData: TQCustomFreeDataEvent;
+    FRepeatJobs: TQRepeatJobs; // 重复作业列表
+    FSignalJobs: array of PQSignal; // 信号作业数组，每个信号维护独立的作业列表
+    FSignalNameList: TList; // 按名称索引的信号列表以优化按名称访问效率
+    FMaxSignalId: Integer; // 当前最大信号的Id
+    FTerminating: Boolean; // 是否正在结束中
+    FStaticThread: TThread; // 后台监控统计线程
+    FPlanCheckJob: IntPtr; // 计划任务检查作业
+    FOnError: TWorkerErrorNotify; // 出错时处理事件
+    FBeforeExecute: TQJobNotifyEvent; // 作业执行前触发事件
+    FAfterExecute: TQJobNotifyEvent; // 作业执行完触发事件
+    FBeforeCancel: TQJobNotifyEvent; // 作业取消前触发事件
+    FLastWaitChain: PQJobWaitChain; // 作业等待链表
+    FSignalQueue: TQSignalQueue; // 信号作业调度管理器
+    FOnCustomFreeData: TQCustomFreeDataEvent; // 自定义的释放数据回调函数
 {$IFDEF MSWINDOWS}
-    FMainWorker: HWND;
-    procedure DoMainThreadWork(var AMsg: TMessage);
+    FMainWorker: HWND; // 用于接收主线程作业的窗口（目前仅调试模式下用）
+    procedure DoMainThreadWork(var AMsg: TMessage); // FMainWorker 的消息处理函数
 {$ENDIF}
     function Popup: PQJob;
     procedure SetMaxWorkers(const Value: Integer);
@@ -1085,7 +1086,7 @@ type
     function GetNextRepeatJobTime: Int64; inline;
     procedure DoPlanCheck(AJob: PQJob);
     procedure AfterPlanRun(AJob: PQJob; AUsedTime: Int64);
-    function HandleToJob(const AHandle: IntPtr): PQJob;
+    function HandleToJob(const AHandle: IntPtr): PQJob;inline;
     procedure PlanCheckNeeded;
     procedure CheckWaitChain(AJob: PQJob);
   public
@@ -1415,7 +1416,7 @@ type
     /// <remarks>触发一个信号后，QWorkers会触发所有已注册的信号关联处理过程的执行</remarks>
     function Signal(AId: Integer; AData: Pointer = nil;
       AFreeType: TQJobDataFreeType = jdfFreeByUser; AWaitTimeout: Cardinal = 0)
-      : TWaitResult; overload;
+      : TWaitResult; overload; inline;
     /// <summary>按名称触发一个信号</summary>
     /// <param name="AName">信号名称</param>
     /// <param name="AData">附加给作业的用户数据指针地址</param>
@@ -1425,7 +1426,17 @@ type
     /// <remarks>触发一个信号后，QWorkers会触发所有已注册的信号关联处理过程的执行</remarks>
     function Signal(const AName: QStringW; AData: Pointer = nil;
       AFreeType: TQJobDataFreeType = jdfFreeByUser; AWaitTimeout: Cardinal = 0)
-      : TWaitResult; overload;
+      : TWaitResult; overload; inline;
+    function SendSignal(AId: Integer; AData: Pointer = nil;
+      AFreeType: TQJobDataFreeType = jdfFreeByUser; AWaitTimeout: Cardinal = 0)
+      : TWaitResult; overload; inline;
+    function SendSignal(const AName: QStringW; AData: Pointer = nil;
+      AFreeType: TQJobDataFreeType = jdfFreeByUser; AWaitTimeout: Cardinal = 0)
+      : TWaitResult; overload; inline;
+    function PostSignal(AId: Integer; AData: Pointer = nil;
+      AFreeType: TQJobDataFreeType = jdfFreeByUser): Boolean; overload; inline;
+    function PostSignal(const AName: QStringW; AData: Pointer = nil;
+      AFreeType: TQJobDataFreeType = jdfFreeByUser): Boolean; overload; inline;
     /// <summary>注册一个信号</summary>
     /// <param name="AName">信号名称</param>
     /// <remarks>
@@ -3371,7 +3382,7 @@ begin
         // ThreadYield;
       end;
       if (FTimeout >= FOwner.FireTimeout + FFireDelay) then
-      // 加一个随机的2秒延迟，以避免同时释放
+      // 加一个随机延迟，以避免同时释放
       begin
         FOwner.WorkerTimeout(Self);
         if not IsFiring then
@@ -3436,9 +3447,11 @@ begin
     end
     else if AJob.IsByPlan then
     begin
-      Result := IntPtr(AJob) or JOB_HANDLE_PLAN_MASK;
-      FPlanJobs.Push(AJob);
-      PlanCheckNeeded;
+      if FPlanJobs.Push(AJob) then
+      begin
+        Result := IntPtr(AJob) or JOB_HANDLE_PLAN_MASK;
+        PlanCheckNeeded;
+      end;
     end
     else if FRepeatJobs.Push(AJob) then
     begin
@@ -3966,11 +3979,12 @@ begin
       Dispose(FSignalJobs[I]);
     end;
     SetLength(FSignalJobs, 0);
+    FreeAndNil(FSignalQueue);
+    FreeAndNil(FSignalNameList);
   finally
     FreeObject(FLocker);
   end;
-  FreeAndNil(FSignalQueue);
-  FreeAndNil(FSignalNameList);
+
 {$IFDEF MSWINDOWS}
   DeallocateHWnd(FMainWorker);
 {$ENDIF}
@@ -5049,6 +5063,18 @@ begin
   end;
 end;
 
+function TQWorkers.SendSignal(AId: Integer; AData: Pointer;
+  AFreeType: TQJobDataFreeType; AWaitTimeout: Cardinal): TWaitResult;
+begin
+  Result := SignalQueue.Send(AId, AData, AFreeType, AWaitTimeout);
+end;
+
+function TQWorkers.SendSignal(const AName: QStringW; AData: Pointer;
+  AFreeType: TQJobDataFreeType; AWaitTimeout: Cardinal): TWaitResult;
+begin
+  Result := SignalQueue.Send(AName, AData, AFreeType, AWaitTimeout);
+end;
+
 procedure TQWorkers.SetEnabled(const Value: Boolean);
 begin
   if Value then
@@ -5667,6 +5693,7 @@ begin
   try
     FSimpleJobs.Clear;
     FRepeatJobs.Clear;
+    FPlanJobs.Clear;
     FLocker.Enter;
     try
       for I := 0 to FMaxSignalId - 1 do
@@ -5763,6 +5790,19 @@ begin
 end;
 
 {$ENDIF}
+
+function TQWorkers.PostSignal(AId: Integer; AData: Pointer;
+  AFreeType: TQJobDataFreeType): Boolean;
+begin
+  Result := SignalQueue.Post(AId, AData, AFreeType);
+end;
+
+function TQWorkers.PostSignal(const AName: QStringW; AData: Pointer;
+  AFreeType: TQJobDataFreeType): Boolean;
+begin
+  Result := SignalQueue.Post(AName, AData, AFreeType);
+end;
+
 
 function TQWorkers.Post(AProc: TQJobProcG; AInterval: Int64; AData: Pointer;
   ARunInMainThread: Boolean; AFreeType: TQJobDataFreeType): IntPtr;
@@ -6960,7 +7000,6 @@ constructor TQJobExtData.Create(const APlan: TQPlanMask; AData: Pointer;
   AFreeType: TQJobDataFreeType);
 var
   APlanData: PQJobPlanData;
-  ATimeStamp: Int64;
 begin
   New(APlanData);
   APlanData.OriginData := AData;
