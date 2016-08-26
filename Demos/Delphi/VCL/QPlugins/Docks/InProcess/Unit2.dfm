@@ -1,0 +1,60 @@
+object Form2: TForm2
+  Left = 0
+  Top = 0
+  Caption = 'Unit2'
+  ClientHeight = 201
+  ClientWidth = 447
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Panel1: TPanel
+    Left = 0
+    Top = 0
+    Width = 447
+    Height = 41
+    Align = alTop
+    BevelOuter = bvNone
+    TabOrder = 0
+    ExplicitLeft = 136
+    ExplicitTop = 104
+    ExplicitWidth = 185
+    object Label1: TLabel
+      Left = 0
+      Top = 0
+      Width = 447
+      Height = 41
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'This is Unit2 Form'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -19
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      Layout = tlCenter
+      ExplicitWidth = 150
+      ExplicitHeight = 23
+    end
+  end
+  object Memo1: TMemo
+    Left = 0
+    Top = 41
+    Width = 447
+    Height = 160
+    Align = alClient
+    Lines.Strings = (
+      'Hello,QPlugins from Unit2!')
+    TabOrder = 1
+    ExplicitLeft = 128
+    ExplicitTop = -24
+    ExplicitWidth = 185
+    ExplicitHeight = 89
+  end
+end

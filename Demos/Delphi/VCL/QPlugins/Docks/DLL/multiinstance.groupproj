@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{2A6C5142-5062-4E0C-ADA4-C27B904D30D3}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="dockhost.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="dockdll.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="dockhost">
+        <MSBuild Projects="dockhost.dproj"/>
+    </Target>
+    <Target Name="dockhost:Clean">
+        <MSBuild Projects="dockhost.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="dockhost:Make">
+        <MSBuild Projects="dockhost.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="dockdll">
+        <MSBuild Projects="dockdll.dproj"/>
+    </Target>
+    <Target Name="dockdll:Clean">
+        <MSBuild Projects="dockdll.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="dockdll:Make">
+        <MSBuild Projects="dockdll.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="dockhost;dockdll"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="dockhost:Clean;dockdll:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="dockhost:Make;dockdll:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

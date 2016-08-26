@@ -1,0 +1,72 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{2189217A-99AE-4A50-AAF8-550B7ADAC3C8}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="dllhost.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="dbproxy.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="bplservice.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="dyndll.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="dllhost">
+        <MSBuild Projects="dllhost.dproj"/>
+    </Target>
+    <Target Name="dllhost:Clean">
+        <MSBuild Projects="dllhost.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="dllhost:Make">
+        <MSBuild Projects="dllhost.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="dbproxy">
+        <MSBuild Projects="dbproxy.dproj"/>
+    </Target>
+    <Target Name="dbproxy:Clean">
+        <MSBuild Projects="dbproxy.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="dbproxy:Make">
+        <MSBuild Projects="dbproxy.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="bplservice">
+        <MSBuild Projects="bplservice.dproj"/>
+    </Target>
+    <Target Name="bplservice:Clean">
+        <MSBuild Projects="bplservice.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="bplservice:Make">
+        <MSBuild Projects="bplservice.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="dyndll">
+        <MSBuild Projects="dyndll.dproj"/>
+    </Target>
+    <Target Name="dyndll:Clean">
+        <MSBuild Projects="dyndll.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="dyndll:Make">
+        <MSBuild Projects="dyndll.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="dllhost;dbproxy;bplservice;dyndll"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="dllhost:Clean;dbproxy:Clean;bplservice:Clean;dyndll:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="dllhost:Make;dbproxy:Make;bplservice:Make;dyndll:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

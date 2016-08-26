@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{EE973034-B190-45D0-94ED-8E571CDEC4DA}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="notify.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="dllrecv.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="notify">
+        <MSBuild Projects="notify.dproj"/>
+    </Target>
+    <Target Name="notify:Clean">
+        <MSBuild Projects="notify.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="notify:Make">
+        <MSBuild Projects="notify.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="dllrecv">
+        <MSBuild Projects="dllrecv.dproj"/>
+    </Target>
+    <Target Name="dllrecv:Clean">
+        <MSBuild Projects="dllrecv.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="dllrecv:Make">
+        <MSBuild Projects="dllrecv.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="notify;dllrecv"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="notify:Clean;dllrecv:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="notify:Make;dllrecv:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

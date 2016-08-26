@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2016-04-06 13:26:06.698.bdsproj,D:\用户目录\我的文档\RAD Studio\Projects\Project2.bdsproj=E:\SVN\PrivateWork\QPlugins\Demos\Delphi\FormService\qdb_plugin.bdsproj</Transaction>
+    <Transaction>2016-04-06 13:27:08.880.pas,E:\SVN\PrivateWork\QPlugins\Demos\Delphi\FormService\Unit1.pas=E:\SVN\PrivateWork\QPlugins\Demos\Delphi\FormService\qdbPgsqlForm.pas</Transaction>
+    <Transaction>2016-04-06 13:27:08.880.dfm,E:\SVN\PrivateWork\QPlugins\Demos\Delphi\FormService\Unit1.dfm=E:\SVN\PrivateWork\QPlugins\Demos\Delphi\FormService\qdbPgsqlForm.dfm</Transaction>
+  </Transactions>
+</BorlandProject>

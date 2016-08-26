@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{80704B14-289E-4394-BEEA-F36EAD403714}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="host.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="plugins.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="host">
+        <MSBuild Projects="host.dproj"/>
+    </Target>
+    <Target Name="host:Clean">
+        <MSBuild Projects="host.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="host:Make">
+        <MSBuild Projects="host.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="plugins">
+        <MSBuild Projects="plugins.dproj"/>
+    </Target>
+    <Target Name="plugins:Clean">
+        <MSBuild Projects="plugins.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="plugins:Make">
+        <MSBuild Projects="plugins.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="host;plugins"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="host:Clean;plugins:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="host:Make;plugins:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

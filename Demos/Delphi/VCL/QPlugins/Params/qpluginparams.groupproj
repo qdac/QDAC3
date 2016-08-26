@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{6A8F5578-AA12-4973-A1A1-29BAFF72344D}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="paramdemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="paramdll.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="paramdemo">
+        <MSBuild Projects="paramdemo.dproj"/>
+    </Target>
+    <Target Name="paramdemo:Clean">
+        <MSBuild Projects="paramdemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="paramdemo:Make">
+        <MSBuild Projects="paramdemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="paramdll">
+        <MSBuild Projects="paramdll.dproj"/>
+    </Target>
+    <Target Name="paramdll:Clean">
+        <MSBuild Projects="paramdll.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="paramdll:Make">
+        <MSBuild Projects="paramdll.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="paramdemo;paramdll"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="paramdemo:Clean;paramdll:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="paramdemo:Make;paramdll:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

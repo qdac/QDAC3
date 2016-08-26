@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{1DD0CC67-FE84-4AD7-9107-5C9FA229AF38}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="mdihost.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="mdichild.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="mdihost">
+        <MSBuild Projects="mdihost.dproj"/>
+    </Target>
+    <Target Name="mdihost:Clean">
+        <MSBuild Projects="mdihost.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="mdihost:Make">
+        <MSBuild Projects="mdihost.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="mdichild">
+        <MSBuild Projects="mdichild.dproj"/>
+    </Target>
+    <Target Name="mdichild:Clean">
+        <MSBuild Projects="mdichild.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="mdichild:Make">
+        <MSBuild Projects="mdichild.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="mdihost;mdichild"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="mdihost:Clean;mdichild:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="mdihost:Make;mdichild:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

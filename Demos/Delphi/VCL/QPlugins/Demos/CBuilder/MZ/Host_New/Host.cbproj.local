@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899/12/30 00:00:00.000.dfm,E:\WG\我的文档\Documents\RAD Studio\Projects\Unit2.dfm=E:\WG\BCB\CS94_QPlugins\Host_New\Unit1.dfm</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.cpp,E:\WG\我的文档\Documents\RAD Studio\Projects\Unit2.cpp=E:\WG\BCB\CS94_QPlugins\Host_New\Unit1.cpp</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.cbproj,E:\WG\我的文档\Documents\RAD Studio\Projects\Project1.cbproj=E:\WG\BCB\CS94_QPlugins\Host_New\Project1.cbproj</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.h,E:\WG\我的文档\Documents\RAD Studio\Projects\Unit2.h=E:\WG\BCB\CS94_QPlugins\Host_New\Unit1.h</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.cbproj,E:\WG\BCB\CS94_QPlugins\Host_New\Project1.cbproj=E:\WG\BCB\CS94_QPlugins\Host_New\Host.cbproj</Transaction>
+    <Transaction>2016/04/08 16:49:20.000.531,=D:\User\QDAC3\Source\QString.pas</Transaction>
+    <Transaction>2016/04/08 16:49:20.000.485,=D:\User\QDAC3\Source\qmsgpack.pas</Transaction>
+    <Transaction>2016/04/08 16:49:20.000.461,=D:\User\QDAC3\Source\qjson.pas</Transaction>
+    <Transaction>2016/04/08 16:49:20.000.499,=D:\User\QDAC3\Source\qrbtree.pas</Transaction>
+    <Transaction>2016/04/08 16:49:20.000.548,=D:\User\QDAC3\Source\qvalue.pas</Transaction>
+    <Transaction>2016/04/08 16:50:04.000.637,D:\User\QDAC3\Source\QString.pas=</Transaction>
+    <Transaction>2016/04/08 16:50:44.000.843,=D:\User\QDAC3\Source\qstring.pas</Transaction>
+    <Transaction>2016/04/08 16:51:56.000.348,=D:\User\QDAC3\QPlugins\kernel\qplugins_messages.pas</Transaction>
+    <Transaction>2016/04/08 16:51:56.000.326,=D:\User\QDAC3\QPlugins\kernel\qplugins_formsvc.pas</Transaction>
+    <Transaction>2016/04/08 16:51:56.000.361,=D:\User\QDAC3\QPlugins\kernel\qplugins_params.pas</Transaction>
+    <Transaction>2016/04/08 16:51:56.000.393,=D:\User\QDAC3\QPlugins\kernel\qplugins_vcl_messages.pas</Transaction>
+    <Transaction>2016/04/08 16:51:56.000.381,=D:\User\QDAC3\QPlugins\kernel\qplugins_vcl_formsvc.pas</Transaction>
+    <Transaction>2016/04/08 16:51:56.000.337,=D:\User\QDAC3\QPlugins\kernel\qplugins_loader_lib.pas</Transaction>
+    <Transaction>2016/04/08 16:51:56.000.314,=D:\User\QDAC3\QPlugins\kernel\qplugins.pas</Transaction>
+  </Transactions>
+</BorlandProject>

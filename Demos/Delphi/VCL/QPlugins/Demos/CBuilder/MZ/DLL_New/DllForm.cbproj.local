@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899/12/30 00:00:00.000.cpp,E:\WG\BCB\CS94_QPlugins\DLL_New\Unit1.cpp=E:\WG\BCB\CS94_QPlugins\DLL_New\Unit2.cpp</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.cpp,E:\WG\BCB\CS94_QPlugins\DLL_New\File1.cpp=E:\WG\我的文档\Documents\RAD Studio\Projects\File2.cpp</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.h,E:\WG\BCB\CS94_QPlugins\DLL_New\Unit1.h=E:\WG\BCB\CS94_QPlugins\DLL_New\Unit2.h</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.cbproj,E:\WG\BCB\CS94_QPlugins\DLL_New\DllForm.cbproj=E:\WG\BCB\CS94_QPlugins\DLL_New\Project1.cbproj</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.cbproj,E:\WG\BCB\CS94_QPlugins\DLL_New\Project1.cbproj=E:\WG\我的文档\Documents\RAD Studio\Projects\Project1.cbproj</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.dfm,E:\WG\BCB\CS94_QPlugins\DLL_New\Unit1.dfm=E:\WG\BCB\CS94_QPlugins\DLL_New\Unit2.dfm</Transaction>
+    <Transaction>2016/04/08 16:57:02.055,=D:\User\QDAC3\QPlugins\kernel\qplugins.pas</Transaction>
+    <Transaction>2016/04/08 16:57:02.068,=D:\User\QDAC3\QPlugins\kernel\qplugins_formsvc.pas</Transaction>
+    <Transaction>2016/04/08 16:57:02.077,=D:\User\QDAC3\QPlugins\kernel\qplugins_messages.pas</Transaction>
+    <Transaction>2016/04/08 16:57:02.090,=D:\User\QDAC3\QPlugins\kernel\qplugins_params.pas</Transaction>
+    <Transaction>2016/04/08 16:57:02.102,=D:\User\QDAC3\QPlugins\kernel\qplugins_vcl_formsvc.pas</Transaction>
+    <Transaction>2016/04/08 16:57:02.112,=D:\User\QDAC3\QPlugins\kernel\qplugins_vcl_messages.pas</Transaction>
+    <Transaction>2016/04/08 16:57:36.436,=D:\User\QDAC3\Source\qjson.pas</Transaction>
+    <Transaction>2016/04/08 16:57:36.457,=D:\User\QDAC3\Source\qmsgpack.pas</Transaction>
+    <Transaction>2016/04/08 16:57:36.469,=D:\User\QDAC3\Source\qrbtree.pas</Transaction>
+    <Transaction>2016/04/08 16:57:36.497,=D:\User\QDAC3\Source\qstring.pas</Transaction>
+    <Transaction>2016/04/08 16:57:36.512,=D:\User\QDAC3\Source\qtimetypes.pas</Transaction>
+    <Transaction>2016/04/08 16:57:36.527,=D:\User\QDAC3\Source\qvalue.pas</Transaction>
+  </Transactions>
+</BorlandProject>
