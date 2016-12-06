@@ -107,6 +107,14 @@ object Form3: TForm3
         Text = 'QDAC.Demo'
       end
     end
+    object ProgressBar1: TProgressBar
+      Left = 369
+      Top = 18
+      Width = 256
+      Height = 17
+      TabOrder = 7
+      Visible = False
+    end
   end
   object Memo1: TMemo
     Left = 0

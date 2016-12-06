@@ -76,7 +76,6 @@ begin
   AHook := TFormModalHook.Create(F);
   AHook.FCloseAction := ACloseAction;
   AHook.ShowModal(OnResult);
-  CloseAllPopups; // 避免窗体上有弹出的项目没有被关闭
 end;
 
 procedure ModalDialog(AClass: TFormClass; OnResult: TFormModalProc); overload;
@@ -102,7 +101,8 @@ procedure TFormModalHook.DoFormClose(Sender: TObject; var Action: TCloseAction);
 begin
   if FForm.ModalResult = mrNone then
     FForm.ModalResult := mrCancel;
-  Action := TCloseAction.caHide; // 隐藏代替关闭
+  Action := FCloseAction;
+  CloseAllPopups;
   if Assigned(FOldClose) then
     FOldClose(Sender, FCloseAction);
 end;
@@ -120,14 +120,17 @@ begin
         if Assigned(FResultProc) then
           FResultProc(FForm);
       end;
-      if FCloseAction = TCloseAction.caFree then
-        FreeMgr.Push(FForm);
+//      if (not Assigned(FOldClose)) and (FCloseAction = TCloseAction.caFree) then
+//        FreeMgr.Push(FForm);
+      CloseAllPopups;
     end);
 {$ELSE}
   FForm.ShowModal;
   if Assigned(FResultProc) then
     FResultProc(FForm);
-  FForm.DisposeOf;
+  CloseAllPopups;
+  if FCloseAction=TCloseAction.caFree then
+    FForm.DisposeOf;
 {$ENDIF}
 end;
 
@@ -163,7 +166,6 @@ end;
 
 procedure TFormDisposeMgr.Push(AObj: TObject);
 begin
-{$IFNDEF AUTOREFCOUNT}
   if FCount = Length(FPendings) then
   begin
     if FCount = 0 then
@@ -173,7 +175,6 @@ begin
   end;
   FPendings[FCount] := AObj;
   Inc(FCount);
-{$ENDIF}
 end;
 
 initialization

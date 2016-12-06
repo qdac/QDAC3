@@ -5,7 +5,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, qaes,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
+  Vcl.ComCtrls;
 
 type
   TForm3 = class(TForm)
@@ -21,6 +22,7 @@ type
     rgKeyLen: TRadioGroup;
     GroupBox1: TGroupBox;
     edtKey: TEdit;
+    ProgressBar1: TProgressBar;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure CBCClick(Sender: TObject);
@@ -28,6 +30,7 @@ type
   private
     { Private declarations }
     procedure InitEncrypt(var AES: TQAES);
+    procedure DoProgress(AProcessed, ATotal: Int64);
   public
     { Public declarations }
   end;
@@ -109,6 +112,16 @@ begin
   Memo2.Lines.Add('Ω‚√‹∫Û:' + AES.Decrypt(ABytes));
 end;
 
+procedure TForm3.DoProgress(AProcessed, ATotal: Int64);
+begin
+  if not ProgressBar1.Visible then
+    ProgressBar1.Visible := true;
+  if AProcessed < ATotal then
+    ProgressBar1.Position := AProcessed * 100 div ATotal
+  else
+    ProgressBar1.Position := 100;
+end;
+
 procedure TForm3.InitEncrypt(var AES: TQAES);
 var
   AKeyType: TQAESKeyType;
@@ -128,6 +141,7 @@ begin
     AES.AsECB(edtKey.Text, AKeyType)
   else
     AES.AsCBC(AInitVector, edtKey.Text, AKeyType);
+  AES.SetProgressCallback(DoProgress);
 end;
 
 end.

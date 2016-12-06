@@ -122,5 +122,14 @@ object Form1: TForm1
         'faHoriz'
         'faVert')
     end
+    object Button8: TButton
+      Left = 416
+      Top = 44
+      Width = 75
+      Height = 25
+      Caption = 'Button8'
+      TabOrder = 8
+      OnClick = Button8Click
+    end
   end
 end

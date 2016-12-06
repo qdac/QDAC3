@@ -10,12 +10,6 @@ uses classes, sysutils, qstring, qvalue, variants{$IFDEF UNICODE},
   Todo:加入只读接口的支持
 }
 type
-  // 基础接口，用于获取对象的最原始地址（而不是当前接口实例的地址）
-  IQBaseInterface = interface
-    ['{0DCE065A-65D2-43C8-902A-B6E6214982B8}']
-    function GetOriginPointer: Pointer; stdcall;
-  end;
-
   // 流
   IQStream = interface
     ['{BCFD2F69-CCB8-4E0B-9FE9-A7D58797D1B8}']
@@ -37,8 +31,8 @@ type
     ptGuid, // Guid
     ptBytes, // Binary
     ptStream, // 流
-    ptArray // Array
-    );
+    ptArray, // Array
+    ptInterface);
   IQParams = interface;
 
   IQString = interface
@@ -79,6 +73,8 @@ type
     function GetParent: IQParams; stdcall;
     function GetType: TQParamType; stdcall;
     procedure SetType(const AType: TQParamType); stdcall;
+    function GetAsInterface: IInterface; stdcall;
+    procedure SetAsInterface(const AIntf: IInterface); stdcall;
     property AsInteger: Integer read GetAsInteger write SetAsInteger;
     property AsInt64: Int64 read GetAsInt64 write SetAsInt64;
     property AsBoolean: Boolean read GetAsBoolean write SetAsBoolean;
@@ -92,6 +88,7 @@ type
     property AsString: IQString read GetAsString write SetAsString;
     property Parent: IQParams read GetParent;
     property ParamType: TQParamType read GetType;
+    property AsInterface: IInterface read GetAsInterface write SetAsInterface;
   end;
 
   // 参数列表
@@ -159,7 +156,7 @@ type
   end;
 
   // 重新实现 TInterfacedObject，以便子类能够重载 QueryInterface 方法
-  TQInterfacedObject = class(TObject, IInterface, IQBaseInterface)
+  TQInterfacedObject = class(TObject, IInterface)
   protected
     FRefCount: Integer;
     FDisableRefCount: Integer;
@@ -167,11 +164,12 @@ type
     constructor Create; overload; virtual;
     function _AddRef: Integer; virtual; stdcall;
     function _Release: Integer; virtual; stdcall;
-    function GetOriginPointer: Pointer; stdcall;
     function QueryInterface(const IID: TGuid; out Obj): HRESULT;
       virtual; stdcall;
+    function GetOriginPointer: Pointer; stdcall;
     procedure DisableRefCount;
     procedure EnableRefCount;
+    function ObjectInstance: TObject;
   end;
 
   TQUnicodeString = class(TQInterfacedObject, IQString)
@@ -261,6 +259,8 @@ type
     procedure SetAsStream(AStream: IQStream); stdcall;
     function GetAsDVariant: Variant;
     procedure SetAsDVariant(const V: Variant);
+    function GetAsInterface: IInterface; stdcall;
+    procedure SetAsInterface(const AIntf: IInterface); stdcall;
   public
     constructor Create(AOwner: TQParams); overload;
     destructor Destroy; override;
@@ -366,23 +366,28 @@ const
     'Guid', // Guid
     'Binary', // Binary
     'Stream', // 流
-    'Array' // Array
-    );
+    'Array', // Array
+    'Interface');
   // IQStream <-> TStream 的简单转换接口
 function NewStream(AStream: TStream; AStreamOwner: Boolean): IQStream; overload;
 function NewStream(AStream: IQStream): TQStream; overload;
 
 function QStream(AStream: TStream; AStreamOwner: Boolean): IQStream; overload;
-  deprecated 'Use NewStream instead';
+{$IF RTLVersion>20}deprecated 'Use NewStream instead'; {$IFEND}
 function QStream(AStream: IQStream): TQStream; overload;
-  deprecated 'Use NewStream instead';
+{$IF RTLVersion>20}deprecated 'Use NewStream instead'; {$IFEND}
 // IQParams 的简单实现
-function NewParams(const AValues: array of const): IQParams;
+function NewParams(const AValues: array of const): IQParams; overload;
+function NewParams: IQParams; overload;
+
 function NewString(const S: QStringW): IQString;
 function ParamAsString(AParam: IQParam): QStringW;
 function ParamAsBytes(AParam: IQParam): TBytes;
 function ParamHelper(AParam: IQParam): IQParamHelper;
 function ParamsHelper(AParams: IQParams): IQParamsHelper;
+// Interface to object
+function InstanceOf(AIntf: IInterface): TObject; overload;
+function InstanceOf(AIntf: IInterface; var AObj: TObject): Boolean; overload;
 
 var
   StringService: IQStringService = nil;
@@ -392,6 +397,7 @@ implementation
 const
   NullChar: QCharW = #0;
   PathDelimiter: PQCharW = '/'; //
+  ObjCastGUID: TGuid = '{CEDF24DE-80A4-447D-8C75-EB871DC121FD}';
 
 resourcestring
   // SInvalidName = '无效的结点名称，名称中不能包含 "/"。';
@@ -436,6 +442,8 @@ type
     procedure SetAsDBytes(const AValue: TBytes);
     function GetAsDVariant: Variant;
     procedure SetAsDVariant(const V: Variant);
+    function GetAsInterface: IInterface; stdcall;
+    procedure SetAsInterface(const AIntf: IInterface); stdcall;
   public
     constructor Create(AIntf: IQParam);
   end;
@@ -479,6 +487,24 @@ type
     constructor Create(AIntf: IQParams);
   end;
 
+function InstanceOf(AIntf: IInterface): TObject;
+var
+  ATemp: Pointer;
+begin
+  ATemp := nil;
+  if Assigned(AIntf) and (AIntf.QueryInterface(ObjCastGUID, IInterface(ATemp))
+    = S_OK) then
+    Result := TObject(ATemp)
+  else
+    Result := nil;
+end;
+
+function InstanceOf(AIntf: IInterface; var AObj: TObject): Boolean;
+begin
+  AObj := InstanceOf(AIntf);
+  Result := Assigned(AObj);
+end;
+
 function ParamHelper(AParam: IQParam): IQParamHelper;
 begin
   if not Supports(AParam, IQParamHelper, Result) then
@@ -512,10 +538,20 @@ begin
   Result := Self;
 end;
 
+function TQInterfacedObject.ObjectInstance: TObject;
+begin
+  Result := Self;
+end;
+
 function TQInterfacedObject.QueryInterface(const IID: TGuid; out Obj): HRESULT;
 begin
   if GetInterface(IID, Obj) then
     Result := 0
+  else if SameId(IID, ObjCastGUID) then
+  begin
+    Pointer(Obj) := Self;
+    Result := 0;
+  end
   else
     Result := E_NOINTERFACE;
 end;
@@ -789,13 +825,11 @@ begin
       end;
     ptBytes:
       begin
-        FValue.TypeNeeded(vdtStream);
-        FValue.AsBytes := ParamAsBytes(ASource);
+        AsBytes := ParamAsBytes(ASource);
       end;
     ptStream:
       begin
-        FValue.TypeNeeded(vdtStream);
-        FValue.AsStream.CopyFrom(NewStream(ASource.AsStream), 0);
+        SetAsStream(ASource.AsStream);
       end;
     ptArray:
       AssignArray;
@@ -857,7 +891,7 @@ var
 
 begin
   case FType of
-    ptBytes, ptStream:
+    ptStream:
       StreamToBytes;
     ptArray:
       ArrayToBytes
@@ -950,6 +984,15 @@ begin
   Result := AsInt64;
 end;
 
+function TQParam.GetAsInterface: IInterface;
+begin
+  if FType in [ptInterface, ptStream, ptBytes] then
+    Result := IInterface(FValue.Value.AsPointer)
+  else
+    raise QException.CreateFmt(SCantConvert, [ParamTypeNames[FType],
+      ParamTypeNames[ptInt64]]);
+end;
+
 function TQParam.GetAsSingle: Single;
 begin
   Result := AsFloat;
@@ -966,7 +1009,10 @@ end;
 
 function TQParam.GetAsString: IQString;
 begin
-  Result := TQParamString.Create(@FValue);
+  if FType = ptArray then
+    Result := AsArray.AsString
+  else
+    Result := TQParamString.Create(@FValue);
 end;
 
 function TQParam.GetAsUString: QStringW;
@@ -1124,6 +1170,12 @@ begin
   FValue.AsInteger := AValue;
 end;
 
+procedure TQParam.SetAsInterface(const AIntf: IInterface);
+begin
+  FValue.TypeNeeded(vdtInt64);
+  IInterface(FValue.Value.AsPointer) := AIntf;
+end;
+
 procedure TQParam.SetAsSingle(const AValue: Single);
 begin
   FValue.AsSingle := AValue;
@@ -1152,6 +1204,8 @@ end;
 procedure TQParam.SetNull;
 begin
   case FType of
+    ptInterface:
+      IInterface(FValue.Value.AsPointer) := nil;
     ptBytes, ptStream:
       IQStream(FValue.Value.AsPointer) := nil;
     ptArray:
@@ -1320,11 +1374,13 @@ begin
         Result := InternalAdd(AName, ptInt64, AParam);
         AParam.AsInt64 := AValue;
       end;
+{$IF RtlVersion>=26}
     varUInt64:
       begin
         Result := InternalAdd(AName, ptUInt64, AParam);
         AParam.AsInt64 := AValue;
       end;
+{$IFEND}
     varString{$IFDEF UNICODE}, varUString{$ENDIF}:
       begin
         Result := InternalAdd(AName, ptUnicodeString, AParam);
@@ -1470,7 +1526,7 @@ begin
       begin
         Result := AParent.ByName(PQCharW(AName));
         if Result.ParamType = ptArray then
-          AParent := (Result as IQBaseInterface).GetOriginPointer
+          AParent := InstanceOf(Result) as TQParams
           // TQParams
         else
           Break;
@@ -1547,7 +1603,8 @@ begin
         AHelper.Cat(QuotedStrW(AParam.Name, SQuoter)).Cat(SNameValue);
       if AParam.ParamType in [ptDateTime, ptInterval, ptAnsiString,
         ptUtf8String, ptUnicodeString, ptGuid, ptBytes, ptStream] then
-        AHelper.Cat(QuotedStrW(AParam.AsString.Value, SQuoter))
+        AHelper.Cat(QuotedStrW(JavaEscape(AParam.AsString.Value,
+          False), SQuoter))
       else
         AHelper.Cat(AParam.AsString.Value);
       AHelper.Cat(SDelimiter);
@@ -1768,6 +1825,11 @@ begin
   end;
 end;
 
+function NewParams: IQParams;
+begin
+  Result := TQParams.Create;
+end;
+
 function TQParams.ByName(const AName: QStringW): IQParam;
 begin
 
@@ -1906,6 +1968,8 @@ begin
 end;
 
 function TQParamHelper.GetAsDVariant: Variant;
+var
+  AObj: TObject;
   procedure BytesToVar;
   var
     ASize: Cardinal;
@@ -1955,8 +2019,9 @@ function TQParamHelper.GetAsDVariant: Variant;
   end;
 
 begin
-  if FInterface is TQParam then
-    Result := (FInterface as TQParam).GetAsDVariant
+  AObj := InstanceOf(FInterface);
+  if Assigned(AObj) and (AObj is TQParam) then
+    Result := (AObj as TQParam).GetAsDVariant
   else
   begin
     case FInterface.ParamType of
@@ -2026,6 +2091,11 @@ end;
 function TQParamHelper.GetAsInteger: Integer;
 begin
   Result := FInterface.AsInteger;
+end;
+
+function TQParamHelper.GetAsInterface: IInterface;
+begin
+  Result := FInterface.GetAsInterface;
 end;
 
 function TQParamHelper.GetAsSingle: Single;
@@ -2163,6 +2233,11 @@ end;
 procedure TQParamHelper.SetAsInteger(const AValue: Integer);
 begin
   FInterface.AsInteger := AValue;
+end;
+
+procedure TQParamHelper.SetAsInterface(const AIntf: IInterface);
+begin
+  FInterface.SetAsInterface(AIntf);
 end;
 
 procedure TQParamHelper.SetAsSingle(const AValue: Single);

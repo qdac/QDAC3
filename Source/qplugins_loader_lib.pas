@@ -39,7 +39,7 @@ type
       overload; override;
     function InternalUnloadServices(const AHandle: THandle): Boolean; override;
   public
-    constructor Create(APath, AExt: QStringW); overload;
+    constructor Create(APath, AExt: QStringW;AIncludeSubDir:Boolean=false); overload;
   end;
 
 {$ELSE}
@@ -144,11 +144,11 @@ end;
 
 { TQBPLLoader }
 
-constructor TQBPLLoader.Create(APath, AExt: QStringW);
+constructor TQBPLLoader.Create(APath, AExt: QStringW;AIncludeSubDir:Boolean);
 begin
   if Length(AExt) = 0 then
     AExt := '.BPL';
-  inherited Create(LID_PACKAGE, 'Loader_BPL', APath, AExt);
+  inherited Create(LID_PACKAGE, 'Loader_BPL', APath, AExt,AIncludeSubDir);
 end;
 
 function TQBPLLoader.InternalLoadServices(const AFileName: PWideChar): THandle;

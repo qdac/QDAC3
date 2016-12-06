@@ -73,6 +73,9 @@ const
   NID_PLUGIN_LOADED = 9; // 加载插件完成
   NID_PLUGIN_UNLOADING = 10; // 服务准备卸载
   NID_PLUGIN_UNLOADED = 11; // 服务卸载完成
+  NID_NOTIFY_PROCESSING = 12; // 通知将要被处理
+  NID_NOTIFY_PROCESSED = 13; // 通知已经处理完成
+  NID_SERVICE_READY = 14; // 服务注册完成
 
 type
   // 版本信息
@@ -164,6 +167,9 @@ type
       var AFireNext: Boolean); stdcall;
   end;
 
+  TQSubscribeEnumCallback = procedure(ANotify: IQNotify; AParam: Int64;
+    var AContinue: Boolean);
+
   // 通知管理器
   IQNotifyManager = interface
     ['{037DCCD1-6877-4917-A315-120CD3E403F4}']
@@ -175,6 +181,8 @@ type
     procedure Send(AId: Cardinal; AParams: IQParams); stdcall;
     procedure Post(AId: Cardinal; AParams: IQParams); stdcall;
     procedure Clear;
+    function EnumSubscribe(ANotifyId: Cardinal;
+      ACallback: TQSubscribeEnumCallback; AParam: Int64): Integer; stdcall;
     function GetCount: Integer; stdcall;
     function GetId(const AIndex: Integer): Cardinal; stdcall;
     function GetName(const AIndex: Integer): PWideChar; stdcall;
@@ -229,6 +237,8 @@ type
     procedure Flush; stdcall;
   end;
 
+  TQServiceCallback = procedure(const AService: IQService); stdcall;
+
   // 插件管理器，所有服务的总管家
   IQPluginsManager = interface(IQServices)
     ['{BDE6247B-87AD-4105-BDC9-1EA345A9E4B0}']
@@ -244,6 +254,16 @@ type
     procedure ProcessQueuedCalls; stdcall;
     function Stop: Boolean; stdcall;
     function Replace(ANewManager: IQPluginsManager): Boolean; stdcall;
+    function WaitService(const AService: PQCharW; ANotify: TQServiceCallback)
+      : Boolean; overload; stdcall;
+    function WaitService(const AId: TGuid; ANotify: TQServiceCallback): Boolean;
+      overload; stdcall;
+    procedure RemoveServiceWait(ANotify: TQServiceCallback); overload; stdcall;
+    procedure RemoveServiceWait(const AService: PQCharW;
+      ANotify: TQServiceCallback); overload; stdcall;
+    procedure RemoveServiceWait(const AId: TGuid; ANotify: TQServiceCallback);
+      overload; stdcall;
+    procedure ServiceReady(AService: IQService); stdcall;
     property Services: IQServices read GetServices;
     property Routers: IQServices read GetRouters;
     property Loaders: IQServices read GetLoaders;
@@ -370,6 +390,7 @@ type
   protected
     FItems: TQPointerList;
     FNextId: Cardinal;
+    FBeforeProcessNotify, FAfterProcessNotify: TQNotifyItem;
     procedure Clear;
     procedure HandlePost(AParams: IInterface);
     procedure DoNotify(AId: Cardinal; AParams: IQParams);
@@ -379,6 +400,8 @@ type
     function Subscribe(ANotifyId: Cardinal; AHandler: IQNotify)
       : Boolean; stdcall;
     procedure Unsubscribe(ANotifyId: Cardinal; AHandler: IQNotify); stdcall;
+    function EnumSubscribe(ANotifyId: Cardinal;
+      ACallback: TQSubscribeEnumCallback; AParam: Int64): Integer; stdcall;
     function IdByName(const AName: PWideChar): Cardinal; stdcall;
     function NameOfId(const AId: Cardinal): PWideChar; stdcall;
     procedure Send(AId: Cardinal; AParams: IQParams); stdcall;
@@ -405,6 +428,7 @@ type
   protected
     FFileExt: QStringW;
     FPath: QStringW;
+    FIncludeSubDir: Boolean;
     FItems: TQPointerList;
     FState: TQLoaderState;
     FActiveFileName: QStringW;
@@ -439,8 +463,8 @@ type
     procedure SetLoadingModule(AInstance: HINST); stdcall;
     function GetState: TQLoaderState; stdcall;
   public
-    constructor Create(const AId: TGuid; AName: QStringW;
-      APath, AExt: QStringW); overload;
+    constructor Create(const AId: TGuid; AName: QStringW; APath, AExt: QStringW;
+      AIncSubDir: Boolean = false); overload;
     destructor Destroy; override;
     function Execute(AParams: IQParams; AResult: IQParams): Boolean;
       override; stdcall;
@@ -454,7 +478,8 @@ type
     FInterface: IInterface;
   public
     constructor Create(AOwner: TComponent); overload; override;
-    constructor Create(AOwner: TComponent; AInterface: IInterface); overload;
+    constructor Create(AOwner: TComponent; AInterface: IInterface);
+      reintroduce; overload;
     property InterfaceObject: IInterface read FInterface write FInterface;
   end;
 
@@ -633,15 +658,15 @@ function ServiceModule(AService: IInterface): HMODULE;
 /// <returns>
 /// 返回服务的完整路径（基于PluginsManager）
 /// </returns>
-function ServicePath(AService: IQService): QStringW;
+function ServicePath(AService: IQService;APathDelimiter:QCharW='/'): QStringW;
 function UnloadServices(AInstance: HMODULE; AWaitDone: Boolean): Boolean;
 function HoldByComponent(AOwner: TComponent; AInterface: IInterface)
   : TComponent;
-
+var
+  PathDelimiter: PQCharW = '/';
 implementation
 
 const
-  PathDelimiter: PQCharW = '/';
   NullChar: WideChar = #0;
 
 resourcestring
@@ -655,13 +680,28 @@ type
     function NewString(S: PWideChar): IQString; stdcall;
   end;
 
+  PServiceWaitItem = ^TServiceWaitItem;
+
+  TServiceWaitItem = record
+    Path: QStringW;
+    Id: TGuid;
+    Next: PServiceWaitItem;
+    case Integer of
+      0:
+        (OnReady: TQServiceCallback);
+      1:
+        (Method: TMethod);
+  end;
+
   // TQPluginsManager 实现了IQService/IQServices/IQNotify接口
   TQPluginsManager = class(TQServices, IQPluginsManager, IQNotify)
+  private
   protected
     FRouters: IQServices;
     FServices: IQServices;
     FLoaders: IQServices;
     FActiveLoader: IQLoader;
+    FWaitingServices: PServiceWaitItem;
     FNotifyMgr: IQNotifyManager;
     function GetLoaders: IQServices; stdcall;
     function GetRouters: IQServices; stdcall;
@@ -672,6 +712,16 @@ type
       ARevert: Boolean): Boolean;
     procedure Notify(const AId: Cardinal; AParams: IQParams;
       var AFireNext: Boolean); stdcall;
+    function WaitService(const AService: PQCharW; ANotify: TQServiceCallback)
+      : Boolean; overload; stdcall;
+    function WaitService(const AId: TGuid; ANotify: TQServiceCallback): Boolean;
+      overload; stdcall;
+    procedure RemoveServiceWait(ANotify: TQServiceCallback); overload; stdcall;
+    procedure RemoveServiceWait(const AService: PQCharW;
+      ANotify: TQServiceCallback); overload; stdcall;
+    procedure RemoveServiceWait(const AId: TGuid; ANotify: TQServiceCallback);
+      overload; stdcall;
+    procedure ServiceReady(AService: IQService); stdcall;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -821,7 +871,7 @@ function PluginsManager: IQPluginsManager;
     AHandle: THandle;
     P: Pointer;
   begin
-    AHandle := OpenFileMappingW(FILE_MAP_READ, False,
+    AHandle := OpenFileMappingW(FILE_MAP_READ, false,
       PWideChar(PluginsManagerNameSpace));
     if AHandle = 0 then // 不存在，自己是首个调用者
     begin
@@ -956,7 +1006,7 @@ end;
 
 function TQService.GetDParent: TQServices;
 begin
-  Result := (IQServices(FParent) as IQBaseInterface).GetOriginPointer;
+  Result := InstanceOf(IInterface(FParent)) as TQServices;
 end;
 
 function TQService.GetOriginObject: Pointer;
@@ -1007,14 +1057,14 @@ begin
   Result := FName;
   while AParent <> nil do
   begin
-    Result := QStringW(AParent.Name) + '/' + Result;
+    Result := QStringW(AParent.Name) + PathDelimiter^ + Result;
     AParent := AParent.Parent;
   end;
 end;
 
 function TQService.GetServiceAttrs: TQParams;
 begin
-  Result := (GetAttrs as IQBaseInterface).GetOriginPointer;
+  Result := InstanceOf(GetAttrs) as TQParams;
 end;
 
 function TQService.IsInModule(AModule: THandle): Boolean;
@@ -1106,7 +1156,7 @@ end;
 
 procedure TQService.ValidName(const S: QStringW);
 begin
-  if StrStrW(PWideChar(S), '/') <> nil then
+  if ContainsCharW(S,PathDelimiter) then
     raise QException.Create(SInvalidName);
 end;
 
@@ -1166,7 +1216,7 @@ begin
   if Assigned(APath) then
   begin
     AMgr := PluginsManager;
-    if APath^ = '/' then
+    if CharInW(APath,PathDelimiter) then
     begin
       AParent := AMgr;
       Inc(APath);
@@ -1183,7 +1233,7 @@ begin
         AName := DecodeTokenW(APath, PathDelimiter, NullChar, True);
         if Length(AName) > 0 then
         begin
-          AFound := False;
+          AFound := false;
           for I := 0 to AParent.Count - 1 do
           begin
             Result := AParent[I];
@@ -1252,7 +1302,7 @@ begin
     Result := 0;
 end;
 
-function ServicePath(AService: IQService): QStringW;
+function ServicePath(AService: IQService;APathDelimiter:QCharW): QStringW;
 var
   AParent, ARoot: IQServices;
 begin
@@ -1267,10 +1317,10 @@ begin
     try
       while AParent <> ARoot do
       begin
-        Result := QStringW(AParent.Name) + PathDelimiter + Result;
+        Result := QStringW(AParent.Name) + APathDelimiter + Result;
         AParent := AParent.Parent;
       end;
-      Result := '/' + Result;
+      Result := APathDelimiter + Result;
     finally
       Unlock;
     end;
@@ -1317,7 +1367,7 @@ begin
   if Assigned(ALoader) then
     Result := ALoader.UnloadServices(AInstance, AWaitDone)
   else
-    Result := False;
+    Result := false;
 end;
 
 function TQServices.ByPath(APath: PWideChar): IQService;
@@ -1405,7 +1455,7 @@ begin
       if AIndex <> ANewIndex then
         FItems.Move(AIndex, ANewIndex)
       else
-        Result := False
+        Result := false
     end;
   finally
     Unlock;
@@ -1527,6 +1577,34 @@ procedure TQPluginsManager.ModuleUnloading(AInstance: HINST);
       end;
     end;
   end;
+  procedure RemoveWaitings;
+  var
+    APrior, AItem, ANext: PServiceWaitItem;
+  begin
+    if Assigned(FWaitingServices) then
+    begin
+      APrior := nil;
+      AItem := FWaitingServices;
+      while Assigned(AItem) do
+      begin
+        if FindHInstance(AItem.Method.Code) = AInstance then
+        begin
+          ANext := AItem.Next;
+          if Assigned(APrior) then
+            APrior.Next := ANext
+          else
+            FWaitingServices := ANext;
+          Dispose(AItem);
+          AItem := ANext;
+        end
+        else
+        begin
+          APrior := AItem;
+          AItem := AItem.Next;
+        end;
+      end;
+    end;
+  end;
 
 begin
   // OutputDebugString(PChar('Clear module HInstance=' + IntToHex(AInstance,
@@ -1605,7 +1683,7 @@ begin
             AError.Add('ErrorMsg', ptUnicodeString).AsString :=
               NewString(FActiveLoader.LastErrorMsg);
             FNotifyMgr.Send(NID_LOADER_ERROR, AError);
-            Result := False;
+            Result := false;
           end;
         end;
         if ARevert then
@@ -1637,7 +1715,7 @@ var
   AName: QStringW;
   I: Integer;
 begin
-  if P^ = '/' then
+  if CharInW(P,PathDelimiter) then
     Inc(P);
   Result := nil;
   AName := DecodeTokenW(P, PathDelimiter, NullChar, True);
@@ -1674,7 +1752,7 @@ begin
       AName := DecodeTokenW(P, PathDelimiter, NullChar, True);
       if Length(AName) > 0 then
       begin
-        AFound := False;
+        AFound := false;
         for I := 0 to Result.Count - 1 do
         begin
           AService := Result[I];
@@ -1740,7 +1818,7 @@ begin
   AParent := AService.Parent;
   while Assigned(AParent) do
   begin
-    Result := QStringW(AParent.Name) + '/' + Result;
+    Result := QStringW(AParent.Name) + PathDelimiter^ + Result;
     AParent := AParent.Parent;
   end;
 end;
@@ -1761,6 +1839,94 @@ begin
     Result := inherited QueryInterface(IID, Obj);
 end;
 
+procedure TQPluginsManager.RemoveServiceWait(ANotify: TQServiceCallback);
+begin
+  RemoveServiceWait(nil, ANotify);
+end;
+
+procedure TQPluginsManager.RemoveServiceWait(const AService: PQCharW;
+  ANotify: TQServiceCallback);
+var
+  APrior, ANext, AItem, AFirst: PServiceWaitItem;
+  ASvcPath: QStringW;
+  ANotifyAddr: TMethod absolute ANotify;
+begin
+  ASvcPath := AService;
+  APrior := nil;
+  AFirst := nil;
+  Lock;
+  try
+    AItem := FWaitingServices;
+    while Assigned(AItem) do
+    begin
+      if (AItem.Method.Code = ANotifyAddr.Code) and
+        ((not Assigned(AService)) or (AItem.Path = ASvcPath)) then
+      begin
+        ANext := AItem.Next;
+        if Assigned(APrior) then
+          APrior.Next := ANext
+        else
+          FWaitingServices := ANext;
+        AItem.Next := AFirst;
+        AFirst := AItem;
+      end
+      else
+      begin
+        APrior := AItem;
+        AItem := AItem.Next;
+      end;
+    end;
+  finally
+    Unlock;
+  end;
+  while Assigned(AFirst) do
+  begin
+    ANext := AFirst.Next;
+    Dispose(AFirst);
+    AFirst := ANext;
+  end;
+end;
+
+procedure TQPluginsManager.RemoveServiceWait(const AId: TGuid;
+  ANotify: TQServiceCallback);
+var
+  APrior, ANext, AItem, AFirst: PServiceWaitItem;
+  ANotifyAddr: TMethod absolute ANotify;
+begin
+  APrior := nil;
+  AFirst := nil;
+  Lock;
+  try
+    AItem := FWaitingServices;
+    while Assigned(AItem) do
+    begin
+      if (AItem.Method.Code = ANotifyAddr.Code) and SameId(AId, AItem.Id) then
+      begin
+        ANext := AItem.Next;
+        if Assigned(APrior) then
+          APrior.Next := ANext
+        else
+          FWaitingServices := ANext;
+        AItem.Next := AFirst;
+        AFirst := AItem;
+      end
+      else
+      begin
+        APrior := AItem;
+        AItem := AItem.Next;
+      end;
+    end;
+  finally
+    Unlock;
+  end;
+  while Assigned(AFirst) do
+  begin
+    ANext := AFirst.Next;
+    Dispose(AFirst);
+    AFirst := ANext;
+  end;
+end;
+
 function TQPluginsManager.Replace(ANewManager: IQPluginsManager): Boolean;
 var
   AParams: TQParams;
@@ -1774,6 +1940,46 @@ begin
   Result := True;
 end;
 
+procedure TQPluginsManager.ServiceReady(AService: IQService);
+var
+  AFirst, APrior, AItem, ANext: PServiceWaitItem;
+begin
+  AFirst := nil;
+  Lock;
+  try
+    AItem := FWaitingServices;
+    APrior := nil;
+    while Assigned(AItem) do
+    begin
+      ANext := AItem.Next;
+      if ((Length(AItem.Path) > 0) and (AItem.Path = ServicePath(AService))) or
+        SameId(AService.GetId, AItem.Id) then
+      begin
+        if Assigned(APrior) then
+          APrior.Next := ANext
+        else
+          FWaitingServices := ANext;
+        if Assigned(AFirst) then
+          AItem.Next := AFirst;
+        AFirst := AItem;
+      end
+      else
+        APrior := AItem;
+      AItem := ANext;
+    end;
+  finally
+    Unlock;
+  end;
+  while Assigned(AFirst) do
+  begin
+    ANext := AFirst.Next;
+    if Assigned(AFirst.OnReady) then
+      AFirst.OnReady(AService);
+    Dispose(AFirst);
+    AFirst := ANext;
+  end;
+end;
+
 procedure TQPluginsManager.SetActiveLoader(ALoader: IQLoader);
 begin
   FActiveLoader := ALoader;
@@ -1781,12 +1987,53 @@ end;
 
 procedure TQPluginsManager.Start;
 begin
-  DoLoaderAction(NID_LOADERS_STARTING, NID_LOADERS_STARTED, False);
+  DoLoaderAction(NID_LOADERS_STARTING, NID_LOADERS_STARTED, false);
 end;
 
 function TQPluginsManager.Stop: Boolean;
 begin
   Result := DoLoaderAction(NID_LOADERS_STOPPING, NID_LOADERS_STOPPED, True);
+end;
+
+function TQPluginsManager.WaitService(const AService: PQCharW;
+  ANotify: TQServiceCallback): Boolean;
+var
+  AItem: PServiceWaitItem;
+begin
+  if Assigned(AService) and (AService^ <> #0) then
+  begin
+    New(AItem);
+    AItem.Path := AService;
+    AItem.OnReady := ANotify;
+    Lock;
+    try
+      AItem.Next := FWaitingServices;
+      FWaitingServices := AItem;
+    finally
+      Unlock;
+    end;
+    Result := True;
+  end
+  else
+    Result := false;
+end;
+
+function TQPluginsManager.WaitService(const AId: TGuid;
+  ANotify: TQServiceCallback): Boolean;
+var
+  AItem: PServiceWaitItem;
+begin
+  New(AItem);
+  AItem.Id := AId;
+  AItem.OnReady := ANotify;
+  Lock;
+  try
+    AItem.Next := FWaitingServices;
+    FWaitingServices := AItem;
+  finally
+    Unlock;
+  end;
+  Result := True;
 end;
 
 function TQPluginsManager._AddRef: Integer;
@@ -1837,6 +2084,13 @@ begin
     'Manager.Plugin.Unloading'));
   FItems.Add(TQNotifyItem.Create(Self, NID_PLUGIN_UNLOADED,
     'Manager.Plugin.Unloaded'));
+  FBeforeProcessNotify := TQNotifyItem.Create(Self, NID_NOTIFY_PROCESSING,
+    'Manager.NotifyManager.Processing');
+  FAfterProcessNotify := TQNotifyItem.Create(Self, NID_NOTIFY_PROCESSED,
+    'Manager.NotifyManager.Processed');
+  FItems.Add(FBeforeProcessNotify);
+  FItems.Add(FAfterProcessNotify);
+  FItems.Add(TQNotifyItem.Create(Self, NID_SERVICE_READY, 'Services.Ready'));
   FNextId := FItems.Count;
 end;
 
@@ -1853,6 +2107,8 @@ var
   AItem: TQNotifyItem;
   AItems: array of IQNotify;
   AFireNext: Boolean;
+  AFireProcessNotify: Boolean;
+  AProcessParams: IQParams;
 begin
   Lock;
   try
@@ -1868,10 +2124,57 @@ begin
   finally
     Unlock;
   end;
+  AFireProcessNotify := (AId <> NID_NOTIFY_PROCESSING) and
+    (AId <> NID_NOTIFY_PROCESSED);
+  if AFireProcessNotify then
+  begin
+    AProcessParams := TQParams.Create;
+    AProcessParams.Add('Id', ptUInt32).AsInt64 := AId;
+    AProcessParams.Add('Params', ptInterface).AsInterface := AParams;
+    DoNotify(NID_NOTIFY_PROCESSING, AProcessParams);
+  end;
+  try
+    AFireNext := True;
+    for I := 0 to High(AItems) do
+    begin
+      AItems[I].Notify(AId, AParams, AFireNext);
+      if not AFireNext then
+        break;
+    end;
+  finally
+    if AFireProcessNotify then
+      DoNotify(NID_NOTIFY_PROCESSED, AProcessParams);
+  end;
+end;
+
+function TQNotifyManager.EnumSubscribe(ANotifyId: Cardinal;
+  ACallback: TQSubscribeEnumCallback; AParam: Int64): Integer;
+var
+  I: Integer;
+  AItem: TQNotifyItem;
+  AItems: array of IQNotify;
+  AFireNext: Boolean;
+begin
+  Lock;
+  try
+    if ANotifyId < Cardinal(FItems.Count) then
+    begin
+      AItem := FItems[ANotifyId];
+      SetLength(AItems, AItem.Count);
+      for I := 0 to AItem.Count - 1 do
+        AItems[I] := IQNotify(AItem.FItems[I]);
+    end
+    else
+      SetLength(AItems, 0);
+  finally
+    Unlock;
+  end;
+  Result := 0;
   AFireNext := True;
   for I := 0 to High(AItems) do
   begin
-    AItems[I].Notify(AId, AParams, AFireNext);
+    ACallback(AItems[I], AParam, AFireNext);
+    Inc(Result);
     if not AFireNext then
       break;
   end;
@@ -2002,7 +2305,7 @@ begin
       Result := True;
     end
     else
-      Result := False;
+      Result := false;
   finally
     Unlock;
   end;
@@ -2127,11 +2430,13 @@ begin
   FItems.Clear;
 end;
 
-constructor TQBaseLoader.Create(const AId: TGuid; AName, APath, AExt: QStringW);
+constructor TQBaseLoader.Create(const AId: TGuid; AName, APath, AExt: QStringW;
+  AIncSubDir: Boolean);
 begin
   inherited Create(AId, AName);
   FPath := APath;
   FFileExt := AExt;
+  FIncludeSubDir := AIncSubDir;
   FItems := TQPointerList.Create;
 end;
 
@@ -2329,7 +2634,7 @@ begin
   AParams._AddRef;
   (PluginsManager as IQNotifyManager).Send(NID_PLUGIN_LOADING, AParams);
   PluginsManager.ActiveLoader := Self;
-  AVclStream := QStream(AStream);
+  AVclStream := NewStream(AStream);
   try
     Result := InternalLoadServices(AVclStream);
     if ALastState = lsIdle then
@@ -2362,7 +2667,6 @@ end;
 
 procedure TQBaseLoader.Start;
 var
-  sr: TSearchRec; // 用系统的封装以便跨平台
   AExts: QStringW;
   AInst: THandle;
   ANotifyMgr: IQNotifyManager;
@@ -2374,7 +2678,7 @@ var
     pExts := PQCharW(AExts);
     AExt := UpperCase(ExtractFileExt(AName));
     P := StrStrW(pExts, PQCharW(AExt));
-    Result := False;
+    Result := false;
     if P <> nil then
     begin
       if (P = pExts) or (P[-1] = ';') or (P[-1] = ',') then
@@ -2390,14 +2694,12 @@ var
     end;
   end;
 
-begin
-  if FindFirst(FPath + '*.*', faAnyFile, sr) = 0 then
+  procedure StartPlugins(APath: String);
+  var
+    sr: TSearchRec; // 用系统的封装以便跨平台
   begin
-    AExts := UpperCase(FileExt);
-    FState := lsLoading;
-    ANotifyMgr := PluginsManager as IQNotifyManager;
-    try
-      ANotifyMgr.Send(NID_PLUGIN_LOADING, nil);
+    if FindFirst(APath + '*.*', faAnyFile, sr) = 0 then
+    begin
       repeat
         if (sr.Attr and faDirectory) = 0 then
         // 不加载子目录下的东西
@@ -2408,12 +2710,24 @@ begin
             if AInst <> 0 then
               AddModule(FPath + sr.Name, AInst);
           end;
-        end;
+        end
+        else if FIncludeSubDir and (sr.Name <> '.') and (sr.Name <> '..') then
+          StartPlugins(APath + sr.Name +
+{$IFDEF MSWINDOWS}'\'{$ELSE}'/'{$ENDIF});
       until FindNext(sr) <> 0;
-    finally
-      FState := lsIdle;
-      ANotifyMgr.Send(NID_PLUGIN_LOADED, nil);
     end;
+  end;
+
+begin
+  AExts := UpperCase(FileExt);
+  FState := lsLoading;
+  ANotifyMgr := PluginsManager as IQNotifyManager;
+  try
+    ANotifyMgr.Send(NID_PLUGIN_LOADING, nil);
+    StartPlugins(FPath);
+  finally
+    FState := lsIdle;
+    ANotifyMgr.Send(NID_PLUGIN_LOADED, nil);
   end;
 end;
 
@@ -2545,10 +2859,14 @@ begin
   try
     AContainer := AMgr.ForcePath(AParent);
     for I := 0 to High(AServices) do
+    begin
       AContainer.Add(AServices[I]);
+    end;
   finally
     Unlock;
   end;
+  for I := 0 to High(AServices) do
+    AMgr.ServiceReady(AServices[I]);
 end;
 
 procedure UnregisterServices(APath: PWideChar; AServices: array of QStringW);

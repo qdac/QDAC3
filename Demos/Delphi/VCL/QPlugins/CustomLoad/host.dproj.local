@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+  <Transactions>
+    <Transaction>2016/11/30 10:44:51.204,=C:\Users\hasee\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2016/11/30 10:45:28.717,E:\User\QDAC3\Demos\Delphi\VCL\QPlugins\CustomLoad\hostmain.pas=C:\Users\hasee\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2016/11/30 10:45:28.718,E:\User\QDAC3\Demos\Delphi\VCL\QPlugins\CustomLoad\hostmain.dfm=C:\Users\hasee\Documents\Embarcadero\Studio\Projects\Unit2.dfm</Transaction>
+    <Transaction>2016/11/30 10:45:30.267,E:\User\QDAC3\Demos\Delphi\VCL\QPlugins\CustomLoad\host.dproj=C:\Users\hasee\Documents\Embarcadero\Studio\Projects\Project2.dproj</Transaction>
+  </Transactions>
+</BorlandProject>

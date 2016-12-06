@@ -41,6 +41,7 @@ type
     Button24: TButton;
     Button25: TButton;
     Button26: TButton;
+    Button27: TButton;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -68,6 +69,7 @@ type
     procedure Button24Click(Sender: TObject);
     procedure Button25Click(Sender: TObject);
     procedure Button26Click(Sender: TObject);
+    procedure Button27Click(Sender: TObject);
   private
     { Private declarations }
     procedure DoCopyIf(ASender, AItem: TQJson; var Accept: Boolean;
@@ -522,6 +524,10 @@ begin
     AJson3.Merge(AJson2, jmmAsSource);
     mmResult.Lines.Add('Json1.Merge(Json2,jmmAsSource)');
     mmResult.Lines.Add(AJson3.AsJson);
+    AJson3 := AJson1.Copy;
+    AJson3.Merge(AJson2, jmmReplace);
+    mmResult.Lines.Add('Json1.Merge(Json2,jmmReplace)');
+    mmResult.Lines.Add(AJson3.AsJson);
     FreeAndNil(AJson3);
   finally
     FreeAndNil(AJson1);
@@ -578,15 +584,9 @@ end;
 
 procedure TForm1.Button25Click(Sender: TObject);
 var
-  AJson: TQJson;
+  s: String;
 begin
-  AJson := TQJson.Create;
-  try
-    AJson.LoadFromFile('C:\Users\swish\Documents\json字符串.txt');
-    mmResult.Text := AJson.Encode(false, true);
-  finally
-    AJson.Free;
-  end;
+  mmResult.Text := JavaUnescape('a\402b', true);
 end;
 
 procedure TForm1.Button26Click(Sender: TObject);
@@ -597,10 +597,35 @@ begin
   AJson.Parse('[1,2,true,false,''str'']');
   mmResult.Lines.Add('Index of Value 2=' + IntToStr(AJson.IndexOfValue(2)));
   mmResult.Lines.Add('Index of Value true=' +
-    IntToStr(AJson.IndexOfValue(true,true)));
+    IntToStr(AJson.IndexOfValue(true, true)));
   mmResult.Lines.Add('Index of Value str=' +
     IntToStr(AJson.IndexOfValue('str')));
   FreeAndNil(AJson);
+end;
+
+procedure TForm1.Button27Click(Sender: TObject);
+var
+  J1, J2: TQJson;
+begin
+  J1 := TQJson.Create;
+  J2 := TQJson.Create;
+  try
+    with J1.ForcePath('T1') do
+    begin
+      Add('T11').AsInteger := 100;
+      Add('T12').AsString := 'T12';
+    end;
+    with J2.ForcePath('T1') do
+    begin
+      Add('T11').AsInteger := 200;
+      Add('T22').AsString := 'T12';
+    end;
+    J1.Merge(J2, TQJsonMergeMethod.jmmReplace);
+    ShowMessage(J1.AsJson);
+  finally
+    FreeAndNil(J1);
+    FreeAndNil(J2);
+  end;
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);
@@ -709,7 +734,7 @@ begin
         Speed := 0;
       mmResult.Clear;
       // mmResult.Lines.Add('加载的JSON文件内容：');
-      // mmResult.Lines.Add(AJson.Encode(True));
+      mmResult.Lines.Add(AJson.Encode(true));
       mmResult.Lines.Add('QJson加载用时:' + IntToStr(T) + 'ms，速度:' +
         RollupSize(Speed));
     finally
@@ -758,8 +783,7 @@ var
 begin
   AJson := TQJson.Create;
   try
-    AJson.Parse
-      ('{"results":[],"status":102,"msg":"IP\/SN\/SCODE\/REFERER Illegal:"}');
+    AJson.Parse(mmResult.Text);
     ShowMessage(AJson.Encode(true));
   finally
     AJson.Free;

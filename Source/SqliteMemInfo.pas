@@ -16,7 +16,7 @@ interface
 {$ENDIF}
 
 uses classes,{$IFDEF MSWINDOWS}Windows,{$ENDIF}
-   {$IFDEF VER280Higher}FireDAC.Phys.SQLiteCli,FireDAC.Phys.SQLiteWrapper{$ELSE}MemoryModule{$ENDIF},
+   {$IFDEF VER280Higher}FireDAC.Phys.SQLiteCli,FireDAC.Phys.SQLiteWrapper{$ELSE}qdac_memmodule{$ENDIF},
    {$IFDEF UNICODE}Generics.Collections{$ELSE}
   IniFiles{$ENDIF},qprov_sqlite;
 

@@ -2,7 +2,8 @@ unit qdac_fmx_pophint;
 
 interface
 
-uses classes, sysutils, types, uitypes, fmx.types, fmx.Objects, fmx.textlayout,
+uses classes, sysutils, types, uitypes, System.Messaging, fmx.types,
+  fmx.Objects, fmx.textlayout,
   fmx.graphics, fmx.controls, fmx.stdctrls, fmx.forms;
 
 type
@@ -12,9 +13,13 @@ type
     FBackground: TRectangle;
     FText: TLabel;
     FTimer: TTimer;
+    FVKMsgId: Integer;
     procedure DoHideHint(ASender: TObject);
+    procedure DoVKVisibleChanged(const Sender: TObject;
+      const Msg: System.Messaging.TMessage);
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
   end;
 
   TQPopupHint = class
@@ -32,7 +37,8 @@ type
   public
     constructor Create; overload;
     destructor Destroy; override;
-    procedure ShowHint(ACtrl: TControl; const AMsg: String); overload;
+    procedure ShowHint(ACtrl: TControl; const AMsg: String;
+      APlacement: TPlacement = TPlacement.Bottom); overload;
     procedure ShowHint(APos: TPointF; const AMsg: String); overload;
     procedure ShowHint(ARect: TRectF; const AMsg: String); overload;
     procedure ShowHint(const S: String;
@@ -113,14 +119,15 @@ begin
       end;
     end;
     if not Assigned(Result) then
-      begin
+    begin
       Result := TQPopupHintHelper.Create(AForm);
-      Result.FPopup.Parent:=AForm;
-      end;
+      Result.FPopup.Parent := AForm;
+    end;
   end;
 end;
 
-procedure TQPopupHint.ShowHint(ACtrl: TControl; const AMsg: String);
+procedure TQPopupHint.ShowHint(ACtrl: TControl; const AMsg: String;
+  APlacement: TPlacement);
 var
   R: TRectF;
   AHelper: TQPopupHintHelper;
@@ -133,6 +140,7 @@ begin
     AHelper.FPopup.Size.Size := TSizeF.Create(R.Width + 20, R.Height + 20);
     AHelper.FText.Text := AMsg;
     AHelper.FPopup.PlacementTarget := ACtrl;
+    AHelper.FPopup.Placement := APlacement;
     AHelper.FPopup.IsOpen := true;
     AHelper.FTimer.Enabled := false;
     AHelper.FTimer.Enabled := true;
@@ -146,7 +154,7 @@ var
   LT: TPointF;
   AHelper: TQPopupHintHelper;
 begin
-  AHelper:=Prepare;
+  AHelper := Prepare;
   if Assigned(AHelper) then
   begin
     R := TextRect(S, AHelper.FText.ResultingTextSettings, Screen.DesktopWidth);
@@ -186,7 +194,8 @@ begin
     end;
     if LT.X < 1 then
       assert(LT.X > 0);
-    AHelper.FPopup.PlacementRectangle.Rect := RectF(LT.X, LT.Y, LT.X + AHelper.FPopup.Width,
+    AHelper.FPopup.PlacementRectangle.Rect :=
+      RectF(LT.X, LT.Y, LT.X + AHelper.FPopup.Width,
       LT.Y + AHelper.FPopup.Height);
     AHelper.FPopup.PlacementTarget := nil;
     AHelper.FPopup.Placement := TPlacement.Absolute;
@@ -201,10 +210,11 @@ var
   R: TRectF;
   AHelper: TQPopupHintHelper;
 begin
-  AHelper:=Prepare;
+  AHelper := Prepare;
   if Assigned(AHelper) then
   begin
-    R := TextRect(AMsg,AHelper.FText.ResultingTextSettings, Screen.DesktopWidth);
+    R := TextRect(AMsg, AHelper.FText.ResultingTextSettings,
+      Screen.DesktopWidth);
     AHelper.FPopup.Size.Size := TSizeF.Create(R.Width + 20, R.Height + 20);
     AHelper.FText.Text := AMsg;
     AHelper.FPopup.PlacementTarget := nil;
@@ -227,9 +237,9 @@ end;
 function TQPopupHint.TextRect(const S: String; ASettings: TTextSettings;
   AMaxWidth: Single): TRectF;
 var
-  ALayout:TTextLayout;
+  ALayout: TTextLayout;
 begin
-  ALayout:=TextLayout;
+  ALayout := textlayout;
   Result := TRectF.Create(0, 0, AMaxWidth, MaxInt);
   ALayout.BeginUpdate;
   ALayout.Font.Assign(ASettings.Font);
@@ -247,10 +257,11 @@ var
   R: TRectF;
   AHelper: TQPopupHintHelper;
 begin
-  AHelper:=Prepare;
+  AHelper := Prepare;
   if Assigned(AHelper) then
   begin
-    R := TextRect(AMsg, AHelper.FText.ResultingTextSettings, Screen.DesktopWidth);
+    R := TextRect(AMsg, AHelper.FText.ResultingTextSettings,
+      Screen.DesktopWidth);
     AHelper.FPopup.Size.Size := TSizeF.Create(R.Width + 20, R.Height + 20);
     AHelper.FText.Text := AMsg;
     AHelper.FPopup.PlacementTarget := nil;
@@ -286,12 +297,38 @@ begin
   FTimer.OnTimer := DoHideHint;
   FTimer.Interval := PopupHint.HintPause;
   FTimer.Enabled := false;
+  FVKMsgId := TMessageManager.DefaultManager.SubscribeToMessage
+    (TVKStateChangeMessage, DoVKVisibleChanged);
+end;
+
+destructor TQPopupHintHelper.Destroy;
+begin
+  TMessageManager.DefaultManager.Unsubscribe(TVKStateChangeMessage, FVKMsgId);
+  inherited;
 end;
 
 procedure TQPopupHintHelper.DoHideHint(ASender: TObject);
 begin
   FPopup.IsOpen := false;
   FTimer.Enabled := false;
+end;
+
+procedure TQPopupHintHelper.DoVKVisibleChanged(const Sender: TObject;
+  const Msg: System.Messaging.TMessage);
+var
+  AVKMsg: TVKStateChangeMessage absolute Msg;
+  R, KR: TRectF;
+begin
+  if AVKMsg.KeyboardVisible then // ¼üÅÌ¿É¼û
+  begin
+    R := FPopup.PlacementRectangle.Rect;
+    KR := TRectF.Create(AVKMsg.KeyboardBounds);
+    if R.Bottom > KR.Top then
+    begin
+      OffsetRect(R, 0, KR.Top - R.Bottom-R.Height);
+      FPopup.PlacementRectangle.Rect := R;
+    end;
+  end;
 end;
 
 initialization

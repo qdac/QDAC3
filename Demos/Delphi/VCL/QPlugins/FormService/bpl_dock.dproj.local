@@ -1,14 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Transactions>
-    <Transaction>2016/04/07 20:15:48.000.656,=rtl.dcp</Transaction>
-    <Transaction>2016/04/07 20:16:01.000.265,C:\Users\swish\Documents\Embarcadero\Studio\Projects\bpl_dock.dproj=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Package1.dproj</Transaction>
+    <Transaction>2016/04/07 20:16:01.000.265,C:\Users\swish\Documents\Embarcadero\Studio\Projects\Package1.dproj=C:\Users\swish\Documents\Embarcadero\Studio\Projects\bpl_dock.dproj</Transaction>
     <Transaction>2016/04/07 20:16:08.000.432,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit7.pas</Transaction>
-    <Transaction>2016/04/07 20:16:35.000.734,D:\User\QDAC3\QPlugins\Demos\Delphi\FormService\vcl.form.bpl.pas=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit7.pas</Transaction>
-    <Transaction>2016/04/07 20:16:35.000.734,D:\User\QDAC3\QPlugins\Demos\Delphi\FormService\vcl.form.bpl.dfm=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit7.dfm</Transaction>
-    <Transaction>2016/04/07 20:17:16.000.288,D:\User\QDAC3\QPlugins\Demos\Delphi\FormService\bpl_dock.dproj=C:\Users\swish\Documents\Embarcadero\Studio\Projects\bpl_dock.dproj</Transaction>
-    <Transaction>2016/04/07 20:36:32.000.614,=soaprtl.dcp</Transaction>
-    <Transaction>2016/04/07 20:36:32.000.603,=dbrtl.dcp</Transaction>
+    <Transaction>2016/04/07 20:16:35.000.734,C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit7.pas=D:\User\QDAC3\QPlugins\Demos\Delphi\FormService\vcl.form.bpl.pas</Transaction>
+    <Transaction>2016/04/07 20:16:35.000.734,C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit7.dfm=D:\User\QDAC3\QPlugins\Demos\Delphi\FormService\vcl.form.bpl.dfm</Transaction>
+    <Transaction>2016/04/07 20:17:16.000.288,C:\Users\swish\Documents\Embarcadero\Studio\Projects\bpl_dock.dproj=D:\User\QDAC3\QPlugins\Demos\Delphi\FormService\bpl_dock.dproj</Transaction>
     <Transaction>2016/04/07 20:36:32.000.589,=vcl.dcp</Transaction>
   </Transactions>
 </BorlandProject>

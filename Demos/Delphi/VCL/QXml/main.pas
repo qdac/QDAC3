@@ -265,10 +265,16 @@ var
   AXML,ANode: TQXMLNode;
   I: Integer;
   T: Cardinal;
+  AStream:TStringStream;
 begin
   AXML := TQXML.Create;
   try
-    AXML.LoadFromFile('c:\temp\test.xml');
+    with AXML.AddNode('xml') do
+      begin
+      AddText('  Hello , world  ');
+      Attrs.Add('Value',' %1 %2 ');
+      end;
+//    AXML.Parse('<xml><aa>44</aa><bb/></xml>');
     ShowMessage(AXML.AsXML);
   finally
     FreeObject(AXML);
@@ -463,7 +469,7 @@ begin
   ARec.CurrVal := 8.9;
   ARec.EnumVal := {$IFDEF UNICODE}TAlign.{$ENDIF}alTop;
   ARec.CharVal := 'A';
-  ARec.VarVal := VarArrayOf(['VariantArray', 1, 2.5, true, false]);
+  ARec.VarVal :=1;// VarArrayOf(['VariantArray', 1, 2.5, true, false]);
   SetLength(ARec.ArrayVal, 3);
   ARec.ArrayVal[0] := 100;
   ARec.ArrayVal[1] := 101;
@@ -472,12 +478,12 @@ begin
   try
     AXML.Add('Record').FromRecord(ARec);
     ACopy := AXML.ItemByName('Record').Copy;
-    ACopy.AttrByPath('Int64Val', 'value').AsInt64 := 100;
-    ACopy.AttrByPath('UStr', 'value').AsString := 'UnicodeString-ByXML';
-    ACopy.AttrByPath('AStr', 'value').AsString := 'AnsiString-ByXML';
-    ACopy.AttrByPath('SStr', 'value').AsString := 'ShortString-ByXML';
-    ACopy.AttrByPath('EnumVal', 'value').AsString := 'alBottom';
-    ACopy.AttrByPath('SetVal', 'value').AsString := '[biHelp]';
+//    ACopy.AttrByPath('Int64Val', 'value').AsInt64 := 100;
+//    ACopy.AttrByPath('UStr', 'value').AsString := 'UnicodeString-ByXML';
+//    ACopy.AttrByPath('AStr', 'value').AsString := 'AnsiString-ByXML';
+//    ACopy.AttrByPath('SStr', 'value').AsString := 'ShortString-ByXML';
+//    ACopy.AttrByPath('EnumVal', 'value').AsString := 'alBottom';
+//    ACopy.AttrByPath('SetVal', 'value').AsString := '[biHelp]';
     ACopy.ToRecord(ARec);
     ACopy.Free;
     AXML.Add('NewRecord').FromRecord(ARec);

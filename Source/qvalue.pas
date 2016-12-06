@@ -1,9 +1,8 @@
-unit qvalue;
+﻿unit qvalue;
 
 interface
 
-uses classes, sysutils, variants, varutils, math, qstring, fmtbcd, qtimetypes,
-  qjson, qmsgpack;
+uses classes, sysutils, variants, varutils, math, qstring, fmtbcd, qtimetypes,qjson,qmsgpack;
 {$I qdac.inc}
 
 {

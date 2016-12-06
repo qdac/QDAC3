@@ -1,0 +1,37 @@
+﻿{
+  "Ver":2,
+  "UpdateTime":"2016-10-10T16:05:12.528",
+  "Project":{
+    "Output":{
+      "Bin":".\\Bin",
+      "Include":".\\Include",
+      "Lib":".\\Lib"
+    },
+    "Extra":{
+      "Alias":"",
+      "NameSpaceSearch":"",
+      "Include":"",
+      "Lib":"D:\\Developer\\Embarcadero\\QDAC\\Lib\\%Ver%\\%Platform%\\%Config%;D:\\Developer\\Embarcadero\\VirtualTreeview\\Lib\\%Ver%\\%Platform%\\%Config%;D:\\Developer\\Embarcadero\\QLang\\Lib\\%Ver%\\%Platform%\\%Config%;D:\\Developer\\Embarcadero\\VirtualTreeview\\Source",
+      "Search":"",
+      "NameSpaces":true,
+      "BuildAllUnits":false,
+      "DpkAddIDEVersion":false
+    },
+    "Files":[
+      {
+        "Use":true,
+        "FileName":".\\CompilerTool.dpr",
+        "Compile":{
+          "RS2010_32":false,
+          "RS10_1_32":true,
+          "RS10_1_64":false,
+          "RS10_1_AD":false,
+          "RS10_1_IO":false,
+          "RS10_1_I6":false,
+          "RS10_1_OS":false,
+          "RS2007_32":false
+        }
+      }
+    ]
+  }
+}

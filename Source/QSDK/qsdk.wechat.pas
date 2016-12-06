@@ -2,7 +2,7 @@ unit qsdk.wechat;
 
 interface
 
-uses system.classes, system.SysUtils, FMX.Graphics;
+uses system.classes, system.SysUtils, system.Generics.Collections, FMX.Graphics;
 
 type
 
@@ -170,14 +170,46 @@ type
 
   end;
 
+  TWechatOrderItem = record
+    Id: String; // 商品ID
+    WePayId: String; // 微信支付商品ID
+    GoodsName: String; // 商品名称
+    Quantity: Integer; // 商品数量
+    Price: Currency; // 价格
+    CategoryId: String; // 分类编码
+    Comment: String; // 描述<1000字
+  end;
+
+  TWechatOrderItems = array of TWechatOrderItem;
+
+  TWechatOrder = record
+    No: String;
+    Description: String; // 商品描述（body:App名称-商品描述）
+    Detail: TWechatOrderItems; // 商品详情(detail)
+    ExtData: String; // 扩展数据(attach)
+    TradeNo: String; // 商户订单号(out_trade_no)
+    FeeType: String; // 货币类型(fee_type)
+    Total: Currency; // 总金额（*100=total_fee）
+    TTL: Integer; // 订单失效时间，单位为分钟，不小于5分钟（转换为time_expire,time_start直接取当前时间）
+    Tag: String; // 商品标记，(goods_tag)如代金券
+    Limit: String; // 支付限制，no_credit 代表不接受信用卡支付
+  end;
+
   TWechatRequestEvent = procedure(ARequest: IWechatRequest) of object;
   TWechatResponseEvent = procedure(AResponse: IWechatResponse) of object;
-  TWechatSession=(Session,Timeline,Favorite);
+  TWechatSession = (Session, Timeline, Favorite);
+
   IWechatService = interface
     ['{10370690-72BC-438C-8105-042D2029B895}']
     procedure Unregister;
     function IsInstalled: Boolean;
     function getAppId: String;
+    function getMchId: String;
+    procedure setMchId(const AId: String);
+    function getDevId: String;
+    procedure setDevId(const AId: String);
+    function getPayKey: String;
+    procedure setPayKey(const AKey: String);
     function OpenWechat: Boolean;
     function IsAPISupported: Boolean;
     function SendRequest(ARequest: IWechatRequest): Boolean;
@@ -188,15 +220,31 @@ type
     procedure setOnResponse(const AEvent: TWechatResponseEvent);
     procedure setAppId(const AId: String);
     function OpenUrl(const AUrl: String): Boolean;
-    function SendText(const AText: String;ASession:TWechatSession=TWechatSession.Session): Boolean;
+    function SendText(const AText: String;
+      ASession: TWechatSession = TWechatSession.Session): Boolean;
     function CreateObject(AObjId: TGuid): IWechatObject;
+    function Pay(const AOrder: TWechatOrder; const ANotifyUrl: String): Boolean;
     property AppId: String read getAppId write setAppId;
     property Installed: Boolean read IsInstalled;
     property APISupported: Boolean read IsAPISupported;
+    // 微信支付相关接口
+    property MchId: String read getMchId write setMchId;
+    property DevId: String read getDevId write setDevId; // 支付终端设备号（device_info）
+    property PayKey: String read getPayKey write setPayKey;
     property OnRequest: TWechatRequestEvent read getOnRequest
       write setOnRequest;
     property OnResponse: TWechatResponseEvent read getOnResponse
       write setOnResponse;
+  end;
+
+  IWechatSigner = interface
+    ['{C06D210C-2DF7-413F-BFE6-E5CEAD764DA1}']
+    procedure Add(const AKey, AValue: String);
+    procedure Clear;
+    function GetSign: String;
+    function GetKey: String;
+    property Sign: String read GetSign;
+    property Key: String read GetKey;
   end;
 
   TWechatObject = class(TObject, IInterface)
@@ -213,11 +261,35 @@ type
   end;
 
 function WechatService: IWechatService;
+function WechatSigner(const AKey: String): IWechatSigner;
 
 implementation
 
-uses FMX.platform{$IFDEF ANDROID}, qsdk.wechat.android{$ENDIF}
+uses FMX.platform, qstring, qdigest{$IFDEF ANDROID}, qsdk.wechat.android{$ENDIF}
 {$IFDEF IOS}, qsdk.wechat.ios{$ENDIF};
+
+type
+  TWechatParam = class
+  private
+    FValue: String;
+  public
+    constructor Create(AValue: String); overload;
+    property Value: String read FValue write FValue;
+  end;
+
+  TWechatSigner = class(TInterfacedObject, IWechatSigner)
+  private
+    FItems: TStringList;
+    FKey: String;
+    function GetSign: String;
+    function GetKey: String;
+  public
+    constructor Create(const AKey: String); overload;
+    destructor Destroy; override;
+    procedure Add(const AName, AValue: String);
+    procedure Clear;
+    property Sign: String read GetSign;
+  end;
 
 function WechatService: IWechatService;
 begin
@@ -226,6 +298,10 @@ begin
     Result := nil;
 end;
 
+function WechatSigner(const AKey: String): IWechatSigner;
+begin
+  Result := TWechatSigner.Create(AKey);
+end;
 { TWechatObject }
 
 function TWechatObject.QueryInterface(const IID: TGuid; out Obj): HResult;
@@ -258,6 +334,67 @@ begin
 {$ELSE}
   Result := __ObjRelease;
 {$ENDIF}
+end;
+
+{ TWechatSigner }
+
+procedure TWechatSigner.Add(const AName, AValue: String);
+begin
+  // 空参数不参与签名
+  if Length(AValue) > 0 then
+    FItems.AddObject(AName, TWechatParam.Create(AValue));
+end;
+
+procedure TWechatSigner.Clear;
+var
+  I: Integer;
+  AObj: TObject;
+begin
+  for I := 0 to FItems.Count - 1 do
+  begin
+    AObj := FItems.Objects[I];
+    FreeAndNilObject(AObj);
+  end;
+  FItems.Clear;
+end;
+
+constructor TWechatSigner.Create(const AKey: String);
+begin
+  inherited Create;
+  FKey := AKey;
+  FItems := TStringList.Create;
+end;
+
+destructor TWechatSigner.Destroy;
+begin
+  Clear;
+  FreeAndNilObject(FItems);
+  inherited;
+end;
+
+function TWechatSigner.GetKey: String;
+begin
+  Result := FKey;
+end;
+
+function TWechatSigner.GetSign: String;
+var
+  S: String;
+  I: Integer;
+begin
+  FItems.Sort;
+  for I := 0 to FItems.Count - 1 do
+    S := FItems[I] + '=' + TWechatParam(FItems.Objects[I]).Value + '&';
+  S := S + 'key=' + FKey;
+  Result := DigestToString(MD5Hash(S));
+end;
+
+{ TWechatParam }
+
+constructor TWechatParam.Create(AValue: String);
+begin
+  inherited Create;
+  FValue := AValue;
 end;
 
 initialization

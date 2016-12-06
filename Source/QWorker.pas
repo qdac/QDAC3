@@ -32,6 +32,15 @@ interface
 }
 
 { 修订日志
+  2016.11.15
+  ==========
+  * 修正了ClearSingleJob/ClearSingleJobs 清理重复作业时没有正确标记作业状态的问题(乱世虾仁报告)
+  * 修正了WaitRunningDone没有等待作业清理完成就退出的问题（MLSkin报告）
+
+  2016.10.11
+  ==========
+  * 修正了由于算术溢出造成 WaitSignal 直接退出的问题（阿木报告）
+
   2016.7.14
   ==========
   * 修改了信号作业的容器，以提高按ID访问时的效率
@@ -940,7 +949,7 @@ type
     function GetIsIdle: Boolean; inline;
     procedure SetFlags(AIndex: Integer; AValue: Boolean); inline;
     function GetFlags(AIndex: Integer): Boolean; inline;
-    function WaitSignal(ATimeout: Integer; AByRepeatJob: Boolean)
+    function WaitSignal(ATimeout: Cardinal; AByRepeatJob: Boolean)
       : TWaitResult; inline;
   public
     constructor Create(AOwner: TQWorkers); overload;
@@ -1020,6 +1029,8 @@ type
 
   /// <summary>工作者管理对象，用来管理工作者和作业</summary>
   TQWorkers = class
+  private
+    function GetTerminating: Boolean;
   protected
     FWorkers: array of TQWorker; // 工作者数组
     FDisableCount: Integer;
@@ -1072,7 +1083,8 @@ type
     function ClearSignalJobs(ASource: PQJob;
       AWaitRunningDone: Boolean = True): Integer;
     procedure WaitSignalJobsDone(AJob: PQJob);
-    procedure WaitRunningDone(const AParam: TWorkerWaitParam);
+    procedure WaitRunningDone(const AParam: TWorkerWaitParam;
+      AMarkTerminateOnly: Boolean = false);
     procedure FreeJobData(AData: Pointer; AFreeType: TQJobDataFreeType);
     procedure DoCustomFreeData(AFreeType: TQJobDataFreeType;
       const AData: Pointer);
@@ -1086,7 +1098,7 @@ type
     function GetNextRepeatJobTime: Int64; inline;
     procedure DoPlanCheck(AJob: PQJob);
     procedure AfterPlanRun(AJob: PQJob; AUsedTime: Int64);
-    function HandleToJob(const AHandle: IntPtr): PQJob;inline;
+    function HandleToJob(const AHandle: IntPtr): PQJob; inline;
     procedure PlanCheckNeeded;
     procedure CheckWaitChain(AJob: PQJob);
   public
@@ -1098,7 +1110,7 @@ type
     /// <param name="ARunInMainThread">作业要求在主线程中执行</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Post(AProc: TQJobProc; AData: Pointer;
-      ARunInMainThread: Boolean = False;
+      ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
     /// <summary>投寄一个后台立即开始的作业</summary>
     /// <param name="AProc">要执行的作业过程</param>
@@ -1107,7 +1119,7 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Post(AProc: TQJobProcG; AData: Pointer;
-      ARunInMainThread: Boolean = False;
+      ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
 {$IFDEF UNICODE}
     /// <summary>投寄一个后台立即开始的作业</summary>
@@ -1117,7 +1129,7 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Post(AProc: TQJobProcA; AData: Pointer;
-      ARunInMainThread: Boolean = False;
+      ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
 {$ENDIF}
     /// <summary>投寄一个后台定时开始的作业</summary>
@@ -1128,7 +1140,7 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Post(AProc: TQJobProc; AInterval: Int64; AData: Pointer;
-      ARunInMainThread: Boolean = False;
+      ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
     /// <summary>投寄一个后台定时开始的作业</summary>
     /// <param name="AProc">要执行的作业过程</param>
@@ -1138,7 +1150,7 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Post(AProc: TQJobProcG; AInterval: Int64; AData: Pointer;
-      ARunInMainThread: Boolean = False;
+      ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
 
 {$IFDEF UNICODE}
@@ -1150,7 +1162,7 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Post(AProc: TQJobProcA; AInterval: Int64; AData: Pointer;
-      ARunInMainThread: Boolean = False;
+      ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
 {$ENDIF}
     /// <summary>投寄一个延迟开始的作业</summary>
@@ -1162,8 +1174,8 @@ type
     /// <param name="ARepeat">是否在上一次作业完成后，再次延迟</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Delay(AProc: TQJobProc; ADelay: Int64; AData: Pointer;
-      ARunInMainThread: Boolean = False;
-      AFreeType: TQJobDataFreeType = jdfFreeByUser; ARepeat: Boolean = False)
+      ARunInMainThread: Boolean = false;
+      AFreeType: TQJobDataFreeType = jdfFreeByUser; ARepeat: Boolean = false)
       : IntPtr; overload;
     /// <summary>投寄一个延迟开始的作业</summary>
     /// <param name="AProc">要执行的作业过程</param>
@@ -1174,8 +1186,8 @@ type
     /// <param name="ARepeat">是否在上一次作业完成后，再次延迟</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Delay(AProc: TQJobProcG; ADelay: Int64; AData: Pointer;
-      ARunInMainThread: Boolean = False;
-      AFreeType: TQJobDataFreeType = jdfFreeByUser; ARepeat: Boolean = False)
+      ARunInMainThread: Boolean = false;
+      AFreeType: TQJobDataFreeType = jdfFreeByUser; ARepeat: Boolean = false)
       : IntPtr; overload;
 {$IFDEF UNICODE}
     /// <summary>投寄一个延迟开始的作业</summary>
@@ -1187,8 +1199,8 @@ type
     /// <param name="ARepeat">是否在上一次作业完成后，再次延迟</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Delay(AProc: TQJobProcA; ADelay: Int64; AData: Pointer;
-      ARunInMainThread: Boolean = False;
-      AFreeType: TQJobDataFreeType = jdfFreeByUser; ARepeat: Boolean = False)
+      ARunInMainThread: Boolean = false;
+      AFreeType: TQJobDataFreeType = jdfFreeByUser; ARepeat: Boolean = false)
       : IntPtr; overload;
 {$ENDIF}
     /// <summary>投寄一个等待信号才开始的作业</summary>
@@ -1197,18 +1209,18 @@ type
     /// <param name="ARunInMainThread">作业要求在主线程中执行</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Wait(AProc: TQJobProc; ASignalId: Integer;
-      ARunInMainThread: Boolean = False): IntPtr; overload;
+      ARunInMainThread: Boolean = false): IntPtr; overload;
     function Wait(AProc: TQJobProc; const ASignalName: QStringW;
-      ARunInMainThread: Boolean = False): IntPtr; overload;
+      ARunInMainThread: Boolean = false): IntPtr; overload;
     /// <summary>投寄一个等待信号才开始的作业</summary>
     /// <param name="AProc">要执行的作业过程</param>
     /// <param name="ASignalId">等待的信号编码，该编码由RegisterSignal函数返回</param>
     /// <param name="ARunInMainThread">作业要求在主线程中执行</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Wait(AProc: TQJobProcG; ASignalId: Integer;
-      ARunInMainThread: Boolean = False): IntPtr; overload;
+      ARunInMainThread: Boolean = false): IntPtr; overload;
     function Wait(AProc: TQJobProcG; const ASignalName: QStringW;
-      ARunInMainThread: Boolean = False): IntPtr; overload;
+      ARunInMainThread: Boolean = false): IntPtr; overload;
 {$IFDEF UNICODE}
     /// <summary>投寄一个等待信号才开始的作业</summary>
     /// <param name="AProc">要执行的作业过程</param>
@@ -1217,9 +1229,9 @@ type
     /// <param name="ARunInMainThread">作业要求在主线程中执行</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Wait(AProc: TQJobProcA; ASignalId: Integer;
-      ARunInMainThread: Boolean = False): IntPtr; overload;
+      ARunInMainThread: Boolean = false): IntPtr; overload;
     function Wait(AProc: TQJobProcA; const ASignalName: QStringW;
-      ARunInMainThread: Boolean = False): IntPtr; overload;
+      ARunInMainThread: Boolean = false): IntPtr; overload;
 {$ENDIF}
     /// <summary>投寄一个在指定时间才开始的重复作业</summary>
     /// <param name="AProc">要定时执行的作业过程</param>
@@ -1229,7 +1241,7 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>成功投寄返回句柄，失败返回0</returns>
     function At(AProc: TQJobProc; const ADelay, AInterval: Int64;
-      AData: Pointer; ARunInMainThread: Boolean = False;
+      AData: Pointer; ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
     /// <summary>投寄一个在指定时间才开始的重复作业</summary>
     /// <param name="AProc">要定时执行的作业过程</param>
@@ -1239,7 +1251,7 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>成功投寄返回句柄，失败返回0</returns>
     function At(AProc: TQJobProcG; const ADelay, AInterval: Int64;
-      AData: Pointer; ARunInMainThread: Boolean = False;
+      AData: Pointer; ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
 {$IFDEF UNICODE}
     /// <summary>投寄一个在指定时间才开始的重复作业</summary>
@@ -1250,7 +1262,7 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>成功投寄返回句柄，失败返回0</returns>
     function At(AProc: TQJobProcA; const ADelay, AInterval: Int64;
-      AData: Pointer; ARunInMainThread: Boolean = False;
+      AData: Pointer; ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
 {$ENDIF}
     /// <summary>投寄一个在指定时间才开始的重复作业</summary>
@@ -1261,7 +1273,7 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>成功投寄返回句柄，失败返回0</returns>
     function At(AProc: TQJobProc; const ATime: TDateTime;
-      const AInterval: Int64; AData: Pointer; ARunInMainThread: Boolean = False;
+      const AInterval: Int64; AData: Pointer; ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
     /// <summary>投寄一个在指定时间才开始的重复作业</summary>
     /// <param name="AProc">要定时执行的作业过程</param>
@@ -1271,7 +1283,7 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>成功投寄返回句柄，失败返回0</returns>
     function At(AProc: TQJobProcG; const ATime: TDateTime;
-      const AInterval: Int64; AData: Pointer; ARunInMainThread: Boolean = False;
+      const AInterval: Int64; AData: Pointer; ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
 {$IFDEF UNICODE}
     /// <summary>投寄一个在指定时间才开始的重复作业</summary>
@@ -1282,7 +1294,7 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>成功投寄返回句柄，失败返回0</returns>
     function At(AProc: TQJobProcA; const ATime: TDateTime;
-      const AInterval: Int64; AData: Pointer; ARunInMainThread: Boolean = False;
+      const AInterval: Int64; AData: Pointer; ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
 {$ENDIF}
     /// <summary>投寄一个计划任务作业</summary>
@@ -1292,7 +1304,7 @@ type
     /// <param name="ARunInMainThread">作业要求在主线程中执行</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Plan(AProc: TQJobProc; const APlan: TQPlanMask; AData: Pointer;
-      ARunInMainThread: Boolean = False;
+      ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
     /// <summary>投寄一个计划任务作业</summary>
     /// <param name="AProc">要执行的作业过程</param>
@@ -1301,7 +1313,7 @@ type
     /// <param name="ARunInMainThread">作业要求在主线程中执行</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Plan(AProc: TQJobProc; const APlan: QStringW; AData: Pointer;
-      ARunInMainThread: Boolean = False;
+      ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
     /// <summary>投寄一个计划任务作业</summary>
     /// <param name="AProc">要执行的作业过程</param>
@@ -1310,7 +1322,7 @@ type
     /// <param name="ARunInMainThread">作业要求在主线程中执行</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Plan(AProc: TQJobProcG; const APlan: TQPlanMask; AData: Pointer;
-      ARunInMainThread: Boolean = False;
+      ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
     /// <summary>投寄一个计划任务作业</summary>
     /// <param name="AProc">要执行的作业过程</param>
@@ -1319,7 +1331,7 @@ type
     /// <param name="ARunInMainThread">作业要求在主线程中执行</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Plan(AProc: TQJobProcG; const APlan: QStringW; AData: Pointer;
-      ARunInMainThread: Boolean = False;
+      ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
 {$IFDEF UNICODE}
     /// <summary>投寄一个计划任务作业</summary>
@@ -1329,7 +1341,7 @@ type
     /// <param name="ARunInMainThread">作业要求在主线程中执行</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Plan(AProc: TQJobProcA; const APlan: TQPlanMask; AData: Pointer;
-      ARunInMainThread: Boolean = False;
+      ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
     /// <summary>投寄一个计划任务作业</summary>
     /// <param name="AProc">要执行的作业过程</param>
@@ -1338,7 +1350,7 @@ type
     /// <param name="ARunInMainThread">作业要求在主线程中执行</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Plan(AProc: TQJobProcA; const APlan: QStringW; AData: Pointer;
-      ARunInMainThread: Boolean = False;
+      ARunInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
 {$ENDIF}
     /// <summary>投寄一个后台长时间执行的作业</summary>
@@ -1481,7 +1493,7 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>返回循环等待结果</returns>
     class function &For(const AStartIndex, AStopIndex: TForLoopIndexType;
-      AWorkerProc: TQForJobProc; AMsgWait: Boolean = False;
+      AWorkerProc: TQForJobProc; AMsgWait: Boolean = false;
       AData: Pointer = nil; AFreeType: TQJobDataFreeType = jdfFreeByUser)
       : TWaitResult; overload; static; inline;
 {$IFDEF UNICODE}
@@ -1494,7 +1506,7 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>返回循环等待结果</returns>
     class function &For(const AStartIndex, AStopIndex: TForLoopIndexType;
-      AWorkerProc: TQForJobProcA; AMsgWait: Boolean = False;
+      AWorkerProc: TQForJobProcA; AMsgWait: Boolean = false;
       AData: Pointer = nil; AFreeType: TQJobDataFreeType = jdfFreeByUser)
       : TWaitResult; overload; static; inline;
 {$ENDIF}
@@ -1507,7 +1519,7 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>返回循环等待结果</returns>
     class function &For(const AStartIndex, AStopIndex: TForLoopIndexType;
-      AWorkerProc: TQForJobProcG; AMsgWait: Boolean = False;
+      AWorkerProc: TQForJobProcG; AMsgWait: Boolean = false;
       AData: Pointer = nil; AFreeType: TQJobDataFreeType = jdfFreeByUser)
       : TWaitResult; overload; static; inline;
 
@@ -1522,7 +1534,7 @@ type
     /// <remarks>Enabled为False时已经运行的作业将仍然运行，它只影响尚未执行的作来</remarks>
     property Enabled: Boolean read GetEnabled write SetEnabled;
     /// <summary>是否正在释放TQWorkers对象自身</summary>
-    property Terminating: Boolean read FTerminating;
+    property Terminating: Boolean read GetTerminating;
     /// <summary>当前工作者数量</summary>
     property Workers: Integer read FWorkerCount;
     /// <summary>当前忙碌工作者数量</summary>
@@ -1582,7 +1594,7 @@ type
   public
     /// <summary>构造函数</summary>
     /// <param name="AByOrder">指定是否是顺序作业，如果为True，则作业会按依次执行</param>
-    constructor Create(AByOrder: Boolean = False); overload;
+    constructor Create(AByOrder: Boolean = false); overload;
     /// <summary>析构函数</summary>
     destructor Destroy; override;
     /// <summary>取消剩下未执行的作业执行</summary>
@@ -1605,7 +1617,7 @@ type
     /// <returns>成功，返回True，失败，返回False</returns>
     /// <remarks>添加到分组中的作业，要么执行完成，要么被取消，不运行通过句柄取消</remarks>
     function Insert(AIndex: Integer; AProc: TQJobProc; AData: Pointer;
-      AInMainThread: Boolean = False;
+      AInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): Boolean; overload;
     /// <summary>插入一个作业过程，如果准备内部计数器为0，则直接执行，否则只添加到列表</summary>
     /// <param name="AIndex">要插入的的位置索引</param>
@@ -1616,7 +1628,7 @@ type
     /// <returns>成功，返回True，失败，返回False</returns>
     /// <remarks>添加到分组中的作业，要么执行完成，要么被取消，不运行通过句柄取消</remarks>
     function Insert(AIndex: Integer; AProc: TQJobProcG; AData: Pointer;
-      AInMainThread: Boolean = False;
+      AInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): Boolean; overload;
 {$IFDEF UNICODE}
     /// <summary>插入一个作业过程，如果准备内部计数器为0，则直接执行，否则只添加到列表</summary>
@@ -1628,7 +1640,7 @@ type
     /// <returns>成功，返回True，失败，返回False</returns>
     /// <remarks>添加到分组中的作业，要么执行完成，要么被取消，不运行通过句柄取消</remarks>
     function Insert(AIndex: Integer; AProc: TQJobProcA; AData: Pointer;
-      AInMainThread: Boolean = False;
+      AInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): Boolean; overload;
 {$ENDIF}
     /// <summary>添加一个作业过程，如果准备内部计数器为0，则直接执行，否则只添加到列表</summary>
@@ -1639,7 +1651,7 @@ type
     /// <returns>成功，返回True，失败，返回False</returns>
     /// <remarks>添加到分组中的作业，要么执行完成，要么被取消，不运行通过句柄取消</remarks>
     function Add(AProc: TQJobProc; AData: Pointer;
-      AInMainThread: Boolean = False;
+      AInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): Boolean; overload;
     /// <summary>添加一个作业过程，如果准备内部计数器为0，则直接执行，否则只添加到列表</summary>
     /// <param name="AProc">要执行的作业过程</param>
@@ -1649,7 +1661,7 @@ type
     /// <returns>成功，返回True，失败，返回False</returns>
     /// <remarks>添加到分组中的作业，要么执行完成，要么被取消，不运行通过句柄取消</remarks>
     function Add(AProc: TQJobProcG; AData: Pointer;
-      AInMainThread: Boolean = False;
+      AInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): Boolean; overload;
 {$IFDEF UNICODE}
     /// <summary>添加一个作业过程，如果准备内部计数器为0，则直接执行，否则只添加到列表</summary>
@@ -1660,7 +1672,7 @@ type
     /// <returns>成功，返回True，失败，返回False</returns>
     /// <remarks>添加到分组中的作业，要么执行完成，要么被取消，不运行通过句柄取消</remarks>
     function Add(AProc: TQJobProcA; AData: Pointer;
-      AInMainThread: Boolean = False;
+      AInMainThread: Boolean = false;
       AFreeType: TQJobDataFreeType = jdfFreeByUser): Boolean; overload;
 {$ENDIF}
     /// <summary>等待作业完成</summary>
@@ -1718,7 +1730,7 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>返回循环等待结果</returns>
     class function &For(const AStartIndex, AStopIndex: TForLoopIndexType;
-      AWorkerProc: TQForJobProc; AMsgWait: Boolean = False;
+      AWorkerProc: TQForJobProc; AMsgWait: Boolean = false;
       AData: Pointer = nil; AFreeType: TQJobDataFreeType = jdfFreeByUser)
       : TWaitResult; overload; static;
 {$IFDEF UNICODE}
@@ -1731,7 +1743,7 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>返回循环等待结果</returns>
     class function &For(const AStartIndex, AStopIndex: TForLoopIndexType;
-      AWorkerProc: TQForJobProcA; AMsgWait: Boolean = False;
+      AWorkerProc: TQForJobProcA; AMsgWait: Boolean = false;
       AData: Pointer = nil; AFreeType: TQJobDataFreeType = jdfFreeByUser)
       : TWaitResult; overload; static;
 {$ENDIF}
@@ -1744,16 +1756,16 @@ type
     /// <param name="AFreeType">附加数据指针释放方式</param>
     /// <returns>返回循环等待结果</returns>
     class function &For(const AStartIndex, AStopIndex: TForLoopIndexType;
-      AWorkerProc: TQForJobProcG; AMsgWait: Boolean = False;
+      AWorkerProc: TQForJobProcG; AMsgWait: Boolean = false;
       AData: Pointer = nil; AFreeType: TQJobDataFreeType = jdfFreeByUser)
       : TWaitResult; overload; static;
     procedure Run(AWorkerProc: TQForJobProc;
-      AMsgWait: Boolean = False); overload;
+      AMsgWait: Boolean = false); overload;
     procedure Run(AWorkerProc: TQForJobProcG;
-      AMsgWait: Boolean = False); overload;
+      AMsgWait: Boolean = false); overload;
 {$IFDEF UNICODE}
     procedure Run(AWorkerProc: TQForJobProcA;
-      AMsgWait: Boolean = False); overload;
+      AMsgWait: Boolean = false); overload;
 {$ENDIF}
     /// <summary>中断循环的执行</summary>
     procedure BreakIt;
@@ -1891,6 +1903,7 @@ type
 var
   JobPool: TJobPool;
   _CPUCount: Integer;
+  AppTerminated: Boolean;
 {$IFDEF MSWINDOWS}
   GetTickCount64: TGetTickCount64;
   WinGetSystemTimes: TGetSystemTimes;
@@ -1920,7 +1933,7 @@ function ThreadExists(AThreadId: TThreadId; AProcessId: DWORD): Boolean;
     ASnapshot: THandle;
     AEntry: TThreadEntry32;
   begin
-    Result := False;
+    Result := false;
     ASnapshot := CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     if ASnapshot = INVALID_HANDLE_VALUE then
       Exit;
@@ -1951,7 +1964,7 @@ function ThreadExists(AThreadId: TThreadId; AProcessId: DWORD): Boolean;
     sr: TSearchRec;
     AId: Integer;
   begin
-    Result := False;
+    Result := false;
     if FindFirst('/proc/' + IntToStr(AProcessId) + '/task/*', faAnyFile, sr) = 0
     then
     begin
@@ -1985,21 +1998,28 @@ begin
 {$ENDIF}
 end;
 
-procedure ProcessAppMessage;
+function ProcessAppMessage: Boolean;
 {$IFDEF MSWINDOWS}
 var
   AMsg: MSG;
 {$ENDIF}
 begin
 {$IFDEF MSWINDOWS}
+  Result := True;
   while PeekMessage(AMsg, 0, 0, 0, PM_REMOVE) do
   begin
     TranslateMessage(AMsg);
     DispatchMessage(AMsg);
+    if AMsg.message = WM_QUIT then
+      AppTerminated := True;
   end;
+  if AppTerminated then
+    PostQuitMessage(ExitCode);
 {$ELSE}
   Application.ProcessMessages;
+  AppTerminated := Application.Terminated;
 {$ENDIF}
+  Result := not AppTerminated;
 end;
 
 function MsgWaitForEvent(AEvent: TEvent; ATimeout: Cardinal): TWaitResult;
@@ -2019,17 +2039,24 @@ begin
     AHandles[0] := AEvent.Handle;
     repeat
       T := GetTickCount;
-      rc := MsgWaitForMultipleObjects(1, AHandles[0], False, ATimeout,
+      rc := MsgWaitForMultipleObjects(1, AHandles[0], false, ATimeout,
         QS_ALLINPUT);
       if rc = WAIT_OBJECT_0 + 1 then
       begin
-        ProcessAppMessage;
-        T := GetTickCount - T;
-        if ATimeout > T then
-          Dec(ATimeout, T)
+        if ProcessAppMessage then
+        begin
+          T := GetTickCount - T;
+          if ATimeout > T then
+            Dec(ATimeout, T)
+          else
+          begin
+            Result := wrTimeout;
+            Break;
+          end;
+        end
         else
         begin
-          Result := wrTimeout;
+          Result := wrAbandoned;
           Break;
         end;
       end
@@ -2049,24 +2076,31 @@ begin
         end;
         Break;
       end;
-    until False;
+    until false;
 {$ELSE}
     repeat
       // 每隔10毫秒检查一下是否有消息需要处理，有则处理，无则进入下一个等待
       T := GetTimestamp;
-      ProcessAppMessage;
-      Result := AEvent.WaitFor(10);
-      if Result = wrTimeout then
+      if ProcessAppMessage then
       begin
-        T := (GetTimestamp - T) div 10;
-        if ATimeout > T then
-          Dec(ATimeout, T)
+        Result := AEvent.WaitFor(10);
+        if Result = wrTimeout then
+        begin
+          T := (GetTimestamp - T) div 10;
+          if ATimeout > T then
+            Dec(ATimeout, T)
+          else
+            Break;
+        end
         else
           Break;
       end
       else
+      begin
+        Result := wrAbandoned;
         Break;
-    until False;
+      end;
+    until false;
 {$ENDIF}
   end;
 end;
@@ -2275,7 +2309,7 @@ begin
   if IsByPlan then
     Result := ExtData.AsPlan.Runnings > 0
   else
-    Result := False;
+    Result := false;
 end;
 
 function TQJob.GetIsRecordOwner: Boolean;
@@ -2484,7 +2518,7 @@ var
   AFirst, AJob, APrior, ANext: PQJob;
 begin
   AJob := PopAll;
-  Result := False;
+  Result := false;
   APrior := nil;
   AFirst := nil;
   while AJob <> nil do
@@ -2599,7 +2633,7 @@ var
     p: PIntPtr;
   begin
     p := AHandles;
-    Result := False;
+    Result := false;
     while IntPtr(p) < IntPtr(AHandles) do
     begin
       if (IntPtr(p^) and (not $03)) = IntPtr(AJob) then
@@ -2748,7 +2782,7 @@ begin
         end
         else
         begin
-          ACanDelete := False;
+          ACanDelete := false;
           APriorJob := AJob;
         end;
         AJob := ANextJob;
@@ -2774,7 +2808,7 @@ var
   var
     ATemp, APrior: PQJob;
   begin
-    Result := False;
+    Result := false;
     ATemp := ANode.Data;
     APrior := nil;
     while ATemp <> nil do
@@ -2815,7 +2849,7 @@ var
   end;
 
 begin
-  AWorkerLookupNeeded := False;
+  AWorkerLookupNeeded := false;
   FLocker.Enter;
   try
     ANode := FItems.Find(AJob);
@@ -2834,7 +2868,7 @@ begin
   finally
     FLocker.Leave;
     if AWorkerLookupNeeded then
-      FOwner.LookupIdleWorker(False);
+      FOwner.LookupIdleWorker(false);
   end;
 end;
 
@@ -3030,7 +3064,7 @@ var
   APriorJob, AJob, ANextJob: PQJob;
   ACanDelete: Boolean;
 begin
-  Result := False;
+  Result := false;
   FLocker.Enter;
   try
     ANode := FItems.First;
@@ -3059,7 +3093,7 @@ begin
         end
         else
         begin
-          ACanDelete := False;
+          ACanDelete := false;
           APriorJob := AJob;
         end;
         AJob := ANextJob;
@@ -3087,7 +3121,7 @@ var
     p: PIntPtr;
   begin
     p := AHandles;
-    Result := False;
+    Result := false;
     while IntPtr(p) < IntPtr(AHandles) do
     begin
       if (IntPtr(p^) and (not $03)) = IntPtr(AJob) then
@@ -3126,7 +3160,7 @@ begin
         end
         else
         begin
-          ACanDelete := False;
+          ACanDelete := false;
           APriorJob := AJob;
         end;
         AJob := ANextJob;
@@ -3166,7 +3200,7 @@ begin
   FOwner := AOwner;
   FTimeout := 1000;
   FreeOnTerminate := True;
-  FEvent := TEvent.Create(nil, False, False, '');
+  FEvent := TEvent.Create(nil, false, false, '');
 end;
 
 destructor TQWorker.Destroy;
@@ -3194,7 +3228,7 @@ begin
   end;
 end;
 
-function TQWorker.WaitSignal(ATimeout: Integer; AByRepeatJob: Boolean)
+function TQWorker.WaitSignal(ATimeout: Cardinal; AByRepeatJob: Boolean)
   : TWaitResult;
 var
   T: Int64;
@@ -3225,7 +3259,7 @@ var
 {$ENDIF}
 begin
 {$IFDEF MSWINDOWS}
-  SyncEvent := TEvent.Create(nil, False, False, '');
+  SyncEvent := TEvent.Create(nil, false, false, '');
 {$IF RTLVersion>=21}
   FThreadName := IntToHex(IntPtr(HInstance), SizeOf(Pointer) shl 1) +
     '.QWorker.' + IntToStr(ThreadId);
@@ -3241,7 +3275,7 @@ begin
 {$ENDIF}
     while not(Terminated or FOwner.FTerminating) do
     begin
-      SetFlags(WORKER_CLEANING, False);
+      SetFlags(WORKER_CLEANING, false);
 {$IFDEF DEBUGOUT}
       OutputDebugString(PChar(FThreadName + ' :工作者正在等待作业'));
 {$ENDIF}
@@ -3253,10 +3287,10 @@ begin
           wr := WaitSignal((FOwner.FRepeatJobs.FFirstFireTime - GetTimestamp)
             div 10, True)
         else
-          wr := WaitSignal(FOwner.FFireTimeout, False);
+          wr := WaitSignal(FOwner.FFireTimeout, false);
       end
       else
-        wr := WaitSignal(FOwner.FFireTimeout, False);
+        wr := WaitSignal(FOwner.FFireTimeout, false);
       if Terminated or FOwner.FTerminating then
       begin
 {$IFDEF DEBUGOUT}
@@ -3269,14 +3303,14 @@ begin
 {$IFDEF DEBUGOUT}
         OutputDebugString(PChar(FThreadName + ':工作者接收到有作业需要处理信号'));
 {$ENDIF}
-        FPending := False;
+        FPending := false;
         if (FOwner.Workers - AtomicIncrement(FOwner.FBusyCount) = 0) and
           (FOwner.Workers < FOwner.MaxWorkers) then
           FOwner.NewWorkerNeeded;
         repeat
           SetFlags(WORKER_LOOKUP, True);
           FActiveJob := FOwner.Popup;
-          SetFlags(WORKER_LOOKUP, False);
+          SetFlags(WORKER_LOOKUP, false);
           if FActiveJob <> nil then
           begin
             SetFlags(WORKER_ISBUSY, True);
@@ -3288,7 +3322,7 @@ begin
             // {$ELSE} FActiveJob.WorkerProc.Proc {$ENDIF};
             // 为Clear(AObject)准备判断，以避免FActiveJob线程不安全
             FActiveJobData := FActiveJob.Data;
-            if FActiveJob.IsSignalWakeup then
+            if FActiveJob.IsSignalWakeup or (not FActiveJob.Runonce) then
               FActiveJobSource := FActiveJob.Source
             else
               FActiveJobSource := nil;
@@ -3377,7 +3411,7 @@ begin
             FFlags := FFlags and (not WORKER_LOOKUP);
         until (FActiveJob = nil) or Terminated or FOwner.FTerminating or
           (not FOwner.Enabled);
-        SetFlags(WORKER_ISBUSY, False);
+        SetFlags(WORKER_ISBUSY, false);
         AtomicDecrement(FOwner.FBusyCount);
         // ThreadYield;
       end;
@@ -3390,7 +3424,7 @@ begin
       end;
     end;
   finally
-    SetFlags(WORKER_RUNNING, False);
+    SetFlags(WORKER_RUNNING, false);
 {$IFDEF DEBUGOUT}
     OutputDebugString(PChar(FThreadName + ':正在清理'));
 {$ENDIF}
@@ -3456,7 +3490,7 @@ begin
     else if FRepeatJobs.Push(AJob) then
     begin
       Result := IntPtr(AJob) or JOB_HANDLE_REPEAT_MASK;
-      LookupIdleWorker(False);
+      LookupIdleWorker(false);
     end;
   end
   else
@@ -3798,7 +3832,7 @@ var
   var
     J: Integer;
   begin
-    Result := False;
+    Result := false;
     FLocker.Enter;
     try
       J := FWorkerCount - 1;
@@ -3871,7 +3905,7 @@ begin
   if FMaxWorkers <= FMinWorkers then
     FMaxWorkers := (FMinWorkers shl 1) + 1;
   FLocker := TCriticalSection.Create;
-  FTerminating := False;
+  FTerminating := false;
   // 创建默认工作者
   FWorkerCount := 0;
   SetLength(FWorkers, FMaxWorkers + 1);
@@ -3880,13 +3914,13 @@ begin
   for I := 0 to FMinWorkers - 1 do
   begin
     FWorkers[I].FEvent.SetEvent;
-    FWorkers[I].Suspended := False;
+    FWorkers[I].Suspended := false;
   end;
   FMaxLongtimeWorkers := (FMaxWorkers shr 1);
 {$IFDEF MSWINDOWS}
   FMainWorker := AllocateHWnd(DoMainThreadWork);
 {$ENDIF}
-  FStaticThread.Suspended := False;
+  FStaticThread.Suspended := false;
   FSignalQueue := TQSignalQueue.Create(Self);
 end;
 
@@ -3906,7 +3940,7 @@ begin
     begin
       Result.FPending := True;
       Result.FEvent.SetEvent;
-      Result.Suspended := False;
+      Result.Suspended := false;
     end;
   end
   else
@@ -4068,7 +4102,7 @@ begin
   try
     if not Assigned(FPlanJobs.FFirst) then
     begin
-      ClearSingleJob(FPlanCheckJob, False);
+      ClearSingleJob(FPlanCheckJob, false);
       FPlanCheckJob := 0;
     end
     else
@@ -4328,7 +4362,7 @@ var
     I := 0;
     while I < C do
     begin
-      AFound := False;
+      AFound := false;
       for J := 0 to High(Result) do
       begin
         if ARunnings[I].Handle = Result[J].Handle then
@@ -4351,7 +4385,7 @@ var
     J: Integer;
   begin
     AHandle := AHandle and (not $03);
-    Result := False;
+    Result := false;
     for J := 0 to High(ARunnings) do
     begin
       if AHandle = (ARunnings[J].Handle and (not $03)) then
@@ -4460,7 +4494,7 @@ var
 begin
   L := 0;
   H := FSignalNameList.Count - 1;
-  Result := False;
+  Result := false;
   while L <= H do
   begin
     I := (L + H) shr 1;
@@ -4515,7 +4549,7 @@ begin
   if AFireCount = 0 then
     SignalQueue.SingalJobDone(AData)
   else
-    LookupIdleWorker(False);
+    LookupIdleWorker(false);
 end;
 
 procedure TQWorkers.FreeJob(AJob: PQJob);
@@ -4523,7 +4557,7 @@ var
   ANext: PQJob;
   AFreeData: Boolean;
 begin
-  AFreeData := False;
+  AFreeData := false;
   CheckWaitChain(AJob);
   while AJob <> nil do
   begin
@@ -4601,6 +4635,11 @@ begin
   Result := (FBusyCount = MaxWorkers);
 end;
 
+function TQWorkers.GetTerminating: Boolean;
+begin
+  Result := FTerminating or AppTerminated;
+end;
+
 function TQWorkers.HandleToJob(const AHandle: IntPtr): PQJob;
 begin
   Result := PQJob(AHandle and (not IntPtr(3)));
@@ -4614,7 +4653,7 @@ begin
   if AtomicIncrement(FLongTimeWorkers) <= FMaxLongtimeWorkers then
   begin
     AJob := JobPool.Pop;
-    JobInitialize(AJob, AData, AFreeType, True, False);
+    JobInitialize(AJob, AData, AFreeType, True, false);
     AJob.SetFlags(JOB_LONGTIME, True);
 {$IFDEF NEXTGEN}
     PQJobProc(@AJob.WorkerProc)^ := AProc;
@@ -4639,7 +4678,7 @@ begin
   if AtomicIncrement(FLongTimeWorkers) <= FMaxLongtimeWorkers then
   begin
     AJob := JobPool.Pop;
-    JobInitialize(AJob, AData, AFreeType, True, False);
+    JobInitialize(AJob, AData, AFreeType, True, false);
     AJob.SetFlags(JOB_LONGTIME, True);
     TQJobProcA(AJob.WorkerProc.ProcA) := AProc;
     AJob.IsAnonWorkerProc := True;
@@ -4696,7 +4735,7 @@ var
       begin
         // OutputDebugString(PChar(Format('Pending %d,Passcount %d',
         // [APendingCount, APasscount])));
-        AWorker := CreateWorker(False);
+        AWorker := CreateWorker(false);
       end;
     finally
       FLocker.Leave;
@@ -4704,7 +4743,7 @@ var
   end;
 
 begin
-  Result := False;
+  Result := false;
   if FBusyCount >= FMaxWorkers then
     Exit
   else if (FDisableCount <> 0) or FTerminating then
@@ -4923,7 +4962,7 @@ var
   end;
 
 begin
-  Result := False;
+  Result := false;
   case JobType of
     0:
       PeekSimpleJob(FSimpleJobs);
@@ -4960,7 +4999,7 @@ var
 begin
   AJob := JobPool.Pop;
   JobInitialize(AJob, TQJobExtData.Create(APlan, AData, AFreeType),
-    jdfFreeAsObject, False, ARunInMainThread);
+    jdfFreeAsObject, false, ARunInMainThread);
   AJob.IsByPlan := True;
 {$IFDEF NEXTGEN}
   PQJobProc(@AJob.WorkerProc)^ := AProc;
@@ -4987,7 +5026,7 @@ var
 begin
   AJob := JobPool.Pop;
   JobInitialize(AJob, TQJobExtData.Create(APlan, AData, AFreeType),
-    jdfFreeAsObject, False, ARunInMainThread);
+    jdfFreeAsObject, false, ARunInMainThread);
   AJob.IsByPlan := True;
   AJob.IsAnonWorkerProc := True;
   TQJobProcA(AJob.WorkerProc.ProcA) := AProc;
@@ -5017,7 +5056,7 @@ begin
         DecodeTime(Now, H, M, S, MS);
         // 修改延迟，以便尽量精确到秒的0点
         FPlanCheckJob := At(DoPlanCheck, (1000 - MS) * Q1MillSecond, Q1Second,
-          nil, False);
+          nil, false);
       end;
     finally
       FLocker.Leave;
@@ -5277,10 +5316,10 @@ var
   AJob: PQJob;
   ASignal: PQSignal;
 begin
-  if not FTerminating then
+  if (not FTerminating) and Assigned(AProc) then
   begin
     AJob := JobPool.Pop;
-    JobInitialize(AJob, nil, jdfFreeByUser, False, ARunInMainThread);
+    JobInitialize(AJob, nil, jdfFreeByUser, false, ARunInMainThread);
 {$IFDEF NEXTGEN}
     PQJobProc(@AJob.WorkerProc)^ := AProc;
 {$ELSE}
@@ -5323,10 +5362,10 @@ var
   AJob: PQJob;
   ASignal: PQSignal;
 begin
-  if not FTerminating then
+  if (not FTerminating) and Assigned(AProc) then
   begin
     AJob := JobPool.Pop;
-    JobInitialize(AJob, nil, jdfFreeByUser, False, ARunInMainThread);
+    JobInitialize(AJob, nil, jdfFreeByUser, false, ARunInMainThread);
     TQJobProcA(AJob.WorkerProc.ProcA) := AProc;
     AJob.IsAnonWorkerProc := True;
     AJob.SetFlags(JOB_SIGNAL_WAKEUP, True);
@@ -5368,12 +5407,11 @@ var
   procedure AddWait;
   begin
     New(AChain);
-    AChain.Event := TEvent.Create(nil, False, False, '');
+    AChain.Event := TEvent.Create(nil, false, false, '');
     AChain.Job := AHandle;
     AChain.Prior := nil;
     FLocker.Enter;
-    if Assigned(FLastWaitChain) then
-      FLastWaitChain.Prior := AChain;
+    AChain.Prior:=FLastWaitChain;
     FLastWaitChain := AChain;
     FLocker.Leave;
   end;
@@ -5408,6 +5446,24 @@ var
     end;
   end;
 
+  procedure AbortWaits;
+  var
+    APrior: PQJobWaitChain;
+  begin
+    FLocker.Enter;
+    try
+      APrior := FLastWaitChain;
+      while Assigned(APrior) do
+      begin
+        if APrior <> AChain then
+          TEvent(APrior.Event).SetEvent;
+        APrior := APrior.Prior;
+      end;
+    finally
+      FLocker.Leave;
+    end;
+  end;
+
 begin
   if (AHandle and $3) = 0 then
   begin
@@ -5428,7 +5484,7 @@ begin
         end;
       finally
         FSimpleJobs.Repush(AFirst);
-        LookupIdleWorker(False);
+        LookupIdleWorker(false);
       end;
       if not Assigned(AChain) then
       begin
@@ -5449,9 +5505,18 @@ begin
       if Assigned(AChain) then
       begin
         if AMsgWait then
-          Result := MsgWaitForEvent(AChain.Event, ATimeout)
+        begin
+          Result := MsgWaitForEvent(AChain.Event, ATimeout);
+          if (Result = wrAbandoned) and AppTerminated then
+            AbortWaits;
+        end
         else
-          Result := TEvent(AChain.Event).WaitFor(ATimeout);
+        begin
+          if Terminating then
+            Result := wrAbandoned
+          else
+            Result := TEvent(AChain.Event).WaitFor(ATimeout);
+        end;
       end
       else
         Result := wrSignaled;
@@ -5475,7 +5540,8 @@ begin
   Result := Wait(AProc, RegisterSignal(ASignalName), ARunInMainThread);
 end;
 
-procedure TQWorkers.WaitRunningDone(const AParam: TWorkerWaitParam);
+procedure TQWorkers.WaitRunningDone(const AParam: TWorkerWaitParam;
+  AMarkTerminateOnly: Boolean);
 var
   AInMainThread: Boolean;
   function HasJobRunning: Boolean;
@@ -5483,7 +5549,7 @@ var
     I: Integer;
     AJob: PQJob;
   begin
-    Result := False;
+    Result := false;
     DisableWorkers;
     FLocker.Enter;
     try
@@ -5531,7 +5597,9 @@ var
             end;
             if Result then
               FWorkers[I].FTerminatingJob := AJob;
-          end;
+          end
+          else
+            Result := True;
         end;
       end;
     finally
@@ -5543,7 +5611,7 @@ var
 begin
   AInMainThread := GetCurrentThreadId = MainThreadId;
   repeat
-    if HasJobRunning then
+    if HasJobRunning and (not AMarkTerminateOnly) then
     begin
       if AInMainThread then
         // 如果是在主线程中清理，由于作业可能在主线程执行，可能已经投寄尚未执行，所以必需让其能够执行
@@ -5766,12 +5834,9 @@ begin
       FSimpleJobs.FLocker.Leave;
     end;
   end;
-  if AWaitRunningDone then
-  begin
-    AWaitParam.WaitType := 2;
-    AWaitParam.SourceJob := ASource;
-    WaitRunningDone(AWaitParam);
-  end;
+  AWaitParam.WaitType := 2;
+  AWaitParam.SourceJob := ASource;
+  WaitRunningDone(AWaitParam, not AWaitRunningDone);
   FreeJob(ASource);
 end;
 {$IFDEF UNICODE}
@@ -5802,7 +5867,6 @@ function TQWorkers.PostSignal(const AName: QStringW; AData: Pointer;
 begin
   Result := SignalQueue.Post(AName, AData, AFreeType);
 end;
-
 
 function TQWorkers.Post(AProc: TQJobProcG; AInterval: Int64; AData: Pointer;
   ARunInMainThread: Boolean; AFreeType: TQJobDataFreeType): IntPtr;
@@ -5893,8 +5957,7 @@ begin
         AWaitParam.WaitType := 5;
       end;
   end;
-  if AWaitRunningDone then
-    WaitRunningDone(AWaitParam);
+  WaitRunningDone(AWaitParam, not AWaitRunningDone);
 end;
 
 function TQWorkers.ClearJobs(AHandles: PIntPtr; ACount: Integer): Integer;
@@ -5911,7 +5974,7 @@ var
   var
     T: Integer;
   begin
-    Result := False;
+    Result := false;
     for T := 0 to ASignalCount - 1 do
     begin
       if ASignalHandles[T] = AHandle then
@@ -6239,7 +6302,7 @@ end;
 constructor TQJobGroup.Create(AByOrder: Boolean);
 begin
   inherited Create;
-  FEvent := TEvent.Create(nil, False, False, '');
+  FEvent := TEvent.Create(nil, false, false, '');
   FLocker := TQSimpleLock.Create;
   FByOrder := AByOrder;
   FItems := TQJobItemList.Create;
@@ -6295,7 +6358,7 @@ begin
   AtomicIncrement(FRuns);
   if FWaitResult = wrIOCompletion then
   begin
-    AIsDone := False;
+    AIsDone := false;
     FLocker.Enter;
     try
       I := FItems.IndexOf(AJob);
@@ -6347,7 +6410,7 @@ end;
 
 procedure TQJobGroup.DoJobsTimeout(AJob: PQJob);
 begin
-  FTimeoutCheck := False;
+  FTimeoutCheck := false;
   Cancel;
   if FWaitResult = wrIOCompletion then
   begin
@@ -6655,7 +6718,7 @@ begin
   if FWorkerCount > ACount then
     FWorkerCount := ACount;
   FWorkJob := JobPool.Pop;
-  JobInitialize(FWorkJob, AData, AFreeType, True, False);
+  JobInitialize(FWorkJob, AData, AFreeType, True, false);
   FEvent := TEvent.Create();
 end;
 
@@ -6832,7 +6895,7 @@ end;
 constructor TStaticThread.Create;
 begin
   inherited Create(True);
-  FEvent := TEvent.Create(nil, False, False, '');
+  FEvent := TEvent.Create(nil, false, false, '');
 {$IFDEF MSWINDOWS}
   Priority := tpIdle;
 {$ENDIF}
@@ -6893,7 +6956,7 @@ begin
         begin
           if Assigned(Workers) and (not Workers.Terminating) and
             (Workers.IdleWorkers = 0) then
-            Workers.LookupIdleWorker(False);
+            Workers.LookupIdleWorker(false);
         end;
       wrTimeout:
         begin
@@ -7179,8 +7242,22 @@ begin
 end;
 
 function TQJobExtData.GetAsString: QStringW;
+  function IsFreeBy(AFreeMethod: TQExtFreeEvent): Boolean;
+  begin
+    Result := MethodEqual(TMethod(FOnFree), TMethod(AFreeMethod));
+  end;
+
 begin
-  Result := PQStringW(Origin)^;
+  if IsFreeBy(DoFreeAsString) then
+    Result := PQStringW(Origin)^
+{$IFNDEF NEXTGEN}
+  else if IsFreeBy(DoFreeAsAnsiString) then
+    Result := AsAnsiString
+{$ENDIF}
+  else if IsFreeBy(DoFreeAsPlan) then
+    Result := AsPlan.Plan.AsString
+  else
+    Result := '';
 end;
 
 function TQJobExtData.GetParamCount: Integer;
@@ -7413,7 +7490,7 @@ begin
   if ATimeout = 0 then
     AEvent := nil
   else
-    AEvent := TEvent.Create(nil, False, False, '');
+    AEvent := TEvent.Create(nil, false, false, '');
   AItem := NewItem(AId, AData, AFreeType, AEvent);
   Inc(AItem.RefCount);
   FOwner.FireSignalJob(AItem);
@@ -7451,6 +7528,7 @@ end;
 initialization
 
 GetThreadStackInfo := nil;
+AppTerminated := false;
 {$IFDEF MSWINDOWS}
 GetTickCount64 := GetProcAddress(GetModuleHandle(kernel32), 'GetTickCount64');
 WinGetSystemTimes := GetProcAddress(GetModuleHandle(kernel32),

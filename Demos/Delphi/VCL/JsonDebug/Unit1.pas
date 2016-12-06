@@ -52,15 +52,26 @@ TAppMsg = record
     Using: Boolean; // สนำร
 end;
 
+  TReadOnlyTest=class
+  private
+    FValue: Integer;
+  published
+  property Value:Integer {read FValue;} write FValue;
+  end;
 procedure TForm1.btn1Click(Sender: TObject);
 var
   json:TQJson;
   AppMsg:TAppMsg;
+  ATest:TReadOnlyTest;
 begin
+  ATest:=TReadOnlyTest.Create;
   json:=TQJson.Create;
-  json.Parse(mmo1.Text);
-  json.ToRecord<TAppMsg>(AppMsg);
-  ShowMessage(AppMsg.Msg_Info);
+  ATest.FValue:=100;
+  json.FromRtti(ATest);
+  json.ToRtti(ATest);
+//  json.Parse(mmo1.Text);
+//  json.ToRecord<TAppMsg>(AppMsg);
+//  ShowMessage(AppMsg.Msg_Info);
   json.Free;
 
 

@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2016/11/11 14:49:33.000.071,C:\Users\hasee\Documents\Embarcadero\Studio\Projects\Unit1.fmx=C:\User\qstyles\Unit1.fmx</Transaction>
+    <Transaction>2016/11/11 14:49:35.000.101,C:\Users\hasee\Documents\Embarcadero\Studio\Projects\Project1.dproj=C:\User\qstyles\Project1.dproj</Transaction>
+    <Transaction>2016/11/12 12:32:08.000.928,C:\User\qstyles\Project1.dproj=E:\User\QDAC3\Demos\Delphi\FMX\QCSS\csstransform.dproj</Transaction>
+    <Transaction>2016/11/12 12:32:54.000.273,C:\User\qstyles\qcss_fmx.pas=E:\User\QDAC3\Demos\Delphi\FMX\QCSS\qcss_fmx.pas</Transaction>
+    <Transaction>2016/11/12 12:33:15.000.004,C:\User\qstyles\Unit1.pas=E:\User\QDAC3\Demos\Delphi\FMX\QCSS\Unit1.pas</Transaction>
+    <Transaction>2016/11/12 12:33:15.000.004,C:\User\qstyles\Unit1.fmx=E:\User\QDAC3\Demos\Delphi\FMX\QCSS\Unit1.fmx</Transaction>
+  </Transactions>
+	<ActiveMobileDevice>
+		<NoProfile iOSSimulator="iPhone5" Android="CJL5T15B18044567"/>  <PMacbookPro iOSSimulator="iPhone5"/>
+  </ActiveMobileDevice>
+</BorlandProject>

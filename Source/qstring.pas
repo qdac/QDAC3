@@ -24,6 +24,29 @@ interface
 }
 
 { 修订日志
+  2016.11.24
+  ==========
+  * 优化了函数 HTMLUnescape 的效率
+
+  2016.11.12
+  ==========
+  + DeleteSideCharsW 用于删除两边的特定字符
+
+  2016.9.29
+  ==========
+  - 删除 RightStrCountW 函数
+  + 增加 RightPosW 函数，来计算字符串出现在右侧的起始位置（阿木建议）
+
+  2016.9.21
+  ==========
+  * 修正了 HashOf 在计算长度为0的数据时出现AV错误的问题（QQ报告）
+
+  2016.8.23
+  ==========
+  * 修正了DecodeChineseId身份证号中包含小写 x 时检查出错的问题
+  + 增加 JavaEscape 和 JavaUnescape 来转义/反转 Java 字符串
+  + 增加 IsOctChar 来检查指定的字符是否是8进制允许的字符
+
   2016.7.16
   ==========
   + 增加 FreeAndNilObject 函数来替代 FreeAndNil
@@ -216,6 +239,9 @@ interface
 uses classes, sysutils, types{$IF RTLVersion>=21},
   Rtti{$IFEND >=XE10}{$IFNDEF MSWINDOWS},
   syncobjs{$ENDIF}
+{$IFDEF MSWINDOWS}
+    , windows
+{$ENDIF}
 {$IFDEF POSIX}
     , Posix.String_
 {$ENDIF}
@@ -875,6 +901,7 @@ type
     /// </summary>
     hsMale);
   TMemCompFunction = function(p1, p2: Pointer; L1, L2: Integer): Integer;
+  TCNSpellCallback = function(const p: PQCharW): QCharW;
   // UTF8编码与Unicode编码转换函数，使用自己的实现
 function Utf8Decode(p: PQCharA; l: Integer): QStringW; overload;
 function Utf8Decode(const p: QStringA): QStringW; overload;
@@ -999,7 +1026,7 @@ function DecodeLineA(var p: PQCharA; ASkipEmpty: Boolean = True;
 function DecodeLineU(var p: PQCharA; ASkipEmpty: Boolean = True;
   AMaxSize: Integer = MaxInt): QStringA;
 function DecodeLineW(var p: PQCharW; ASkipEmpty: Boolean = True;
-  AMaxSize: Integer = MaxInt): QStringW;
+  AMaxSize: Integer = MaxInt; AQuoterChar: QCharW = #0): QStringW;
 // 大小写转换
 function CharUpperA(c: QCharA): QCharA;
 function CharUpperW(c: QCharW): QCharW;
@@ -1097,6 +1124,7 @@ function NaturalCompareW(s1, s2: PQCharW; AIgnoreCase: Boolean;
   AIgnoreSpace: Boolean = True): Integer;
 // 十六进制相关函数
 function IsHexChar(c: QCharW): Boolean; inline;
+function IsOctChar(c: QCharW): Boolean; inline;
 function HexValue(c: QCharW): Integer;
 function HexChar(V: Byte): QCharW; inline;
 // 类型转换函数
@@ -1216,11 +1244,11 @@ function IsNoChineseName(S: QStringW): Boolean;
 /// <summary>
 /// 判断指定的字符串是否是有效的中国地址
 /// </summary>
-function IsChineseAddr(S: QStringW): Boolean;
+function IsChineseAddr(S: QStringW; AMinLength: Integer = 3): Boolean;
 /// <summary>
 /// 判断指定的字符串是否是有效的外国地址
 /// </summary>
-function IsNoChineseAddr(S: QStringW): Boolean;
+function IsNoChineseAddr(S: QStringW; AMinLength: Integer = 3): Boolean;
 /// 查找指定的二进制内容出现的起始位置
 function MemScan(S: Pointer; len_s: Integer; sub: Pointer;
   len_sub: Integer): Pointer;
@@ -1236,6 +1264,8 @@ function IndexOfValueW(AList: TStrings; const AValue: QStringW;
   ASpliter: QCharW): Integer;
 
 function DeleteCharW(const ASource, ADeletes: QStringW): QStringW;
+function DeleteSideCharsW(const ASource: QStringW; ADeletes: QStringW;
+  AIgnoreCase: Boolean = false): QStringW;
 function DeleteRightW(const S, ADelete: QStringW; AIgnoreCase: Boolean = false;
   ACount: Integer = MaxInt): QStringW;
 function DeleteLeftW(const S, ADelete: QStringW; AIgnoreCase: Boolean = false;
@@ -1243,10 +1273,18 @@ function DeleteLeftW(const S, ADelete: QStringW; AIgnoreCase: Boolean = false;
 function ContainsCharW(const S, ACharList: QStringW): Boolean;
 function HtmlEscape(const S: QStringW): QStringW;
 function HtmlUnescape(const S: QStringW): QStringW;
+function JavaEscape(const S: QStringW; ADoEscape: Boolean): QStringW;
+function JavaUnescape(const S: QStringW; AStrictEscape: Boolean): QStringW;
 function HtmlTrimText(const S: QStringW): QStringW;
+function UrlEncode(const ABytes: PByte; l: Integer; ASpacesAsPlus: Boolean)
+  : QStringW; overload;
+function UrlEncode(const ABytes: TBytes; ASpacesAsPlus: Boolean)
+  : QStringW; overload;
+function UrlEncode(const S: QStringW; ASpacesAsPlus: Boolean;
+  AUtf8Encode: Boolean = True): QStringW; overload;
 function LeftStrCount(const S: QStringW; const sub: QStringW;
   AIgnoreCase: Boolean): Integer;
-function RightStrCount(const S: QStringW; const sub: QStringW;
+function RightPosW(const S: QStringW; const sub: QStringW;
   AIgnoreCase: Boolean): Integer;
 // 下面是一些辅助函数
 function ParseInt(var S: PQCharW; var ANum: Int64): Integer;
@@ -1361,6 +1399,7 @@ var
   JavaFormatUtf8: Boolean;
   IsFMXApp: Boolean;
   MemComp: TMemCompFunction;
+  OnFetchCNSpell: TCNSpellCallback;
 
 const
   SLineBreak: PQCharW = {$IFDEF MSWINDOWS}#13#10{$ELSE}#10{$ENDIF};
@@ -1374,9 +1413,6 @@ const
 implementation
 
 uses dateutils, math, variants
-{$IFDEF MSWINDOWS}
-    , windows
-{$ENDIF}
 {$IF (RTLVersion>=25) and (not Defined(NEXTGEN))}
     , AnsiStrings
 {$IFEND >=XE4}
@@ -1394,6 +1430,7 @@ resourcestring
   SRangeEndNeeded = '字符范围边界结束字符未指定。';
   STooSmallCapMoneyGroup = '给定的分组数 %d 小于实际需要的最小货币分组数 %d。';
   SUnsupportNow = '指定的函数 %s 目前不受支持';
+  SBadJavaEscape = '无效的 Java 转义序列：%s';
 
 type
   TGBKCharSpell = record
@@ -1444,7 +1481,9 @@ var
   hMsvcrtl: HMODULE;
   VCStrStr: TMSVCStrStr;
   VCStrStrW: TMSVCStrStrW;
+{$IFDEF WIN64}
   VCMemCmp: TMSVCMemCmp;
+{$ENDIF}
 {$ENDIF}
 
 const
@@ -1713,9 +1752,11 @@ end;
 
 function Utf8Encode(ps: PQCharW; sl: Integer; pd: PQCharA; dl: Integer)
   : Integer;
+{$IFNDEF MSWINDOWS}
 var
   pds: PQCharA;
   c: Cardinal;
+{$ENDIF}
 begin
   if (ps = nil) or (sl = 0) then
     Result := 0
@@ -1921,29 +1962,34 @@ begin
     SetLength(Result, 0);
 end;
 
+function SpellOfChar(w: Word): QCharW;
+var
+  I, l, H: Integer;
+begin
+  Result := #0;
+  l := 0;
+  H := 22;
+  repeat
+    I := (l + H) div 2;
+    if w >= GBKSpells[I].StartChar then
+    begin
+      if w <= GBKSpells[I].EndChar then
+      begin
+        Result := GBKSpells[I].SpellChar;
+        Break;
+      end
+      else
+        l := I + 1;
+    end
+    else
+      H := I - 1;
+  until l > H;
+end;
+
 function CNSpellChars(S: QStringA; AIgnoreEnChars: Boolean): QStringW;
 var
   p: PQCharA;
   pd, pds: PQCharW;
-  function SpellOfChar: QCharW;
-  var
-    I: Integer;
-    w: Word;
-  begin
-    w := p^ shl 8;
-    Inc(p);
-    w := w or p^;
-    Inc(p);
-    Result := #0;
-    for I := 0 to 22 do
-    begin
-      if (w >= GBKSpells[I].StartChar) and (w <= GBKSpells[I].EndChar) then
-      begin
-        Result := GBKSpells[I].SpellChar;
-        Break;
-      end;
-    end;
-  end;
 
 begin
   if S.Length > 0 then
@@ -1958,14 +2004,15 @@ begin
       begin
         if not AIgnoreEnChars then
         begin
-          pd^ := QCharW(p^);
+          pd^ := QCharW(CharUpperA(p^));
           Inc(pd);
         end;
         Inc(p);
       end
       else
       begin
-        pd^ := SpellOfChar;
+        pd^ := SpellOfChar(ExchangeByteOrder(PWord(p)^));
+        Inc(p, 2);
         if pd^ <> #0 then
           Inc(pd);
       end;
@@ -1977,8 +2024,44 @@ begin
 end;
 
 function CNSpellChars(S: QStringW; AIgnoreEnChars: Boolean): QStringW;
+var
+  pw, pd: PQCharW;
+  T: QStringA;
 begin
-  Result := CNSpellChars(AnsiEncode(S), AIgnoreEnChars);
+  pw := PWideChar(S);
+  System.SetLength(Result, Length(S));
+  pd := PQCharW(Result);
+  while pw^ <> #0 do
+  begin
+    if pw^ < #127 then
+    begin
+      if not AIgnoreEnChars then
+      begin
+        pd^ := CharUpperW(pw^);
+        Inc(pd);
+      end;
+    end
+    else if (pw^ > #$4E00) and (pw^ <= #$9FA5) then // 汉字区间
+    begin
+      if Assigned(OnFetchCNSpell) then
+      begin
+        pd^ := OnFetchCNSpell(pw);
+        if pd^ <> #0 then
+        begin
+          Inc(pd);
+          Inc(pw);
+          continue;
+        end;
+      end;
+      T := AnsiEncode(pw, 1);
+      if T.Length = 2 then
+        pd^ := SpellOfChar(ExchangeByteOrder(PWord(PQCharA(T))^));
+      if pd^ <> #0 then
+        Inc(pd);
+    end;
+    Inc(pw);
+  end;
+  SetLength(Result, (IntPtr(pd) - IntPtr(PQCharW(Result))) shr 1);
 end;
 
 function CharSizeA(c: PQCharA): Integer;
@@ -3151,7 +3234,7 @@ var
   p: PQCharW;
 begin
   p := PQCharW(S);
-  Result := DecodeTokenW(p, ADelimiters, AQuoter, AIgnoreCase);
+  Result := DecodeTokenW(p, ADelimiters, AQuoter, AIgnoreCase, ASkipDelimiters);
   if ARemove then
     S := StrDupX(p, Length(S) - (p - PQCharW(S)));
 end;
@@ -3368,14 +3451,37 @@ begin
   end;
 end;
 
-function DecodeLineW(var p: PQCharW; ASkipEmpty: Boolean; AMaxSize: Integer)
-  : QStringW;
+function DecodeLineW(var p: PQCharW; ASkipEmpty: Boolean; AMaxSize: Integer;
+  AQuoterChar: QCharW): QStringW;
 var
   ps: PQCharW;
 begin
   ps := p;
   while p^ <> #0 do
   begin
+    if p^ = AQuoterChar then
+    begin
+      Inc(p);
+      while p^ <> #0 do
+      begin
+        if p^ = #$5C then
+        begin
+          Inc(p);
+          if p^ <> #0 then
+            Inc(p);
+        end
+        else if p^ = AQuoterChar then
+        begin
+          Inc(p);
+          if p^ = AQuoterChar then
+            Inc(p)
+          else
+            Break;
+        end
+        else
+          Inc(p);
+      end;
+    end;
     if ((p[0] = #13) and (p[1] = #10)) or (p[0] = #10) then
     begin
       if ps = p then
@@ -3853,25 +3959,33 @@ begin
     begin
       while (s1^ <> 0) and (s2^ <> 0) and
         ((s1^ = s2^) or (CharUpperA(s1^) = CharUpperA(s2^))) do
+      begin
         Inc(Result);
+        Inc(s1);
+        Inc(s2);
+      end;
     end
     else
     begin
       while (s1^ <> 0) and (s2^ <> 0) and (s1^ = s2^) do
+      begin
         Inc(Result);
+        Inc(s1);
+        Inc(s2);
+      end;
     end;
   end;
 end;
 
 function SameCharsU(s1, s2: PQCharA; AIgnoreCase: Boolean): Integer;
-  function CompareSubSeq: Boolean;
+  function CompareSubSeq: Integer;
   var
     ACharSize1, ACharSize2: Integer;
   begin
     ACharSize1 := CharSizeU(s1) - 1;
     ACharSize2 := CharSizeU(s2) - 1;
-    Result := ACharSize1 = ACharSize2;
-    if Result then
+    Result := 0;
+    if ACharSize1 = ACharSize2 then
     begin
       Inc(s1);
       Inc(s2);
@@ -3880,10 +3994,13 @@ function SameCharsU(s1, s2: PQCharA; AIgnoreCase: Boolean): Integer;
         Inc(s1);
         Inc(s2);
       end;
-      Result := (ACharSize1 = 0);
+      if ACharSize1 = 0 then
+        Result := ACharSize2 + 1;
     end;
   end;
 
+var
+  ACharSize: Integer;
 begin
   Result := 0;
   if (s1 <> nil) and (s2 <> nil) then
@@ -3893,8 +4010,13 @@ begin
       while (s1^ <> 0) and (s2^ <> 0) and
         ((s1^ = s2^) or (CharUpperA(s1^) = CharUpperA(s2^))) do
       begin
-        if CompareSubSeq then
-          Inc(Result)
+        ACharSize := CompareSubSeq;
+        if ACharSize <> 0 then
+        begin
+          Inc(Result);
+          Inc(s1, ACharSize);
+          Inc(s2, ACharSize);
+        end
         else
           Break;
       end;
@@ -3903,8 +4025,13 @@ begin
     begin
       while (s1^ <> 0) and (s2^ <> 0) and (s1^ = s2^) do
       begin
-        if CompareSubSeq then
-          Inc(Result)
+        ACharSize := CompareSubSeq;
+        if ACharSize <> 0 then
+        begin
+          Inc(Result);
+          Inc(s1, ACharSize);
+          Inc(s2, ACharSize);
+        end
         else
           Break;
       end;
@@ -3921,12 +4048,20 @@ begin
     begin
       while (s1^ <> #0) and (s2^ <> #0) and
         ((s1^ = s2^) or (CharUpperW(s1^) = CharUpperW(s2^))) do
+      begin
         Inc(Result);
+        Inc(s1);
+        Inc(s2);
+      end;
     end
     else
     begin
       while (s1^ <> #0) and (s2^ <> #0) and (s1^ = s2^) do
+      begin
         Inc(Result);
+        Inc(s1);
+        Inc(s2);
+      end;
     end;
   end;
 end;
@@ -5030,14 +5165,21 @@ begin
     ((c >= 'A') and (c <= 'F'));
 end;
 
+function IsOctChar(c: WideChar): Boolean; inline;
+begin
+  Result := (c >= '0') and (c <= '7');
+end;
+
 function HexValue(c: QCharW): Integer;
 begin
   if (c >= '0') and (c <= '9') then
     Result := Ord(c) - Ord('0')
   else if (c >= 'a') and (c <= 'f') then
     Result := 10 + Ord(c) - Ord('a')
+  else if (c >= 'A') and (c <= 'F') then
+    Result := 10 + Ord(c) - Ord('A')
   else
-    Result := 10 + Ord(c) - Ord('A');
+    Result := -1;
 end;
 
 function HexChar(V: Byte): QCharW;
@@ -5203,7 +5345,7 @@ function StringReplaceWX(const S, Old, New: QStringW; AFlags: TReplaceFlags)
   : QStringW;
 var
   ps, pse, pr, pd, po, pn, pns: PQCharW;
-  LO, LN, LS, LD, I, ACount: Integer;
+  LO, LN, LS, I, ACount: Integer;
   SS, SOld: QStringW;
   AFounds: array of Integer;
   AReplaceOnce: Boolean;
@@ -5287,9 +5429,8 @@ end;
 
 var
   ps, pse, pds, pr, pd, po, pn: PQCharW;
-  l, LO, LN, LS, LR, ACount: Integer;
+  l, LO, LN, LS, LR: Integer;
   AReplaceOnce: Boolean;
-  AFounds: array of Integer;
 begin
   LO := Length(Old);
   LN := Length(New);
@@ -5774,7 +5915,7 @@ end;
 
 function MemCompPascal(p1, p2: Pointer; L1, L2: Integer): Integer;
 var
-  l, L0: Integer;
+  l: Integer;
   ps1: PByte absolute p1;
   ps2: PByte absolute p2;
 begin
@@ -6012,28 +6153,67 @@ begin
   end;
 end;
 
-function RightStrCount(const S: QStringW; const sub: QStringW;
+function RightPosW(const S: QStringW; const sub: QStringW;
   AIgnoreCase: Boolean): Integer;
 var
-  ps, pe, psub: PQCharW;
-  l: Integer;
+  ps, pe, psub, psube, pc, pt: PQCharW;
+  LS, lsub: Integer;
 begin
-  l := Length(sub);
+  lsub := Length(sub);
+  LS := Length(S);
   Result := 0;
-  if Length(S) > l then
+  if LS >= lsub then
   begin
-    ps := PQCharW(S);
-    pe := ps + Length(S) - 1;
-    psub := PQCharW(sub);
-    while pe >= ps do
+    ps := Pointer(S);
+    pe := ps + LS - 1;
+    psub := Pointer(sub);
+    psube := psub + lsub - 1;
+    if AIgnoreCase then
     begin
-      if StartWithW(pe, psub, AIgnoreCase) then
+      while pe - ps >= lsub - 1 do
       begin
-        Inc(Result);
-        Dec(pe, l);
-      end
-      else
+        if (pe^ = psube^) or (CharUpperW(pe^) = CharUpperW(psube^)) then
+        begin
+          pt := psube - 1;
+          pc := pe - 1;
+          while (pt >= psub) and
+            ((pc^ = pt^) or (CharUpperW(pc^) = CharUpperW(pt^))) do
+          begin
+            Dec(pt);
+            Dec(pc);
+          end;
+          if pt < psub then
+          begin
+            Dec(pe, lsub);
+            Result := pe - ps + 2;
+            Exit;
+          end;
+        end;
         Dec(pe);
+      end;
+    end
+    else
+    begin
+      while pe - ps >= lsub - 1 do
+      begin
+        if pe^ = psube^ then
+        begin
+          pt := psube - 1;
+          pc := pe - 1;
+          while (pt >= psub) and (pc^ = pt^) do
+          begin
+            Dec(pt);
+            Dec(pc);
+          end;
+          if pt < psub then
+          begin
+            Dec(pe, lsub);
+            Result := pe - ps + 2;
+            Exit;
+          end;
+        end;
+        Dec(pe);
+      end;
     end;
   end;
 end;
@@ -6261,6 +6441,51 @@ begin
     Result := ASource;
 end;
 
+function DeleteSideCharsW(const ASource: QStringW; ADeletes: QStringW;
+  AIgnoreCase: Boolean): QStringW;
+var
+  ps, pd, pe: PQCharW;
+  ATemp: QStringW;
+begin
+  if Length(ADeletes) = 0 then
+    Result := ASource
+  else
+  begin
+    if AIgnoreCase then
+    begin
+      ATemp := UpperCase(ASource);
+      ADeletes := UpperCase(ADeletes);
+      ps := PQCharW(ATemp);
+      pe := ps + Length(ATemp);
+    end
+    else
+    begin
+      ps := PQCharW(ASource);
+      pe := ps + Length(ASource);
+    end;
+    pd := PQCharW(ADeletes);
+    while ps < pe do
+    begin
+      if CharInW(ps, pd) then
+        Inc(ps, CharSizeW(ps))
+      else
+        Break;
+    end;
+    while pe > ps do
+    begin
+      Dec(pe);
+      if (pe^ >= #$DB00) and (pe^ <= #$DFFF) then
+        Dec(pe);
+      if not CharInW(pe, pd) then
+      begin
+        Inc(pe, CharSizeW(pe));
+        Break;
+      end;
+    end;
+    Result := StrDupX(ps, pe - ps);
+  end;
+end;
+
 function DeleteRightW(const S, ADelete: QStringW; AIgnoreCase: Boolean = false;
   ACount: Integer = MaxInt): QStringW;
 var
@@ -6392,6 +6617,327 @@ begin
   end;
 end;
 
+function JavaEscape(const S: QStringW; ADoEscape: Boolean): QStringW;
+var
+  ASize: Integer;
+  p, ps, pd: PWideChar;
+begin
+  ASize := Length(S);
+  if ASize > 0 then
+  begin
+    p := Pointer(S);
+    ps := p;
+    while p^ <> #0 do
+    begin
+      if p^ < ' ' then // 控制字符
+      begin
+        if (p^ >= #7) and (p^ <= #13) then
+          Inc(ASize);
+      end
+      else if p^ >= '~' then // 非可打印字符，转义的话使用 \uxxxx
+      begin
+        if ADoEscape then
+          Inc(ASize, 5);
+      end
+      else
+      begin
+        if (p^ = '\') or (p^ = '''') or (p^ = '"') then // \->\\
+          Inc(ASize);
+      end;
+      Inc(p);
+    end;
+    if ASize = Length(S) then
+      Result := S
+    else
+    begin
+      SetLength(Result, ASize);
+      pd := Pointer(Result);
+      p := ps;
+      while p^ <> #0 do
+      begin
+        if p^ < ' ' then // 控制字符
+        begin
+          case p^ of
+            #7:
+              begin
+                PInteger(pd)^ := $0061005C; // \a
+                Inc(pd, 2);
+              end;
+            #8:
+              begin
+                PInteger(pd)^ := $0062005C; // \b
+                Inc(pd, 2);
+              end;
+            #9:
+              begin
+                PInteger(pd)^ := $0074005C; // \t
+                Inc(pd, 2);
+              end;
+            #10:
+              begin
+                PInteger(pd)^ := $006E005C; // \n
+                Inc(pd, 2);
+              end;
+            #11:
+              begin
+                PInteger(pd)^ := $0076005C; // \v
+                Inc(pd, 2);
+              end;
+            #12:
+              begin
+                PInteger(pd)^ := $0066005C; // \f
+                Inc(pd, 2);
+              end;
+            #13:
+              begin
+                PInteger(pd)^ := $0072005C; // \r
+                Inc(pd, 2);
+              end
+          else
+            begin
+              pd^ := p^;
+              Inc(pd);
+            end;
+          end;
+        end
+        else if p^ >= '~' then // 非可打印字符，转义的话使用 \uxxxx
+        begin
+          if ADoEscape then // \uxxxx
+          begin
+            PInteger(pd)^ := $0075005C; // \u
+            Inc(pd, 2);
+            pd^ := LowerHexChars[(Ord(p^) shr 12) and $0F];
+            Inc(pd);
+            pd^ := LowerHexChars[(Ord(p^) shr 8) and $0F];
+            Inc(pd);
+            pd^ := LowerHexChars[(Ord(p^) shr 4) and $0F];
+            Inc(pd);
+            pd^ := LowerHexChars[Ord(p^) and $0F];
+            Inc(pd);
+          end
+          else
+          begin
+            pd^ := p^;
+            Inc(pd);
+          end;
+        end
+        else
+        begin
+          case p^ of
+            '\':
+              begin
+                PInteger(pd)^ := $005C005C; // \\
+                Inc(pd, 2);
+              end;
+            '''':
+              begin
+                PInteger(pd)^ := $0027005C; // \'
+                Inc(pd, 2);
+              end;
+            '"':
+              begin
+                PInteger(pd)^ := $0022005C; // \"
+                Inc(pd, 2);
+              end
+          else
+            begin
+              pd^ := p^;
+              Inc(pd);
+            end;
+          end;
+        end;
+        Inc(p);
+      end;
+    end;
+  end
+  else
+    SetLength(Result, 0);
+end;
+
+function JavaUnescape(const S: QStringW; AStrictEscape: Boolean): QStringW;
+var
+  ps, p, pd: PWideChar;
+  ASize: Integer;
+begin
+  ASize := Length(S);
+  if ASize > 0 then
+  begin
+    p := Pointer(S);
+    ps := p;
+    while p^ <> #0 do
+    begin
+      if p^ = '\' then
+      begin
+        Inc(p);
+        case p^ of
+          'a', 'b', 'f', 'n', 'r', 't', 'v', '''', '"', '\', '?':
+            begin
+              Dec(ASize);
+              Inc(p);
+            end;
+          'x': // \xNN
+            begin
+              Dec(ASize, 2);
+              Inc(p, 3);
+            end;
+          'u': // \uxxxx
+            begin
+              if IsHexChar(p[1]) and IsHexChar(p[2]) and IsHexChar(p[3]) and
+                IsHexChar(p[4]) then
+              begin
+                Dec(ASize, 5);
+                Inc(p, 5);
+              end
+              else
+                raise Exception.CreateFmt(SBadJavaEscape, [Copy(p, 0, 6)]);
+            end;
+          'U': // \Uxxxxxxxx
+            begin
+              if IsHexChar(p[1]) and IsHexChar(p[2]) and IsHexChar(p[3]) and
+                IsHexChar(p[4]) and IsHexChar(p[5]) and IsHexChar(p[6]) and
+                IsHexChar(p[7]) and IsHexChar(p[8]) then
+              begin
+                Dec(ASize, 9);
+                Inc(p, 9);
+              end
+              else
+                raise Exception.CreateFmt(SBadJavaEscape, [Copy(p, 0, 10)]);
+            end
+        else
+          begin
+            if IsOctChar(p[0]) then
+            begin
+              if IsOctChar(p[1]) then
+              begin
+                if IsOctChar(p[2]) then
+                begin
+                  Dec(ASize, 3);
+                  Inc(p, 3);
+                end
+                else
+                begin
+                  Dec(ASize, 2);
+                  Inc(p, 2);
+                end;
+              end
+              else
+              begin
+                Dec(ASize, 1);
+                Inc(p, 1);
+              end;
+            end
+            else if AStrictEscape then
+            begin
+              raise Exception.CreateFmt(SBadJavaEscape, [Copy(p, 0, 6)]);
+            end;
+          end;
+        end;
+      end
+      else
+        Inc(p);
+    end;
+    if Length(S) = ASize then // 尺寸相等，没有需要处理的转义
+      Result := S
+    else
+    begin
+      SetLength(Result, ASize);
+      pd := Pointer(Result);
+      p := ps;
+      while p^ <> #0 do
+      begin
+        if p^ = '\' then
+        begin
+          Inc(p);
+          case p^ of
+            'a':
+              pd^ := #7;
+            'b':
+              pd^ := #8;
+            'f':
+              pd^ := #12;
+            'n':
+              pd^ := #10;
+            'r':
+              pd^ := #13;
+            't':
+              pd^ := #9;
+            'v':
+              pd^ := #11;
+            '''':
+              pd^ := '''';
+            '"':
+              pd^ := '"';
+            '\':
+              pd^ := '\';
+            '?':
+              pd^ := '?';
+            'x': // \xNN
+              begin
+                pd^ := WideChar((HexValue(p[1]) shl 4) or HexValue(p[2]));
+                Inc(p, 2);
+              end;
+            'u': // \uxxxx
+              begin
+                pd^ := WideChar((HexValue(p[1]) shl 12) or
+                  (HexValue(p[2]) shl 8) or (HexValue(p[3]) shl 4) or
+                  HexValue(p[4]));
+                Inc(p, 4);
+              end;
+            'U': // \Uxxxxxxxx
+              begin
+                pd^ := WideChar((HexValue(p[1]) shl 12) or
+                  (HexValue(p[2]) shl 8) or (HexValue(p[3]) shl 4) or
+                  HexValue(p[4]));
+                Inc(pd);
+                pd^ := WideChar((HexValue(p[5]) shl 12) or
+                  (HexValue(p[6]) shl 8) or (HexValue(p[7]) shl 4) or
+                  HexValue(p[8]));
+                Inc(p, 8);
+              end
+          else
+            begin
+              if IsOctChar(p[0]) then
+              begin
+                ASize := HexValue(p[0]);
+                if IsOctChar(p[1]) then
+                begin
+                  ASize := (ASize shl 3) + HexValue(p[1]);
+                  if IsOctChar(p[2]) then
+                  begin
+                    pd^ := WideChar((ASize shl 3) + HexValue(p[2]));
+                    Inc(p, 2);
+                  end
+                  else
+                  begin
+                    pd^ := WideChar(ASize);
+                    Inc(p);
+                  end;
+                end
+                else
+                  pd^ := WideChar(ASize);
+              end
+              else
+              begin
+                pd^ := p^;
+                Inc(pd);
+              end;
+            end;
+          end;
+          Inc(pd);
+        end
+        else
+        begin
+          pd^ := p^;
+          Inc(pd);
+        end;
+        Inc(p);
+      end;
+    end;
+  end
+  else
+    SetLength(Result, 0);
+end;
+
 function HtmlEscape(const S: QStringW): QStringW;
 var
   p, pd: PQCharW;
@@ -6412,6 +6958,7 @@ begin
         begin
           AFound := True;
           StrCpyW(pd, PQCharW(HtmlEscapeChars[(I shl 1) + 1]));
+          Inc(pd, Length(HtmlEscapeChars[(I shl 1) + 1]));
           Break;
         end;
       end;
@@ -6429,11 +6976,163 @@ begin
     Result := '';
 end;
 
+type
+  THTMLEscapeHashItem = record
+    Hash: Integer;
+    Char: Word;
+    Next: Byte;
+  end;
+
+function UnescapeHtmlChar(var p: PQCharW): QCharW;
+const
+  HtmlUnescapeTable: array [0 .. 94] of THTMLEscapeHashItem =
+    ((Hash: 1667591796; Char: 162; Next: 255), // 0:0:&cent;
+    (Hash: 1768257635; Char: 161; Next: 10), // 1:15:&iexcl;
+    (Hash: 1886352750; Char: 163; Next: 34), // 2:55:&pound;
+    (Hash: 1869900140; Char: 245; Next: 255), // 3:3:&otilde;
+    (Hash: 1853122924; Char: 241; Next: 255), // 4:4:&ntilde;
+    (Hash: 1936226560; Char: 173; Next: 66), // 5:54:&shy;
+    (Hash: 1684367104; Char: 176; Next: 64), // 6:31:&deg;
+    (Hash: 1769043301; Char: 191; Next: 255), // 7:78:&iquest;
+    (Hash: 1096901493; Char: 193; Next: 255), // 8:79:&Aacute;
+    (Hash: 1095068777; Char: 198; Next: 12), // 9:81:&AElig;
+    (Hash: 1130587492; Char: 199; Next: 84), // 10:15:&Ccedil;
+    (Hash: 1651668578; Char: 166; Next: 89), // 11:11:&brvbar;
+    (Hash: 1164142962; Char: 202; Next: 255), // 12:81:&Ecirc;
+    (Hash: 1634562048; Char: 38; Next: 18), // 13:13:&amp;
+    (Hash: 1231516257; Char: 204; Next: 255), // 14:86:&Igrave;
+    (Hash: 1851945840; Char: 32; Next: 1), // 15:15:&nbsp;
+    (Hash: 1231119221; Char: 205; Next: 24), // 16:71:&Iacute;
+    (Hash: 1919248128; Char: 174; Next: 40), // 17:17:&reg;
+    (Hash: 1163151360; Char: 208; Next: 255), // 18:13:&ETH;
+    (Hash: 1316252012; Char: 209; Next: 255), // 19:36:&Ntilde;
+    (Hash: 1869835361; Char: 248; Next: 255), // 20:20:&oslash;
+    (Hash: 1869966700; Char: 246; Next: 255), // 21:21:&ouml;
+    (Hash: 1919512167; Char: 197; Next: 255), // 22:22:&ring;
+    (Hash: 1633908084; Char: 180; Next: 85), // 23:23:&acute;
+    (Hash: 1331915122; Char: 212; Next: 255), // 24:71:&Ocirc;
+    (Hash: 1918988661; Char: 187; Next: 255), // 25:25:&raquo;
+    (Hash: 1333029228; Char: 213; Next: 41), // 26:35:&Otilde;
+    (Hash: 1769303404; Char: 239; Next: 76), // 27:27:&iuml;
+    (Hash: 1953066341; Char: 215; Next: 255), // 28:53:&times;
+    (Hash: 1432445813; Char: 218; Next: 255), // 29:59:&Uacute;
+    (Hash: 1432578418; Char: 219; Next: 255), // 30:65:&Ucirc;
+    (Hash: 1818325365; Char: 171; Next: 6), // 31:31:&laquo;
+    (Hash: 1835098994; Char: 175; Next: 88), // 32:32:&macr;
+    (Hash: 1868653429; Char: 243; Next: 82), // 33:33:&oacute;
+    (Hash: 1499554677; Char: 221; Next: 255), // 34:55:&Yacute;
+    (Hash: 1835623282; Char: 181; Next: 26), // 35:35:&micro;
+    (Hash: 1970105344; Char: 168; Next: 19), // 36:36:&uml;
+    (Hash: 1937402985; Char: 223; Next: 67), // 37:63:&szlig;
+    (Hash: 1633772405; Char: 225; Next: 255), // 38:47:&aacute;
+    (Hash: 1767990133; Char: 237; Next: 70), // 39:39:&iacute;
+    (Hash: 1635019116; Char: 227; Next: 255), // 40:17:&atilde;
+    (Hash: 1635085676; Char: 228; Next: 255), // 41:35:&auml;
+    (Hash: 1969713761; Char: 249; Next: 255), // 42:42:&ugrave;
+    (Hash: 1700881269; Char: 233; Next: 255), // 43:43:&eacute;
+    (Hash: 1667458404; Char: 231; Next: 255), // 44:80:&ccedil;
+    (Hash: 1768122738; Char: 238; Next: 255), // 45:45:&icirc;
+    (Hash: 1701278305; Char: 232; Next: 255), // 46:58:&egrave;
+    (Hash: 1433759084; Char: 220; Next: 38), // 47:47:&Uuml;
+    (Hash: 1667589225; Char: 184; Next: 68), // 48:48:&cedil;
+    (Hash: 1098148204; Char: 195; Next: 51), // 49:49:&Atilde;
+    (Hash: 1869767782; Char: 170; Next: 255), // 50:50:&ordf;
+    (Hash: 1701013874; Char: 234; Next: 72), // 51:49:&ecirc;
+    (Hash: 1332964449; Char: 216; Next: 255), // 52:52:&Oslash;
+    (Hash: 1333095788; Char: 214; Next: 28), // 53:53:&Ouml;
+    (Hash: 1903521652; Char: 34; Next: 5), // 54:54:&quot;
+    (Hash: 1634758515; Char: 39; Next: 2), // 55:55:&apos;
+    (Hash: 2036690432; Char: 165; Next: 255), // 56:56:&yen;
+    (Hash: 1869767789; Char: 186; Next: 255), // 57:57:&ordm;
+    (Hash: 1668641394; Char: 164; Next: 46), // 58:58:&curren;
+    (Hash: 1232432492; Char: 207; Next: 29), // 59:59:&Iuml;
+    (Hash: 1668247673; Char: 169; Next: 255), // 60:60:&copy;
+    (Hash: 1634036841; Char: 230; Next: 255), // 61:61:&aelig;
+    (Hash: 1634169441; Char: 224; Next: 255), // 62:62:&agrave;
+    (Hash: 1165323628; Char: 203; Next: 37), // 63:63:&Euml;
+    (Hash: 1702194540; Char: 235; Next: 255), // 64:31:&euml;
+    (Hash: 1331782517; Char: 211; Next: 30), // 65:65:&Oacute;
+    (Hash: 1768387169; Char: 236; Next: 255), // 66:54:&igrave;
+    (Hash: 1768256616; Char: 240; Next: 255), // 67:63:&ieth;
+    (Hash: 1869050465; Char: 242; Next: 255), // 68:48:&ograve;
+    (Hash: 1885434465; Char: 182; Next: 255), // 69:69:&para;
+    (Hash: 1868786034; Char: 244; Next: 255), // 70:39:&ocirc;
+    (Hash: 1886156147; Char: 177; Next: 16), // 71:71:&plusmn;
+    (Hash: 1684633193; Char: 247; Next: 255), // 72:49:&divide;
+    (Hash: 1414025042; Char: 222; Next: 255), // 73:73:&THORN;
+    (Hash: 1432842849; Char: 217; Next: 255), // 74:74:&Ugrave;
+    (Hash: 1164010357; Char: 201; Next: 255), // 75:75:&Eacute;
+    (Hash: 1969316725; Char: 250; Next: 255), // 76:27:&uacute;
+    (Hash: 1231251826; Char: 206; Next: 255), // 77:77:&Icirc;
+    (Hash: 1936024436; Char: 167; Next: 7), // 78:78:&sect;
+    (Hash: 1852797952; Char: 172; Next: 8), // 79:79:&not;
+    (Hash: 1332179553; Char: 210; Next: 44), // 80:80:&Ograve;
+    (Hash: 1819541504; Char: 60; Next: 9), // 81:81:&lt;
+    (Hash: 1969449330; Char: 251; Next: 255), // 82:33:&ucirc;
+    (Hash: 1835623524; Char: 183; Next: 255), // 83:83:&middot;
+    (Hash: 1970629996; Char: 252; Next: 255), // 84:15:&uuml;
+    (Hash: 2036425589; Char: 253; Next: 255), // 85:23:&yacute;
+    (Hash: 1735655424; Char: 62; Next: 14), // 86:86:&gt;
+    (Hash: 1667854947; Char: 194; Next: 255), // 87:87:&circ;
+    (Hash: 1953001330; Char: 254; Next: 255), // 88:32:&thorn;
+    (Hash: 2037738860; Char: 255; Next: 255), // 89:11:&yuml;
+    (Hash: 1164407393; Char: 200; Next: 255), // 90:90:&Egrave;
+    (Hash: 1634888046; Char: 229; Next: 255), // 91:91:&aring;
+    (Hash: 0; Char: 0; Next: 255), // 92:Not Used
+    (Hash: 0; Char: 0; Next: 255), // 93:Not Used
+    (Hash: 1097298529; Char: 192; Next: 255) // 94:94:&Agrave;
+    );
+  function HashOfEscape: Integer;
+  var
+    c: Integer;
+    R: array [0 .. 3] of Byte absolute Result;
+  begin
+    Inc(p); // Skip #
+    c := 3;
+    Result := 0;
+    while (p^ <> #0) and (c >= 0) do
+    begin
+      if p^ = ';' then
+        Exit;
+      R[c] := Ord(p^);
+      Inc(p);
+      Dec(c);
+    end;
+    while p^ <> #0 do
+    begin
+      if p^ = ';' then
+        Exit
+      else
+        Inc(p);
+    end;
+    Result := 0;
+  end;
+
+var
+  AHash, ANext: Integer;
+begin
+  AHash := HashOfEscape;
+  Result := #0;
+  if AHash <> 0 then
+  begin
+    ANext := AHash mod 97;
+    while ANext <> 255 do
+    begin
+      if HtmlUnescapeTable[ANext].Hash = AHash then
+      begin
+        Result := QCharW(HtmlUnescapeTable[ANext].Char);
+        Break;
+      end
+      else
+        ANext := HtmlUnescapeTable[ANext].Next;
+    end;
+  end;
+end;
+
 function HtmlUnescape(const S: QStringW): QStringW;
 var
   p, pd, ps: PQCharW;
-  AFound: Boolean;
-  I, l, H: Integer;
+  l: Integer;
 begin
   if Length(S) > 0 then
   begin
@@ -6449,7 +7148,7 @@ begin
           ps := p;
           Inc(p, 2);
           l := 0;
-          if p^ = 'x' then
+          if (p^ = 'x') or (p^ = 'X') then
           begin
             Inc(p);
             while IsHexChar(p^) do
@@ -6480,28 +7179,10 @@ begin
         end
         else
         begin
-          AFound := false;
-          H := (Length(HtmlEscapeChars) shr 1) - 1;
-          for I := 0 to H do
-          begin
-            if StrStrW(p, PWideChar(HtmlEscapeChars[I shl 1 + 1])) = p then
-            begin
-              AFound := True;
-              StrCpyW(pd, PQCharW(HtmlEscapeChars[(I shl 1)]));
-              Inc(pd);
-              Break;
-            end;
-          end; // end for
-          if AFound then
-          begin
-            Inc(p, Length(HtmlEscapeChars[I shl 1 + 1]));
-            continue;
-          end
-          else
-          begin
+          pd^ := UnescapeHtmlChar(p);
+          if pd^ = #0 then
             pd^ := p^;
-            Inc(pd);
-          end; // end if
+          Inc(pd);
         end; // end else
       end // end else
       else
@@ -6536,6 +7217,115 @@ begin
   end
   else
     Result := '';
+end;
+
+function UrlEncode(const ABytes: PByte; l: Integer; ASpacesAsPlus: Boolean)
+  : QStringW; overload;
+const
+  SafeChars: array [33 .. 127] of Byte = ( //
+    0, 0, 0, 0, 0, 0, 0, 0, //
+    0, 0, 0, 0, 1, 1, 0, 1, //
+    1, 1, 1, 1, 1, 1, 1, 1, //
+    1, 0, 0, 0, 0, 0, 0, 0, //
+    1, 1, 1, 1, 1, 1, 1, 1, //
+    1, 1, 1, 1, 1, 1, 1, 1, //
+    1, 1, 1, 1, 1, 1, 1, 1, //
+    1, 1, 0, 0, 0, 0, 1, 0, //
+    1, 1, 1, 1, 1, 1, 1, 1, //
+    1, 1, 1, 1, 1, 1, 1, 1, //
+    1, 1, 1, 1, 1, 1, 1, 1, //
+    1, 1, 0, 0, 0, 1, 0);
+  HexChars: array [0 .. 15] of QCharW = ('0', '1', '2', '3', '4', '5', '6', '7',
+    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F');
+var
+  c: Integer;
+  ps, pe: PByte;
+  pd: PQCharW;
+begin
+  // 计算实际的长度
+  c := 0;
+  ps := PByte(ABytes);
+  pe := PByte(IntPtr(ps) + l);
+  while IntPtr(ps) < IntPtr(pe) do
+  begin
+    if (ps^ = Ord('%')) and (IntPtr(pe) - IntPtr(ps) > 2) and
+      (PByte(IntPtr(ps) + 1)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
+      Ord('0') .. Ord('9')]) and
+      (PByte(IntPtr(ps) + 2)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
+      Ord('0') .. Ord('9')]) then // 原来就是%xx?
+      Inc(ps, 3)
+    else
+    begin
+      if (ps^ < 32) or (ps^ > 127) then
+        Inc(c);
+      Inc(ps);
+    end;
+  end;
+  SetLength(Result, l + (c shl 1));
+  pd := PQCharW(Result);
+  ps := ABytes;
+  while IntPtr(ps) < IntPtr(pe) do
+  begin
+    if (ps^ = Ord('%')) and (IntPtr(pe) - IntPtr(ps) > 2) and
+      (PByte(IntPtr(ps) + 1)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
+      Ord('0') .. Ord('9')]) and
+      (PByte(IntPtr(ps) + 2)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
+      Ord('0') .. Ord('9')]) then // 原来就是%xx?
+    begin
+      pd^ := '%';
+      Inc(pd);
+      Inc(ps);
+      pd^ := QCharW(ps^);
+      Inc(pd);
+      Inc(ps);
+      pd^ := QCharW(ps^);
+      Inc(pd);
+      Inc(ps);
+    end
+    else
+    begin
+      if (ps^ in [33 .. 127]) and (SafeChars[ps^] <> 0) then
+        pd^ := QCharW(ps^)
+      else if (ps^ = 32) and ASpacesAsPlus then
+        pd^ := '+'
+      else
+      begin
+        pd^ := '%';
+        Inc(pd);
+        pd^ := HexChars[(ps^ shr 4) and $0F];
+        Inc(pd);
+        pd^ := HexChars[ps^ and $0F];
+      end;
+      Inc(pd);
+      Inc(ps);
+    end;
+  end;
+end;
+
+function UrlEncode(const ABytes: TBytes; ASpacesAsPlus: Boolean)
+  : QStringW; overload;
+begin
+  if Length(ABytes) > 0 then
+    Result := UrlEncode(@ABytes[0], Length(ABytes), ASpacesAsPlus)
+  else
+    SetLength(Result, 0);
+end;
+
+function UrlEncode(const S: QStringW; ASpacesAsPlus, AUtf8Encode: Boolean)
+  : QStringW; overload;
+var
+  ABytes: QStringA;
+begin
+  if Length(S) > 0 then
+  begin
+    if AUtf8Encode then
+      ABytes := qstring.Utf8Encode(S)
+    else
+      ABytes := AnsiEncode(S);
+    Result := UrlEncode(PByte(PQCharA(ABytes)), ABytes.Length, ASpacesAsPlus);
+  end
+  else
+    Result := S;
 end;
 
 // 下面是一些辅助函数
@@ -7187,8 +7977,8 @@ begin
     add    eax, ecx
     cmp   ebx, edx
     jne    A00
-    pop ebx
     A01:
+    pop ebx
     mov Result,eax
   end;
 {$ELSE}
@@ -9911,6 +10701,7 @@ begin
     AEndDigits := 4;
   SetLength(ATemp, 40); // 最大长度为40
   pd := PWideChar(ATemp) + 39;
+  //计算实际的分组数量，注意此时包含钱和厘，最后会根据实际的显示需要截断
   I := 0;
   while V > 0 do
   begin
@@ -9988,6 +10779,8 @@ begin
   SetLength(Result, p - PWideChar(Result));
   if (AFlags and MC_UNIT) <> 0 then
   begin
+    if Length(Result) = 0 then
+      Result := '零圆';
     if (AFlags and MC_END_PATCH) <> 0 then
     begin
       if PWideChar(Result)[Length(Result) - 1] = Units[2] then // 分
@@ -9999,7 +10792,11 @@ begin
       Result := AStartText + ANegText + Result;
   end
   else
+  begin
+    if Length(Result) = 0 then
+      Result := '零';
     Result := AStartText + ANegText + Result;
+  end;
 end;
 
 function IsHumanName(S: QStringW; AllowChars: TNameCharSet; AMinLen: Integer;
@@ -10087,16 +10884,16 @@ begin
   end;
 end;
 
-function IsChineseAddr(S: QStringW): Boolean;
+function IsChineseAddr(S: QStringW; AMinLength: Integer): Boolean;
 begin
-  Result := IsHumanName(S, [nctChinese, nctDot, nctSpace, nctNum], 2, 128,
-    AddrCharTest);
+  Result := IsHumanName(S, [nctChinese, nctAlpha, nctSymbol, nctDot, nctSpace,
+    nctNum], AMinLength, 128, AddrCharTest);
 end;
 
-function IsNoChineseAddr(S: QStringW): Boolean;
+function IsNoChineseAddr(S: QStringW; AMinLength: Integer): Boolean;
 begin
-  Result := IsHumanName(S, [nctAlpha, nctDot, nctSpace, nctNum], 2, 128,
-    AddrCharTest);
+  Result := IsHumanName(S, [nctAlpha, nctDot, nctSymbol, nctSpace, nctNum],
+    AMinLength, 128, AddrCharTest);
 end;
 
 { TQBits }
@@ -10178,8 +10975,8 @@ begin
   begin
     if (Length(CardNo) = 15) then
       CardNo := ChineseId15To18(CardNo);
-    if CheckChineseId18(CardNo) <> CardNo[{$IFDEF NEXTGEN}17{$ELSE}18{$ENDIF}]
-    then // 身份证号校验码检查
+    if CheckChineseId18(CardNo) <>
+      CharUpperW(CardNo[{$IFDEF NEXTGEN}17{$ELSE}18{$ENDIF}]) then // 身份证号校验码检查
       Exit;
     p := PQCharW(CardNo);
     AreaCode := StrDupX(p, 6);
@@ -10373,8 +11170,6 @@ var
   end;
 
   function RootPath: String;
-  var
-    LP, sp: PQCharW;
   begin
     p := pBase;
     if StartWithW(p, 'http://', True) then
@@ -10461,13 +11256,17 @@ if hMsvcrtl <> 0 then
 begin
   VCStrStr := TMSVCStrStr(GetProcAddress(hMsvcrtl, 'strstr'));
   VCStrStrW := TMSVCStrStrW(GetProcAddress(hMsvcrtl, 'wcsstr'));
+{$IFDEF WIN64}
   VCMemCmp := TMSVCMemCmp(GetProcAddress(hMsvcrtl, 'memcmp'));
+{$ENDIF}
 end
 else
 begin
   VCStrStr := nil;
   VCStrStrW := nil;
+{$IFDEF WIN64}
   VCMemCmp := nil;
+{$ENDIF}
 end;
 {$ENDIF}
 IsFMXApp := GetClass('TFmxObject') <> nil;

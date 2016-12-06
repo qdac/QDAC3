@@ -66,7 +66,7 @@ type
 
 var
   MsgFilters: IQService;
-  _MsgFilter: TQMessageService;
+  _MsgFilter: IQMessageService;
   NID_APPREADY: Cardinal;
   { TQMessageService }
 
@@ -82,6 +82,7 @@ begin
   // 触发下DLL中的Application.OnIdle
   if Assigned(Application.OnIdle) then //
     Application.OnIdle(Application, ADone);
+  CheckSynchronize;
 end;
 
 type
@@ -202,7 +203,7 @@ begin
   begin
     AppHandle := FindAppHandle;
     _MsgFilter := TQMessageService.Create(NewId, 'MessageFilter.VCL');
-    RegisterServices('Services/Messages', [_MsgFilter]);
+    RegisterServices('Services/Messages', [InstanceOf(_MsgFilter) as TQService]);
     if AppHandle <> 0 then
     begin
       Application.Handle := AppHandle;
@@ -221,12 +222,14 @@ end;
 procedure UnregisterMessageService;
 var
   AMgr: IQNotifyManager;
+  ASvc:IQService;
 begin
   if Assigned(_MsgFilter) then
   begin
     if Supports(PluginsManager, IQNotifyManager, AMgr) then
       AMgr.Unsubscribe(NID_APPREADY, _MsgFilter as IQNotify);
-    _MsgFilter.Parent.Remove(_MsgFilter);
+    ASvc:=(_MsgFilter as IQService);
+    ASvc.Parent.Remove(ASvc);
     _MsgFilter := nil;
   end;
 end;

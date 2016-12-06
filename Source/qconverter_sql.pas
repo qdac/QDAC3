@@ -26,6 +26,7 @@ type
     FMacroStart: QCharW;
     FMacroEnd: QCharW;
     FMacros: TQMacroManager;
+    FSavePoint: Integer;
     FWhereFields: array of TQFieldDef;
     function EncodeBinary(const p: PByte; L: Integer): QStringW;
       virtual; abstract;
@@ -384,6 +385,11 @@ var
 begin
   inherited;
   FetchTableName;
+  if Assigned(FMacros) then
+  begin
+    FMacros.Push('TableName', FTableName);
+    FMacros.Push('TableName.Quoted', QuotedIdent(FTableName));
+  end;
   FInsertBegin := 'insert into ' + QuotedIdent(FTableName) + '(';
   SetLength(FWhereFields, ADefs.Count);
   ACount := 0;
@@ -690,7 +696,7 @@ end;
 
 function TQPgSQLConverter.EncodeBinary(const p: PByte; L: Integer): QStringW;
 begin
-  Result := 'E''\\x' + QString.BinToHex(p, L) + '''';
+  Result := 'E''\\x' + qstring.BinToHex(p, L) + '''';
 end;
 
 function TQPgSQLConverter.EncodeBoolean(const v: Boolean): QStringW;
@@ -742,7 +748,7 @@ end;
 
 function TQMySQLConverter.EncodeBinary(const p: PByte; L: Integer): QStringW;
 begin
-  Result := 'X''' + QString.BinToHex(p, L) + '''';
+  Result := 'X''' + qstring.BinToHex(p, L) + '''';
 end;
 
 function TQMySQLConverter.EncodeBoolean(const v: Boolean): QStringW;

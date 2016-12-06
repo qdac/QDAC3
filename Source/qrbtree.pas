@@ -35,6 +35,7 @@ interface
   QQ邮箱:109867294@qq.com
 }
 {$I 'qdac.inc'}
+{.$DEFINE DEBUG_EXISTS}//Enable duplicate push test
 
 uses
   Classes, sysutils, qstring;
@@ -261,6 +262,7 @@ type
     function GetBucketCount: Integer; inline;
     function Compare(Data1, Data2: Pointer; var AResult: Integer)
       : Boolean; inline;
+    procedure BuncketsNeeded; inline;
     procedure InternalDelete(AIndex: Integer; APrior, AHashList: PQHashList);
   public
     /// 构造函数，以桶数量为参数，后期可以调用Resize调整
@@ -1018,6 +1020,15 @@ var
   AIndex: Integer;
   ABucket: PQHashList;
 begin
+{$IFDEF DEBUG_EXISTS}
+  DebugOut('Try add item %x(Hash:%d)', [IntPtr(AData), AHash]);
+  if Exists(AData, AHash) then
+  begin
+    DebugOut('Duplicates Item %x(Hash:%d) found.Exit', [IntPtr(AData), AHash]);
+    Exit;
+  end;
+{$ENDIF}
+  BuncketsNeeded;
   new(ABucket);
   ABucket.Hash := AHash;
   ABucket.Data := AData;
@@ -1029,6 +1040,12 @@ begin
     FAfterBucketUsed(Self, AIndex);
   if FAutoSize and ((FCount div Length(FBuckets)) > 3) then
     Resize(0);
+end;
+
+procedure TQHashTable.BuncketsNeeded;
+begin
+  if Length(FBuckets) = 0 then
+    Resize(17);
 end;
 
 procedure TQHashTable.ChangeHash(AData: Pointer;
@@ -1342,6 +1359,11 @@ begin
   end;
   Dispose(AHashList);
   Dec(FCount);
+  if FAutoSize then
+  begin
+    if FCount * 3 < Length(FBuckets) then
+      Resize(0);
+  end;
 end;
 
 procedure TQHashTable.Resize(ASize: Cardinal);
@@ -1359,18 +1381,21 @@ var
 begin
   if ASize = 0 then
   begin
-    for I := 0 to 27 do
+    if FCount > 0 then
     begin
-      if BucketSizes[I] > FCount then
+      for I := 0 to 27 do
       begin
-        ASize := BucketSizes[I];
-        Break;
+        if BucketSizes[I] > FCount then
+        begin
+          ASize := BucketSizes[I];
+          Break;
+        end;
       end;
+      if ASize = 0 then // 最大的桶大小
+        ASize := BucketSizes[27];
+      if ASize = Cardinal(Length(FBuckets)) then
+        Exit;
     end;
-    if ASize = 0 then // 最大的桶大小
-      ASize := BucketSizes[27];
-    if ASize = Cardinal(Length(FBuckets)) then
-      Exit;
   end;
   if ASize <> Cardinal(Length(FBuckets)) then
   begin
@@ -1402,7 +1427,7 @@ begin
     FAutoSize := Value;
     if AutoSize then
     begin
-      if (FCount div Length(FBuckets)) > 3 then
+      if (Length(FBuckets) > 0) and ((FCount div Length(FBuckets)) > 3) then
         Resize(0);
     end;
   end;

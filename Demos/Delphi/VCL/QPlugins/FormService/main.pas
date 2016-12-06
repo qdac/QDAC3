@@ -21,6 +21,7 @@ type
     Button6: TButton;
     Button7: TButton;
     ComboBox1: TComboBox;
+    Button8: TButton;
     procedure FormCreate(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
@@ -31,6 +32,7 @@ type
     procedure Button6Click(Sender: TObject);
     procedure Button7Click(Sender: TObject);
     procedure ComboBox1Change(Sender: TObject);
+    procedure Button8Click(Sender: TObject);
   private
     { Private declarations }
     FMultiForms: array of IQFormService;
@@ -172,6 +174,11 @@ begin
   begin
     DockPage(AFormService, True);
   end;
+end;
+
+procedure TForm1.Button8Click(Sender: TObject);
+begin
+ShowMessage(IntToHex(IntPtr(InstanceOf(PluginsManager) as TQServices),8));
 end;
 
 procedure TForm1.ComboBox1Change(Sender: TObject);

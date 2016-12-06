@@ -7,7 +7,12 @@ unit qdac_fmx_vkhelper;
 
   Changes
   =======
-
+  2016.9.26
+  ========
+  * Fixed:When a edit has focused and the virtual keyboard hidden,click back on android will exit directly
+  2016.8.24
+  ========
+  * Fixed:When the scrollbox is scrolling,the adjust is too early make position not correct
   2016.7.29
   ========
   * Fixed:Access volation when you set control return action to Next and the control is the last one
@@ -55,7 +60,21 @@ unit qdac_fmx_vkhelper;
 }
 interface
 
-uses classes, sysutils, math, System.Types;
+uses classes, sysutils, math, FMX.controls, FMX.Layouts,
+  System.Types;
+
+type
+  TControlHelper = class helper for TControl
+    function OffsetOf(AParent: TControl): TPointF;
+    function LocalToParent(AParent: TControl; APoint: TPointF)
+      : TPointF; overload;
+    function LocalToParent(AParent: TControl; R: TRectF): TRectF; overload;
+  end;
+
+  TScrollBoxHelper = class helper for TCustomScrollBox
+  public
+    procedure ScrollInView(ACtrl: TControl);
+  end;
 
 var
   EnableReturnKeyHook: Boolean;
@@ -66,8 +85,8 @@ function GetVKBounds: TRectF; overload;
 implementation
 
 uses System.UITypes, System.Messaging,
-  FMX.Types, FMX.Controls, System.Rtti,
-  FMX.Layouts, FMX.text, FMX.scrollbox, FMX.VirtualKeyboard, FMX.Forms,
+  FMX.Types, System.Rtti,
+  FMX.text, FMX.scrollbox, FMX.VirtualKeyboard, FMX.Forms,
   FMX.Platform, typinfo
 {$IFDEF ANDROID}, FMX.Platform.Android, FMX.Helpers.Android,
   FMX.VirtualKeyboard.Android, Androidapi.JNI.GraphicsContentViewText,
@@ -91,6 +110,8 @@ type
   end;
 
   TQAdjustStack = class
+  private
+    function GetLastCtrl: TControl;
   protected
     FLast: PAdjustItem;
     function GetAdjusted: Boolean;
@@ -100,6 +121,7 @@ type
     procedure Restore;
     procedure Remove(ACtrl: TComponent);
     property Adjusted: Boolean read GetAdjusted;
+    property LastControl: TControl read GetLastCtrl;
   end;
 
   TVKNextHelper = class(TFMXObject)
@@ -138,6 +160,7 @@ type
       AVKVisible: Boolean);
     function NeedAdjust(ACtrl: TControl; var ACaretRect: TRectF): Boolean;
     function IsAnimating(AScrollBox: TCustomScrollBox): Boolean;
+    procedure AdjustIfNeeded;
   public
     constructor Create(AOwner: TComponent); overload; override;
     destructor Destroy; override;
@@ -237,6 +260,69 @@ begin
   Result := false;
 {$ENDIF}
 end;
+{ TControlHelper }
+
+function TControlHelper.LocalToParent(AParent: TControl;
+  APoint: TPointF): TPointF;
+var
+  AOffset: TPointF;
+begin
+  AOffset := OffsetOf(AParent);
+  Result.X := APoint.X + AOffset.X;
+  Result.Y := APoint.Y + AOffset.Y;
+end;
+
+function TControlHelper.LocalToParent(AParent: TControl; R: TRectF): TRectF;
+var
+  AOffset: TPointF;
+begin
+  AOffset := OffsetOf(AParent);
+  Result := R;
+  Result.Offset(AOffset.X, AOffset.Y);
+end;
+
+function TControlHelper.OffsetOf(AParent: TControl): TPointF;
+var
+  ACtrl: TControl;
+begin
+  ACtrl := Self;
+  Result.X := 0;
+  Result.Y := 0;
+  while (ACtrl <> nil) and (ACtrl <> AParent) do
+  begin
+    Result.X := Result.X + ACtrl.Position.X;
+    Result.Y := Result.Y + ACtrl.Position.Y;
+    ACtrl := ACtrl.ParentControl;
+  end;
+  if not Assigned(ACtrl) then
+    raise Exception.CreateFmt('指定的控件 %s 不是 %s 的子控件', [Name, AParent.Name]);
+end;
+{ TScrollBoxHelper }
+
+procedure TScrollBoxHelper.ScrollInView(ACtrl: TControl);
+var
+  R, LR: TRectF;
+  dx, dy: Single;
+begin
+  R := ACtrl.LocalToParent(Self, ACtrl.LocalRect);
+  LR := LocalRect;
+  if not LR.Contains(R) then
+  begin
+    if R.Left > LR.Right then
+      dx := LR.Right - R.Right
+    else if R.Right < R.Left then
+      dx := R.Left
+    else
+      dx := 0;
+    if R.Top > LR.Bottom then
+      dy := LR.Bottom - R.Bottom
+    else if R.Bottom < LR.Top then
+      dy := R.Top
+    else
+      dy := 0;
+    ScrollBy(dx, dy);
+  end;
+end;
 
 { TVKStateHandler }
 /// Adjust by layout,return the real adjust offset
@@ -296,9 +382,9 @@ var
     ALastRootStyle: String;
   begin
     Result := nil;
-    if (ARoot.ChildrenCount > 0) then
+    if (ARoot.ComponentCount > 0) then
     begin
-      for I := 0 to ARoot.ChildrenCount - 1 do
+      for I := 0 to ARoot.ComponentCount - 1 do
       begin
         if ACtrl is TLayout then
         begin
@@ -335,7 +421,7 @@ var
 begin
   ALayout := RootLayout(ARoot); // 确认存在用于调整的根布局
   FAdjustStack.Save(ALayout);
-  ALayout.Position.y := ALayout.Position.y + AVOffset;
+  ALayout.Position.Y := ALayout.Position.Y + AVOffset;
   Result := AVOffset;
 end;
 
@@ -345,11 +431,10 @@ var
   ALastY: Single;
 begin
   FAdjustStack.Save(AScrollBox);
-  ALastY := AScrollBox.ViewportPosition.y;
-  AScrollBox.ScrollBy(0, AVOffset);
-  Result := ALastY - AScrollBox.ViewportPosition.y;
-  if IsZero(Result) then
-    FAdjustStack.RemoveLast;
+  ALastY := AScrollBox.ViewportPosition.Y;
+  AScrollBox.ViewportPosition.Offset(0,AVOffset+ALastY);
+//  AScrollBox.ScrollBy(0, AVOffset);
+  Result := ALastY - AScrollBox.ViewportPosition.Y;
 end;
 
 function TVKStateHandler.AdjustByScrollBox(AScrollBox: TCustomScrollBox;
@@ -358,9 +443,9 @@ var
   ALastY: Single;
 begin
   FAdjustStack.Save(AScrollBox);
-  ALastY := AScrollBox.ViewportPosition.y;
+  ALastY := AScrollBox.ViewportPosition.Y;
   AScrollBox.ScrollBy(0, AVOffset);
-  Result := ALastY - AScrollBox.ViewportPosition.y;
+  Result := ALastY - AScrollBox.ViewportPosition.Y;
 end;
 
 procedure TVKStateHandler.AdjustCtrl(ACtrl: TControl;
@@ -377,7 +462,10 @@ var
       begin
         // 正在滚动时不需要调整
         if IsAnimating(AParent as TCustomScrollBox) then
+        begin
+          AOffset := 0;
           Exit;
+        end;
         AOffset := AOffset - AdjustByScrollBox
           (AParent as TCustomScrollBox, AOffset)
       end
@@ -441,32 +529,7 @@ begin
   end;
 end;
 
-// 构造函数，订阅消息
-constructor TVKStateHandler.Create(AOwner: TComponent);
-begin
-  inherited Create(AOwner);
-  FAdjustStack := TQAdjustStack.Create;
-  FVKMsgId := TMessageManager.DefaultManager.SubscribeToMessage
-    (TVKStateChangeMessage, DoVKVisibleChanged);
-  FSizeMsgId := TMessageManager.DefaultManager.SubscribeToMessage
-    (TSizeChangedMessage, DoSizeChanged);
-  FIdleMsgId := TMessageManager.DefaultManager.SubscribeToMessage(TIdleMessage,
-    DoAppIdle);
-end;
-
-/// 析构函数，取消消息订阅
-destructor TVKStateHandler.Destroy;
-begin
-  TMessageManager.DefaultManager.Unsubscribe(TVKStateChangeMessage, FVKMsgId);
-  TMessageManager.DefaultManager.Unsubscribe(TSizeChangedMessage, FSizeMsgId);
-  TMessageManager.DefaultManager.Unsubscribe(TIdleMessage, FIdleMsgId);
-  FAdjustStack.Restore;
-  inherited;
-end;
-
-/// 在应用空闲时，检查虚拟键盘是否隐藏或是否覆盖住了当前获得焦点的控件
-procedure TVKStateHandler.DoAppIdle(const Sender: TObject;
-  const Msg: System.Messaging.TMessage);
+procedure TVKStateHandler.AdjustIfNeeded;
 {$IFDEF ANDROID}
   procedure FMXAndroidFix;
   var
@@ -538,7 +601,8 @@ procedure TVKStateHandler.DoAppIdle(const Sender: TObject;
   procedure RestoreCtrls;
   begin
 {$IFDEF ANDROID}
-    UpdateAndroidKeyboardServiceState;
+    if not Assigned(Screen.FocusControl) then
+      UpdateAndroidKeyboardServiceState;
 {$ENDIF}
     if Assigned(FLastControl) then
       AdjustCtrl(FLastControl, RectF(0, 0, 0, 0),
@@ -574,9 +638,39 @@ begin
     RestoreCtrls;
 end;
 
+// 构造函数，订阅消息
+constructor TVKStateHandler.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FAdjustStack := TQAdjustStack.Create;
+  FVKMsgId := TMessageManager.DefaultManager.SubscribeToMessage
+    (TVKStateChangeMessage, DoVKVisibleChanged);
+  FSizeMsgId := TMessageManager.DefaultManager.SubscribeToMessage
+    (TSizeChangedMessage, DoSizeChanged);
+  FIdleMsgId := TMessageManager.DefaultManager.SubscribeToMessage(TIdleMessage,
+    DoAppIdle);
+end;
+
+/// 析构函数，取消消息订阅
+destructor TVKStateHandler.Destroy;
+begin
+  TMessageManager.DefaultManager.Unsubscribe(TVKStateChangeMessage, FVKMsgId);
+  TMessageManager.DefaultManager.Unsubscribe(TSizeChangedMessage, FSizeMsgId);
+  TMessageManager.DefaultManager.Unsubscribe(TIdleMessage, FIdleMsgId);
+  FAdjustStack.Restore;
+  inherited;
+end;
+
+/// 在应用空闲时，检查虚拟键盘是否隐藏或是否覆盖住了当前获得焦点的控件
+procedure TVKStateHandler.DoAppIdle(const Sender: TObject;
+  const Msg: System.Messaging.TMessage);
+begin
+  AdjustIfNeeded;
+end;
+
 /// 在横竖屏切换时，处理控件位置
 procedure TVKStateHandler.DoSizeChanged(const Sender: TObject;
-  const Msg: System.Messaging.TMessage);
+const Msg: System.Messaging.TMessage);
 var
   ASizeMsg: TSizeChangedMessage absolute Msg;
   R: TRect;
@@ -594,7 +688,7 @@ end;
 
 /// 虚拟键盘可见性变更消息，调整或恢复控件位置
 procedure TVKStateHandler.DoVKVisibleChanged(const Sender: TObject;
-  const Msg: System.Messaging.TMessage);
+const Msg: System.Messaging.TMessage);
 var
   AVKMsg: TVKStateChangeMessage absolute Msg;
   ACtrl: TControl;
@@ -621,7 +715,6 @@ end;
 
 function TVKStateHandler.IsAnimating(AScrollBox: TCustomScrollBox): Boolean;
 var
-  AService: IFMXVirtualKeyboardService;
   AContext: TRttiContext;
   AType: TRttiType;
   AField: TRttiField;
@@ -642,7 +735,7 @@ end;
 
 /// 响应组件释放通知，以避免访问无效地址
 function TVKStateHandler.NeedAdjust(ACtrl: TControl;
-  var ACaretRect: TRectF): Boolean;
+var ACaretRect: TRectF): Boolean;
 var
   ACaret: ICaret;
   ACaretObj: TCustomCaret;
@@ -662,7 +755,7 @@ var
         if AObj is TLayout then
         begin
           ALayout := AObj as TLayout;
-          Result := ALayout.Position.y;
+          Result := ALayout.Position.Y;
         end;
       end;
     end;
@@ -676,7 +769,7 @@ begin
     ACaretObj := ACaret.GetObject;
     ACaretRect.TopLeft := ACtrl.LocalToAbsolute(ACaretObj.Pos);
     ACaretRect.Right := ACaretRect.Left + ACaretObj.Size.cx + 1;
-    ACaretRect.Bottom := ACaretRect.Top + ACaretObj.Size.cy+1; // 下面加点余量
+    ACaretRect.Bottom := ACaretRect.Top + ACaretObj.Size.cy + 1; // 下面加点余量
     if ACaretRect.Bottom > ACtrlBounds.Bottom then
     begin
       if ACtrl is TCustomPresentedScrollBox then
@@ -695,7 +788,7 @@ begin
 end;
 
 procedure TVKStateHandler.Notification(AComponent: TComponent;
-  Operation: TOperation);
+Operation: TOperation);
 begin
   if Operation = opRemove then
   begin
@@ -715,6 +808,14 @@ end;
 function TQAdjustStack.GetAdjusted: Boolean;
 begin
   Result := Assigned(FLast);
+end;
+
+function TQAdjustStack.GetLastCtrl: TControl;
+begin
+  if Assigned(FLast) then
+    Result := FLast.Control
+  else
+    Result := nil;
 end;
 
 procedure TQAdjustStack.Remove(ACtrl: TComponent);
@@ -747,7 +848,7 @@ procedure TQAdjustStack.RemoveLast;
 var
   APrior: PAdjustItem;
 begin
- if Assigned(FLast) then
+  if Assigned(FLast) then
   begin
     APrior := FLast.Prior;
     Dispose(FLast);
@@ -766,14 +867,14 @@ begin
     begin
       if Control is TCustomScrollBox then
       begin
-        Control.Margins.Bottom := LastMargin.y;
-        Control.Margins.Left := LastMargin.x;
+        Control.Margins.Bottom := LastMargin.Y;
+        Control.Margins.Left := LastMargin.X;
         (Control as TCustomScrollBox).ViewportPosition := LastViewPos;
       end
       else if Control is TCustomPresentedScrollBox then
       begin
-        Control.Margins.Bottom := LastMargin.y;
-        Control.Margins.Left := LastMargin.x;
+        Control.Margins.Bottom := LastMargin.Y;
+        Control.Margins.Left := LastMargin.X;
         (Control as TCustomPresentedScrollBox).ViewportPosition := LastViewPos;
       end
       else
@@ -802,14 +903,14 @@ begin
   if ACtrl is TCustomScrollBox then
   begin
     AItem.LastViewPos := (ACtrl as TCustomScrollBox).ViewportPosition;
-    AItem.LastMargin.x := ACtrl.Margins.Left;
-    AItem.LastMargin.y := ACtrl.Margins.Bottom;
+    AItem.LastMargin.X := ACtrl.Margins.Left;
+    AItem.LastMargin.Y := ACtrl.Margins.Bottom;
   end
   else if ACtrl is TCustomPresentedScrollBox then
   begin
     AItem.LastViewPos := (ACtrl as TCustomPresentedScrollBox).ViewportPosition;
-    AItem.LastMargin.x := ACtrl.Margins.Left;
-    AItem.LastMargin.y := ACtrl.Margins.Bottom;
+    AItem.LastMargin.X := ACtrl.Margins.Left;
+    AItem.LastMargin.Y := ACtrl.Margins.Bottom;
   end
   else
   begin
@@ -824,7 +925,7 @@ end;
 { TVKNextHelper }
 
 procedure TVKNextHelper.DoFocusNext(Sender: TObject; var Key: Word;
-  var KeyChar: Char; Shift: TShiftState);
+var KeyChar: Char; Shift: TShiftState);
 var
   AVKCtrl: IVirtualKeyboardControl;
   procedure FocusNext(ACtrl: TControl);

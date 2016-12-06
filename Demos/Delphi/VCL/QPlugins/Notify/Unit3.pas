@@ -97,7 +97,7 @@ end;
 initialization
 
 RegisterServices('/Services/Docks/Forms',
-  [TQVCLFormService.Create('DLL_Shared', TForm3.Create(nil))]);
+  [TQVCLFormService.Create('DLL_Shared', TForm3.Create(nil),nil)]);
 RegisterServices('/Services/Docks/Forms',
   [TQVCLFormService.Create('DLL_MutiInstance', TForm3)]);
 

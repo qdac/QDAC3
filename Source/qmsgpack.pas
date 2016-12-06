@@ -24,6 +24,12 @@ interface
 }
 
 { 修订日志
+  2016.10.08
+  =========
+  * 修正了 WriteSingle/WriteFloat 可能出现无效的浮点运算的问题
+  2016.8.23
+  =========
+  + ToRtti 加入固定长度数组支持（移植 QJson 源码）
   2016.7.24
   =========
   * 修正了 SaveToStream 时，由于 TFileStream 类型的流在调整 Size 时同时调整了 Position 造成的问题（谢顿报告）
@@ -381,6 +387,7 @@ type
     procedure SetIgnoreCase(const Value: Boolean);
     function GetRoot: TQMsgPack;
     function BoolToStr(v: Boolean): QStringW; inline;
+    function GetIsOrdType: Boolean;
   protected
     /// 替换指定位置的结点为新结点
     ///
@@ -389,11 +396,14 @@ type
     /// <param name="ANewItem">要替换的新结点</param>
     procedure Replace(AIndex: Integer; ANewItem: TQMsgPack); virtual;
     procedure DoNodeNameChanged(ANode: TQMsgPack); virtual;
+    procedure DoNodeMoved(ANode: TQMsgPack); virtual;
     procedure InternalEncode(ANode: TQMsgPack; AStream: TStream);
     procedure DoParsed; virtual;
     function InternalAdd(const AKey: TBytes; AKeyType, ADataType: TQMsgPackType)
       : TQMsgPack;
     function CreateNew: TQMsgPack; virtual;
+    function HashName(const s: QStringW): TQHashType;
+    procedure HashNeeded; inline;
   public
     /// <summary>构造函数</summary>
     constructor Create; overload;
@@ -740,15 +750,18 @@ type
     /// <param name="AInstance">实例地址</param>
     /// <remarks>实际上参数只支持对象，记录由于目前无法直接转换为TValue，所以没
     /// 意义，而其它类型因为是值拷贝，实际就算赋值了也返回不了，因此无意义</remarks>
-    procedure ToRtti(AInstance: TValue); overload;
+    procedure ToRtti(AInstance: TValue;
+      AClearCollections: Boolean = True); overload;
     /// <summary>从当前JSON中按指定的类型信息还原到指定的地址</summary>
     /// <param name="ADest">目的地址</param>
     /// <param name="AType">对象或结构体的类型信息</param>
     /// <remarks>ADest对应的应是记录或对象，其它类型不受支持</remarks>
-    procedure ToRtti(ADest: Pointer; AType: PTypeInfo); overload;
+    procedure ToRtti(ADest: Pointer; AType: PTypeInfo;
+      AClearCollections: Boolean = True); overload;
     /// <summary>从当前的JSON中还原到指定的记录实例中</summary>
     /// <param name="ARecord">目的记录实例</param>
-    procedure ToRecord<T: record >(var ARecord: T);
+    procedure ToRecord<T: record >(var ARecord: T;
+      AClearCollections: Boolean = True);
 {$IFEND >=2010}
     /// 该函数用于为 Delphi 提供 for .. in 语法支持。
     function GetEnumerator: TQMsgPackEnumerator;
@@ -855,6 +868,10 @@ type
     /// <returns>包含，返回true，失败，返回false</returns>
     /// <remarks>此函数等价于ItemByPath(APath)<>nil</remarks>
     function Exists(const APath: QStringW): Boolean; inline;
+    /// <summary>重置各项的值为默认状态</summary>
+    /// <param name="ADetach">是否从父结点中移除自己</param>
+    procedure Reset(ADetach: Boolean); virtual;
+
     // 下面的方法是为了方便流式管理加入
     class procedure WriteInt(AStream: TStream; AValue: Int64);
     class procedure WriteFloat(AStream: TStream; AValue: Double);
@@ -912,6 +929,7 @@ type
     property IsNull: Boolean read GetIsNull;
     /// <summary>判断是否是数字类型</summary>
     property IsNumeric: Boolean read GetIsNumeric;
+    property IsOrdType: Boolean read GetIsOrdType;
     /// <summary>判断是否是日期时间类型</summary>
     property IsDateTime: Boolean read GetIsDateTime;
     /// <summary>判断是否是字符串类型</summary>
@@ -967,9 +985,9 @@ type
     function CreateItem: TQMsgPack; override;
     procedure Replace(AIndex: Integer; ANewItem: TQMsgPack); override;
     procedure DoNodeNameChanged(ANode: TQMsgPack); override;
-    function HashName(const s: QStringW): TQHashType;
     procedure DoParsed; override;
     function CreateNew: TQMsgPack; override;
+    procedure DoNodeMoved(ANode: TQMsgPack); override;
   public
     constructor Create; overload;
     destructor Destroy; override;
@@ -1387,6 +1405,11 @@ begin
     FParent.Remove(Self);
 end;
 
+procedure TQMsgPack.DoNodeMoved(ANode: TQMsgPack);
+begin
+
+end;
+
 procedure TQMsgPack.DoNodeNameChanged(ANode: TQMsgPack);
 begin
 
@@ -1472,6 +1495,7 @@ begin
   ArrayNeeded(mptMap);
   Result := CreateItem;
   Result.FParent := Self;
+  Result.FIgnoreCase := IgnoreCase;
   FItems.Add(Result);
 end;
 
@@ -1841,8 +1865,8 @@ function TQMsgPack.EncodeAsString(AStrictJson: Boolean): QStringW;
             if Length(AItem.FValue) = 0 then
               Result := '""'
             else
-              Result := QuotedStrW(StrDupX(@AItem.FValue[0],
-                Length(AItem.FValue) shr 1), '"');
+              Result := '"' + JavaEscape(StrDupX(@AItem.FValue[0],
+                Length(AItem.FValue) shr 1), False) + '"';
           end
           else
           begin
@@ -1927,7 +1951,8 @@ function TQMsgPack.EncodeAsString(AStrictJson: Boolean): QStringW;
           if Length(AItem.Name) > 0 then
           begin
             if AStrictJson then
-              ABuilder.Cat(QuotedStrW(AItem.Name, '"'))
+              ABuilder.Cat(MapStrStart).Cat(JavaEscape(AItem.Name, False))
+                .Cat(MapStrStart)
             else
               ABuilder.Cat(AItem.Name);
             ABuilder.Cat(MapValueDelim, 1);
@@ -2145,7 +2170,10 @@ end;
 procedure TQMsgPack.FreeItem(AItem: TQMsgPack);
 begin
   if Assigned(OnQMsgPackFree) then
-    OnQMsgPackFree(AItem)
+  begin
+    AItem.FParent := nil;
+    OnQMsgPackFree(AItem);
+  end
   else
     FreeObject(AItem);
 end;
@@ -2282,10 +2310,15 @@ var
           tkRecord:
             begin
               DataType := mptMap;
-              AValue := AFields[J].GetValue(ASource);
-              Add(AFields[J].Name)
-                .FromRtti(Pointer(IntPtr(ASource) + AFields[J].Offset),
-                AFields[J].FieldType.Handle);
+//              AValue := AFields[J].GetValue(ASource);
+              if AFields[J].FieldType.Handle = TypeInfo(TGuid) then
+                Add(AFields[J].Name).AsString :=
+                  GUIDToString
+                  (PGuid(Pointer(IntPtr(ASource) + AFields[J].Offset))^)
+              else
+                Add(AFields[J].Name)
+                  .FromRtti(Pointer(IntPtr(ASource) + AFields[J].Offset),
+                  AFields[J].FieldType.Handle);
             end;
         end;
       end
@@ -2317,8 +2350,9 @@ var
       try
         for J := 0 to ACount - 1 do
         begin
-          if not(APropList[J].PropType^.Kind in [tkMethod, tkInterface,
-            tkClassRef, tkPointer, tkProcedure]) then
+          if Assigned(APropList[J].GetProc) and Assigned(APropList[J].SetProc)
+            and (not(APropList[J].PropType^.Kind in [tkMethod, tkInterface,
+            tkClassRef, tkPointer, tkProcedure])) then
           begin
 {$IF RTLVersion>25}
             AName := APropList[J].NameFld.ToString;
@@ -2814,6 +2848,11 @@ begin
   Result := (DataType = mptMap);
 end;
 
+function TQMsgPack.GetIsOrdType: Boolean;
+begin
+  Result := DataType in [mptBoolean, mptInteger];
+end;
+
 function TQMsgPack.GetIsString: Boolean;
 begin
   Result := (DataType = mptString);
@@ -3063,43 +3102,53 @@ begin
   Result := AChild <> nil;
 end;
 
+function TQMsgPack.HashName(const s: QStringW): TQHashType;
+var
+  ATemp: QStringW;
+begin
+  if not IgnoreCase then
+    Result := HashOf(PQCharW(s), Length(s) shl 1)
+  else
+  begin
+    ATemp := UpperCase(s);
+    Result := HashOf(PQCharW(ATemp), Length(ATemp) shl 1);
+  end;
+end;
+
+procedure TQMsgPack.HashNeeded;
+begin
+  if (FKeyHash = 0) and (Length(FKey) > 0) then
+    FKeyHash := HashName(Name);
+end;
+
 function TQMsgPack.IndexOf(const AName: QStringW): Integer;
 var
   I, l: Integer;
   AItem: TQMsgPack;
-  AHash: Cardinal;
+  AHash: TQHashType;
   s: QStringW;
 begin
   Result := -1;
   l := Length(AName);
   if l > 0 then
-    AHash := HashOf(PQCharW(AName), l shl 1)
+    AHash := HashName(AName)
   else
     Exit;
   l := l shl 1;
   for I := 0 to Count - 1 do
   begin
     AItem := Items[I];
-    s := AItem.KeyAsString;
+    s := AItem.Name;
     if (Length(s) shl 1) = l then
     begin
-      if not IgnoreCase then
+      AItem.HashNeeded;
+      if AItem.FKeyHash = AHash then
       begin
-        if AItem.FKeyHash = 0 then
-          AItem.FKeyHash := HashOf(PQCharW(s), l);
-        if AItem.FKeyHash = AHash then
+        if StrCmpW(PQCharW(s), PQCharW(AName), IgnoreCase) = 0 then
         begin
-          if s = AName then
-          begin
-            Result := I;
-            Break;
-          end;
+          Result := I;
+          Break;
         end;
-      end
-      else if StartWithW(PQCharW(s), PQCharW(AName), True) then
-      begin
-        Result := I;
-        Break;
       end;
     end;
   end;
@@ -3146,6 +3195,7 @@ begin
   Result := CreateItem;
   Result.FParent := Self;
   Result.FKeyType := AKeyType;
+  Result.FIgnoreCase := IgnoreCase;
   SetLength(Result.FKey, Length(AKey));
   if Length(AKey) > 0 then
     Move(AKey[0], Result.FKey[0], Length(AKey));
@@ -3156,13 +3206,13 @@ procedure TQMsgPack.InternalEncode(ANode: TQMsgPack; AStream: TStream);
 var
   I, C: Integer;
   AChild: TQMsgPack;
-  ALastPos:Int64;
+  ALastPos: Int64;
 begin
-  ALastPos:=AStream.Position;
+  ALastPos := AStream.Position;
   if ALastPos = AStream.Size then
   begin
     AStream.Size := AStream.Size + 16384;
-    AStream.Position:=ALastPos;
+    AStream.Position := ALastPos;
   end;
   case ANode.DataType of
     mptUnknown, mptNull:
@@ -3753,7 +3803,6 @@ end;
 function TQMsgPack.ItemByName(const AName: QStringW; AList: TQMsgPackList;
   ANest: Boolean): Integer;
 var
-  AHash: Cardinal;
   l: Integer;
   function InternalFind(AParent: TQMsgPack): Integer;
   var
@@ -3766,17 +3815,8 @@ var
       AItem := Items[I];
       if Length(AItem.FKey) = l then
       begin
-        if not IgnoreCase then
-        begin
-          if AItem.FKeyHash = 0 then
-            AItem.FKeyHash := HashOf(PQCharW(AItem.FKey), l shl 1);
-          if AItem.FKeyHash = AHash then
-          begin
-            if AItem.Name = AName then
-              AList.Add(AItem);
-          end;
-        end
-        else if StartWithW(PQCharW(AItem.FKey), PQCharW(AName), True) then
+        AItem.HashNeeded;
+        if StrCmpW(PQCharW(AItem.Name), PQCharW(AName), IgnoreCase) = 0 then
           AList.Add(AItem);
       end;
       if ANest then
@@ -3787,13 +3827,9 @@ var
 begin
   l := Length(AName);
   if l > 0 then
-  begin
-    AHash := HashOf(PQCharW(AName), l shl 1);
-    Result := InternalFind(Self);
-  end
+    Result := InternalFind(Self)
   else
   begin
-    AHash := 0;
     Result := -1;
     Exit;
   end;
@@ -3815,7 +3851,7 @@ begin
   Result := nil;
   while Assigned(AParent) and (p^ <> #0) do
   begin
-    AName := DecodeTokenW(p, PathDelimiters, WideChar(0), False);
+    AName := HtmlUnescape(DecodeTokenW(p, PathDelimiters, WideChar(0), False));
     if Length(AName) > 0 then
     begin
       // 查找的是数组？
@@ -3971,7 +4007,7 @@ begin
         if Length(Name) = 0 then
           raise Exception.Create(SCantAttachNoNameNodeToObject)
         else if ANewParent.IndexOf(Name) <> -1 then
-          raise Exception.CreateFmt(SNodeNameExists, [Name]);;
+          raise Exception.CreateFmt(SNodeNameExists, [Name]);
       end;
       if Assigned(FParent) then
         FParent.Remove(Self);
@@ -3982,7 +4018,7 @@ begin
         ANewParent.FItems.Insert(0, Self)
       else
         ANewParent.FItems.Insert(AIndex, Self);
-      DoNodeNameChanged(Self);
+      DoNodeMoved(Self);
     end
     else
       raise Exception.Create(SCanAttachToNoneContainer);
@@ -4027,6 +4063,24 @@ procedure TQMsgPack.Replace(AIndex: Integer; ANewItem: TQMsgPack);
 begin
   FreeObject(Items[AIndex]);
   FItems[AIndex] := ANewItem;
+end;
+
+procedure TQMsgPack.Reset(ADetach: Boolean);
+begin
+  if ADetach and Assigned(FParent) then
+  begin
+    FParent.Remove(Self);
+    FParent := nil;
+  end;
+  SetLength(FKey, 0);
+  FKeyHash := 0;
+  SetLength(FValue, 0);
+  Clear;
+  FKeyType := mptUnknown;
+  FDataType := mptUnknown;
+  FExtType := 0;
+  FData := nil;
+  FIgnoreCase := not MsgPackCaseSensitive;
 end;
 
 procedure TQMsgPack.ResetKey;
@@ -4279,6 +4333,7 @@ procedure TQMsgPack.SetIgnoreCase(const Value: Boolean);
       for I := 0 to AParent.Count - 1 do
         InternalSetIgnoreCase(AParent[I]);
     end;
+    DoNodeNameChanged(AParent);
   end;
 
 begin
@@ -4483,12 +4538,13 @@ end;
 
 {$IF RTLVersion>=21}
 
-procedure TQMsgPack.ToRecord<T>(var ARecord: T);
+procedure TQMsgPack.ToRecord<T>(var ARecord: T; AClearCollections: Boolean);
 begin
-  ToRtti(@ARecord, TypeInfo(T));
+  ToRtti(@ARecord, TypeInfo(T), AClearCollections);
 end;
 
-procedure TQMsgPack.ToRtti(ADest: Pointer; AType: PTypeInfo);
+procedure TQMsgPack.ToRtti(ADest: Pointer; AType: PTypeInfo;
+  AClearCollections: Boolean);
   function MsgPackToValueArray(ATypeInfo: PTypeInfo; AMsgPack: TQMsgPack)
     : TValueArray;
   var
@@ -4539,6 +4595,8 @@ procedure TQMsgPack.ToRtti(ADest: Pointer; AType: PTypeInfo);
   var
     I: Integer;
   begin
+    if AClearCollections then
+      ACollection.Clear;
     for I := 0 to AMsgPack.Count - 1 do
       AMsgPack[I].ToRtti(ACollection.Add);
   end;
@@ -4740,8 +4798,14 @@ procedure TQMsgPack.ToRtti(ADest: Pointer; AType: PTypeInfo);
                   AChild.ToRtti(AObj);
               end;
             tkRecord:
-              AChild.ToRtti(Pointer(IntPtr(ABaseAddr) + AFields[J].Offset),
-                AFields[J].FieldType.Handle);
+              begin
+                if AFields[J].FieldType.Handle = TypeInfo(TGuid) then
+                  PGuid(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
+                    StringToGuid(AChild.AsString)
+                else
+                  AChild.ToRtti(Pointer(IntPtr(ABaseAddr) + AFields[J].Offset),
+                    AFields[J].FieldType.Handle);
+              end;
           end;
         end;
       end;
@@ -4768,7 +4832,7 @@ procedure TQMsgPack.ToRtti(ADest: Pointer; AType: PTypeInfo);
       begin
         AChild := Items[J];
         AProp := GetPropInfo(AObj, AChild.Name);
-        if AProp <> nil then
+        if (AProp <> nil) and Assigned(AProp.SetProc) then
         begin
           case AProp.PropType^.Kind of
             tkClass:
@@ -5042,6 +5106,206 @@ procedure TQMsgPack.ToRtti(ADest: Pointer; AType: PTypeInfo);
     else
       raise Exception.CreateFmt(SMissRttiTypeDefine, [AType.Name]);
   end;
+  function GetFixedArrayItemType: PTypeInfo;
+  var
+    pType: PPTypeInfo;
+  begin
+    pType := GetTypeData(AType)^.ArrayData.elType;
+    if pType = nil then
+      Result := nil
+    else
+      Result := pType^;
+  end;
+  procedure ToFixedArray;
+  var
+    I, C, ASize: Integer;
+    ASubType: PTypeInfo;
+    AChild: TQMsgPack;
+    AChildObj: TObject;
+    pi: Pointer;
+  begin
+    C := Min(GetTypeData(AType).ArrayData.ElCount, Count);
+    ASubType := GetFixedArrayItemType;
+    if ASubType = nil then
+      Exit;
+    ASize := GetTypeData(ASubType).elSize;
+    for I := 0 to C - 1 do
+    begin
+      pi := Pointer(IntPtr(ADest) + ASize * I);
+      AChild := Items[I];
+      case ASubType.Kind of
+        tkInteger:
+          begin
+            case GetTypeData(ASubType).OrdType of
+              otSByte:
+                PShortint(pi)^ := AChild.AsInteger;
+              otUByte:
+                PByte(pi)^ := AChild.AsInteger;
+              otSWord:
+                PSmallint(pi)^ := AChild.AsInteger;
+              otUWord:
+                PWord(pi)^ := AChild.AsInteger;
+              otSLong:
+                PInteger(pi)^ := AChild.AsInteger;
+              otULong:
+                PCardinal(pi)^ := AChild.AsInteger;
+            end;
+          end;
+{$IFNDEF NEXTGEN}
+        tkChar:
+          PByte(pi)^ := Ord(PAnsiChar(AnsiString(AChild.AsString))[0]);
+{$ENDIF !NEXTGEN}
+        tkEnumeration:
+          begin
+            if GetTypeData(ASubType)^.BaseType^ = TypeInfo(Boolean) then
+              PBoolean(pi)^ := AChild.AsBoolean
+            else
+            begin
+              case GetTypeData(ASubType)^.OrdType of
+                otSByte:
+                  begin
+                    if AChild.IsOrdType then
+                      PShortint(pi)^ := AChild.AsInteger
+                    else
+                      PShortint(pi)^ := GetEnumValue(ASubType, AChild.AsString);
+                  end;
+                otUByte:
+                  begin
+                    if AChild.IsOrdType then
+                      PByte(pi)^ := AChild.AsInteger
+                    else
+                      PByte(pi)^ := GetEnumValue(ASubType, AChild.AsString);
+                  end;
+                otSWord:
+                  begin
+                    if AChild.IsOrdType then
+                      PSmallint(pi)^ := AChild.AsInteger
+                    else
+                      PSmallint(pi)^ := GetEnumValue(ASubType, AChild.AsString);
+                  end;
+                otUWord:
+                  begin
+                    if AChild.IsOrdType then
+                      PWord(pi)^ := AChild.AsInteger
+                    else
+                      PWord(pi)^ := GetEnumValue(ASubType, AChild.AsString);
+                  end;
+                otSLong:
+                  begin
+                    if AChild.IsOrdType then
+                      PInteger(pi)^ := AChild.AsInteger
+                    else
+                      PInteger(pi)^ := GetEnumValue(ASubType, AChild.AsString);
+                  end;
+                otULong:
+                  begin
+                    if AChild.IsOrdType then
+                      PCardinal(pi)^ := AChild.AsInteger
+                    else
+                      PCardinal(pi)^ :=
+                        GetEnumValue(ASubType, Items[I].AsString);
+                  end;
+              end;
+            end;
+          end;
+        tkFloat:
+          case GetTypeData(ASubType)^.FloatType of
+            ftSingle:
+              PSingle(pi)^ := Items[I].AsFloat;
+            ftDouble:
+              PDouble(pi)^ := Items[I].AsFloat;
+            ftExtended:
+              PExtended(pi)^ := Items[I].AsFloat;
+            ftComp:
+              PComp(pi)^ := Items[I].AsFloat;
+            ftCurr:
+              PCurrency(pi)^ := Items[I].AsFloat;
+          end;
+{$IFNDEF NEXTGEN}
+        tkString:
+          PShortString(pi)^ := ShortString(Items[I].AsString);
+{$ENDIF !NEXTGEN}
+        tkSet:
+          begin
+            case GetTypeData(ASubType)^.OrdType of
+              otSByte:
+                begin
+                  if AChild.IsOrdType then
+                    PShortint(pi)^ := AChild.AsInteger
+                  else
+                    PShortint(pi)^ := StringToSet(ASubType, AChild.AsString);
+                end;
+              otUByte:
+                begin
+                  if AChild.IsOrdType then
+                    PByte(pi)^ := AChild.AsInteger
+                  else
+                    PByte(pi)^ := StringToSet(ASubType, AChild.AsString);
+                end;
+              otSWord:
+                begin
+                  if AChild.IsOrdType then
+                    PSmallint(pi)^ := AChild.AsInteger
+                  else
+                    PSmallint(pi)^ := StringToSet(ASubType, AChild.AsString);
+                end;
+              otUWord:
+                begin
+                  if AChild.IsOrdType then
+                    PWord(pi)^ := AChild.AsInteger
+                  else
+                    PWord(pi)^ := StringToSet(ASubType, AChild.AsString);
+                end;
+              otSLong:
+                begin
+                  if AChild.IsOrdType then
+                    PInteger(pi)^ := AChild.AsInteger
+                  else
+                    PInteger(pi)^ := StringToSet(ASubType, AChild.AsString);
+                end;
+              otULong:
+                begin
+                  if AChild.IsOrdType then
+                    PCardinal(pi)^ := AChild.AsInteger
+                  else
+                    PCardinal(pi)^ := StringToSet(ASubType, Items[I].AsString);
+                end;
+            end;
+          end;
+        tkClass:
+          begin
+            if PPointer(pi)^ <> nil then
+            begin
+              AChildObj := PPointer(pi)^;
+              if AChildObj is TStrings then
+                (AChildObj as TStrings).Text := Items[I].AsString
+              else if AChildObj is TCollection then
+                LoadCollection(Items[I], AChildObj as TCollection)
+              else
+                Items[I].ToRtti(AChildObj);
+            end;
+          end;
+        tkWChar:
+          PWideChar(pi)^ := PWideChar(Items[I].AsString)[0];
+{$IFNDEF NEXTGEN}
+        tkLString:
+          PAnsiString(pi)^ := AnsiString(Items[I].AsString);
+        tkWString:
+          PWideString(pi)^ := Items[I].AsString;
+{$ENDIF}
+        tkVariant:
+          PVariant(pi)^ := Items[I].AsVariant;
+        tkArray, tkDynArray:
+          Items[I].ToRtti(pi, ASubType);
+        tkRecord:
+          Items[I].ToRtti(pi, ASubType);
+        tkInt64:
+          PInt64(pi)^ := Items[I].AsInt64;
+        tkUString:
+          PUnicodeString(pi)^ := Items[I].AsString;
+      end;
+    end;
+  end;
 
 begin
   if ADest <> nil then
@@ -5052,19 +5316,22 @@ begin
       ToObject
     else if AType.Kind = tkDynArray then
       ToArray
+    else if AType.Kind = tkArray then
+      ToFixedArray
     else
       raise Exception.Create(SUnsupportPropertyType);
   end;
 end;
 
-procedure TQMsgPack.ToRtti(AInstance: TValue);
+procedure TQMsgPack.ToRtti(AInstance: TValue; AClearCollections: Boolean);
 begin
   if AInstance.IsEmpty then
     Exit;
   if AInstance.Kind = tkRecord then
-    ToRtti(AInstance.GetReferenceToRawData, AInstance.TypeInfo)
+    ToRtti(AInstance.GetReferenceToRawData, AInstance.TypeInfo,
+      AClearCollections)
   else if AInstance.Kind = tkClass then
-    ToRtti(AInstance.AsObject, AInstance.TypeInfo)
+    ToRtti(AInstance.AsObject, AInstance.TypeInfo, AClearCollections)
 end;
 
 function TQMsgPack.ToRttiValue: TValue;
@@ -5315,11 +5582,12 @@ end;
 class procedure TQMsgPack.WriteFloat(AStream: TStream; AValue: Double);
 var
   AType: Byte;
+  v: Int64 absolute AValue;
 begin
-  AValue := ExchangeByteOrder(AValue);
+  v := ExchangeByteOrder(v);
   AType := $CB;
   AStream.WriteBuffer(AType, 1);
-  AStream.WriteBuffer(AValue, 8);
+  AStream.WriteBuffer(v, 8);
 end;
 
 class procedure TQMsgPack.WriteInt(AStream: TStream; AValue: Int64);
@@ -5452,11 +5720,12 @@ end;
 class procedure TQMsgPack.WriteSingle(AStream: TStream; AValue: Single);
 var
   AType: Byte;
+  v: Integer absolute AValue;
 begin
   AType := $CA;
-  AValue := ExchangeByteOrder(AValue);
+  v := ExchangeByteOrder(v);
   AStream.WriteBuffer(AType, 1);
-  AStream.WriteBuffer(AValue, 4);
+  AStream.WriteBuffer(v, 4);
 end;
 
 class procedure TQMsgPack.WriteString(AStream: TStream; AValue: QStringW);
@@ -5532,14 +5801,21 @@ end;
 { TQHashedMsgPack }
 
 procedure TQHashedMsgPack.Assign(ANode: TQMsgPack);
+var
+  I: Integer;
 begin
   inherited;
-  if (Length(FKey) > 0) then
+  if (Length(FKey) > 0) and (FKeyHash = 0) then
   begin
-    if FKeyHash = 0 then
-      FKeyHash := HashOf(PQCharW(FKey), Length(FKey) shl 1);
+    FKeyHash := HashName(Name);
     if Assigned(Parent) then
       TQHashedMsgPack(Parent).FHashTable.Add(Self, FKeyHash);
+  end;
+  for I := 0 to Count - 1 do
+  begin
+    ANode := Items[I];
+    ANode.HashNeeded;
+    FHashTable.Add(ANode, ANode.NameHash);
   end;
 end;
 
@@ -5575,10 +5851,23 @@ begin
   FreeAndNilObject(FHashTable);
 end;
 
+procedure TQHashedMsgPack.DoNodeMoved(ANode: TQMsgPack);
+var
+  AParent: TQHashedMsgPack;
+begin
+  inherited;
+  if FParent is TQHashedMsgPack then
+  begin
+    AParent := FParent as TQHashedMsgPack;
+    HashNeeded;
+    if not AParent.FHashTable.Exists(ANode, ANode.FKeyHash) then
+      AParent.FHashTable.Add(ANode, ANode.FKeyHash);
+  end;
+end;
+
 procedure TQHashedMsgPack.DoNodeNameChanged(ANode: TQMsgPack);
   procedure Rehash;
   var
-    AIndex: Integer;
     AHash: TQHashType;
     AList: PQHashList;
     AItem: TQMsgPack;
@@ -5609,9 +5898,7 @@ begin
   begin
     ANode.FKeyHash := HashName(ANode.Name);
     if Assigned(ANode.Parent) then
-    begin
       TQHashedMsgPack(ANode.Parent).FHashTable.Add(ANode, ANode.FKeyHash);
-    end;
   end
   else
     Rehash;
@@ -5629,30 +5916,19 @@ begin
     if Length(AMsgPack.FKey) > 0 then
     begin
       if AMsgPack.FKeyHash = 0 then
+      begin
         AMsgPack.FKeyHash := HashName(AMsgPack.Name);
-      FHashTable.Add(AMsgPack, AMsgPack.FKeyHash);
+        FHashTable.Add(AMsgPack, AMsgPack.FKeyHash);
+      end;
     end;
     if AMsgPack.Count > 0 then
       AMsgPack.DoParsed;
   end;
 end;
 
-function TQHashedMsgPack.HashName(const s: QStringW): TQHashType;
-var
-  ATemp: QStringW;
-begin
-  if not IgnoreCase then
-    Result := HashOf(PQCharW(s), Length(s) shl 1)
-  else
-  begin
-    ATemp := UpperCase(s);
-    Result := HashOf(PQCharW(s), Length(s) shl 1);
-  end;
-end;
-
 function TQHashedMsgPack.IndexOf(const AName: QStringW): Integer;
 var
-  AIndex, AHash: Integer;
+  AHash: TQHashType;
   AList: PQHashList;
   AItem: TQMsgPack;
 begin
@@ -5662,7 +5938,7 @@ begin
   while AList <> nil do
   begin
     AItem := AList.Data;
-    if AItem.Name = AName then
+    if StrCmpW(PQCharW(AItem.Name), PQCharW(AName), IgnoreCase) = 0 then
     begin
       Result := AItem.ItemIndex;
       Break;
@@ -5675,7 +5951,7 @@ end;
 function TQHashedMsgPack.ItemByName(AName: QStringW): TQMsgPack;
   function ByHash: TQMsgPack;
   var
-    AIndex, AHash: Integer;
+    AHash: TQHashType;
     AList: PQHashList;
     AItem: TQMsgPack;
   begin
@@ -5685,7 +5961,7 @@ function TQHashedMsgPack.ItemByName(AName: QStringW): TQMsgPack;
     while AList <> nil do
     begin
       AItem := AList.Data;
-      if AItem.Name = AName then
+      if StrCmpW(PQCharW(AItem.Name), PQCharW(AName), IgnoreCase) = 0 then
       begin
         Result := AItem;
         Break;
@@ -5719,7 +5995,11 @@ begin
   FHashTable.Delete(AOld, AOld.NameHash);
   inherited;
   if Length(ANewItem.FKey) > 0 then
+  begin
+    if ANewItem.FKeyHash = 0 then
+      ANewItem.FKeyHash := HashName(ANewItem.Name);
     FHashTable.Add(ANewItem, ANewItem.FKeyHash);
+  end;
 end;
 
 initialization

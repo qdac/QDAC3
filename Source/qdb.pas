@@ -6450,7 +6450,7 @@ begin
   if PageSize <> 0 then
     FRecordNo := FRecordNo - FPageSize * FPageIndex;
 end;
-{$IFNDEF NEXTGEN}
+{$IFNDEF UNICODE}
 
 procedure TQDataSet.InternalAddRecord(Buffer: Pointer; Append: Boolean);
 begin
@@ -7526,7 +7526,7 @@ begin
     FCommandText := Value;
   end;
 end;
-{$IFNDEF NEXTGEN}
+{$IFNDEF UNICODE}
 
 procedure TQDataSet.SetFieldData(Field: TField; Buffer: Pointer);
 begin

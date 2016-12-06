@@ -248,8 +248,8 @@ object Form1: TForm1
       OnClick = Button24Click
     end
     object Button25: TButton
-      Left = 544
-      Top = 104
+      Left = 539
+      Top = 105
       Width = 75
       Height = 25
       Caption = #20020#26102#27979#35797
@@ -264,6 +264,15 @@ object Form1: TForm1
       Caption = 'IndexOfValue'
       TabOrder = 26
       OnClick = Button26Click
+    end
+    object Button27: TButton
+      Left = 720
+      Top = 104
+      Width = 75
+      Height = 25
+      Caption = 'Button27'
+      TabOrder = 27
+      OnClick = Button27Click
     end
   end
   object mmResult: TMemo
