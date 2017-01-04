@@ -14,6 +14,10 @@ uses classes, sysutils, types, qstring, qvalue, qtimetypes, qdac_postqueue,
   本单元实现了Delphi下的 QPlugins 的核心实现（注：不包括额外的加载器和路由器）。
 
   变更说明
+  2017.1.3
+  =========
+  * 修正了 HandlePost 处理通知时参数错误（软件高手报告）
+
   2016.3.25
   =========
   * 修正了 TQBaseLoader 返回的 Loader 地址错误的问题
@@ -658,12 +662,15 @@ function ServiceModule(AService: IInterface): HMODULE;
 /// <returns>
 /// 返回服务的完整路径（基于PluginsManager）
 /// </returns>
-function ServicePath(AService: IQService;APathDelimiter:QCharW='/'): QStringW;
+function ServicePath(AService: IQService; APathDelimiter: QCharW = '/')
+  : QStringW;
 function UnloadServices(AInstance: HMODULE; AWaitDone: Boolean): Boolean;
 function HoldByComponent(AOwner: TComponent; AInterface: IInterface)
   : TComponent;
+
 var
   PathDelimiter: PQCharW = '/';
+
 implementation
 
 const
@@ -1156,7 +1163,7 @@ end;
 
 procedure TQService.ValidName(const S: QStringW);
 begin
-  if ContainsCharW(S,PathDelimiter) then
+  if ContainsCharW(S, PathDelimiter) then
     raise QException.Create(SInvalidName);
 end;
 
@@ -1216,7 +1223,7 @@ begin
   if Assigned(APath) then
   begin
     AMgr := PluginsManager;
-    if CharInW(APath,PathDelimiter) then
+    if CharInW(APath, PathDelimiter) then
     begin
       AParent := AMgr;
       Inc(APath);
@@ -1302,7 +1309,7 @@ begin
     Result := 0;
 end;
 
-function ServicePath(AService: IQService;APathDelimiter:QCharW): QStringW;
+function ServicePath(AService: IQService; APathDelimiter: QCharW): QStringW;
 var
   AParent, ARoot: IQServices;
 begin
@@ -1715,7 +1722,7 @@ var
   AName: QStringW;
   I: Integer;
 begin
-  if CharInW(P,PathDelimiter) then
+  if CharInW(P, PathDelimiter) then
     Inc(P);
   Result := nil;
   AName := DecodeTokenW(P, PathDelimiter, NullChar, True);
@@ -2208,10 +2215,10 @@ begin
   if StrCmpW(ALastParam.Name, '@NID', True) = 0 then
   begin
     ANotifyId := Cardinal(ALastParam.AsInteger);
-    if ANotifyParams.Count > 2 then
+    if ANotifyParams.Count >= 2 then
     begin
       ALastParam := ANotifyParams[ANotifyParams.Count - 2];
-      if StrCmpW(ALastParam.Name, '@NVT', True) = 0 then
+      if StrCmpW(ALastParam.Name, '@EVT', True) = 0 then
       begin
         AEvent := Pointer(ALastParam.AsInt64);
         ANotifyParams.Delete(ANotifyParams.Count - 1);
@@ -2879,14 +2886,14 @@ begin
   begin
     for I := 0 to High(AServices) do
     begin
-      for J := 0 to AParent.Count - 1 do
+      J := 0;
+      while J < AParent.Count do
       begin
         AItem := AParent[J];
         if StrCmpW(AItem.Name, PWideChar(AServices[I]), True) = 0 then
-        begin
-          AParent.Remove(AItem);
-          break;
-        end;
+          AParent.Remove(AItem)
+        else
+          Inc(J);
       end;
     end;
   end;

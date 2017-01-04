@@ -1382,31 +1382,38 @@ type
       AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
 {$ENDIF}
     /// <summary>清除所有作业</summary>
-    procedure Clear; overload;
+    /// <param name="AWaitRunningDone">是否等待正在运行的作业完成，默认为 true 等待</param>
+    procedure Clear(AWaitRunningDone: Boolean = True); overload;
     /// <summary>清除一个对象相关的所有作业</summary>
     /// <param name="AObject">要释放的作业处理过程关联对象</param>
     /// <param name="AMaxTimes">最多清除的数量，如果<0，则全清</param>
     /// <returns>返回实际清除的作业数量</returns>
+    /// <param name="AWaitRunningDone">是否等待正在运行的作业完成，默认为 true 等待</param>
     /// <remarks>一个对象如果计划了作业，则在自己释放前应调用本函数以清除关联的作业，
     /// 否则，未完成的作业可能会触发异常。</remarks>
-    function Clear(AObject: Pointer; AMaxTimes: Integer = -1): Integer;
-      overload;
+    function Clear(AObject: Pointer; AMaxTimes: Integer = -1;
+      AWaitRunningDone: Boolean = True): Integer; overload;
     /// <summary>清除所有投寄的指定过程作业</summary>
     /// <param name="AProc">要清除的作业执行过程</param>
     /// <param name="AData">要清除的作业附加数据指针地址，如果值为Pointer(-1)，
     /// 则清除所有的相关过程，否则，只清除附加数据地址一致的过程</param>
     /// <param name="AMaxTimes">最多清除的数量，如果<0，则全清</param>
+    /// <param name="AWaitRunningDone">是否等待正在运行的作业完成，默认为 true 等待</param>
     /// <returns>返回实际清除的作业数量</returns>
-    function Clear(AProc: TQJobProc; AData: Pointer; AMaxTimes: Integer = -1)
-      : Integer; overload;
+    function Clear(AProc: TQJobProc; AData: Pointer; AMaxTimes: Integer = -1;
+      AWaitRunningDone: Boolean = True): Integer; overload;
     /// <summary>清除指定信号关联的所有作业</summary>
     /// <param name="ASingalName">要清除的信号名称</param>
+    /// <param name="AWaitRunningDone">是否等待正在运行的作业完成，默认为 true 等待</param>
     /// <returns>返回实际清除的作业数量</returns>
-    function Clear(ASignalName: QStringW): Integer; overload;
+    function Clear(ASignalName: QStringW; AWaitRunningDone: Boolean = True)
+      : Integer; overload;
     /// <summary>清除指定信号关联的所有作业</summary>
     /// <param name="ASingalId">要清除的信号ID</param>
+    /// <param name="AWaitRunningDone">是否等待正在运行的作业完成，默认为 true 等待</param>
     /// <returns>返回实际清除的作业数量</returns>
-    function Clear(ASignalId: Integer): Integer; overload;
+    function Clear(ASignalId: Integer; AWaitRunningDone: Boolean = True)
+      : Integer; overload;
     /// <summary>清除指定句柄对应的作业</summary>
     /// <param name="ASingalId">要清除的作业句柄</param>
     /// <param name="AWaitRunningDone">如果作业正在执行中，是否等待完成</param>
@@ -1418,7 +1425,8 @@ type
     /// <param name="AHandles">由Post/At等投递函数返回的句柄列表</param>
     /// <parma name="ACount">AHandles对应的句柄个数</param>
     /// <returns>返回实际清除的作业数量</returns>
-    function ClearJobs(AHandles: PIntPtr; ACount: Integer): Integer; overload;
+    function ClearJobs(AHandles: PIntPtr; ACount: Integer;
+      AWaitRunningDone: Boolean = True): Integer; overload;
     /// <summary>触发一个信号</summary>
     /// <param name="AId">信号编码，由RegisterSignal返回</param>
     /// <param name="AData">附加给作业的用户数据指针地址</param>
@@ -3552,7 +3560,8 @@ begin
 end;
 {$ENDIF}
 
-function TQWorkers.Clear(AObject: Pointer; AMaxTimes: Integer): Integer;
+function TQWorkers.Clear(AObject: Pointer; AMaxTimes: Integer;
+  AWaitRunningDone: Boolean): Integer;
 var
   ACleared: Integer;
   AWaitParam: TWorkerWaitParam;
@@ -3619,9 +3628,12 @@ begin
     Dec(AMaxTimes, ACleared);
     if AMaxTimes = 0 then
       Exit;
-    AWaitParam.WaitType := 0;
-    AWaitParam.Bound := AObject;
-    WaitRunningDone(AWaitParam);
+    if AWaitRunningDone then
+    begin
+      AWaitParam.WaitType := 0;
+      AWaitParam.Bound := AObject;
+      WaitRunningDone(AWaitParam);
+    end;
   end;
 end;
 
@@ -3748,8 +3760,8 @@ begin
   end;
 end;
 
-function TQWorkers.Clear(AProc: TQJobProc; AData: Pointer;
-  AMaxTimes: Integer): Integer;
+function TQWorkers.Clear(AProc: TQJobProc; AData: Pointer; AMaxTimes: Integer;
+  AWaitRunningDone: Boolean): Integer;
 var
   ACleared: Integer;
   AWaitParam: TWorkerWaitParam;
@@ -3817,10 +3829,13 @@ begin
     Inc(Result, ACleared);
     if AMaxTimes = 0 then
       Exit;
-    AWaitParam.WaitType := 1;
-    AWaitParam.Data := AData;
-    AWaitParam.WorkerProc := TMethod(AProc);
-    WaitRunningDone(AWaitParam);
+    if AWaitRunningDone then
+    begin
+      AWaitParam.WaitType := 1;
+      AWaitParam.Data := AData;
+      AWaitParam.WorkerProc := TMethod(AProc);
+      WaitRunningDone(AWaitParam);
+    end;
   end;
 end;
 
@@ -5411,7 +5426,7 @@ var
     AChain.Job := AHandle;
     AChain.Prior := nil;
     FLocker.Enter;
-    AChain.Prior:=FLastWaitChain;
+    AChain.Prior := FLastWaitChain;
     FLastWaitChain := AChain;
     FLocker.Leave;
   end;
@@ -5628,7 +5643,8 @@ begin
   TEvent(AJob.Data).SetEvent;
 end;
 
-function TQWorkers.Clear(ASignalName: QStringW): Integer;
+function TQWorkers.Clear(ASignalName: QStringW;
+  AWaitRunningDone: Boolean): Integer;
 var
   I: Integer;
   ASignal: PQSignal;
@@ -5652,7 +5668,7 @@ begin
     FLocker.Leave;
   end;
   if AJob <> nil then
-    ClearSignalJobs(AJob);
+    ClearSignalJobs(AJob, AWaitRunningDone);
 end;
 {$IFDEF UNICODE}
 
@@ -5726,7 +5742,8 @@ begin
   end;
 end;
 
-function TQWorkers.Clear(ASignalId: Integer): Integer;
+function TQWorkers.Clear(ASignalId: Integer; AWaitRunningDone: Boolean)
+  : Integer;
 var
   AJob: PQJob;
 begin
@@ -5746,12 +5763,12 @@ begin
     FLocker.Leave;
   end;
   if AJob <> nil then
-    Result := ClearSignalJobs(AJob)
+    Result := ClearSignalJobs(AJob, AWaitRunningDone)
   else
     Result := 0;
 end;
 
-procedure TQWorkers.Clear;
+procedure TQWorkers.Clear(AWaitRunningDone: Boolean);
 var
   I: Integer;
   AParam: TWorkerWaitParam;
@@ -5773,8 +5790,11 @@ begin
     finally
       FLocker.Leave;
     end;
-    AParam.WaitType := $FF;
-    WaitRunningDone(AParam);
+    if AWaitRunningDone then
+    begin
+      AParam.WaitType := $FF;
+      WaitRunningDone(AParam);
+    end;
   finally
     EnableWorkers;
   end;
@@ -5960,7 +5980,8 @@ begin
   WaitRunningDone(AWaitParam, not AWaitRunningDone);
 end;
 
-function TQWorkers.ClearJobs(AHandles: PIntPtr; ACount: Integer): Integer;
+function TQWorkers.ClearJobs(AHandles: PIntPtr; ACount: Integer;
+  AWaitRunningDone: Boolean): Integer;
 var
   ASimpleHandles: array of IntPtr;
   APlanHandles: array of IntPtr;
@@ -6078,40 +6099,43 @@ begin
     Inc(Result, FRepeatJobs.Clear(@ARepeatHandles[0], ARepeatCount));
   if ASignalCount > 0 then
     Inc(Result, ClearSignals);
-  FillChar(AWaitParam, SizeOf(TWorkerWaitParam), 0);
-  I := 0;
-  while I < ASimpleCount do
+  if AWaitRunningDone then
   begin
-    if ASimpleHandles[I] <> 0 then
+    FillChar(AWaitParam, SizeOf(TWorkerWaitParam), 0);
+    I := 0;
+    while I < ASimpleCount do
     begin
-      AWaitParam.SourceJob := Pointer(ASimpleHandles[I]);
-      AWaitParam.WaitType := 4;
-      WaitRunningDone(AWaitParam);
-      Inc(Result);
+      if ASimpleHandles[I] <> 0 then
+      begin
+        AWaitParam.SourceJob := Pointer(ASimpleHandles[I]);
+        AWaitParam.WaitType := 4;
+        WaitRunningDone(AWaitParam);
+        Inc(Result);
+      end;
+      Inc(I);
     end;
-    Inc(I);
-  end;
-  I := 0;
-  while I < ASimpleCount do
-  begin
-    if ASimpleHandles[I] <> 0 then
+    I := 0;
+    while I < ASimpleCount do
     begin
-      AWaitParam.SourceJob := Pointer(APlanHandles[I]);
-      AWaitParam.WaitType := 5;
-      WaitRunningDone(AWaitParam);
-      Inc(Result);
+      if ASimpleHandles[I] <> 0 then
+      begin
+        AWaitParam.SourceJob := Pointer(APlanHandles[I]);
+        AWaitParam.WaitType := 5;
+        WaitRunningDone(AWaitParam);
+        Inc(Result);
+      end;
+      Inc(I);
     end;
-    Inc(I);
-  end;
-  I := 0;
-  while I < ARepeatCount do
-  begin
-    if ARepeatHandles[I] <> 0 then
+    I := 0;
+    while I < ARepeatCount do
     begin
-      AWaitParam.SourceJob := Pointer(ARepeatHandles[I]);
-      AWaitParam.WaitType := 2;
-      WaitRunningDone(AWaitParam);
-      Inc(Result);
+      if ARepeatHandles[I] <> 0 then
+      begin
+        AWaitParam.SourceJob := Pointer(ARepeatHandles[I]);
+        AWaitParam.WaitType := 2;
+        WaitRunningDone(AWaitParam);
+        Inc(Result);
+      end;
     end;
   end;
 end;

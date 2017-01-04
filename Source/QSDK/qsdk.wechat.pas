@@ -152,18 +152,31 @@ type
 
   IWechatResponse = interface
     ['{02FF62AF-5705-4047-947E-7F6019A9474E}']
-    function getOpenID: String;
-    procedure setOpenID(const AValue: String);
-    function getTansaction: String;
-    procedure setTransaction(const AValue: String);
     function getErrorCode: Integer;
     procedure setErrorCode(const ACode: Integer);
     function getErrorMsg: String;
     procedure setErrorMsg(const AValue: String);
-    property OpenID: String read getOpenID write setOpenID;
-    property Transaction: String read getTansaction write setTransaction;
+    function getRespType: Integer;
+    property RespType: Integer read getRespType;
     property ErrorCode: Integer read getErrorCode write setErrorCode;
     property ErrorMsg: String read getErrorMsg write setErrorMsg;
+  end;
+
+  TWechatPayResult = (wprOk, wprCancel, wprError);
+
+  IWechatPayResponse = interface(IWechatResponse)
+    ['{0D062157-281E-40DB-A223-A74AB05D1C10}']
+    function getPrepayId: String;
+    procedure setPrepayId(const AVal: String);
+    function getReturnKey: String;
+    procedure setReturnKey(const AVal: String);
+    function getExtData: String;
+    function getPayResult: TWechatPayResult;
+    procedure setExtData(const AVal: String);
+    property prepayId: String read getPrepayId write setPrepayId;
+    property returnKey: String read getReturnKey write setReturnKey;
+    property extData: String read getExtData write setExtData;
+    property PayResult: TWechatPayResult read getPayResult;
   end;
 
   IWechatAddCardToPackageRequest = interface(IWechatRequest)
@@ -186,7 +199,7 @@ type
     No: String;
     Description: String; // 商品描述（body:App名称-商品描述）
     Detail: TWechatOrderItems; // 商品详情(detail)
-    ExtData: String; // 扩展数据(attach)
+    extData: String; // 扩展数据(attach)
     TradeNo: String; // 商户订单号(out_trade_no)
     FeeType: String; // 货币类型(fee_type)
     Total: Currency; // 总金额（*100=total_fee）
@@ -197,6 +210,7 @@ type
 
   TWechatRequestEvent = procedure(ARequest: IWechatRequest) of object;
   TWechatResponseEvent = procedure(AResponse: IWechatResponse) of object;
+
   TWechatSession = (Session, Timeline, Favorite);
 
   IWechatService = interface
@@ -223,7 +237,8 @@ type
     function SendText(const AText: String;
       ASession: TWechatSession = TWechatSession.Session): Boolean;
     function CreateObject(AObjId: TGuid): IWechatObject;
-    function Pay(const AOrder: TWechatOrder; const ANotifyUrl: String): Boolean;
+    function Pay(APrepayId, AnonceStr, ASign: String;
+      ATimeStamp: Integer): Boolean;
     property AppId: String read getAppId write setAppId;
     property Installed: Boolean read IsInstalled;
     property APISupported: Boolean read IsAPISupported;
@@ -247,7 +262,7 @@ type
     property Key: String read GetKey;
   end;
 
-  TWechatObject = class(TObject, IInterface)
+  TWechatObject = class(TInterfacedObject, IInterface)
   protected
 {$IFNDEF AUTOREFCOUNT}
     [Volatile]
@@ -295,7 +310,10 @@ function WechatService: IWechatService;
 begin
   if not TPlatformServices.Current.SupportsPlatformService(IWechatService,
     Result) then
-    Result := nil;
+  begin
+    RegisterWechatService;
+    TPlatformServices.Current.SupportsPlatformService(IWechatService, Result);
+  end;
 end;
 
 function WechatSigner(const AKey: String): IWechatSigner;
@@ -306,34 +324,17 @@ end;
 
 function TWechatObject.QueryInterface(const IID: TGuid; out Obj): HResult;
 begin
-  if GetInterface(IID, Obj) then
-    Result := 0
-  else
-    Result := E_NOINTERFACE;
+  Result := inherited QueryInterface(IID, Obj);
 end;
 
 function TWechatObject._AddRef: Integer;
 begin
-{$IFNDEF AUTOREFCOUNT}
-  Result := AtomicIncrement(FRefCount);
-{$ELSE}
-  Result := __ObjAddRef;
-{$ENDIF}
+  Result := inherited _AddRef;
 end;
 
 function TWechatObject._Release: Integer;
 begin
-{$IFNDEF AUTOREFCOUNT}
-  Result := AtomicDecrement(FRefCount);
-  if Result = 0 then
-  begin
-    // Mark the refcount field so that any refcounting during destruction doesn't infinitely recurse.
-    __MarkDestroying(Self);
-    Destroy;
-  end;
-{$ELSE}
-  Result := __ObjRelease;
-{$ENDIF}
+  Result := inherited _Release;
 end;
 
 { TWechatSigner }
@@ -396,9 +397,5 @@ begin
   inherited Create;
   FValue := AValue;
 end;
-
-initialization
-
-RegisterWechatService;
 
 end.

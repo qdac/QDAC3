@@ -2,7 +2,7 @@ unit qstring;
 {$I 'qdac.inc'}
 
 interface
-
+{$REGION 'History'}
 {
   本源码来自QDAC项目，版权归swish(QQ:109867294)所有。
   (1)、使用许可及限制
@@ -236,6 +236,7 @@ interface
   ==========
   * 修正了QuotedStr对于长度为0的字符串编码出错的问题
 }
+{$ENDREGION 'History'}
 uses classes, sysutils, types{$IF RTLVersion>=21},
   Rtti{$IFEND >=XE10}{$IFNDEF MSWINDOWS},
   syncobjs{$ENDIF}
@@ -1551,7 +1552,7 @@ var
   ps, pe: PByte;
   pd, pds: PWord;
   c: Cardinal;
-  procedure _Utf8Encode;
+  procedure _Utf8Decode;
   begin
     ps := PByte(p);
     pe := ps;
@@ -1667,10 +1668,10 @@ begin
   SetLength(AResult, MultiByteToWideChar(CP_UTF8, 8, PAnsiChar(p), l,
     PQCharW(AResult), l)); // 8==>MB_ERR_INVALID_CHARS
   Result := Length(AResult) <> 0;
-  // if not Result then
-  // _Utf8Encode;
+  if not Result then
+    _Utf8Decode;
 {$ELSE}
-  _Utf8Encode
+  _Utf8Decode
 {$ENDIF}
 end;
 
@@ -7331,10 +7332,10 @@ end;
 // 下面是一些辅助函数
 function ParseDateTime(S: PWideChar; var AResult: TDateTime): Boolean;
 var
-  Y, M, d, H, N, Sec, MS: Word;
+  Y, M, d, H, N, Sec, MS: Cardinal;
   AQuoter: WideChar;
   ADate: TDateTime;
-  function ParseNum(var N: Word): Boolean;
+  function ParseNum(var N: Cardinal): Boolean;
   var
     neg: Boolean;
     ps: PQCharW;
@@ -10701,7 +10702,7 @@ begin
     AEndDigits := 4;
   SetLength(ATemp, 40); // 最大长度为40
   pd := PWideChar(ATemp) + 39;
-  //计算实际的分组数量，注意此时包含钱和厘，最后会根据实际的显示需要截断
+  // 计算实际的分组数量，注意此时包含钱和厘，最后会根据实际的显示需要截断
   I := 0;
   while V > 0 do
   begin

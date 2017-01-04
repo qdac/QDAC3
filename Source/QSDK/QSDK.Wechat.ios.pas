@@ -4,14 +4,16 @@
 { Created by TU2(Ticr),and agree to share with QSDK }
 { ******************************************************* }
 
-unit QSDK.Wechat.ios;
+unit qsdk.wechat.ios;
 
 interface
 
 uses
-  System.ZLib {libz.dylib} , System.Sqlite {libsqlite3.0.dylib} ,
+  Classes, Sysutils, System.ZLib {libz.dylib} ,
+  System.Sqlite {libsqlite3.0.dylib} , System.Net.UrlClient,
   iOSapi.Foundation, Macapi.ObjectiveC, iOSapi.UIKit, Macapi.Helpers,
-  iOSapi.Foundation, FMX.Platform.ios;
+  FMX.Platform, FMX.Platform.ios, iOSapi.SCNetworkReachability,
+  iOSapi.CoreTelephony, qsdk.wechat, QString, System.Messaging;
 
 type
   BaseReq = interface;
@@ -86,6 +88,10 @@ type
   TWXApi = class(TOCGenericImport<WXApiClass, WXApi>)
   end;
 
+  BaseReqClass = interface(NSObjectClass)
+    ['{DB6C6725-1314-4E96-9800-E8837BEBA3CB}']
+  end;
+
   // ------------------------------------------------------------------------------
   /// <summary>微信终端SDK所有请求消息的基类</summary>
   BaseReq = interface(NSObject)
@@ -100,6 +106,13 @@ type
     procedure setOpenID(openID: NSString); cdecl;
   end;
 
+  TBaseReq = class(TOCGenericImport<BaseReqClass, BaseReq>)
+  end;
+
+  SendAuthReqClass = interface(BaseReqClass)
+    ['{E39DB951-8E23-4AEC-9884-EA3356B7DC21}']
+  end;
+
   /// <summary>认证请求</summary>
   SendAuthReq = interface(BaseReq)
     ['{0719D7AB-B0CB-4D16-8A64-6E270D9D98A7}']
@@ -109,6 +122,13 @@ type
     function state: NSString; cdecl;
     /// <remarks>state字符串长度不能超过1K</remarks>
     procedure setState(state: NSString); cdecl;
+  end;
+
+  TSendAuthReq = class(TOCGenericImport<SendAuthReqClass, SendAuthReq>)
+  end;
+
+  PayReqClass = interface(BaseReqClass)
+    ['{2E36C4EE-0050-4072-ABAF-DE2171F5FA64}']
   end;
 
   /// <summary>支付请求</summary>
@@ -132,6 +152,9 @@ type
     /// <summary>商家根据微信开放平台文档对数据做的签名</summary>
     function sign: NSString; cdecl;
     procedure setSign(sign: NSString); cdecl;
+  end;
+
+  TPayReq = class(TOCGenericImport<PayReqClass, PayReq>)
   end;
 
   /// <summary>拆企业红包请求</summary>
@@ -293,6 +316,10 @@ type
     procedure setCountry(country: NSString); cdecl;
   end;
 
+  BaseRespClass = interface(NSObjectClass)
+    ['{6D726818-BFCC-4C88-B7F0-23CDBA69CB84}']
+  end;
+
   // ------------------------------------------------------------------------------
   /// <summary>该类为微信终端SDK所有响应消息的基类</summary>
   BaseResp = interface(NSObject)
@@ -322,11 +349,19 @@ type
     procedure setCountry(country: NSString); cdecl;
   end;
 
+  PayRespClass = interface(BaseRespClass)
+    ['{EDBDFDF8-F5AA-4D22-8580-1CD2BA1DA473}']
+  end;
+
   /// <summary>支付响应</summary>
   PayResp = interface(BaseResp)
     ['{BD7E06A1-1EC0-4150-86D7-F83BE56BDA33}']
     function returnKey: NSString; cdecl;
     procedure setReturnKey(returnKey: NSString); cdecl;
+  end;
+
+  TPayResp = class(TOCGenericImport<PayRespClass, PayResp>)
+
   end;
 
   /// <summary>拆企业红包响应</summary>
@@ -688,38 +723,106 @@ type
     procedure onAuthFinish(errCode: Integer; authCode: NSString); cdecl;
   end;
 
-  TWeChatHelper = class(TOCLocal, WXApiDelegate)
+  TiOSWechatRequest = class(TInterfacedObject, IWechatRequest)
   private
-    class
-
-      var WCH: TWeChatHelper;
-    class function GetDefault: TWeChatHelper; static;
+    function getOpenID: String;
+    procedure setOpenID(const AValue: String);
+    function getTansaction: String;
+    procedure setTransaction(const AValue: String);
+    property openID: String read getOpenID write setOpenID;
+    property Transaction: String read getTansaction write setTransaction;
   public
-    /// <summary>检查微信是否已被用户安装。</summary>
-    /// <remarks>该方法已失效</remarks>
-    class function isWXAppInstalled: Boolean;
-    /// <summary>判断当前微信的版本是否支持OpenApi</summary>
-    /// <remarks>该方法已失效</remarks>
-    class function isWXAppSupportApi: Boolean;
-    /// <summary>获取微信的itunes安装地址。</summary>
-    class function getWXAppInstallUrl: string;
-    /// <summary>获取当前微信SDK的版本号。</summary>
-    class function getApiVersion: string;
-    class property Default: TWeChatHelper read GetDefault;
+    constructor Create(AReq: BaseReq); overload;
+  end;
+
+  TiOSWechatResponse = class(TInterfacedObject, IWechatResponse)
   private
-    FScene: Integer;
+    FType: Integer;
+    FErrorMsg: String;
+    FErrorCode: Integer;
+    function getErrorCode: Integer;
+    procedure setErrorCode(const acode: Integer);
+    function getErrorMsg: String;
+    procedure setErrorMsg(const AValue: String);
+    function getRespType: Integer;
+    property ErrorCode: Integer read getErrorCode write setErrorCode;
+    property ErrorMsg: String read getErrorMsg write setErrorMsg;
+  public
+    constructor Create(const AUrl: TUri);
+  end;
+
+  TiWechatPayResponse = class(TiOSWechatResponse, IWechatPayResponse)
+  private
+    FReturnKey, FPrepayId, FExtData: String;
+    FPayResult: TWechatPayResult;
+    function getPrepayId: String;
+    procedure setPrepayId(const AVal: String);
+    function getReturnKey: String;
+    procedure setReturnKey(const AVal: String);
+    function getExtData: String;
+    procedure setExtData(const AVal: String);
+    function getPayResult: TWechatPayResult;
+  public
+    constructor Create(const AUrl: TUri);
+    property returnKey: String read FReturnKey write setReturnKey;
+  end;
+
+  TiOSWechatService = class;
+
+  TiOSWXApiDelegate = class(TOCLocal, WXApiDelegate)
   protected
-    { WXApiDelegate }
+    [weaked]
+    FService: TiOSWechatService;
+  public
     procedure onReq(req: BaseReq); cdecl;
     procedure onResp(resp: BaseResp); cdecl;
+  end;
+
+  TiOSWechatService = class(TInterfacedObject, IWechatService)
+  private
+    FScene: Integer;
+    FAppId: String;
+    FMchId: String;
+    FDevId: String;
+    FPayKey: String;
+    FMsgId: Integer;
+    FLastErrorMsg: String;
+    FLastError: Integer;
+    FRegistered: Boolean;
+    FOnRequest: TWechatRequestEvent;
+    FOnResponse: TWechatResponseEvent;
+    procedure DoReq(P1: BaseReq); cdecl;
+  protected
+    { WXApiDelegate }
+    FDelegate: TiOSWXApiDelegate;
+    function Registered: Boolean;
+    procedure DoAppEvent(const Sender: TObject; const M: TMessage);
   public
-    function registerApp(const appid: string;
-      const appdesc: string = ''): Boolean;
-    /// <summary>打开微信。</summary>
-    function openWXApp: Boolean;
-    function DoHandleOpenURL(AContext: TObject): Boolean;
-    procedure SendMessageToWX(const AText: string);
-    property scene: Integer read FScene write FScene;
+    constructor Create; overload;
+    procedure Unregister;
+    function IsInstalled: Boolean;
+    function getAppId: String;
+    function OpenWechat: Boolean;
+    function IsAPISupported: Boolean;
+    function SendRequest(ARequest: IWechatRequest): Boolean;
+    function SendResponse(AResp: IWechatResponse): Boolean;
+    function getOnRequest: TWechatRequestEvent;
+    procedure setOnRequest(const AEvent: TWechatRequestEvent);
+    function getOnResponse: TWechatResponseEvent;
+    procedure setOnResponse(const AEvent: TWechatResponseEvent);
+    procedure setAppID(const AId: String);
+    function OpenUrl(const AUrl: String): Boolean;
+    function SendText(const atext: String; ASession: TWechatSession): Boolean;
+    function CreateObject(AObjId: TGuid): IWechatObject;
+    function getMchId: String;
+    procedure setMchId(const AId: String);
+    function getDevId: String;
+    procedure setDevId(const AId: String);
+    function Pay(aprepayId, anonceStr, asign: String;
+      atimeStamp: Integer): Boolean;
+    function getPayKey: String;
+    procedure setPayKey(const AKey: String);
+
   end;
 
 const
@@ -776,135 +879,373 @@ const
   WechatAuth_Err_Cancel = -4; // 用户取消授权
   WechatAuth_Err_Timeout = -5; // 超时
 
+  ERR_OK = 0;
+  ERR_COMM = -1;
+  ERR_USER_CANCEL = -2;
+  ERR_SENT_FAILED = -3;
+  ERR_AUTH_DENIED = -4;
+  ERR_UNSUPPORT = -5;
+  ERR_BAN = -6;
+procedure RegisterWechatService;
+
 implementation
 
-uses QSDK.Wechat;
-{$IFDEF CPUARM}
+{$IF DEFINED(IOS) AND DEFINED(CPUARM)}
 {$O-}
+
+const
+  CoreTelephonyFwk =
+    '/System/Library/Frameworks/CoreTelephony.framework/CoreTelephony';
 function WXApi_FakeLoader: WXApi; cdecl;
   external 'libWeChatSDK.a' name 'OBJC_CLASS_$_WXApi';
+function CoreTelephonyFakeLoader: NSString; cdecl;
+  external CoreTelephonyFwk name 'OBJC_CLASS_$_CTTelephonyNetworkInfo';
 {$O+}
 {$ENDIF}
+{ TiOSWechatService }
 
-{ TWeChatHelper }
-class function TWeChatHelper.getApiVersion: string;
+constructor TiOSWechatService.Create;
+var
+  ASvc: IFMXApplicationEventService;
 begin
-  Result := NSStrToStr(TWXApi.OCClass.getApiVersion);
+  inherited Create;
+  FDevId := 'APP';
+  FMsgId := TMessageManager.DefaultManager.SubscribeToMessage
+    (TApplicationEventMessage, DoAppEvent);
+  FDelegate := TiOSWXApiDelegate.Create;
+  FDelegate.FService := Self;
 end;
 
-class function TWeChatHelper.getWXAppInstallUrl: string;
+function TiOSWechatService.CreateObject(AObjId: TGuid): IWechatObject;
 begin
-  Result := NSStrToStr(TWXApi.OCClass.getWXAppInstallUrl);
 end;
 
-class function TWeChatHelper.isWXAppInstalled: Boolean;
+procedure TiOSWechatService.DoAppEvent(const Sender: TObject;
+  const M: TMessage);
+var
+  AMsg: TApplicationEventMessage absolute M;
+  AContext: TiOSOpenApplicationContext;
+  AUri: TUri;
+  AResp: PayResp;
+  AValue: String;
 begin
-  Result := TWXApi.OCClass.isWXAppInstalled;
+  if Assigned(FOnResponse) then
+  begin
+    if AMsg.Value.Event = TApplicationEvent.OpenUrl then
+    begin
+      AContext := AMsg.Value.Context as TiOSOpenApplicationContext;
+      AUri := TUri.Create(AContext.url);
+      if AUri.Host = 'pay' then
+        FOnResponse(TiWechatPayResponse.Create(AUri))
+      else
+        FOnResponse(TiOSWechatResponse.Create(AUri));
+    end;
+  end;
 end;
 
-class function TWeChatHelper.isWXAppSupportApi: Boolean;
+function TiOSWechatService.getAppId: String;
+begin
+  Result := FAppId;
+end;
+
+function TiOSWechatService.getDevId: String;
+begin
+  Result := FDevId;
+end;
+
+function TiOSWechatService.getMchId: String;
+begin
+  Result := FMchId;
+end;
+
+function TiOSWechatService.getOnRequest: TWechatRequestEvent;
+begin
+  Result := FOnRequest;
+end;
+
+function TiOSWechatService.getOnResponse: TWechatResponseEvent;
+begin
+  Result := FOnResponse;
+end;
+
+function TiOSWechatService.getPayKey: String;
+begin
+  Result := FPayKey;
+end;
+
+function TiOSWechatService.IsAPISupported: Boolean;
 begin
   Result := TWXApi.OCClass.isWXAppSupportApi;
 end;
 
-class function TWeChatHelper.GetDefault: TWeChatHelper;
+function TiOSWechatService.IsInstalled: Boolean;
 begin
-  if WCH = nil then
-  begin
-    WCH := TWeChatHelper.Create;
-  end;
-  Result := WCH;
+  Result := Registered and TWXApi.OCClass.isWXAppInstalled;
 end;
 
-function TWeChatHelper.registerApp(const appid, appdesc: string): Boolean;
+procedure TiOSWechatService.DoReq(P1: BaseReq);
 begin
-  if (appdesc = '') then
-    Result := TWXApi.OCClass.registerApp(StrToNSStr(appid))
-  else
-    Result := TWXApi.OCClass.registerAppwithDescription(StrToNSStr(appid),
-      StrToNSStr(appdesc));
+  if Assigned(FOnRequest) then
+    FOnRequest(TiOSWechatRequest.Create(P1));
 end;
 
-function TWeChatHelper.openWXApp: Boolean;
+function TiOSWechatService.OpenUrl(const AUrl: String): Boolean;
 begin
-  Result := TWXApi.OCClass.openWXApp;
+
 end;
 
-function TWeChatHelper.DoHandleOpenURL(AContext: TObject): Boolean;
+function TiOSWechatService.OpenWechat: Boolean;
 begin
-  Result := TWXApi.OCClass.handleOpenURL
-    (StrToNSUrl(TiOSOpenApplicationContext(AContext).url), GetObjectID);
+
 end;
 
-procedure TWeChatHelper.SendMessageToWX(const AText: string);
+function TiOSWechatService.Pay(aprepayId, anonceStr, asign: String;
+  atimeStamp: Integer): Boolean;
+const
+  PrepayUrl = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
 var
-  req: SendMessageToWXReq;
+  AReq: PayReq;
 begin
-  req := TSendMessageToWXReq.Wrap(TSendMessageToWXReq.Alloc.init);
-  req.setText(StrToNSStr(AText));
-  req.setBText(True);
-  req.setScene(FScene);
-  TWXApi.OCClass.sendReq(req);
+  AReq := TPayReq.Create;
+  // AReq .appid := StringToJString(FAppId);
+  AReq.setPartnerId(StrToNSStr(FMchId));
+  AReq.setPrepayId(StrToNSStr(aprepayId));
+  AReq.setPackage(StrToNSStr('Sign=WXPay'));
+  AReq.setNonceStr(StrToNSStr(anonceStr));
+  AReq.setTimeStamp(atimeStamp);
+  AReq.setSign(StrToNSStr(asign));
+  Debugout('WXPay Start with PrepayId %s,NonceStr %s,Timestamp %d ,Sign %s',
+    [aprepayId, anonceStr, atimeStamp, asign]);
+  Result := Registered and TWXApi.OCClass.sendReq(AReq);
 end;
 
-procedure TWeChatHelper.onReq(req: BaseReq);
+function TiOSWechatService.Registered: Boolean;
 begin
-  // {
-  // if([req isKindOfClass:[GetMessageFromWXReq class]])
-  // {
-  // // 微信请求App提供内容， 需要app提供内容后使用sendRsp返回
-  // NSString *strTitle = [NSString stringWithFormat:@"微信请求App提供内容"];
-  // NSString *strMsg = @"微信请求App提供内容，App要调用sendResp:GetMessageFromWXResp返回给微信";
-  //
-  // UIAlertView *alert = [[UIAlertView alloc] initWithTitle:strTitle message:strMsg delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
-  // alert.tag = 1000;
-  // [alert show];
-  // [alert release];
-  // }
-  // else if([req isKindOfClass:[ShowMessageFromWXReq class]])
-  // {
-  // ShowMessageFromWXReq* temp = (ShowMessageFromWXReq*)req;
-  // WXMediaMessage *msg = temp.message;
-  //
-  // //显示微信传过来的内容
-  // WXAppExtendObject *obj = msg.mediaObject;
-  //
-  // NSString *strTitle = [NSString stringWithFormat:@"微信请求App显示内容"];
-  // NSString *strMsg = [NSString stringWithFormat:@"标题：%@ \n内容：%@ \n附带信息：%@ \n缩略图:%u bytes\n\n", msg.title, msg.description, obj.extInfo, msg.thumbData.length];
-  //
-  // UIAlertView *alert = [[UIAlertView alloc] initWithTitle:strTitle message:strMsg delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
-  // [alert show];
-  // [alert release];
-  // }
-  // else if([req isKindOfClass:[LaunchFromWXReq class]])
-  // {
-  // //从微信启动App
-  // NSString *strTitle = [NSString stringWithFormat:@"从微信启动"];
-  // NSString *strMsg = @"这是从微信启动的消息";
-  //
-  // UIAlertView *alert = [[UIAlertView alloc] initWithTitle:strTitle message:strMsg delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
-  // [alert show];
-  // [alert release];
-  // }
-  // }
+  if not FRegistered then
+  begin
+    FRegistered := TWXApi.OCClass.registerApp(StrToNSStr(FAppId));
+  end;
+  Result := FRegistered;
+end;
+
+function TiOSWechatService.SendRequest(ARequest: IWechatRequest): Boolean;
+begin
 
 end;
 
-procedure TWeChatHelper.onResp(resp: BaseResp);
+function TiOSWechatService.SendResponse(AResp: IWechatResponse): Boolean;
 begin
-  // -(void) onResp:(BaseResp*)resp
-  // {
-  // if([resp isKindOfClass:[SendMessageToWXResp class]])
-  // {
-  // NSString *strTitle = [NSString stringWithFormat:@"发送媒体消息结果"];
-  // NSString *strMsg = [NSString stringWithFormat:@"errcode:%d", resp.errCode];
-  //
-  // UIAlertView *alert = [[UIAlertView alloc] initWithTitle:strTitle message:strMsg delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
-  // [alert show];
-  // [alert release];
-  // }
-  // }
 
+end;
+
+function TiOSWechatService.SendText(const atext: String;
+  ASession: TWechatSession): Boolean;
+begin
+
+end;
+
+procedure TiOSWechatService.setAppID(const AId: String);
+begin
+  FAppId := AId;
+end;
+
+procedure TiOSWechatService.setDevId(const AId: String);
+begin
+  FDevId := AId;
+end;
+
+procedure TiOSWechatService.setMchId(const AId: String);
+begin
+  FMchId := AId;
+end;
+
+procedure TiOSWechatService.setOnRequest(const AEvent: TWechatRequestEvent);
+begin
+  FOnRequest := AEvent;
+end;
+
+procedure TiOSWechatService.setOnResponse(const AEvent: TWechatResponseEvent);
+begin
+  FOnResponse := AEvent;
+end;
+
+procedure TiOSWechatService.setPayKey(const AKey: String);
+begin
+  FPayKey := AKey;
+end;
+
+procedure TiOSWechatService.Unregister;
+begin
+
+end;
+
+procedure RegisterWechatService;
+begin
+  TPlatformServices.Current.AddPlatformService(IWechatService,
+    TiOSWechatService.Create);
+end;
+
+{ TiOSWechatRequest }
+
+constructor TiOSWechatRequest.Create(AReq: BaseReq);
+begin
+  inherited Create;
+end;
+
+function TiOSWechatRequest.getOpenID: String;
+begin
+
+end;
+
+function TiOSWechatRequest.getTansaction: String;
+begin
+
+end;
+
+procedure TiOSWechatRequest.setOpenID(const AValue: String);
+begin
+
+end;
+
+procedure TiOSWechatRequest.setTransaction(const AValue: String);
+begin
+
+end;
+
+{ TiOSWechatResponse }
+
+constructor TiOSWechatResponse.Create(const AUrl: TUri);
+var
+  I: Integer;
+begin
+  inherited Create;
+  for I := 0 to High(AUrl.Params) do
+  begin
+    if AUrl.Params[I].Name = 'ret' then
+    begin
+      FErrorCode := StrToIntDef(AUrl.Params[I].Value, 0);
+      case FErrorCode of
+        ERR_OK:
+          FErrorMsg := '操作已成功完成';
+        ERR_COMM:
+          FErrorMsg := '通讯错误';
+        ERR_USER_CANCEL:
+          FErrorMsg := '用户已取消操作';
+        ERR_SENT_FAILED:
+          FErrorMsg := '发送请求失败';
+        ERR_AUTH_DENIED:
+          FErrorMsg := '认证失败';
+        ERR_UNSUPPORT:
+          FErrorMsg := '不支持的操作';
+        ERR_BAN:
+          FErrorMsg := '操作被阻止';
+      end;
+    end;
+  end;
+end;
+
+function TiOSWechatResponse.getErrorCode: Integer;
+begin
+  Result := FErrorCode;
+end;
+
+function TiOSWechatResponse.getErrorMsg: String;
+begin
+  Result := FErrorMsg;
+end;
+
+function TiOSWechatResponse.getRespType: Integer;
+begin
+  Result := FType;
+end;
+
+procedure TiOSWechatResponse.setErrorCode(const acode: Integer);
+begin
+  FErrorCode := acode;
+end;
+
+procedure TiOSWechatResponse.setErrorMsg(const AValue: String);
+begin
+  FErrorMsg := AValue;
+end;
+
+{ TiOSWXApiDelegate }
+
+procedure TiOSWXApiDelegate.onReq(req: BaseReq);
+begin
+  FService.DoReq(req);
+end;
+
+procedure TiOSWXApiDelegate.onResp(resp: BaseResp);
+begin
+  // Not used,use openurl direct
+end;
+
+{ TiWechatPayResponse }
+
+constructor TiWechatPayResponse.Create(const AUrl: TUri);
+var
+  APayResp: PayResp;
+  I: Integer;
+const
+  COMMAND_PAY_BY_WX = 5;
+begin
+  inherited Create(AUrl);
+  FType := COMMAND_PAY_BY_WX;
+  for I := 0 to High(AUrl.Params) do
+  begin
+    if AUrl.Params[I].Name = 'returnKey' then
+    begin
+      FReturnKey := AUrl.Params[I].Value;
+      break;
+    end;
+  end;
+  if FReturnKey = '(null)' then
+    FReturnKey := '';
+  case FErrorCode of
+    ERR_OK:
+      FPayResult := TWechatPayResult.wprOk;
+    ERR_USER_CANCEL:
+      FPayResult := TWechatPayResult.wprCancel
+  else
+    FPayResult := TWechatPayResult.wprError;
+  end;
+end;
+
+function TiWechatPayResponse.getExtData: String;
+begin
+  Result := FExtData;
+end;
+
+function TiWechatPayResponse.getPayResult: TWechatPayResult;
+begin
+  Result := FPayResult;
+end;
+
+function TiWechatPayResponse.getPrepayId: String;
+begin
+  Result := FPrepayId;
+  // iOS 不支持
+end;
+
+function TiWechatPayResponse.getReturnKey: String;
+begin
+  Result := FReturnKey;
+end;
+
+procedure TiWechatPayResponse.setExtData(const AVal: String);
+begin
+  FExtData := AVal;
+end;
+
+procedure TiWechatPayResponse.setPrepayId(const AVal: String);
+begin
+  FPrepayId := AVal;
+end;
+
+procedure TiWechatPayResponse.setReturnKey(const AVal: String);
+begin
+  FReturnKey := AVal;
 end;
 
 end.

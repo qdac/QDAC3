@@ -71,6 +71,10 @@ type
       ACreator: TObject); overload;
     constructor Create(AName: QStringW; AFormClass: TFormClass;
       AIsMultiInstance: Boolean = True); overload;
+    constructor Create(const AId: TGuid; AName: QStringW; AForm: TForm;
+      ACreator: TObject); overload;
+    constructor Create(const AId: TGuid; AName: QStringW;
+      AFormClass: TFormClass; AIsMultiInstance: Boolean = True); overload;
     destructor Destroy; override;
     procedure ShowModal(AOnModalResult: TQFormModalResultHandler;
       ATag: IQParams); override;
@@ -115,6 +119,8 @@ type
   /// </returns>
 function RegisterFormService(const APath, AName: QStringW; AClass: TFormClass;
   AMultiInstance: Boolean = True): IQFormService; overload;
+function RegisterFormService(const AId: TGuid; const APath, AName: QStringW;
+  AClass: TFormClass; AMultiInstance: Boolean = True): IQFormService; overload;
 /// <summary>
 /// 注册一个单实例服务
 /// </summary>
@@ -132,7 +138,8 @@ function RegisterFormService(const APath, AName: QStringW; AClass: TFormClass;
 /// </returns>
 function RegisterFormService(const APath, AName: QStringW; AForm: TForm)
   : IQFormService; overload;
-
+function RegisterFormService(const AId: TGuid; const APath, AName: QStringW;
+  AForm: TForm): IQFormService; overload;
 /// <summary>
 /// 获取指定的窗体关联的 IQFormService 的服务接口
 /// </summary>
@@ -270,12 +277,32 @@ begin
   Result := AService as IQFormService;
 end;
 
+function RegisterFormService(const AId: TGuid; const APath, AName: QStringW;
+  AClass: TFormClass; AMultiInstance: Boolean): IQFormService;
+var
+  AService: TQVCLFormService;
+begin
+  AService := TQVCLFormService.Create(AId, AName, AClass, AMultiInstance);
+  RegisterServices(PQCharW(APath), [AService]);
+  Result := AService as IQFormService;
+end;
+
 function RegisterFormService(const APath, AName: QStringW; AForm: TForm)
   : IQFormService;
 var
   AService: TQVCLFormService;
 begin
   AService := TQVCLFormService.Create(AName, AForm, nil);
+  RegisterServices(PQCharW(APath), [AService]);
+  Result := AService as IQFormService;
+end;
+
+function RegisterFormService(const AId: TGuid; const APath, AName: QStringW;
+  AForm: TForm): IQFormService;
+var
+  AService: TQVCLFormService;
+begin
+  AService := TQVCLFormService.Create(AId, AName, AForm, nil);
   RegisterServices(PQCharW(APath), [AService]);
   Result := AService as IQFormService;
 end;
@@ -347,6 +374,22 @@ procedure TQVCLFormService.BringToFront;
 begin
   if FormNeeded then
     FForm.BringToFront;
+end;
+
+constructor TQVCLFormService.Create(const AId: TGuid; AName: QStringW;
+  AForm: TForm; ACreator: TObject);
+begin
+  inherited Create(AId, AName);
+  FCreator := ACreator;
+  Form := AForm;
+end;
+
+constructor TQVCLFormService.Create(const AId: TGuid; AName: QStringW;
+  AFormClass: TFormClass; AIsMultiInstance: Boolean);
+begin
+  inherited Create(AId, Name);
+  FFormClass := AFormClass;
+  FIsMultiInstance := AIsMultiInstance;
 end;
 
 constructor TQVCLFormService.Create(AName: QStringW; AForm: TForm;
@@ -556,11 +599,11 @@ end;
 
 procedure TQVCLFormService.DoFree(ASender: TObject);
 var
-  AFreeNotify:TQFormNotifyEvent;
+  AFreeNotify: TQFormNotifyEvent;
 begin
   if Assigned(FOldOnFree) then
     FOldOnFree(ASender);
-  AFreeNotify:=FEvents.OnFree;
+  AFreeNotify := FEvents.OnFree;
   UnlinkFormEvents;
   FForm := nil;
   if Assigned(AFreeNotify) then

@@ -296,7 +296,7 @@ var
     Attr: TQCSSAttrValue;
   begin
     ALine := DecodeStatement;
-    Result := (ALine <> '}') and (ps^ <> #0);
+    Result := (ALine <> '}') and (ps^ <> #0) and (Length(ALine)>0);
     if Result then
     begin
       pl := PQCharW(ALine);

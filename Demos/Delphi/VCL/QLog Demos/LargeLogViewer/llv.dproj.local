@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2016/12/08 15:20:49.000.100,E:\User\QDAC3\Demos\Delphi\VCL\QLog Demos\LargeLogViewer\main.dfm=C:\Users\hasee\Documents\Embarcadero\Studio\Projects\Unit2.dfm</Transaction>
+    <Transaction>2016/12/08 15:20:54.000.893,E:\User\QDAC3\Demos\Delphi\VCL\QLog Demos\LargeLogViewer\llv.dproj=C:\Users\hasee\Documents\Embarcadero\Studio\Projects\Project2.dproj</Transaction>
+    <Transaction>2016/12/09 13:19:27.000.561,E:\User\QDAC3\Demos\Delphi\VCL\QLog Demos\LargeLogViewer\logextract.dfm=E:\User\QDAC3\Demos\Delphi\VCL\QLog Demos\LargeLogViewer\Unit1.dfm</Transaction>
+    <Transaction>2016/12/09 15:44:02.000.284,E:\User\QDAC3\Demos\Delphi\VCL\QLog Demos\LargeLogViewer\about.dfm=E:\User\QDAC3\Demos\Delphi\VCL\QLog Demos\LargeLogViewer\Unit1.dfm</Transaction>
+  </Transactions>
+</BorlandProject>

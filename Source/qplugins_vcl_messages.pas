@@ -17,7 +17,7 @@ unit qplugins_vcl_messages;
 }
 interface
 
-uses classes, sysutils, syncobjs, qstring, qplugins,
+uses classes, sysutils, syncobjs, qstring, qplugins,qlog,
   qplugins_params, qplugins_messages, qdac_postqueue, windows, messages,
   controls, forms;
 {$HPPEMIT '#pragma link "qplugins_vcl_messages"'}
@@ -34,7 +34,6 @@ type
 
   TQMessageService = class(TQService, IQMessageService, IQNotify)
   private
-    FAppReadyId: Cardinal;
   public
     procedure Notify(const AId: Cardinal; AParams: IQParams;
       var AFireNext: Boolean); stdcall;
@@ -132,7 +131,7 @@ end;
 procedure TQMessageService.Notify(const AId: Cardinal; AParams: IQParams;
   var AFireNext: Boolean);
 begin
-  if AId = FAppReadyId then
+  if AId = NID_APPREADY then
     Application.Handle := FindAppHandle;
 end;
 
@@ -203,7 +202,8 @@ begin
   begin
     AppHandle := FindAppHandle;
     _MsgFilter := TQMessageService.Create(NewId, 'MessageFilter.VCL');
-    RegisterServices('Services/Messages', [InstanceOf(_MsgFilter) as TQService]);
+    RegisterServices('Services/Messages',
+      [InstanceOf(_MsgFilter) as TQService]);
     if AppHandle <> 0 then
     begin
       Application.Handle := AppHandle;
@@ -222,13 +222,13 @@ end;
 procedure UnregisterMessageService;
 var
   AMgr: IQNotifyManager;
-  ASvc:IQService;
+  ASvc: IQService;
 begin
   if Assigned(_MsgFilter) then
   begin
     if Supports(PluginsManager, IQNotifyManager, AMgr) then
       AMgr.Unsubscribe(NID_APPREADY, _MsgFilter as IQNotify);
-    ASvc:=(_MsgFilter as IQService);
+    ASvc := (_MsgFilter as IQService);
     ASvc.Parent.Remove(ASvc);
     _MsgFilter := nil;
   end;
@@ -253,6 +253,8 @@ begin
   inherited Create(NewId, 'MessageHost.VCL');
   Application.OnMessage := DoAppMessage;
   Application.OnIdle := DoAppIdle;
+  if IsLibrary then
+    Application.Handle := FindAppHandle;
   AProc := Application.Initialize;
 end;
 
@@ -332,7 +334,7 @@ end;
 
 procedure TQMsgFilters.HandleIdle;
 begin
-  // Do nothing
+  CheckSynchronize;
 end;
 
 function TQMsgFilters.IsFilterShowModal: Boolean;

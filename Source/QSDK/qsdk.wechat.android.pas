@@ -12,6 +12,7 @@ uses AndroidAPI.JNIBridge, AndroidAPI.JNI.JavaTypes,
   AndroidAPI.JNI.App, AndroidAPI.JNI.Util;
 
 type
+  JWXPayEntryActivity = interface; //
   JBuild = interface; // com.tencent.mm.sdk.constants.Build
   JConstantsAPI_Token = interface;
   // com.tencent.mm.sdk.constants.ConstantsAPI$Token
@@ -3727,16 +3728,91 @@ type
     JStatSpecifyReportedInfo>)
   end;
 
+  JWXPayEntryActivityClass = interface(JActivityClass)
+    // or JObjectClass // SuperSignature: android/app/Activity
+    ['{36F4681B-72E4-423E-86DC-DDD1DEE7BC3D}']
+    { static Property Methods }
+
+    { static Methods }
+    { class } function init: JWXPayEntryActivity; cdecl; // ()V
+
+    { class } procedure setWxAPI(P1: JIWXAPI); cdecl;
+    // (Lcom/tencent/mm/sdk/openapi/IWXAPI;)V
+    { class } function getWxAPI: JIWXAPI; cdecl;
+    // ()Lcom/tencent/mm/sdk/openapi/IWXAPI;
+    { class } procedure setWXEventHandler(P1: JIWXAPIEventHandler); cdecl;
+    // (Lcom/tencent/mm/sdk/openapi/IWXAPIEventHandler;)V
+    { class } function getWXEventHandler: JIWXAPIEventHandler; cdecl;
+    // ()Lcom/tencent/mm/sdk/openapi/IWXAPIEventHandler;
+
+    { static Property }
+    property WxAPI: JIWXAPI read getWxAPI write setWxAPI;
+    property WXEventHandler: JIWXAPIEventHandler read getWXEventHandler
+      write setWXEventHandler;
+  end;
+
+  [JavaSignature('com/jlgoldenbay/ddb/wxapi/WXPayEntryActivity')]
+  JWXPayEntryActivity = interface(JActivity)
+    // or JObject // SuperSignature: android/app/Activity
+    ['{0011B21A-C602-4435-8F87-241B8968AC64}']
+    { Property Methods }
+
+    { methods }
+    procedure onCreate(savedInstanceState: JBundle); cdecl;
+    // (Landroid/os/Bundle;)V
+    procedure onReq(req: JBaseReq); cdecl;
+    // (Lcom/tencent/mm/sdk/modelbase/BaseReq;)V
+    procedure onResp(resp: JBaseResp); cdecl;
+    // (Lcom/tencent/mm/sdk/modelbase/BaseResp;)V
+
+    { Property }
+  end;
+
+  TJWXPayEntryActivity = class(TJavaGenericImport<JWXPayEntryActivityClass,
+    JWXPayEntryActivity>)
+  end;
+
 procedure RegisterWechatService;
 
 implementation
 
-uses system.classes, system.sysutils, fmx.platform, system.Diagnostics,
+uses system.classes, system.sysutils, system.Generics.Collections, fmx.platform,
+  system.Diagnostics, system.Rtti, TypInfo,
   Dateutils,
   AndroidAPI.Helpers, system.Net.HttpClient, qstring, qxml, qjson, qdigest,
   qsdk.wechat;
 
 type
+  TWechatResponse = class(TInterfacedObject, IWechatResponse)
+  private
+    FErrorMsg: String;
+    FType, FErrorCode: Integer;
+    function getErrorCode: Integer;
+    procedure setErrorCode(const acode: Integer);
+    function getErrorMsg: String;
+    function getRespType: Integer;
+    procedure setErrorMsg(const AValue: String);
+    property ErrorCode: Integer read getErrorCode write setErrorCode;
+    property ErrorMsg: String read getErrorMsg write setErrorMsg;
+  public
+    constructor Create(AResp: JBaseResp);
+  end;
+
+  TWechatPayResponse = class(TWechatResponse, IWechatPayResponse)
+  private
+    FPrepayId, FReturnKey, FExtData: String;
+    FPayResult: TWechatPayResult;
+    function getPrepayId: String;
+    procedure setPrepayId(const AVal: String);
+    function getReturnKey: String;
+    procedure setReturnKey(const AVal: String);
+    function getExtData: String;
+    procedure setExtData(const AVal: String);
+    function getPayResult: TWechatPayResult;
+  public
+    constructor Create(AResp: JBaseResp);
+  end;
+
   TAndroidWechatService = class(TJavaLocal, IWechatService, JIWXAPIEventHandler)
   private
     FInstance: JIWXAPI;
@@ -3749,9 +3825,8 @@ type
     FRegistered: Boolean;
     FOnRequest: TWechatRequestEvent;
     FOnResponse: TWechatResponseEvent;
+    FPayActivity: JActivity;
     function Registered: Boolean;
-    procedure onReq(P1: JBaseReq); cdecl;
-    procedure onResp(P1: JBaseResp); cdecl;
   public
     constructor Create; overload;
     procedure Unregister;
@@ -3773,9 +3848,12 @@ type
     procedure setMchId(const AId: String);
     function getDevId: String;
     procedure setDevId(const AId: String);
+    function Pay(aprepayId, anonceStr, asign: String;
+      atimeStamp: Integer): Boolean;
     function getPayKey: String;
     procedure setPayKey(const AKey: String);
-    function Pay(const AOrder: TWechatOrder; const ANotifyUrl: String): Boolean;
+    procedure onReq(P1: JBaseReq); cdecl;
+    procedure onResp(P1: JBaseResp); cdecl;
   end;
 
   TAndroidWechatBaseRequest = class(TWechatObject, IWechatRequest)
@@ -3998,6 +4076,8 @@ begin
     TypeInfo(qsdk.wechat.android.JStatServiceImpl));
   TRegTypes.RegisterType('QSDK.Wechat.Android.JStatSpecifyReportedInfo',
     TypeInfo(qsdk.wechat.android.JStatSpecifyReportedInfo));
+  TRegTypes.RegisterType('Androidapi.JNI.wxpay.JWXPayEntryActivity',
+    TypeInfo(qsdk.wechat.android.JWXPayEntryActivity));
 end;
 
 { TAndroidWechatService }
@@ -4070,8 +4150,20 @@ begin
 end;
 
 procedure TAndroidWechatService.onResp(P1: JBaseResp);
+var
+  APayResp: JPayResp;
+  AResp: IWechatResponse;
+  AClassName: String;
 begin
-
+  if Assigned(FOnResponse) then
+  begin
+    // Debugout('WechatService::Pay Response cast error,real class is %s',
+    // [JStringToString(P1.getClass.getCanonicalName)]);
+    if P1.getType = TJConstantsAPI.JavaClass.COMMAND_PAY_BY_WX then
+      FOnResponse(TWechatPayResponse.Create(P1))
+    else
+      FOnResponse(TWechatResponse.Create(P1));
+  end;
 end;
 
 function TAndroidWechatService.OpenUrl(const aurl: String): Boolean;
@@ -4088,181 +4180,24 @@ begin
   result := Registered and FInstance.openWXApp;
 end;
 
-function TAndroidWechatService.Pay(const AOrder: TWechatOrder;
-  const ANotifyUrl: String): Boolean;
+function TAndroidWechatService.Pay(aprepayId, anonceStr, asign: String;
+  atimeStamp: Integer): Boolean;
 const
   PrepayUrl = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
 var
-  aprepayId: String;
-  function OrderDetail: String;
-  var
-    AJson: TQJson;
-    i: Integer;
-  begin
-    AJson := TQJson.Create;
-    try
-      with AJson.AddArray('goods_detail') do
-      begin
-        for i := 0 to High(AOrder.Detail) do
-        begin
-          with Add do
-          begin
-            Add('goods_id').AsString := AOrder.Detail[i].Id;
-            if Length(AOrder.Detail[i].WePayId) > 0 then
-              Add('wxpay_goods_id').AsString := AOrder.Detail[i].WePayId;
-            Add('goods_name').AsString := AOrder.Detail[i].GoodsName;
-            Add('quantity').AsInteger := AOrder.Detail[i].Quantity;
-            Add('price').AsFloat := AOrder.Detail[i].Price;
-            Add('goods_catogry').AsString := AOrder.Detail[i].CategoryId;
-            Add('body').AsString := AOrder.Detail[i].Comment;
-          end;
-        end;
-      end;
-      result := AJson.AsJson;
-    finally
-      FreeAndNilObject(AJson);
-    end;
-  end;
-
-  function CalcSign(AReq: TQXML): String;
-  var
-    AList: TStringList;
-    AValue: String;
-    i, c: Integer;
-    ASigner:IWechatSigner;
-  begin
-    ASigner:=WechatSigner(FPayKey);
-    c := 0;
-    for i := 0 to AReq.Count - 1 do
-    begin
-      with AReq[i] do
-        ASigner.Add(Name,Text);
-    end;
-    result := ASigner.Sign;
-  end;
-
-  function Prepay(var aprepayId: String): Boolean;
-  var
-    anonceStr, asign: String;
-    AHttp: THttpClient;
-    AReq, aresult: TQXMLNode;
-    AReply: IHttpResponse;
-    AStream: TStream;
-  begin
-    AHttp := THttpClient.Create;
-    AReq := TQXML.Create;
-    AStream := TMemoryStream.Create;
-    try
-      anonceStr := IntToStr(Random(MaxInt));
-      AReq.AddNode('appid').AddText(FAppId);
-      AReq.AddNode('mch_id').AddText(FMchId);
-      if Length(FDevId) > 0 then
-        AReq.AddNode('device_info').AddText(FDevId);
-      AReq.AddNode('nonce_str').AddText(anonceStr);
-      AReq.AddNode('body').AddText(AOrder.description);
-      AReq.AddNode('detail').AddCData(OrderDetail);
-      AReq.AddNode('attach').AddText(AOrder.extData);
-      AReq.AddNode('out_trade_no').AddText(AOrder.No);
-      if Length(AOrder.FeeType) > 0 then
-        AReq.AddNode('fee_type').AddText(AOrder.FeeType);
-      AReq.AddNode('total_fee').AddText(IntToStr(Trunc(AOrder.Total * 100)));
-      AReq.AddNode('spbill_create_ip').AddText('192.168.1.1'); // LocalIP,Todo
-      if AOrder.TTL > 0 then
-      begin
-        AReq.AddNode('time_start')
-          .AddText(FormatDateTime('yyyymmddhhnnss', Now));
-        AReq.AddNode('time_expire').AddText(FormatDateTime('yyyymmddhhnnss',
-          IncMinute(Now, AOrder.TTL)));
-      end;
-      if Length(AOrder.Tag) > 0 then
-        AReq.AddNode('goods_tag').AddText(AOrder.Tag);
-      AReq.AddNode('notify_url').AddText(ANotifyUrl);
-      AReq.AddNode('trade_type').AddText('APP');
-      AReq.AddNode('sign_type').AddText('MD5');
-      AReq.SaveToStream(AStream, teUTF8, false, false);
-      asign := CalcSign(AReq);
-      AReq.AddNode('sign').AddText(asign);
-      AReply := AHttp.Post(PrepayUrl, AStream);
-      if Assigned(AReply) and (AReply.StatusCode = 200) then
-      begin
-        aresult := TQXML.Create;
-        try
-          AReply.ContentStream.Position := 0;
-          aresult.LoadFromStream(AReply.ContentStream);
-          if aresult.TextByPath('return_code', '') <> 'SUCCESS' then
-          begin
-            FLastError := -1;
-            FLastErrorMsg := aresult.TextByPath('return_msg','');
-          end
-          else
-          begin
-            // 处理业务结果
-            if aresult.TextByPath('result_code', '') = 'SUCCESS' then
-            begin
-              FLastError := 0;
-              FLastErrorMsg := '';
-              aprepayId := aresult.textbypath('prepay_id', '');
-            end
-            else
-            begin
-              // NOAUTH	商户无此接口权限	商户未开通此接口权限	请商户前往申请此接口权限
-              // NOTENOUGH	余额不足	用户帐号余额不足	用户帐号余额不足，请用户充值或更换支付卡后再支付
-              // ORDERPAID	商户订单已支付	商户订单已支付，无需重复操作	商户订单已支付，无需更多操作
-              // ORDERCLOSED	订单已关闭	当前订单已关闭，无法支付	当前订单已关闭，请重新下单
-              // SYSTEMERROR	系统错误	系统超时	系统异常，请用相同参数重新调用
-              // APPID_NOT_EXIST	APPID不存在	参数中缺少APPID	请检查APPID是否正确
-              // MCHID_NOT_EXIST	MCHID不存在	参数中缺少MCHID	请检查MCHID是否正确
-              // APPID_MCHID_NOT_MATCH	appid和mch_id不匹配	appid和mch_id不匹配	请确认appid和mch_id是否匹配
-              // LACK_PARAMS	缺少参数	缺少必要的请求参数	请检查参数是否齐全
-              // OUT_TRADE_NO_USED	商户订单号重复	同一笔交易不能多次提交	请核实商户订单号是否重复提交
-              // SIGNERROR	签名错误	参数签名结果不正确	请检查签名参数和方法是否都符合签名算法要求
-              // XML_FORMAT_ERROR	XML格式错误	XML格式错误	请检查XML参数格式是否正确
-              // REQUIRE_POST_METHOD	请使用post方法	未使用post传递参数 	请检查请求参数是否通过post方法提交
-              // POST_DATA_EMPTY	post数据为空	post数据不能为空	请检查post数据是否为空
-              // NOT_UTF8
-            end;
-          end;
-        finally
-          FreeAndNilObject(AHttp);
-        end;
-      end;
-    finally
-      FreeAndNilObject(AHttp);
-    end;
-  end;
-  function DoPay:Boolean;
-  var
-    AReq: JPayReq;
-    ASignList: TStringList;
-    AnoceStr: String;
-    atimeStamp: String;
-    ASigner: IWechatSigner;
-  begin
-    ASigner:=WechatSigner(FPayKey);
-    AReq := TJPayReq.JavaClass.init;
-    AReq.appId := StringToJString(FAppId);
-    ASigner.Add('appId',FAppId);
-    AReq.partnerId := StringToJString(FMchId);
-    ASigner.Add('partnerId',FMchId);
-    AReq.prepayId := StringToJString(aprepayId);
-    ASigner.Add('prepayId',aprepayId);
-    AReq.packageValue := StringToJString('Sign=WXPay');
-    ASigner.Add('packageValue','Sign=WXPay');
-    AnoceStr := IntToStr(Random(MaxInt));
-    atimeStamp := IntToStr(DateTimeToUnix(Now));
-    AReq.nonceStr := StringToJString(AnoceStr);
-    ASigner.Add('nonceStr',AnoceStr);
-    AReq.timeStamp := StringToJString(atimeStamp);
-    ASigner.Add('timeStamp',atimeStamp);
-    AReq.sign := StringToJString(ASigner.Sign);
-    result := Registered and FInstance.sendReq(AReq as JBaseReq);
-  end;
-
+  AReq: JPayReq;
 begin
-  if Prepay(aprepayId) then
-    result := DoPay
-  else
-    result := false;
+  AReq := TJPayReq.JavaClass.init;
+  AReq.appId := StringToJString(FAppId);
+  AReq.partnerId := StringToJString(FMchId);
+  AReq.prepayId := StringToJString(aprepayId);
+  AReq.packageValue := StringToJString('Sign=WXPay');
+  AReq.nonceStr := StringToJString(anonceStr);
+  AReq.timeStamp := StringToJString(IntToStr(atimeStamp));
+  AReq.sign := StringToJString(asign);
+  Debugout('WXPay Start with PrepayId %s,NonceStr %s,Timestamp %d ,Sign %s',
+    [aprepayId, anonceStr, atimeStamp, asign]);
+  result := Registered and FInstance.sendReq(AReq as JBaseReq);
 end;
 
 function TAndroidWechatService.Registered: Boolean;
@@ -4273,6 +4208,9 @@ begin
     begin
       FInstance := TJWXAPIFactory.JavaClass.createWXAPI(TAndroidHelper.Context,
         StringToJString(FAppId));
+      FInstance.registerApp(StringToJString(FAppId));
+      TJWXPayEntryActivity.JavaClass.WxAPI := FInstance;
+      TJWXPayEntryActivity.JavaClass.WXEventHandler := Self;
     end;
   end;
   result := Assigned(FInstance);
@@ -4434,8 +4372,106 @@ begin
   (Request as JOpenWebview_Req).url := StringToJString(Value);
 end;
 
+{ TWechatResponse }
+
+constructor TWechatResponse.Create(AResp: JBaseResp);
+begin
+  inherited Create;
+  FType := AResp.getType;
+  FErrorCode := AResp.errCode;
+  FErrorMsg := JStringToString(AResp.errStr);
+end;
+
+function TWechatResponse.getErrorCode: Integer;
+begin
+  result := FErrorCode;
+end;
+
+function TWechatResponse.getErrorMsg: String;
+begin
+  result := FErrorMsg;
+end;
+
+function TWechatResponse.getRespType: Integer;
+begin
+  result := FType;
+end;
+
+procedure TWechatResponse.setErrorCode(const acode: Integer);
+begin
+  FErrorCode := acode;
+end;
+
+procedure TWechatResponse.setErrorMsg(const AValue: String);
+begin
+  FErrorMsg := AValue;
+end;
+
+{ TWechatPayResponse }
+
+constructor TWechatPayResponse.Create(AResp: JBaseResp);
+var
+  APayResp: JPayResp;
+  AJavaClass: Jlang_Class;
+begin
+  inherited Create(AResp);
+  AJavaClass := TJlang_Class.JavaClass.forName(AResp.getClass.getCanonicalName);
+  if Assigned(AJavaClass) then
+    APayResp := TJPayResp.Wrap((AJavaClass.cast(AResp) as ILocalObject)
+      .GetObjectID);
+  FPrepayId := JStringToString(APayResp.prepayId);
+  FReturnKey := JStringToString(APayResp.returnKey);
+  FExtData := JStringToString(APayResp.extData);
+  if ErrorCode = TJBaseResp_ErrCode.JavaClass.ERR_OK then
+    FPayResult := TWechatPayResult.wprOk
+  else if ErrorCode = TJBaseResp_ErrCode.JavaClass.ERR_USER_CANCEL then
+    FPayResult := TWechatPayResult.wprCancel
+  else
+    FPayResult := TWechatPayResult.wprError;
+end;
+
+function TWechatPayResponse.getExtData: String;
+begin
+  result := FExtData;
+end;
+
+function TWechatPayResponse.getPayResult: TWechatPayResult;
+begin
+  result := FPayResult;
+end;
+
+function TWechatPayResponse.getPrepayId: String;
+begin
+  result := FPrepayId;
+end;
+
+function TWechatPayResponse.getReturnKey: String;
+begin
+  result := FReturnKey;
+end;
+
+procedure TWechatPayResponse.setExtData(const AVal: String);
+begin
+  FExtData := AVal;
+end;
+
+procedure TWechatPayResponse.setPrepayId(const AVal: String);
+begin
+  FPrepayId := AVal;
+end;
+
+procedure TWechatPayResponse.setReturnKey(const AVal: String);
+begin
+  FReturnKey := AVal;
+end;
+
 initialization
 
 RegisterTypes;
+// LifecycleManager := TAndroidActivityLifecycleManager.Create;
+
+finalization
+
+// UnregisterLifecycleManager;
 
 end.

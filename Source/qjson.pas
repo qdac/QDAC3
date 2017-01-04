@@ -24,6 +24,10 @@ interface
 }
 
 { 修订日志
+  2017.1.1
+  ==========
+  + 增加 Insert 系列函数，用于在指定的位置插入一个结点（阿木、恢弘建议）
+
   2016.11.23
   ==========
   + 增加 Reset 函数，重置结点的所有内容，同时也会从父结点中移除自身（不得闲报告）
@@ -556,6 +560,7 @@ type
     procedure SetIgnoreCase(const Value: Boolean);
     function HashName(const S: QStringW): TQHashType;
     procedure HashNeeded; inline;
+    procedure FromType(const AValue: String; AType: TQJsonDataType);
   public
     /// <summary>构造函数</summary>
     constructor Create; overload;
@@ -638,6 +643,18 @@ type
     /// <returns>返回添加的新对象</returns>
     function Add(AName: QStringW): TQJson; overload; virtual;
 
+    function Insert(AIndex: Integer; const AName: String): TQJson; overload;
+    function Insert(AIndex: Integer; const AName: String;
+      ADataType: TQJsonDataType): TQJson; overload;
+    function Insert(AIndex: Integer; const AName, AValue: String;
+      ADataType: TQJsonDataType = jdtString): TQJson; overload;
+    function Insert(AIndex: Integer; const AName: String; AValue: Extended)
+      : TQJson; overload;
+    function Insert(AIndex: Integer; const AName: String; AValue: Int64)
+      : TQJson; overload;
+    function Insert(AIndex: Integer; const AName: String; AValue: Boolean)
+      : TQJson; overload;
+    procedure Insert(AIndex: Integer; AChild: TQJson); overload;
     /// <summary>强制一个路径存在,如果不存在,则依次创建需要的结点(jdtObject或jdtArray)</summary>
     /// <param name="APath">要添加的结点路径</param>
     /// <returns>返回路径对应的对象</returns>
@@ -1527,66 +1544,12 @@ function TQJson.Add(AName, AValue: QStringW; ADataType: TQJsonDataType)
   : Integer;
 var
   ANode: TQJson;
-  p: PQCharW;
-  ABuilder: TQStringCatHelperW;
-  procedure AddAsDateTime;
-  var
-    ATime: TDateTime;
-  begin
-    if ParseDateTime(PQCharW(AValue), ATime) then
-      ANode.AsDateTime := ATime
-    else if ParseJsonTime(PQCharW(AValue), ATime) then
-      ANode.AsDateTime := ATime
-    else
-      raise Exception.Create(SBadJsonTime);
-  end;
-
 begin
   ANode := CreateJson;
   ANode.FName := AName;
   Result := Add(ANode);
   DoJsonNameChanged(ANode);
-  p := PQCharW(AValue);
-  if ADataType = jdtUnknown then
-  begin
-    ABuilder := TQStringCatHelperW.Create;
-    try
-      if ANode.TryParseValue(ABuilder, p) <> 0 then
-        ANode.AsString := AValue
-      else if p^ <> #0 then
-        ANode.AsString := AValue;
-    finally
-      FreeObject(ABuilder);
-    end;
-  end
-  else
-  begin
-    case ADataType of
-      jdtString:
-        ANode.AsString := AValue;
-      jdtInteger:
-        ANode.AsInteger := StrToInt(AValue);
-      jdtFloat:
-        ANode.AsFloat := StrToFloat(AValue);
-      jdtBoolean:
-        ANode.AsBoolean := StrToBool(AValue);
-      jdtDateTime:
-        AddAsDateTime;
-      jdtArray:
-        begin
-          if p^ <> '[' then
-            raise Exception.CreateFmt(SBadJsonArray, [Value]);
-          ANode.ParseObject(p);
-        end;
-      jdtObject:
-        begin
-          if p^ <> '{' then
-            raise Exception.CreateFmt(SBadJsonObject, [Value]);
-          ANode.ParseObject(p);
-        end;
-    end;
-
-  end;
+  ANode.FromType(AValue, ADataType);
 end;
 
 function TQJson.Add(AName: QStringW; ADataType: TQJsonDataType): TQJson;
@@ -2876,6 +2839,67 @@ begin
   else
     FreeObject(AJson);
 end;
+
+procedure TQJson.FromType(const AValue: String; AType: TQJsonDataType);
+var
+  ANode: TQJson;
+  p: PQCharW;
+  ABuilder: TQStringCatHelperW;
+  procedure ToDateTime;
+  var
+    ATime: TDateTime;
+  begin
+    if ParseDateTime(PQCharW(AValue), ATime) then
+      AsDateTime := ATime
+    else if ParseJsonTime(PQCharW(AValue), ATime) then
+      AsDateTime := ATime
+    else
+      raise Exception.Create(SBadJsonTime);
+  end;
+
+begin
+  p := PQCharW(AValue);
+  if AType = jdtUnknown then
+  begin
+    ABuilder := TQStringCatHelperW.Create;
+    try
+      if ANode.TryParseValue(ABuilder, p) <> 0 then
+        AsString := AValue
+      else if p^ <> #0 then
+        AsString := AValue;
+    finally
+      FreeObject(ABuilder);
+    end;
+  end
+  else
+  begin
+    case AType of
+      jdtString:
+        AsString := AValue;
+      jdtInteger:
+        AsInteger := StrToInt(AValue);
+      jdtFloat:
+        AsFloat := StrToFloat(AValue);
+      jdtBoolean:
+        AsBoolean := StrToBool(AValue);
+      jdtDateTime:
+        ToDateTime;
+      jdtArray:
+        begin
+          if p^ <> '[' then
+            raise Exception.CreateFmt(SBadJsonArray, [AValue]);
+          ParseObject(p);
+        end;
+      jdtObject:
+        begin
+          if p^ <> '{' then
+            raise Exception.CreateFmt(SBadJsonObject, [AValue]);
+          ParseObject(p);
+        end;
+    end;
+  end;
+end;
+
 {$IF RTLVersion>=21}
 
 procedure TQJson.FromRecord<T>(const ARecord: T);
@@ -3668,6 +3692,67 @@ begin
       Break;
     end;
   end;
+end;
+
+function TQJson.Insert(AIndex: Integer; const AName, AValue: String;
+  ADataType: TQJsonDataType): TQJson;
+begin
+  Result := Insert(AIndex, AName);
+  Result.FromType(AValue, ADataType);
+end;
+
+function TQJson.Insert(AIndex: Integer; const AName: String;
+  ADataType: TQJsonDataType): TQJson;
+begin
+  Result := CreateJson;
+  Insert(AIndex, Result);
+  Result.Name := AName;
+  Result.DataType := ADataType;
+end;
+
+function TQJson.Insert(AIndex: Integer; const AName: String): TQJson;
+begin
+  Result := Insert(AIndex, AName, jdtUnknown);
+end;
+
+function TQJson.Insert(AIndex: Integer; const AName: String;
+  AValue: Extended): TQJson;
+begin
+  Result := Insert(AIndex, AName);
+  Result.AsFloat := AValue;
+end;
+
+procedure TQJson.Insert(AIndex: Integer; AChild: TQJson);
+begin
+  if Assigned(AChild.Parent) then
+  begin
+    if AChild.Parent <> Self then
+      AChild.Parent.Remove(AChild)
+    else
+      Exit;
+  end;
+  ArrayNeeded(jdtObject);
+  AChild.FParent := Self;
+  AChild.FIgnoreCase := FIgnoreCase;
+  if AIndex <= 0 then
+    AIndex := 0
+  else if AIndex >= Count then
+    AIndex := Count;
+  FItems.Insert(AIndex, AChild);
+end;
+
+function TQJson.Insert(AIndex: Integer; const AName: String;
+  AValue: Boolean): TQJson;
+begin
+  Result := Insert(AIndex, AName);
+  Result.AsBoolean := AValue;
+end;
+
+function TQJson.Insert(AIndex: Integer; const AName: String;
+  AValue: Int64): TQJson;
+begin
+  Result := Insert(AIndex, AName);
+  Result.AsInt64 := AValue;
 end;
 
 function TQJson.IntByName(AName: QStringW; ADefVal: Int64): Int64;
