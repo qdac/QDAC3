@@ -23,6 +23,9 @@ unit qxml;
 }
 // 测试环境仅为Delphi 2007或XE6，其它版本的开发环境，请自行修改
 { 修订日志
+  2017.1.4
+  =========
+  * 修正了 XML 编码时，未正确处理空 XML 文件的问题（麦子仲肥报告）
   2016.6.21
   =========
   * 修正了 AttachTo 没有判断父是否创建了FItems对象的问题（堕落恶魔报告）
@@ -2740,13 +2743,16 @@ var
     end;
     if AItem.Count = 0 then
     begin
-      if XMLTagShortClose then
-        ABuilder.Cat(TagEnd, 2)
-      else if Length(AItem.FName) > 0 then
-        ABuilder.Cat(TagClose, 1).Cat(TagCloseStart, 2).Cat(AItem.FName)
-          .Cat(TagClose, 1)
-      else if AItem.Parent = nil then
-        ABuilder.Cat(TagCloseStart, 6);
+      if (Length(AItem.Name) > 0) or (ADefaultTag and (AItem = Self)) then
+      begin
+        if XMLTagShortClose then
+          ABuilder.Cat(TagEnd, 2)
+        else if Length(AItem.FName) > 0 then
+          ABuilder.Cat(TagClose, 1).Cat(TagCloseStart, 2).Cat(AItem.FName)
+            .Cat(TagClose, 1)
+        else if AItem.Parent = nil then
+          ABuilder.Cat(TagCloseStart, 6);
+      end;
     end
     else
     begin
@@ -2778,6 +2784,8 @@ var
               // if ADoFormat then
               // ABuilder.Replicate(AIndent, ALevel);
               ABuilder.Cat(XMLEncode(ANode.FName, True));
+              if ADoFormat and (I < AItem.Count - 1) then
+                ABuilder.Cat(SLineBreak);
             end;
           xntComment:
             begin
@@ -2806,7 +2814,9 @@ var
           ABuilder.Replicate(AIndent, ALevel);
       end;
       if (Length(AItem.FName) > 0) then
+      begin
         ABuilder.Cat(TagCloseStart, 2).Cat(AItem.FName).Cat(TagClose, 1)
+      end;
     end;
   end;
 

@@ -6,9 +6,16 @@ uses classes, sysutils, qstring, qvalue, variants{$IFDEF UNICODE},
   Generics.collections, Rtti{$ENDIF};
 {$HPPEMIT '#pragma link "qplugins_params"'}
 
+{$REGION History}
 {
   Todo:加入只读接口的支持
+
+修订日志
+========
+2017.1.5
+  * 修正了 AddRange 忘记减少ACount的值的问题（软件高手报告）
 }
+{$ENDREGION}
 type
   // 流
   IQStream = interface
@@ -1479,6 +1486,7 @@ begin
   begin
     Add(AParams[AStartIndex]);
     Inc(AStartIndex);
+    Dec(ACount);
   end;
 end;
 
