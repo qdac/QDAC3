@@ -329,6 +329,7 @@ begin
         end;
       end;
     end;
+    DoProgress(csLoadData, FRecordIndex, FActiveRecs.Count);
   end
   else
     Result := False;
@@ -650,6 +651,7 @@ begin
         end;
       end;
     end;
+    DoProgress(csLoadData, FRecordIndex, FActiveRecs.Count);
   end
   else
     Result := False;
@@ -883,6 +885,7 @@ begin
       end;
     end;
     Result := True;
+    DoProgress(csLoadData,FStream.Position,FDSHeader.NextDS);
   end
   else
     Result := False;

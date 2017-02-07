@@ -1,103 +1,14 @@
-/// <summary>
-/// IQFormService 的 VCL 版实现单元，仅支持 VCL 程序
-/// </summary>
-unit qplugins_vcl_formsvc;
+unit qplugins_fmx_formsvc;
 
 interface
 
-uses classes, sysutils, types, windows, messages, controls, comctrls, forms,
-  qstring, qplugins, qplugins_params, qplugins_vcl_messages,
-  qplugins_formsvc{$IF RTLVERSION>=23}, uitypes{$IFEND};
-{$HPPEMIT '#pragma link "qplugins_vcl_formsvc"'}
+/// <summary>
+/// IQFormService 的 FMX 版实现单元，仅支持 FMX 程序
+/// </summary>
+uses classes, qplugins_formsvc, qstring, fmx.forms;
 
 type
-  TQVCLFormService = class(TQFormService)
-  protected
-    FForm: TForm;
-    FFormOrigin: TRect;
-    FFormClass: TFormClass;
-    FEvents: TQFormEvents;
-    FFreeService: IQFreeNotifyService;
-    FOldCanClose: TCloseQueryEvent;
-    FOldOnClose: TCloseEvent;
-    FOldOnFree: TNotifyEvent;
-    FOldOnActivate: TNotifyEvent;
-    FOldOnDeactivate: TNotifyEvent;
-    FOldOnResize: TNotifyEvent;
-    FOldOnShow: TNotifyEvent;
-    FOldOnHide: TNotifyEvent;
-    FFormAlign: TFormAlign;
-    FIsMultiInstance: Boolean;
-    FClosing: Boolean;
-    FDockParent: THandle;
-    procedure AdjustAlign;
-    procedure DoCanClose(ASender: TObject; var ACanClose: Boolean);
-    procedure DoClose(ASender: TObject; var Action: TCloseAction);
-    procedure DoFree(ASender: TObject);
-    procedure DoActivate(ASender: TObject);
-    procedure DoDeactivate(ASender: TObject);
-    procedure DoResize(ASender: TObject);
-    procedure DoShow(ASender: TObject);
-    procedure DoHide(ASender: TObject);
-    procedure SetForm(const Value: TForm);
-    procedure DoDockParentFree(AData: Pointer);
-    procedure DoDockParentSizeChanged(AData: Pointer);
-    procedure DoFormFree(AData: Pointer);
-    function FormNeeded: Boolean; override;
-    function GetWidth: Integer; override;
-    procedure SetWidth(const AValue: Integer); override;
-    function GetHeight: Integer; override;
-    procedure SetHeight(const AValue: Integer); override;
-    function GetFormAlign: TFormAlign; override;
-    procedure SetFormAlign(const AValue: TFormAlign); override;
-    procedure ParentResized; override;
-    function GetDockParent: THandle; override;
-    procedure UnlinkFormEvents;
-    function GetOriginHeight: Integer;
-    function GetOriginWidth: Integer;
-    function GetOriginBottom: Integer;
-    function GetOriginLeft: Integer;
-    function GetOriginRight: Integer;
-    function GetOriginTop: Integer;
-    property OriginWidth: Integer read GetOriginWidth;
-    property OriginHeight: Integer read GetOriginHeight;
-    property OriginLeft: Integer read GetOriginLeft;
-    property OriginTop: Integer read GetOriginTop;
-    property OriginRight: Integer read GetOriginRight;
-    property OriginBottom: Integer read GetOriginBottom;
-  public
-    constructor Create(AName: QStringW; AForm: TForm;
-      ACreator: TObject); overload;
-    constructor Create(AName: QStringW; AFormClass: TFormClass;
-      AIsMultiInstance: Boolean = True); overload;
-    constructor Create(const AId: TGuid; AName: QStringW; AForm: TForm;
-      ACreator: TObject); overload;
-    constructor Create(const AId: TGuid; AName: QStringW;
-      AFormClass: TFormClass; AIsMultiInstance: Boolean = True); overload;
-    destructor Destroy; override;
-    procedure ShowModal(AOnModalResult: TQFormModalResultHandler;
-      ATag: IQParams); override;
-    procedure Show; override;
-    procedure BringToFront; override;
-    function GetInstance: IQService; override; stdcall;
-    procedure SendToBack; override;
-    procedure SetBounds(L, T, W, H: Integer); override;
-    procedure GetBounds(var R: TRect); override;
-    procedure DockTo(AHandle: THandle; const ARect: TRect); overload; override;
-    procedure DockTo(AHandle: THandle; Align: TFormAlign); overload; override;
-    procedure Undock; override;
-    procedure SendInput(var AInput: TQInputEvent); override;
-    procedure HookEvents(const AEvents: TQFormEvents); override;
-    procedure UnhookEvents; override;
-    function IsMultiInstance: Boolean; override;
-    function GetModalResult: TModalResult; override;
-    procedure SetModalResult(const AValue: TModalResult); override;
-    function QueryInterface(const IID: TGuid; out Obj): HRESULT;
-      override; stdcall;
-    property Form: TForm read FForm write SetForm;
-    property FormAlign: TFormAlign read GetFormAlign write SetFormAlign;
-  end;
-
+  TFormClass = class of TCommonCustomForm;
   /// <summary>
   /// 注册一个IQFormService服务
   /// </summary>
@@ -152,6 +63,20 @@ function FindFormService(AForm: TForm): IQFormService;
 
 implementation
 
+uses sysutils, types, fmx.types, uitypes, qplugins_params, qplugins, windows,
+  fmx.platform.Win;
+// sysutils, uitypes, types, fmx.types,
+// fmx.controls, fmx.Platform, fmx.styles, fmx.forms, qstring, qplugins,
+// qplugins_params,
+// qplugins_fmx_messages, qplugins_formsvc
+// {$IFDEF MSWINDOWS}
+// , Winapi.windows, Winapi.messages,
+// fmx.Platform.Win
+// {$ELSE}
+// {$MESSAGE Error 'QPlugins FMX 仅支持 Windows 下的程序'}
+// {$ENDIF};
+{$HPPEMIT '#pragma link "qplugins_fmx_formsvc"'}
+
 const
   FreeNotificationRoot: QStringW = '/Services/Docks/FreeNotifications';
   VCLControlTestRoot: QStringW = '/Services/VCL/ControlTest';
@@ -160,30 +85,106 @@ const
   SParentResized: PChar = 'QPlugins.FormService.ParentResized';
 
 type
-  IQVCLTestService = interface
-    ['{CCC7C6EB-135F-4A89-99C2-109DF56B617E}']
-    function IsVCLControl(AHandle: HWND): Boolean;
-    function HasControl(AHandle: HWND): Boolean;
+  TQFormServiceHolder = class(TComponent)
+  protected
+    FFormService: TQFormService;
   end;
 
-  TQVCLTestService = class(TQService, IQVCLTestService)
-  protected
+  TQFMXFormService = class(TQFormService)
+  private
+    FForm: TCommonCustomForm;
+    FFormOrigin: TRect;
+    FFormClass: TFormClass;
+    FEvents: TQFormEvents;
+    FFreeService: IQFreeNotifyService;
+    FOldCanClose: TCloseQueryEvent;
+    FOldOnClose: TCloseEvent;
+    FOldOnFree: TNotifyEvent;
+    FOldOnActivate: TNotifyEvent;
+    FOldOnDeactivate: TNotifyEvent;
+    FOldOnResize: TNotifyEvent;
+    FOldOnShow: TNotifyEvent;
+    FOldOnHide: TNotifyEvent;
+    FFormAlign: TFormAlign;
+    FIsMultiInstance: Boolean;
+    FClosing: Boolean;
+    FDockParent: THandle;
+    procedure AdjustAlign;
+    procedure DoCanClose(ASender: TObject; var ACanClose: Boolean);
+    procedure DoClose(ASender: TObject; var Action: TCloseAction);
+    procedure DoFree(ASender: TObject);
+    procedure DoActivate(ASender: TObject);
+    procedure DoDeactivate(ASender: TObject);
+    procedure DoResize(ASender: TObject);
+    procedure DoShow(ASender: TObject);
+    procedure DoHide(ASender: TObject);
+    procedure SetForm(const Value: TCommonCustomForm);
+    procedure DoDockParentFree(AData: Pointer);
+    procedure DoDockParentSizeChanged(AData: Pointer);
+    procedure DoFormFree(AData: Pointer);
+    function FormNeeded: Boolean; override;
+    function GetWidth: Integer; override;
+    procedure SetWidth(const AValue: Integer); override;
+    function GetHeight: Integer; override;
+    procedure SetHeight(const AValue: Integer); override;
+    function GetFormAlign: TFormAlign; override;
+    procedure SetFormAlign(const AValue: TFormAlign); override;
+    procedure ParentResized; override;
+    function GetDockParent: THandle; override;
+    procedure UnlinkFormEvents;
+    function GetOriginHeight: Integer;
+    function GetOriginWidth: Integer;
+    function GetOriginBottom: Integer;
+    function GetOriginLeft: Integer;
+    function GetOriginRight: Integer;
+    function GetOriginTop: Integer;
+    property OriginWidth: Integer read GetOriginWidth;
+    property OriginHeight: Integer read GetOriginHeight;
+    property OriginLeft: Integer read GetOriginLeft;
+    property OriginTop: Integer read GetOriginTop;
+    property OriginRight: Integer read GetOriginRight;
+    property OriginBottom: Integer read GetOriginBottom;
   public
-    constructor Create; override;
+    constructor Create(AName: QStringW; AForm: TCommonCustomForm;
+      ACreator: TObject); overload;
+    constructor Create(AName: QStringW; AFormClass: TFormClass;
+      AIsMultiInstance: Boolean = True); overload;
+    constructor Create(const AId: TGuid; AName: QStringW;
+      AForm: TCommonCustomForm; ACreator: TObject); overload;
+    constructor Create(const AId: TGuid; AName: QStringW;
+      AFormClass: TFormClass; AIsMultiInstance: Boolean = True); overload;
     destructor Destroy; override;
-    function IsVCLControl(AHandle: HWND): Boolean;
-    function HasControl(AHandle: HWND): Boolean;
+    procedure ShowModal(AOnModalResult: TQFormModalResultHandler;
+      ATag: IQParams); override;
+    procedure Show; override;
+    procedure BringToFront; override;
+    function GetInstance: IQService; override; stdcall;
+    procedure SendToBack; override;
+    procedure SetBounds(L, T, W, H: Integer); override;
+    procedure GetBounds(var R: TRect); override;
+    procedure DockTo(AHandle: THandle; const ARect: TRect); overload; override;
+    procedure DockTo(AHandle: THandle; Align: TFormAlign); overload; override;
+    procedure Undock; override;
+    procedure SendInput(var AInput: TQInputEvent); override;
+    procedure HookEvents(const AEvents: TQFormEvents); override;
+    procedure UnhookEvents; override;
+    function IsMultiInstance: Boolean; override;
+    function GetModalResult: TModalResult; override;
+    procedure SetModalResult(const AValue: TModalResult); override;
+    function QueryInterface(const IID: TGuid; out Obj): HRESULT;
+      override; stdcall;
+    property Form: TCommonCustomForm read FForm write SetForm;
+    property FormAlign: TFormAlign read GetFormAlign write SetFormAlign;
   end;
 
   TQControlHook = class
   private
-    FControl: TWinControl;
-    FLastWndProc: TWndMethod;
+    FControl: TCommonCustomForm;
+    FLastResize: TNotifyEvent;
     FRefCount: Integer;
-    procedure HackedFormProc(var AMsg: TMessage);
-    procedure HackedControlProc(var AMsg: TMessage);
+    procedure DoResize(ASender: TObject);
   public
-    constructor Create(ACtrl: TWinControl); overload;
+    constructor Create(ACtrl: TCommonCustomForm); overload;
     destructor Destroy; override;
   end;
 
@@ -200,8 +201,7 @@ type
   end;
 
   TQFormNotify = record
-    CtrlHandle: THandle;
-    Control: TWinControl;
+    Control: TCommonCustomForm;
     FSizeNotifies: TQFormNotifyLink;
     FFreeNotifies: TQFormNotifyLink;
   end;
@@ -218,12 +218,11 @@ type
     function IndexOf(AComponent: TComponent): Integer;
     procedure ParentSizeChanged(AParent: THandle);
     procedure NoOp;
-    procedure RemoveHook(ACtrl: TWinControl);
-    procedure AddHook(ACtrl: TWinControl);
+    procedure RemoveHook(ACtrl: TCommonCustomForm);
+    procedure AddHook(ACtrl: TCommonCustomForm);
     procedure DoNotifies(const ALink: TQFormNotifyLink);
     procedure FreeNotify(AItem: PQFormNotify);
-    procedure DoParentFormFree(AData: Pointer);
-    function NewItem(ACtrl: TWinControl): PQFormNotify;
+    function NewItem(ACtrl: TCommonCustomForm): PQFormNotify;
     procedure AddNotifyProc(var ALink: TQFormNotifyLink;
       AProc: TQFormNotifyProc; AData: Pointer);
     function RemoveNotifyProc(var ALink: TQFormNotifyLink;
@@ -255,23 +254,16 @@ type
     procedure ParentSizeChanged(AParent: THandle);
   end;
 
-  TQFormServiceHolder = class(TComponent)
-  protected
-    FFormService: TQFormService;
-  end;
-
 var
-  VCLCtrlTestServices: IQServices;
-  LocalVCLCtrlTestService: IQVCLTestService;
   LocalFreeNotifyService: IQFreeNotifyService;
   LocalFreeNotifyServiceName: QStringW;
 
 function RegisterFormService(const APath, AName: QStringW; AClass: TFormClass;
   AMultiInstance: Boolean): IQFormService;
 var
-  AService: TQVCLFormService;
+  AService: TQFMXFormService;
 begin
-  AService := TQVCLFormService.Create(AName, AClass, AMultiInstance);
+  AService := TQFMXFormService.Create(AName, AClass, AMultiInstance);
   RegisterServices(PQCharW(APath), [AService]);
   Result := AService as IQFormService;
 end;
@@ -279,9 +271,9 @@ end;
 function RegisterFormService(const AId: TGuid; const APath, AName: QStringW;
   AClass: TFormClass; AMultiInstance: Boolean): IQFormService;
 var
-  AService: TQVCLFormService;
+  AService: TQFMXFormService;
 begin
-  AService := TQVCLFormService.Create(AId, AName, AClass, AMultiInstance);
+  AService := TQFMXFormService.Create(AId, AName, AClass, AMultiInstance);
   RegisterServices(PQCharW(APath), [AService]);
   Result := AService as IQFormService;
 end;
@@ -289,9 +281,9 @@ end;
 function RegisterFormService(const APath, AName: QStringW; AForm: TForm)
   : IQFormService;
 var
-  AService: TQVCLFormService;
+  AService: TQFMXFormService;
 begin
-  AService := TQVCLFormService.Create(AName, AForm, nil);
+  AService := TQFMXFormService.Create(AName, AForm, nil);
   RegisterServices(PQCharW(APath), [AService]);
   Result := AService as IQFormService;
 end;
@@ -299,15 +291,31 @@ end;
 function RegisterFormService(const AId: TGuid; const APath, AName: QStringW;
   AForm: TForm): IQFormService;
 var
-  AService: TQVCLFormService;
+  AService: TQFMXFormService;
 begin
-  AService := TQVCLFormService.Create(AId, AName, AForm, nil);
+  AService := TQFMXFormService.Create(AId, AName, AForm, nil);
   RegisterServices(PQCharW(APath), [AService]);
   Result := AService as IQFormService;
 end;
 
-{ TQVCLFormService }
-procedure TQVCLFormService.AdjustAlign;
+function FindFormService(AForm: TForm): IQFormService;
+var
+  AHolder: TQFormServiceHolder;
+  I: Integer;
+begin
+  Result := nil;
+  for I := 0 to AForm.ComponentCount - 1 do
+  begin
+    if AForm.Components[I] is TQFormServiceHolder then
+    begin
+      Result := (AForm.Components[I] as TQFormServiceHolder).FFormService;
+      Exit;
+    end;
+  end;
+end;
+{ TQFMXFormService }
+
+procedure TQFMXFormService.AdjustAlign;
 var
   R: TRect;
   AW, AH: Integer;
@@ -318,13 +326,12 @@ begin
 
   if Assigned(FForm) then
   begin
-    AParent := windows.GetParent(FForm.Handle);
+    AParent := windows.GetParent(FormToHwnd(FForm));
     if AParent <> 0 then
     begin
       GetWindowRect(AParent, R);
       AW := R.Right - R.Left;
       AH := R.Bottom - R.Top;
-      FForm.Align := alNone;
       case FormAlign of
         faLeftTop:
           FForm.SetBounds(0, 0, OriginWidth, OriginHeight);
@@ -369,37 +376,21 @@ begin
   end;
 end;
 
-procedure TQVCLFormService.BringToFront;
+procedure TQFMXFormService.BringToFront;
 begin
-  if FormNeeded then
+  if Assigned(FForm) then
     FForm.BringToFront;
 end;
 
-constructor TQVCLFormService.Create(const AId: TGuid; AName: QStringW;
-  AForm: TForm; ACreator: TObject);
-begin
-  inherited Create(AId, AName);
-  FCreator := ACreator;
-  Form := AForm;
-end;
-
-constructor TQVCLFormService.Create(const AId: TGuid; AName: QStringW;
-  AFormClass: TFormClass; AIsMultiInstance: Boolean);
-begin
-  inherited Create(AId, Name);
-  FFormClass := AFormClass;
-  FIsMultiInstance := AIsMultiInstance;
-end;
-
-constructor TQVCLFormService.Create(AName: QStringW; AForm: TForm;
-  ACreator: TObject);
+constructor TQFMXFormService.Create(const AId: TGuid; AName: QStringW;
+  AForm: TCommonCustomForm; ACreator: TObject);
 begin
   inherited Create(NewId, AName);
   FCreator := ACreator;
   Form := AForm;
 end;
 
-constructor TQVCLFormService.Create(AName: QStringW; AFormClass: TFormClass;
+constructor TQFMXFormService.Create(AName: QStringW; AFormClass: TFormClass;
   AIsMultiInstance: Boolean);
 begin
   inherited Create(NewId, AName);
@@ -407,7 +398,23 @@ begin
   FIsMultiInstance := AIsMultiInstance;
 end;
 
-destructor TQVCLFormService.Destroy;
+constructor TQFMXFormService.Create(AName: QStringW; AForm: TCommonCustomForm;
+  ACreator: TObject);
+begin
+  inherited Create(NewId, AName);
+  FCreator := ACreator;
+  Form := AForm;
+end;
+
+constructor TQFMXFormService.Create(const AId: TGuid; AName: QStringW;
+  AFormClass: TFormClass; AIsMultiInstance: Boolean);
+begin
+  inherited Create(NewId, AName);
+  FFormClass := AFormClass;
+  FIsMultiInstance := AIsMultiInstance;
+end;
+
+destructor TQFMXFormService.Destroy;
 begin
   if Assigned(FForm) then
   begin
@@ -415,7 +422,7 @@ begin
     DisableRefCount; // 禁用引用计数
     if FClosing then
     begin
-      SetProp(FForm.Handle, SFormNeedFree, 1);
+      SetProp(FormToHwnd(FForm), SFormNeedFree, 1);
       if not(csDestroying in FForm.ComponentState) then
         DoFree(Self)
       else
@@ -430,7 +437,7 @@ begin
   inherited;
 end;
 
-procedure TQVCLFormService.DoActivate(ASender: TObject);
+procedure TQFMXFormService.DoActivate(ASender: TObject);
 begin
   if Assigned(FOldOnActivate) then
     FOldOnActivate(ASender);
@@ -438,7 +445,7 @@ begin
     FEvents.OnActivate(Self);
 end;
 
-procedure TQVCLFormService.DoCanClose(ASender: TObject; var ACanClose: Boolean);
+procedure TQFMXFormService.DoCanClose(ASender: TObject; var ACanClose: Boolean);
 begin
   if Assigned(FOldCanClose) then
     FOldCanClose(ASender, ACanClose);
@@ -446,15 +453,9 @@ begin
     FEvents.CanClose(Self, ACanClose);
 end;
 
-procedure TQVCLFormService.DockTo(AHandle: THandle; Align: TFormAlign);
-begin
-  FormAlign := Align;
-  DockTo(AHandle, Rect(0, 0, 0, 0));
-end;
-
-procedure TQVCLFormService.DockTo(AHandle: THandle; const ARect: TRect);
+procedure TQFMXFormService.DockTo(AHandle: THandle; const ARect: TRect);
 var
-  AParent: TWinControl;
+  AForm: TCommonCustomForm;
 
   function RegisterFreeNotify: Boolean;
   var
@@ -491,82 +492,60 @@ var
   end;
 
   function IsSharePackage: Boolean;
-  type
-    TWinControlMethod = procedure of object;
-  var
-    ACtrlMethod, AFormMethod: TWinControlMethod;
   begin
-    ACtrlMethod := AParent.UpdateControlState;
-    AFormMethod := FForm.UpdateControlState;
     // 如果控件和窗体位于同一个模块中，不需要额外处理，直接Dock就行
-    Result := Assigned(AParent) and
-      (FindHInstance(TMethod(ACtrlMethod).Code)
-      = FindHInstance(TMethod(AFormMethod).Code));
+    Result := Assigned(AForm) and
+      (FindHInstance(Pointer(GetWindowLong(AHandle, GWL_WNDPROC)))
+      = FindHInstance(Pointer(GetWindowLong(FormToHwnd(FForm), GWL_WNDPROC))));
   end;
-  function IsEmptyRect(const R: TRect): Boolean;
+  procedure WinDock;
   begin
-    Result := (R.Right <= R.Left) or (R.Bottom <= R.Top);
-  end;
-
-begin
-  if FormNeeded then
-  begin
-    AParent := FindControl(AHandle);
-    if IsSharePackage then
+    AForm := FindWindow(AHandle);
+    if FormNeeded then
     begin
-      if RegisterFreeNotify then
+      if IsSharePackage then
       begin
-        if IsEmptyRect(ARect) then
-          FForm.Dock(AParent, FForm.BoundsRect)
-        else
-          FForm.Dock(AParent, ARect);
-        FForm.Visible := True;
-        FDockParent := AHandle;
-        AdjustAlign;
-      end;
-    end
-    else // 窗体和宿主的类型信息不在同一个模块内
-    begin
-      if RegisterFreeNotify then
-      begin
-        FForm.ParentWindow := AHandle;
-        FForm.BorderStyle := bsNone;
-        if FormAlign in [faCustom, faDefault, faNone] then
+        if RegisterFreeNotify then
         begin
-          if IsEmptyRect(ARect) then
-            FForm.Dock(AParent, FForm.BoundsRect)
-          else
-            FForm.SetBounds(ARect.Left, ARect.Top, ARect.Right - ARect.Left,
-              ARect.Bottom - ARect.Top);
+          FDockParent := AHandle;
+          FForm.Parent := AForm;
+          FForm.SetBounds(ARect.Left, ARect.Top, ARect.Width, ARect.Height);
+          FForm.Visible := True;
         end;
-        FForm.Visible := True;
-        FDockParent := AHandle;
-        AdjustAlign;
+      end
+      else
+      begin
+        if RegisterFreeNotify then
+        begin
+          FForm.BorderStyle := TFmxFormBorderStyle.None;
+          FForm.Visible := True;
+          FDockParent := AHandle;
+          windows.SetParent(FormToHwnd(FForm), AHandle);
+          AdjustAlign;
+        end;
       end;
     end;
   end;
+
+begin
+  WinDock;
 end;
 
-procedure TQVCLFormService.DoClose(ASender: TObject; var Action: TCloseAction);
-var
-  AHandle: HWND;
+procedure TQFMXFormService.DockTo(AHandle: THandle; Align: TFormAlign);
 begin
-  FClosing := True;
-  if FForm.HandleAllocated then
-    AHandle := FForm.Handle
-  else
-    AHandle := 0;
+  FormAlign := Align;
+  DockTo(AHandle, Rect(0, 0, 0, 0));
+end;
+
+procedure TQFMXFormService.DoClose(ASender: TObject; var Action: TCloseAction);
+begin
   if Assigned(FOldOnClose) then
     FOldOnClose(ASender, Action);
   if Assigned(FEvents.OnClose) then
     FEvents.OnClose(Self, Action);
-  // 检查窗体如果需要释放，则不要去管它
-  if (AHandle <> 0) and (GetProp(AHandle, SFormNeedFree) = 1) then
-    Action := caFree;
-  FClosing := False;
 end;
 
-procedure TQVCLFormService.DoDeactivate(ASender: TObject);
+procedure TQFMXFormService.DoDeactivate(ASender: TObject);
 begin
   if Assigned(FOldOnDeactivate) then
     FOldOnDeactivate(ASender);
@@ -574,42 +553,40 @@ begin
     FEvents.OnDeactivate(Self);
 end;
 
-procedure TQVCLFormService.DoDockParentFree(AData: Pointer);
+procedure TQFMXFormService.DoDockParentFree(AData: Pointer);
 begin
-  // Dock的父控件要被释放，要将WindowProc指回去，以避免
   if Assigned(FForm) then
     Undock;
 end;
 
-procedure TQVCLFormService.DoDockParentSizeChanged(AData: Pointer);
+procedure TQFMXFormService.DoDockParentSizeChanged(AData: Pointer);
 begin
-  AdjustAlign;
+  ParentResized;
 end;
 
-procedure TQVCLFormService.DoFormFree(AData: Pointer);
+procedure TQFMXFormService.DoFormFree(AData: Pointer);
 begin
   if Assigned(FForm) then
   begin
     Undock;
-    UnlinkFormEvents;
+    UnhookEvents;
     FForm := nil;
   end;
 end;
 
-procedure TQVCLFormService.DoFree(ASender: TObject);
+procedure TQFMXFormService.DoFree(ASender: TObject);
 var
   AFreeNotify: TQFormNotifyEvent;
 begin
   if Assigned(FOldOnFree) then
     FOldOnFree(ASender);
   AFreeNotify := FEvents.OnFree;
-  UnlinkFormEvents;
   FForm := nil;
   if Assigned(AFreeNotify) then
     AFreeNotify(Self);
 end;
 
-procedure TQVCLFormService.DoHide(ASender: TObject);
+procedure TQFMXFormService.DoHide(ASender: TObject);
 begin
   if Assigned(FOldOnHide) then
     FOldOnHide(ASender);
@@ -617,7 +594,7 @@ begin
     FEvents.OnHide(Self);
 end;
 
-procedure TQVCLFormService.DoResize(ASender: TObject);
+procedure TQFMXFormService.DoResize(ASender: TObject);
 begin
   if Assigned(FOldOnResize) then
     FOldOnResize(ASender);
@@ -625,7 +602,7 @@ begin
     FEvents.OnResize(Self);
 end;
 
-procedure TQVCLFormService.DoShow(ASender: TObject);
+procedure TQFMXFormService.DoShow(ASender: TObject);
 begin
   if Assigned(FOldOnShow) then
     FOldOnShow(ASender);
@@ -633,7 +610,7 @@ begin
     FEvents.OnShow(Self);
 end;
 
-function TQVCLFormService.FormNeeded: Boolean;
+function TQFMXFormService.FormNeeded: Boolean;
 begin
   if not Assigned(FForm) then
   begin
@@ -643,49 +620,26 @@ begin
   Result := Assigned(FForm);
 end;
 
-procedure TQVCLFormService.GetBounds(var R: TRect);
+procedure TQFMXFormService.GetBounds(var R: TRect);
 begin
   if Assigned(FForm) then
-    R := FForm.BoundsRect
+    R := Rect(FForm.Left, FForm.Top, FForm.Left + FForm.Width,
+      FForm.Top + FForm.Height)
   else
     FillChar(R, SizeOf(TRect), 0);
 end;
 
-function TQVCLFormService.GetDockParent: THandle;
+function TQFMXFormService.GetDockParent: THandle;
 begin
   Result := FDockParent;
 end;
 
-function TQVCLFormService.GetFormAlign: TFormAlign;
+function TQFMXFormService.GetFormAlign: TFormAlign;
 begin
-  if FFormAlign = faDefault then
-  begin
-    if FormNeeded then
-    begin
-      case FForm.Align of
-        alNone:
-          FFormAlign := faNone;
-        alTop:
-          FFormAlign := faTop;
-        alBottom:
-          FFormAlign := faBottom;
-        alLeft:
-          FFormAlign := faLeft;
-        alRight:
-          FFormAlign := faRight;
-        alClient:
-          FFormAlign := faContent;
-        alCustom:
-          FFormAlign := faCustom;
-      end
-    end
-    else
-      FFormAlign := faDefault;
-  end;
   Result := FFormAlign;
 end;
 
-function TQVCLFormService.GetHeight: Integer;
+function TQFMXFormService.GetHeight: Integer;
 begin
   if FormNeeded then
     Result := FForm.Height
@@ -693,18 +647,16 @@ begin
     Result := 0;
 end;
 
-function TQVCLFormService.GetInstance: IQService;
+function TQFMXFormService.GetInstance: IQService;
 begin
   if Assigned(FFormClass) then
   begin
     if FIsMultiInstance then
-    begin
-      Result := TQVCLFormService.Create(Name, FFormClass.Create(nil), Self);
-    end
+      Result := TQFMXFormService.Create(Name, FFormClass.Create(nil), Self)
     else
     begin
       if not Assigned(FForm) then
-        Form := FFormClass.Create(nil);
+        FForm := FFormClass.Create(nil);
       Result := Self;
     end;
   end
@@ -712,7 +664,7 @@ begin
     Result := Self;
 end;
 
-function TQVCLFormService.GetModalResult: TModalResult;
+function TQFMXFormService.GetModalResult: TModalResult;
 begin
   if Assigned(FForm) then
     Result := FForm.ModalResult
@@ -720,37 +672,37 @@ begin
     Result := mrNone;
 end;
 
-function TQVCLFormService.GetOriginBottom: Integer;
+function TQFMXFormService.GetOriginBottom: Integer;
 begin
   Result := FFormOrigin.Bottom;
 end;
 
-function TQVCLFormService.GetOriginHeight: Integer;
+function TQFMXFormService.GetOriginHeight: Integer;
 begin
   Result := FFormOrigin.Bottom - FFormOrigin.Top;
 end;
 
-function TQVCLFormService.GetOriginLeft: Integer;
+function TQFMXFormService.GetOriginLeft: Integer;
 begin
   Result := FFormOrigin.Left;
 end;
 
-function TQVCLFormService.GetOriginRight: Integer;
+function TQFMXFormService.GetOriginRight: Integer;
 begin
   Result := FFormOrigin.Right;
 end;
 
-function TQVCLFormService.GetOriginTop: Integer;
+function TQFMXFormService.GetOriginTop: Integer;
 begin
   Result := FFormOrigin.Top;
 end;
 
-function TQVCLFormService.GetOriginWidth: Integer;
+function TQFMXFormService.GetOriginWidth: Integer;
 begin
   Result := FFormOrigin.Right - FFormOrigin.Left;
 end;
 
-function TQVCLFormService.GetWidth: Integer;
+function TQFMXFormService.GetWidth: Integer;
 begin
   if FormNeeded then
     Result := FForm.Width
@@ -758,22 +710,22 @@ begin
     Result := 0;
 end;
 
-procedure TQVCLFormService.HookEvents(const AEvents: TQFormEvents);
+procedure TQFMXFormService.HookEvents(const AEvents: TQFormEvents);
 begin
   FEvents := AEvents;
 end;
 
-function TQVCLFormService.IsMultiInstance: Boolean;
+function TQFMXFormService.IsMultiInstance: Boolean;
 begin
   Result := Assigned(FFormClass) and FIsMultiInstance;
 end;
 
-procedure TQVCLFormService.ParentResized;
+procedure TQFMXFormService.ParentResized;
 begin
   AdjustAlign;
 end;
 
-function TQVCLFormService.QueryInterface(const IID: TGuid; out Obj): HRESULT;
+function TQFMXFormService.QueryInterface(const IID: TGuid; out Obj): HRESULT;
 begin
   Result := inherited QueryInterface(IID, Obj);
   if Result = E_NOINTERFACE then
@@ -786,7 +738,7 @@ begin
   end;
 end;
 
-procedure TQVCLFormService.SendInput(var AInput: TQInputEvent);
+procedure TQFMXFormService.SendInput(var AInput: TQInputEvent);
   procedure InputKey(var AItem: TInput; AKey: Word; AIsDown: Boolean);
   const
     MAPVK_VK_TO_VSC = 0;
@@ -942,49 +894,30 @@ begin
   end;
 end;
 
-procedure TQVCLFormService.SendToBack;
+procedure TQFMXFormService.SendToBack;
 begin
-  if FormNeeded then
+  if Assigned(FForm) then
     FForm.SendToBack;
 end;
 
-procedure TQVCLFormService.SetBounds(L, T, W, H: Integer);
+procedure TQFMXFormService.SetBounds(L, T, W, H: Integer);
 begin
-  if FormNeeded then
+  if Assigned(FForm) then
     FForm.SetBounds(L, T, W, H);
 end;
 
-procedure TQVCLFormService.SetForm(const Value: TForm);
-  procedure BindService;
-  var
-    AHolder: TQFormServiceHolder;
-    I: Integer;
-  begin
-    for I := 0 to Form.ComponentCount - 1 do
-    begin
-      if Form.Components[I] is TQFormServiceHolder then
-      begin
-        (Form.Components[I] as TQFormServiceHolder).FFormService := Self;
-        Exit;
-      end;
-    end;
-    AHolder := TQFormServiceHolder.Create(Form);
-    AHolder.FFormService := Self;
-  end;
-
+procedure TQFMXFormService.SetForm(const Value: TCommonCustomForm);
 begin
   if FForm <> Value then
   begin
     if Assigned(FForm) then
-    begin
-      UnlinkFormEvents;
-      LocalFreeNotifyService.Unregister(DoFormFree);
-    end;
+      UnhookEvents;
     FForm := Value;
     if Assigned(FForm) then
     begin
-      FFormOrigin := FForm.BoundsRect;
-      LocalFreeNotifyService.RegisterFreeNotify(FForm.Handle, DoFormFree, nil);
+      FFormOrigin := FForm.GetBounds;
+      LocalFreeNotifyService.RegisterFreeNotify(FormToHwnd(FForm),
+        DoFormFree, nil);
       FOldCanClose := FForm.OnCloseQuery;
       FOldOnClose := FForm.OnClose;
       FOldOnFree := FForm.OnDestroy;
@@ -1001,51 +934,44 @@ begin
       FForm.OnResize := DoResize;
       FForm.OnShow := DoShow;
       FForm.OnHide := DoHide;
-      BindService;
     end;
   end;
 end;
 
-procedure TQVCLFormService.SetFormAlign(const AValue: TFormAlign);
+procedure TQFMXFormService.SetFormAlign(const AValue: TFormAlign);
 begin
   if FFormAlign <> AValue then
   begin
     FFormAlign := AValue;
-    if Assigned(FForm) and (AValue <> faDefault) then
-    begin
-      FForm.Align := alNone;
-      AdjustAlign;
-    end;
+    AdjustAlign;
   end;
 end;
 
-procedure TQVCLFormService.SetHeight(const AValue: Integer);
+procedure TQFMXFormService.SetHeight(const AValue: Integer);
 begin
   if FormNeeded then
     FForm.Height := AValue;
 end;
 
-procedure TQVCLFormService.SetModalResult(const AValue: TModalResult);
+procedure TQFMXFormService.SetModalResult(const AValue: TModalResult);
 begin
   if FormNeeded then
     FForm.ModalResult := AValue;
 end;
 
-procedure TQVCLFormService.SetWidth(const AValue: Integer);
+procedure TQFMXFormService.SetWidth(const AValue: Integer);
 begin
   if FormNeeded then
     FForm.Width := AValue;
 end;
 
-procedure TQVCLFormService.Show;
+procedure TQFMXFormService.Show;
 begin
   if FormNeeded then
-  begin
     FForm.Show;
-  end;
 end;
 
-procedure TQVCLFormService.ShowModal(AOnModalResult: TQFormModalResultHandler;
+procedure TQFMXFormService.ShowModal(AOnModalResult: TQFormModalResultHandler;
   ATag: IQParams);
 begin
   if FormNeeded then
@@ -1058,28 +984,26 @@ begin
     AOnModalResult(Self, ATag);
 end;
 
-procedure TQVCLFormService.Undock;
+procedure TQFMXFormService.Undock;
 begin
-  if Assigned(FForm) then
-  begin
-    if FForm.FormStyle <> fsMDIChild then
-      FForm.Hide;
-    FForm.ParentWindow := 0;
-    FForm.HostDockSite := nil;
-    if Assigned(FFreeService) then
-    begin
-      FFreeService.Unregister(DoDockParentFree);
-      FFreeService.Unregister(DoDockParentSizeChanged);
-    end;
-  end;
+  FForm.Parent := nil;
+  windows.SetParent(FormToHwnd(FForm), 0);
+  FDockParent := 0;
 end;
 
-procedure TQVCLFormService.UnhookEvents;
+procedure TQFMXFormService.UnhookEvents;
 begin
-  FillChar(FEvents, SizeOf(FEvents), 0);
+  FEvents.CanClose := nil;
+  FEvents.OnClose := nil;
+  FEvents.OnFree := nil;
+  FEvents.OnActivate := nil;
+  FEvents.OnDeactivate := nil;
+  FEvents.OnResize := nil;
+  FEvents.OnShow := nil;
+  FEvents.OnHide := nil;
 end;
 
-procedure TQVCLFormService.UnlinkFormEvents;
+procedure TQFMXFormService.UnlinkFormEvents;
 begin
   if Assigned(FForm) then
   begin
@@ -1091,7 +1015,7 @@ begin
     FForm.OnResize := FOldOnResize;
     FForm.OnShow := FOldOnShow;
     FForm.OnHide := FOldOnHide;
-    FillChar(FEvents, SizeOf(TQFormEvents), 0);
+    UnhookEvents;
   end;
 end;
 
@@ -1112,7 +1036,7 @@ end;
 
 destructor TQFormNotifyService.Destroy;
 begin
-  FreeAndNilObject(FNotifier);
+  FreeAndNil(FNotifier);
   inherited;
 end;
 
@@ -1120,19 +1044,11 @@ function TQFormNotifyService.InSameInstance(AHandle: THandle): Boolean;
 type
   TComponentMethod = procedure of object;
 var
-  ACtrlMethod, ASelfMethod: TComponentMethod;
-  ACtrl: TWinControl;
+  AMethod: TComponentMethod;
 begin
-  ACtrl := FindControl(AHandle);
-  if Assigned(ACtrl) then
-  begin
-    ACtrlMethod := ACtrl.HandleNeeded;
-    ASelfMethod := FNotifier.NoOp;
-    Result := FindHInstance(TMethod(ACtrlMethod).Code)
-      = FindHInstance(TMethod(ASelfMethod).Code);
-  end
-  else
-    Result := False;
+  AMethod := FNotifier.NoOp;
+  Result := GetClassLong(AHandle, GCL_HMODULE)
+    = FindHInstance(TMethod(AMethod).Code);
 end;
 
 procedure TQFormNotifyService.ParentSizeChanged(AParent: THandle);
@@ -1157,62 +1073,9 @@ begin
   FNotifier.Unregister(AOnFree);
 end;
 
-{ TQVCLTestService }
-
-constructor TQVCLTestService.Create;
-begin
-  inherited Create(NewId, LocalVCLCtrlTestServiceName);
-  IsVCLControlHook := IsVCLControl;
-end;
-
-destructor TQVCLTestService.Destroy;
-begin
-  IsVCLControlHook := nil;
-  inherited;
-end;
-
-function TQVCLTestService.HasControl(AHandle: HWND): Boolean;
-begin
-  Result := FindControl(AHandle) <> nil;
-end;
-
-function TQVCLTestService.IsVCLControl(AHandle: HWND): Boolean;
-var
-  ATestService: IQVCLTestService;
-  I: Integer;
-  procedure DebugWindow(AWnd: HWND);
-  var
-    AName, AText: array [0 .. 255] of Char;
-  begin
-    GetClassName(AWnd, @AName, 256);
-    GetWindowText(AWnd, @AText, 256);
-    OutputDebugString(PChar('ClassName：' + PChar(@AName) + ',Text=' +
-      PChar(@AText)));
-  end;
-
-begin
-  // DebugWindow(AHandle);
-  Result := False;
-  if not Assigned(VCLCtrlTestServices) then
-    VCLCtrlTestServices := PluginsManager.ByPath(PQCharW(VCLControlTestRoot))
-      as IQServices;
-  if Assigned(VCLCtrlTestServices) then
-  begin
-    for I := 0 to VCLCtrlTestServices.Count - 1 do
-    begin
-      if Supports(VCLCtrlTestServices[I], IQVCLTestService, ATestService) then
-      begin
-        Result := ATestService.HasControl(AHandle);
-        if Result then
-          Break;
-      end;
-    end;
-  end;
-end;
-
 { TQFormNotifier }
 
-procedure TQFormNotifier.AddHook(ACtrl: TWinControl);
+procedure TQFormNotifier.AddHook(ACtrl: TCommonCustomForm);
 var
   I: Integer;
   AHook: TQControlHook;
@@ -1261,6 +1124,7 @@ procedure TQFormNotifier.Clear;
 var
   I: Integer;
   AItem: PQFormNotify;
+  ANotify: PQFormNotifyItem;
 begin
   for I := 0 to FNotifications.Count - 1 do
   begin
@@ -1285,10 +1149,8 @@ end;
 destructor TQFormNotifier.Destroy;
 begin
   Clear;
-  while FControlHooks.Count > 0 do
-    RemoveHook(TQControlHook(FControlHooks[0]).FControl);
-  FreeAndNilObject(FControlHooks);
-  FreeAndNilObject(FNotifications);
+  FreeAndNil(FControlHooks);
+  FreeAndNil(FNotifications);
   inherited;
 end;
 
@@ -1308,11 +1170,6 @@ begin
   end;
 end;
 
-procedure TQFormNotifier.DoParentFormFree(AData: Pointer);
-begin
-  RemoveHook(AData);
-end;
-
 procedure TQFormNotifier.FreeNotify(AItem: PQFormNotify);
   procedure FreeLinks(var ALink: TQFormNotifyLink);
   var
@@ -1330,11 +1187,7 @@ procedure TQFormNotifier.FreeNotify(AItem: PQFormNotify);
 
 begin
   if Assigned(AItem.FSizeNotifies.First) then
-  begin
     RemoveHook(AItem.Control);
-    if not(AItem.Control is TForm) then
-      RemoveHook(GetParentForm(AItem.Control, False));
-  end;
   FreeLinks(AItem.FSizeNotifies);
   FreeLinks(AItem.FFreeNotifies);
   Dispose(AItem);
@@ -1357,10 +1210,9 @@ begin
   end;
 end;
 
-function TQFormNotifier.NewItem(ACtrl: TWinControl): PQFormNotify;
+function TQFormNotifier.NewItem(ACtrl: TCommonCustomForm): PQFormNotify;
 begin
   New(Result);
-  Result.CtrlHandle := ACtrl.Handle;
   Result.Control := ACtrl;
   Result.FSizeNotifies.First := nil;
   Result.FSizeNotifies.Last := nil;
@@ -1372,7 +1224,7 @@ end;
 
 procedure TQFormNotifier.NoOp;
 begin
-  // No op needed
+
 end;
 
 procedure TQFormNotifier.Notification(AComponent: TComponent;
@@ -1407,7 +1259,7 @@ begin
   for I := 0 to FNotifications.Count - 1 do
   begin
     AItem := FNotifications[I];
-    if AItem.CtrlHandle = AParent then
+    if IntPtr(AItem.Control) = AParent then
       DoNotifies(AItem.FSizeNotifies);
   end;
 end;
@@ -1417,14 +1269,14 @@ procedure TQFormNotifier.RegisterFreeNotification(AHandle: THandle;
 var
   AItem: PQFormNotify;
   I: Integer;
-  ACtrl: TWinControl;
+  AForm: TCommonCustomForm;
 begin
-  ACtrl := FindControl(AHandle);
-  if Assigned(ACtrl) then
+  AForm := FindWindow(AHandle);
+  if Assigned(AForm) then
   begin
-    I := IndexOf(ACtrl);
+    I := IndexOf(AForm);
     if I = -1 then
-      AItem := NewItem(ACtrl)
+      AItem := NewItem(AForm)
     else
       AItem := FNotifications[I];
     AddNotifyProc(AItem.FFreeNotifies, AOnFree, AData);
@@ -1436,27 +1288,23 @@ procedure TQFormNotifier.RegisterSizeNotification(AHandle: THandle;
 var
   AItem: PQFormNotify;
   I: Integer;
-  ACtrl: TWinControl;
+  AForm: TCommonCustomForm;
 begin
-  ACtrl := FindControl(AHandle);
-  if Assigned(ACtrl) then
+  AForm := FindWindow(AHandle);
+  if Assigned(AForm) then
   begin
-    I := IndexOf(ACtrl);
+    I := IndexOf(AForm);
     if I = -1 then
-      AItem := NewItem(ACtrl)
+      AItem := NewItem(AForm)
     else
       AItem := FNotifications[I];
     if not Assigned(AItem.FSizeNotifies.First) then
-    begin
-      AddHook(ACtrl);
-      if not(ACtrl is TForm) then
-        AddHook(GetParentForm(ACtrl, False));
-    end;
+      AddHook(AForm);
     AddNotifyProc(AItem.FSizeNotifies, AOnSizeChanged, AData);
   end;
 end;
 
-procedure TQFormNotifier.RemoveHook(ACtrl: TWinControl);
+procedure TQFormNotifier.RemoveHook(ACtrl: TCommonCustomForm);
 var
   I: Integer;
   AHook: TQControlHook;
@@ -1469,7 +1317,7 @@ begin
       Dec(AHook.FRefCount);
       if AHook.FRefCount = 0 then
       begin
-        FreeAndNilObject(AHook);
+        FreeAndNil(AHook);
         FControlHooks.Delete(I);
       end;
       Exit;
@@ -1512,18 +1360,16 @@ procedure TQFormNotifier.Unregister(AProc: TQFormNotifyProc);
 var
   I: Integer;
   AItem: PQFormNotify;
+  AFound: Boolean;
 begin
+  AFound := False;
   for I := 0 to FNotifications.Count - 1 do
   begin
     AItem := FNotifications[I];
     if RemoveNotifyProc(AItem.FSizeNotifies, AProc) then
     begin
       if not Assigned(AItem.FSizeNotifies.First) then
-      begin
         RemoveHook(AItem.Control);
-        if not(AItem.Control is TForm) then
-          RemoveHook(GetParentForm(AItem.Control, False));
-      end;
     end;
     RemoveNotifyProc(AItem.FFreeNotifies, AProc);
     if not(Assigned(AItem.FSizeNotifies.First) or
@@ -1538,156 +1384,24 @@ end;
 
 { TQControlHook }
 
-constructor TQControlHook.Create(ACtrl: TWinControl);
+constructor TQControlHook.Create(ACtrl: TCommonCustomForm);
 begin
   inherited Create;
   FControl := ACtrl;
-  FLastWndProc := ACtrl.WindowProc;
-  if ACtrl is TForm then
-    ACtrl.WindowProc := HackedFormProc
-  else
-    ACtrl.WindowProc := HackedControlProc;
+  FLastResize := ACtrl.OnResize;
+  ACtrl.OnResize := DoResize;
 end;
 
 destructor TQControlHook.Destroy;
 begin
-  FControl.WindowProc := FLastWndProc;
+  FControl.OnResize := FLastResize;
   inherited;
 end;
 
-procedure TQControlHook.HackedControlProc(var AMsg: TMessage);
-var
-  AWMPosChanged: TWMWindowPosChanged absolute AMsg;
+procedure TQControlHook.DoResize(ASender: TObject);
 begin
-  FLastWndProc(AMsg);
-  if AMsg.Msg = WM_WINDOWPOSCHANGED then
-  begin
-    if (AWMPosChanged.WindowPos.flags and SWP_NOSIZE) = 0 then
-    begin
-      if Assigned(LocalFreeNotifyService) then
-        LocalFreeNotifyService.ParentSizeChanged(FControl.Handle);
-    end;
-  end;
-end;
-
-function DoSetChildWindowFocus(AWnd: HWND; AParam: LParam): Boolean; stdcall;
-begin
-  if (not PBoolean(AParam)^) and IsWindowVisible(AWnd) and IsWindowEnabled(AWnd)
-  then
-  begin
-    SetFocus(AWnd);
-    Result := False;
-    PBoolean(AParam)^ := True;
-  end
-  else
-    Result := True;
-end;
-
-procedure TQControlHook.HackedFormProc(var AMsg: TMessage);
-  procedure SelectFirstChild(AHandle: HWND);
-  var
-    AIsSet: Boolean;
-  begin
-    AIsSet := False;
-    EnumChildWindows(AHandle, @DoSetChildWindowFocus, LParam(@AIsSet));
-  end;
-  procedure HackedTab;
-  var
-    AWMDialogKey: TCMDialogKey absolute AMsg;
-    AList: TList;
-    I, StartIndex: Integer;
-    CurControl: TWinControl;
-    AForm: TForm;
-    GoForward: Boolean;
-  begin
-    if GetKeyState(VK_MENU) >= 0 then
-    begin
-      if AWMDialogKey.CharCode = VK_TAB then
-      begin
-        if GetKeyState(VK_CONTROL) >= 0 then
-        begin
-          AForm := (FControl as TForm);
-          CurControl := AForm.ActiveControl;
-          GoForward := GetKeyState(VK_SHIFT) >= 0;
-          AList := TList.Create;
-          try
-            AForm.GetTabOrderList(AList);
-            if AList.Count > 0 then
-            begin
-              StartIndex := AList.IndexOf(CurControl);
-              if StartIndex = -1 then
-              begin
-                if GoForward then
-                  StartIndex := AList.Count - 1
-                else
-                  StartIndex := 0;
-              end;
-              I := StartIndex;
-              repeat
-                if GoForward then
-                begin
-                  Inc(I);
-                  if I = AList.Count then
-                    I := 0;
-                end
-                else
-                begin
-                  if I = 0 then
-                    I := AList.Count;
-                  Dec(I);
-                end;
-                CurControl := TWinControl(AList[I]);
-                if CurControl.CanFocus and CurControl.TabStop and
-                  (CurControl.Parent = AForm) then
-                begin
-                  if CurControl is TPageControl then
-                  // 如果是PageControl，则尝试定位到当前页的第一个子窗体，暂时非完美实现
-                  begin
-                    if Assigned(TPageControl(CurControl).ActivePage) then
-                    begin
-                      SelectFirstChild(TPageControl(CurControl)
-                        .ActivePage.Handle);
-                      Break;
-                    end;
-                  end
-                  else
-                    CurControl.SetFocus;
-                  Break;
-                end;
-              until (I = StartIndex);
-            end;
-            AMsg.Result := 1;
-            Exit;
-          finally
-            FreeAndNilObject(AList);
-          end;
-        end;
-      end;
-    end;
-    FLastWndProc(AMsg);
-  end;
-
-begin
-  if AMsg.Msg = CM_DIALOGKEY then
-    HackedTab
-  else
-    FLastWndProc(AMsg);
-end;
-
-function FindFormService(AForm: TForm): IQFormService;
-var
-  AHolder: TQFormServiceHolder;
-  I: Integer;
-begin
-  Result := nil;
-  for I := 0 to AForm.ComponentCount - 1 do
-  begin
-    if AForm.Components[I] is TQFormServiceHolder then
-    begin
-      Result := (AForm.Components[I] as TQFormServiceHolder).FFormService;
-      Exit;
-    end;
-  end;
+  if Assigned(LocalFreeNotifyService) then
+    LocalFreeNotifyService.ParentSizeChanged(IntPtr(FControl));
 end;
 
 initialization
@@ -1696,17 +1410,10 @@ LocalFreeNotifyService := TQFormNotifyService.Create;
 LocalFreeNotifyServiceName := (LocalFreeNotifyService as IQService).Name;
 RegisterServices(PQCharW(FreeNotificationRoot),
   [LocalFreeNotifyService as IQService]);
-LocalVCLCtrlTestService := TQVCLTestService.Create;
-RegisterServices(PQCharW(VCLControlTestRoot),
-  [LocalVCLCtrlTestService as IQService]);
-VCLCtrlTestServices := nil;
 
 finalization
 
-VCLCtrlTestServices := nil;
-LocalVCLCtrlTestService := nil;
 UnregisterServices(PQCharW(FreeNotificationRoot), [LocalFreeNotifyServiceName]);
-UnregisterServices(PQCharW(VCLControlTestRoot), ['IsVCLControl']);
 LocalFreeNotifyService.Clear;
 LocalFreeNotifyService := nil;
 

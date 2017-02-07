@@ -9,7 +9,7 @@ interface
 { .$DEFINE DEBUGOUT }
 {$ENDIF}
 // 在线程数太多时TQSimpleLock的自旋带来过多的开销，反而不如临界，所以暂时放弃使用
-// Known bugs:In Shared DLL,QWorker is not work fine
+
 { .$DEFINE QWORKER_SIMPLE_LOCK }
 {
   本源码来自QDAC项目，版权归swish(QQ:109867294)所有。
@@ -30,8 +30,12 @@ interface
   账号：4367 4209 4324 0179 731
   开户行：建设银行长春团风储蓄所
 }
-
+{$REGION '修订日志'}
 { 修订日志
+  2017.1.10
+  ==========
+  * 修订了延迟重复作业无法通过作业中设置 AJob.IsTerminated 停止的问题（九木报告）
+
   2016.11.15
   ==========
   * 修正了ClearSingleJob/ClearSingleJobs 清理重复作业时没有正确标记作业状态的问题(乱世虾仁报告)
@@ -419,6 +423,8 @@ interface
   上层应用能够做必要的标记，默认值为空
   * 作业投寄时加入了附加的参数，决定如何释放附加的数据对象
 }
+{$ENDREGION}
+
 uses
   classes, types, sysutils, SyncObjs, Variants, dateutils
 {$IFDEF UNICODE}, Generics.Collections{$ENDIF}{$IF RTLVersion>=21},
@@ -2835,18 +2841,20 @@ var
             FItems.Delete(ANode);
         end
         else
-          ATemp.AfterRun(AUsedTime);
-        if ATemp.IsDelayRepeat then
         begin
-          if APrior <> nil then
-            APrior.Next := ATemp.Next
-          else
-            ANode.Data := ATemp.Next;
-          if ANode.Data = nil then
-            FItems.Delete(ANode);
-          ATemp.Next := nil;
-          InternalPush(ATemp);
-          AWorkerLookupNeeded := True;
+          ATemp.AfterRun(AUsedTime);
+          if ATemp.IsDelayRepeat then
+          begin
+            if APrior <> nil then
+              APrior.Next := ATemp.Next
+            else
+              ANode.Data := ATemp.Next;
+            if ANode.Data = nil then
+              FItems.Delete(ANode);
+            ATemp.Next := nil;
+            InternalPush(ATemp);
+            AWorkerLookupNeeded := True;
+          end;
         end;
         Result := True;
         Break;

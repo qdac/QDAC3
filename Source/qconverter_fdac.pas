@@ -933,6 +933,7 @@ begin
       LoadRow('Current', 1);
       LoadRow('Proposed', 2);
       Result := True;
+      //不支持进度显示
     finally
       FHelper.ObjectEndRead; // Row
     end;

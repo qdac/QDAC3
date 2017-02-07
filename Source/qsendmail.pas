@@ -147,10 +147,10 @@ begin
     begin
       with AData.Attachements.Items[I]^ do
       begin
-        if Assigned(ContentStream) then
+        if Length(ContentFile) > 0 then
+          ABuilder.Attachments.Add(ContentFile, ContentId)
+        else if Assigned(ContentStream)  then
           ABuilder.Attachments.Add(ContentStream, ContentType, ContentId)
-        else if Length(ContentFile) > 0 then
-          ABuilder.Attachments.Add(ContentFile, ContentId);
       end;
     end;
     ABuilder.FillMessage(AMsg);

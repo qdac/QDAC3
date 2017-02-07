@@ -180,7 +180,7 @@ begin
             ADef.DBType := SQL_SINGLE
           else if S = 'r8' then
             ADef.DBType := SQL_FLOAT
-          else if (S = 'numeric') or (S='number') then
+          else if (S = 'numeric') or (S = 'number') then
           begin
             if ANode.Attrs.ValueByName('rs:dbtype') = 'currency' then
             begin
@@ -308,6 +308,7 @@ begin
       ARow := ARow.Parent.ItemByPath('rs:original\z:row');
       LoadOldValues;
     end;
+    DoProgress(csLoadData, FRowIndex, FDataRoot.Count);
   end
   else
     Result := False;

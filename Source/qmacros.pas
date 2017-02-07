@@ -34,6 +34,10 @@ interface
 }
 
 { 修订日志
+  2017.2.3
+  ==========
+  * 修正了使用匿名函数做为宏值函数时，存在内存泄露的问题
+
   2016.3.23
   ==========
   * 修正了以无效字符结束时，如果宏位于字符串结尾时出错的问题(黑暗杀手报告）
@@ -433,6 +437,15 @@ type
     IsMacro: Boolean;
   end;
 
+procedure FreeMacroValue(AValue: PQMacroValue); // inline;
+begin
+{$IFDEF UNICODE}
+  if TMethod(AValue.OnFetchValue).Data = Pointer(-1) then
+    PQMacroValueFetchEventA(@TMethod(AValue.OnFetchValue).Code)^:=nil;
+{$ENDIF}
+  Dispose(AValue);
+end;
+
 function EventEqual(AHandler1, AHandler2: TMethod): Boolean;
 begin
   Result := (AHandler1.Code = AHandler2.Code) and
@@ -532,9 +545,9 @@ begin
       end
   else
     begin
-      Result:='\';
-//      Result := p^;
-//      Inc(p);
+      Result := '\';
+      // Result := p^;
+      // Inc(p);
     end;
   end;
 end;
@@ -1434,12 +1447,15 @@ begin
       while (AMacro.Value <> nil) and (AMacro.Value.SavePoint > ASavePoint) do
       begin
         AValue := AMacro.Value.Prior;
-        Dispose(AMacro.Value);
+        FreeMacroValue(AMacro.Value);
         AMacro.FValue := AValue;
         Inc(APopCount);
       end;
       if AMacro.FValue = nil then // 全部出栈了
-        FMacroes.Delete(I)
+      begin
+        FreeObject(AMacro);
+        FMacroes.Delete(I);
+      end
       else
         Inc(I);
     end;
@@ -1671,11 +1687,7 @@ begin
   begin
     AValue := FValue;
     FValue := FValue.Prior;
-{$IFDEF UNICODE}
-    if TMethod(AValue.OnFetchValue).Data = Pointer(-1) then
-      TQMacroValueFetchEventA(TMethod(AValue.OnFetchValue).Code) := nil;
-{$ENDIF}
-    Dispose(AValue);
+    FreeMacroValue(AValue);
   end;
   inherited;
 end;

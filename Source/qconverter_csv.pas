@@ -35,7 +35,7 @@ type
     FTextPos: PWideChar;
     FOnEncodeValue: TQTextReformatEvent;
     FOnDecodeValue: TQTextReformatEvent;
-
+    FSaveToText: Boolean;
     procedure BeforeExport; override;
     procedure BeginExport(AIndex: Integer); override;
     procedure SaveFieldDefs(ADefs: TQFieldDefs); override;
@@ -52,6 +52,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    function SaveToText(ADataSet: TQDataSet): QStringW;
+    procedure LoadFromText(ADataSet: TQDataSet; const AText: QStringW);
   published
     property ExportEncoding: TTextEncoding read FExportEncoding
       write FExportEncoding; // 输出文件编码，默认UTF-8
@@ -105,6 +107,8 @@ var
   end;
 
 begin
+  if FSaveToText then
+    Exit;
   S := FText.Value;
   case ExportEncoding of
     teAnsi:
@@ -134,7 +138,8 @@ end;
 procedure TQTextConverter.BeforeImport;
 begin
   inherited;
-  FText.LoadFromStream(FStream);
+  if Assigned(FStream) then
+    FText.LoadFromStream(FStream);
   FTextPos := FText.Start;
 end;
 
@@ -240,6 +245,14 @@ begin
     FOnGetCustomFields(Self, AFieldDefs);
 end;
 
+procedure TQTextConverter.LoadFromText(ADataSet: TQDataSet;
+  const AText: QStringW);
+begin
+  FText.Reset;
+  FText.Cat(AText);
+  LoadFromStream(ADataSet, nil);
+end;
+
 function TQTextConverter.ReadRecord(ARec: TQRecord): Boolean;
 var
   ALine, AValue: QStringW;
@@ -275,6 +288,8 @@ begin
     until p^ = #0;
     if Assigned(FOnGetCustomValues) then
       FOnGetCustomValues(Self, ARec);
+    DoProgress(csLoadData, (IntPtr(FTextPos) - IntPtr(FText.Start)) shr 1,
+      (IntPtr(FText.Current) - IntPtr(FText.Start)) shr 1);
   end;
 end;
 
@@ -293,6 +308,17 @@ begin
         FText.Back(1);
       FText.Cat(SLineBreak);
     end;
+  end;
+end;
+
+function TQTextConverter.SaveToText(ADataSet: TQDataSet): String;
+begin
+  FSaveToText := True;
+  try
+    ADataSet.SaveToStream(nil, Self);
+    Result := FText.Value;
+  finally
+    FSaveToText := False;
   end;
 end;
 

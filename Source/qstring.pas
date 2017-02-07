@@ -2,6 +2,7 @@ unit qstring;
 {$I 'qdac.inc'}
 
 interface
+
 {$REGION 'History'}
 {
   本源码来自QDAC项目，版权归swish(QQ:109867294)所有。
@@ -24,6 +25,11 @@ interface
 }
 
 { 修订日志
+  2017.1.23
+  ==========
+  * 修正了 UrlEncode编码时没有对特殊转义字符计算空间的问题
+  + 增加 UrlDecode 函数来解析Url的各个组成部分
+
   2016.11.24
   ==========
   * 优化了函数 HTMLUnescape 的效率
@@ -237,6 +243,7 @@ interface
   * 修正了QuotedStr对于长度为0的字符串编码出错的问题
 }
 {$ENDREGION 'History'}
+
 uses classes, sysutils, types{$IF RTLVersion>=21},
   Rtti{$IFEND >=XE10}{$IFNDEF MSWINDOWS},
   syncobjs{$ENDIF}
@@ -1126,7 +1133,7 @@ function NaturalCompareW(s1, s2: PQCharW; AIgnoreCase: Boolean;
 // 十六进制相关函数
 function IsHexChar(c: QCharW): Boolean; inline;
 function IsOctChar(c: QCharW): Boolean; inline;
-function HexValue(c: QCharW): Integer;
+function HexValue(c: QCharW): Integer; inline;
 function HexChar(V: Byte): QCharW; inline;
 // 类型转换函数
 function TryStrToGuid(const S: QStringW; var AGuid: TGuid): Boolean;
@@ -1283,6 +1290,10 @@ function UrlEncode(const ABytes: TBytes; ASpacesAsPlus: Boolean)
   : QStringW; overload;
 function UrlEncode(const S: QStringW; ASpacesAsPlus: Boolean;
   AUtf8Encode: Boolean = True): QStringW; overload;
+function UrlDecode(const AUrl: QStringW;
+  var AScheme, AHost, ADocument: QStringW; var APort: Word; AParams: TStrings;
+  AUtf8Encode: Boolean = True): Boolean;
+
 function LeftStrCount(const S: QStringW; const sub: QStringW;
   AIgnoreCase: Boolean): Integer;
 function RightPosW(const S: QStringW; const sub: QStringW;
@@ -1432,6 +1443,7 @@ resourcestring
   STooSmallCapMoneyGroup = '给定的分组数 %d 小于实际需要的最小货币分组数 %d。';
   SUnsupportNow = '指定的函数 %s 目前不受支持';
   SBadJavaEscape = '无效的 Java 转义序列：%s';
+  SBadHexChar = '无效的十六进制字符 %s';
 
 type
   TGBKCharSpell = record
@@ -7257,7 +7269,7 @@ begin
       Inc(ps, 3)
     else
     begin
-      if (ps^ < 32) or (ps^ > 127) then
+      if (ps^ < 32) or (ps^ > 127) or (SafeChars[ps^] = 0) then
         Inc(c);
       Inc(ps);
     end;
@@ -7327,6 +7339,157 @@ begin
   end
   else
     Result := S;
+end;
+
+function UrlDecode(const AUrl: QStringW;
+  var AScheme, AHost, ADocument: QStringW; var APort: Word; AParams: TStrings;
+  AUtf8Encode: Boolean): Boolean;
+var
+  p, ps: PQCharW;
+  V, N: QStringW;
+  iV: Int64;
+  function DecodeUrlStr(const S: QStringW; var AResult: QStringW): Boolean;
+  var
+    pd, pds, pb: PQCharA;
+    ps: PQCharW;
+    ADoUnescape: Boolean;
+    ABuf: TBytes;
+
+  begin
+    Result := True;
+    ps := PQCharW(S);
+    ADoUnescape := false;
+    while ps^ <> #0 do
+    begin
+      if ps^ = '%' then
+      begin
+        ADoUnescape := True;
+        Break;
+      end
+      else
+        Inc(ps);
+    end;
+    if ADoUnescape then
+    begin
+      SetLength(ABuf, Length(S));
+      pd := PQCharA(@ABuf[0]);
+      ps := PQCharW(S);
+      pds := pd;
+      while ps^ <> #0 do
+      begin
+        if ps^ = '%' then
+        begin
+          Inc(ps);
+          if IsHexChar(ps^) then
+          begin
+            pd^ := HexValue(ps^) shl 4;
+            Inc(ps);
+            if IsHexChar(ps^) then
+            begin
+              pd^ := pd^ or HexValue(ps^);
+              Inc(ps);
+            end
+            else
+            begin
+              Result := false;
+              Break;
+            end;
+          end
+          else
+          begin
+            Result := false;
+            Break;
+          end;
+        end
+        else
+        begin
+          pd^ := QCharA(ps^);
+          Inc(ps);
+        end;
+        Inc(pd);
+      end;
+      if AUtf8Encode then
+      begin
+        if not Utf8Decode(pds, IntPtr(pd) - IntPtr(pds), AResult, pb) then
+          AResult := AnsiDecode(pds, IntPtr(pd) - IntPtr(pds));
+      end
+      else
+        AResult := AnsiDecode(pds, IntPtr(pd) - IntPtr(pds));
+    end
+    else
+      AResult := S;
+  end;
+
+const
+  HostEnd: PQCharW = ':/';
+  DocEnd: PQCharW = '?';
+  ParamDelimiter: PQCharW = '&';
+begin
+  Result := True;
+  p := PQCharW(AUrl);
+  SkipSpaceW(p);
+  ps := p;
+  p := StrStrW(ps, '://');
+  if p <> nil then
+  begin
+    AScheme := StrDupX(ps, p - ps);
+    Inc(p, 3);
+    ps := p;
+  end
+  else
+    AScheme := '';
+  p := ps;
+  SkipUntilW(p, HostEnd);
+  AHost := StrDupX(ps, p - ps);
+  if p^ = ':' then
+  begin
+    if ParseInt(p, iV) <> 0 then
+    begin
+      APort := Word(iV);
+      if p^ = '/' then
+        Inc(p);
+    end
+    else
+      APort := 0;
+  end
+  else // 未指定端口
+  begin
+    APort := 0;
+    if p^ = '/' then
+      Inc(p);
+  end;
+  if Assigned(AParams) then
+  begin
+    ps := p;
+    SkipUntilW(p, DocEnd);
+    if p^ = '?' then
+    begin
+      ADocument := StrDupX(ps, p - ps);
+      Inc(p);
+      AParams.BeginUpdate;
+      try
+        while p^ <> #0 do
+        begin
+          V := DecodeTokenW(p, ParamDelimiter, QCharW(0), false, True);
+          if DecodeUrlStr(NameOfW(V, '='), N) and DecodeUrlStr(ValueOfW(V, '='),V)
+          then
+            AParams.Add(N + '=' + V)
+          else
+          begin
+            Result := false;
+            Break;
+          end;
+        end;
+      finally
+        AParams.EndUpdate;
+      end;
+    end
+    else
+    begin
+      ADocument := ps;
+      AParams.Clear;
+    end;
+  end;
 end;
 
 // 下面是一些辅助函数
@@ -7560,14 +7723,17 @@ const
   Digits: PWideChar = '0123456789';
 begin
   // 跳过星期，这个可以直接通过日期计算出来，不需要
-  SkipUntilW(p, Comma, WideChar(0));
-  if p^ = #0 then
+  if StrStrW(p, Comma) <> nil then
   begin
-    Result := false;
-    Exit;
-  end
-  else
-    Inc(p);
+    SkipUntilW(p, Comma, WideChar(0));
+    if p^ = #0 then
+    begin
+      Result := false;
+      Exit;
+    end
+    else
+      Inc(p);
+  end;
   SkipUntilW(p, Digits, WideChar(0));
   d := 0;
   // 日期

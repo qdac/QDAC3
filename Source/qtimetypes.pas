@@ -2434,6 +2434,7 @@ var
             begin
               if Accept(@FLimits[tlpSecond], NS) then
               begin
+
                 H := NH;
                 N := NM;
                 S := NS;

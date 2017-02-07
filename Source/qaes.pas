@@ -181,6 +181,9 @@ type
       <param name="AData">要解密的数据内容</param>
       <param name="AResult">用于存贮解密后的原始数据的缓冲区</param> }
     procedure Decrypt(const AData: TBytes; var AResult: TBytes); overload;
+
+    procedure Decrypt(const AData: PByte; ALen: Integer;
+      var AResult: TBytes); overload;
     { 对指定的加密字符串数据进行解密，并返回解密后的字符串
 
 
@@ -4009,6 +4012,22 @@ procedure TQAES.Decrypt(const ASourceFile, ADestFile: QStringW);
 begin
   AESDecrypt(ASourceFile, ADestFile, FInitVector, FKey, FKeyType, FMode,
     FKeyIsString);
+end;
+
+procedure TQAES.Decrypt(const AData: PByte; ALen: Integer; var AResult: TBytes);
+var
+  AKeyData: TQAESKey;
+begin
+  if ALen > 0 then
+  begin
+    if FKeyIsString then
+      AKeyData := KeyFromString(FKey, FKeyType)
+    else
+      KeyFromBytes(PQCharW(FKey), Length(FKey) shl 1, FKeyType, AKeyData);
+    AESDecrypt(AData, ALen, FInitVector, AResult, AKeyData, FMode);
+  end
+  else
+    SetLength(AResult, 0);
 end;
 
 function TQAES.Decrypt(const S: String): String;

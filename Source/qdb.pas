@@ -812,7 +812,7 @@ type
 
   TQConverter = class(TComponent)
   private
-    procedure SetFStreamProcessors(const Value: TQStreamProcessors);
+
   protected
     FDataSet: TQDataSet;
     FExportRanges: TQExportRanges;
@@ -841,7 +841,8 @@ type
     // 进度
     procedure DoProgress(AStep: TQConvertStep; AProgress, ATotal: Integer);
     procedure RemoveChild(AIndex: Integer);
-
+    function GetActiveRecCount: Integer; virtual;
+    procedure SetFStreamProcessors(const Value: TQStreamProcessors);
     property ActiveDataSet: Integer read FActiveDataSet write FActiveDataSet;
     property DataSetCount: Integer read FDataSetCount write FDataSetCount;
     property StartOffset: Int64 read FStartOffset;
@@ -870,6 +871,7 @@ type
       ASourceStream, ATargetStream: TStream); overload;
     procedure SaveToConverter(AConverter: TQConverterClass;
       ASourceFile, ATargetFile: QStringW); overload;
+    property ActiveRecCount: Integer read GetActiveRecCount;
   published
     property ExportRanges: TQExportRanges read FExportRanges
       write FExportRanges; // 导出范围选择
@@ -1082,11 +1084,16 @@ type
       DoCheck: Boolean): TGetResult; overload; override;
     procedure InternalInitRecord(Buffer: TRecordBuffer); overload; override;
     procedure InternalSetToRecord(Buffer: TRecordBuffer); overload; override;
+{$IF RTLVersion>23}
+    procedure InternalGotoBookmark(Bookmark: TBookmark); overload; override;
+    procedure SetFieldData(Field: TField; Buffer: TValueBuffer);
+      overload; override;
+{$IFEND >XE3}
 {$IFEND 2009+}
-{$IFNDEF UNICODE}
     procedure SetFieldData(Field: TField; Buffer: Pointer); overload; override;
     procedure InternalAddRecord(Buffer: Pointer; Append: Boolean);
       overload; override;
+{$IFNDEF UNICODE}
     function GetRecord(Buffer: PChar; GetMode: TGetMode; DoCheck: Boolean)
       : TGetResult; overload; override;
     procedure InternalInitRecord(Buffer: PChar); overload; override;
@@ -1102,11 +1109,6 @@ type
 {$ENDIF}
     procedure InternalGotoBookmark(Bookmark: Pointer); overload; override;
 {$ENDIF !NEXTGEN}
-{$IF RTLVersion>23}
-    procedure InternalGotoBookmark(Bookmark: TBookmark); overload; override;
-    procedure SetFieldData(Field: TField; Buffer: TValueBuffer);
-      overload; override;
-{$IFEND >XE3}
     function GetRecNo: Integer; override;
     procedure SetRecNo(Value: Integer); override;
     procedure InternalInitRecord(Buffer: TQRecord); reintroduce; overload;
@@ -1135,8 +1137,7 @@ type
     function InternalGetFieldData(ARecord: TQRecord; AField: TField;
       ABuffer: Pointer; AIsOld: Boolean): Boolean;
     procedure InternalSetFieldData(ARecord: TQRecord; AField: TField;
-      ABuffer: Pointer; AIsOld: Boolean); overload;
-    procedure InternalSetFieldData(AField: TField; ABuffer: Pointer); overload;
+      ABuffer: Pointer; AIsOld: Boolean);
     procedure InternalDelete; override;
     procedure InternalInsert; override;
     procedure InternalEdit; override;
@@ -5254,7 +5255,8 @@ begin
   inherited;
   if Assigned(FEditingRow) then
   begin
-    FEditingRow.Release;
+    if State = dsInsert then
+      FreeRecord(FEditingRow);
     FEditingRow := nil;
   end;
 end;
@@ -5348,7 +5350,6 @@ begin
   inherited;
   ABuf := ActiveRecordBuffer;
   FEditingRow := ABuf.Bookmark;
-  FEditingRow.AddRef;
   if Assigned(ABuf.Bookmark) then // 值拷贝，以便缓存新值
   begin
     ARealRec := RealRecord(ABuf.Bookmark);
@@ -5506,7 +5507,6 @@ procedure TQDataSet.InternalGotoBookmark(Bookmark: Pointer);
 begin
   InternalSetToRecord(PPointer(Bookmark)^);
 end;
-{$ENDIF !NEXTGEN}
 {$IF RTLVersion>23}
 
 procedure TQDataSet.InternalGotoBookmark(Bookmark: TBookmark);
@@ -5514,6 +5514,7 @@ begin
   InternalSetToRecord(PPointer(@Bookmark[0])^);
 end;
 {$IFEND >XE3}
+{$ENDIF !NEXTGEN}
 
 procedure TQDataSet.InternalHandleException;
 begin
@@ -5792,7 +5793,6 @@ begin
   else if AEdited.Modified then
     PostChanges;
   AEdited.FBookmark := nil;
-  FEditingRow.Release;
   FEditingRow := nil;
 end;
 {$IF RTLVersion>24}
@@ -6157,7 +6157,9 @@ var
     AConverter.BeginImport(AConverter.FActiveDataSet);
     try
       ADataSet.FOpenBy := dsomByConverter;
+      AConverter.DoProgress(csLoadFields, 0, 0);
       AConverter.LoadFieldDefs(ADataSet.FieldDefs as TQFieldDefs);
+      AConverter.DoProgress(csLoadData, 0, 0);
       ARec := ADataSet.AllocRecord;
       while AConverter.ReadRecord(ARec) do
       begin
@@ -6414,29 +6416,6 @@ begin
   Result := LocateEx(KeyFields, KeyValues, Options, False, True);
 end;
 
-procedure TQDataSet.InternalSetFieldData(AField: TField; ABuffer: Pointer);
-var
-  pBuf: TQRecord;
-begin
-  if not(State in dsWriteModes) then
-    DatabaseError(SDSNotInEdit, Self);
-  pBuf := TQRecord(ActiveBuffer);
-  if Assigned(pBuf) then
-  begin
-    if State = dsInsert then
-      InternalSetFieldData(FEditingRow, AField, ABuffer, False)
-    else
-      InternalSetFieldData(TQRecord(ActiveBuffer), AField, ABuffer, False);
-    if State = dsInsert then
-      pBuf.FStatus := usInserted
-    else if pBuf.Status <> usInserted then
-      pBuf.FStatus := usModified;
-    SetModified(True);
-    if not(State in [dsCalcFields, dsInternalCalc, dsFilter, dsNewValue]) then
-      DataEvent(deFieldChange, Longint(AField));
-  end;
-end;
-
 procedure TQDataSet.InternalSetToRecord(Buffer: TQRecord);
 begin
   FActiveRecords.Clean;
@@ -6445,12 +6424,13 @@ begin
   if Length(FSort) > 0 then
     FRecordNo := Buffer.FSortedIndex
   else if Filtered then
+    FRecordNo := Buffer.FFilteredIndex
   else
     FRecordNo := Buffer.FOriginIndex;
   if PageSize <> 0 then
     FRecordNo := FRecordNo - FPageSize * FPageIndex;
 end;
-{$IFNDEF UNICODE}
+{$IFNDEF NEXTGEN}
 
 procedure TQDataSet.InternalAddRecord(Buffer: Pointer; Append: Boolean);
 begin
@@ -6712,7 +6692,7 @@ var
                 ARec.Values[ADestIdx].OldValue.TypeNeeded
                   (AFields[J].FValueType);
                 ARec.Values[ADestIdx].OldValue.Copy
-                  (ASrc.Values[ASrcIdx].NewValue, False);
+                  (ASrc.Values[ASrcIdx].OldValue, False);
               end;
             end;
             Inc(J);
@@ -7371,7 +7351,10 @@ var
   begin
     AConverter.BeginExport(AConverter.FActiveDataSet);
     if merMeta in AConverter.ExportRanges then
+    begin
+      AConverter.DoProgress(csSaveFields, 0, 0);
       AConverter.SaveFieldDefs(ADataSet.FieldDefs as TQFieldDefs);
+    end;
     if ADataExportNeeded then
     begin
       if usUnmodified in AcceptStatus then
@@ -7379,12 +7362,16 @@ var
         AList := ADataSet.FOriginRecords
       else
         AList := ADataSet.FChangedRecords;
+      AConverter.DoProgress(csSaveData, 0, AList.Count);
       I := 0;
       while I < AList.Count do
       begin
         ARec := RealRecord(AList[I]);
         if ARec.Status in AcceptStatus then
+        begin
           AConverter.WriteRecord(ARec);
+          AConverter.DoProgress(csSaveData, I, AList.Count);
+        end;
         Inc(I);
       end;
       if (AList <> ADataSet.FChangedRecords) and (usDeleted in AcceptStatus)
@@ -7395,11 +7382,16 @@ var
         begin
           ARec := RealRecord(ADataSet.FChangedRecords[I]);
           if ARec.Status = usDeleted then
+          begin
             AConverter.WriteRecord(ARec);
+            AConverter.DoProgress(csSaveData, I,
+              ADataSet.FChangedRecords.Count);
+          end;
           Inc(I);
         end;
       end;
     end;
+    AConverter.DoProgress(csAfterExport, 0, 0);
     AConverter.EndExport(AConverter.FActiveDataSet);
   end;
 
@@ -7526,20 +7518,40 @@ begin
     FCommandText := Value;
   end;
 end;
-{$IFNDEF UNICODE}
+{$IFNDEF NEXTGEN}
 
 procedure TQDataSet.SetFieldData(Field: TField; Buffer: Pointer);
+var
+  pBuf: TQRecord;
 begin
-  InternalSetFieldData(Field, Buffer);
+  if not(State in dsWriteModes) then
+    DatabaseError(SDSNotInEdit, Self);
+  pBuf := TQRecord(ActiveBuffer);
+  if Assigned(pBuf) then
+  begin
+    if State = dsInsert then
+      InternalSetFieldData(FEditingRow, Field, Buffer, False)
+    else
+      InternalSetFieldData(TQRecord(ActiveBuffer), Field, Buffer, False);
+    if State = dsInsert then
+      pBuf.FStatus := usInserted
+    else if pBuf.Status <> usInserted then
+      pBuf.FStatus := usModified;
+    SetModified(True);
+    if not(State in [dsCalcFields, dsInternalCalc, dsFilter, dsNewValue]) then
+      DataEvent(deFieldChange, Longint(Field));
+  end;
 end;
 {$ENDIF}
+{$IFNDEF NEXTGEN}
 {$IF RTLVersion>23}
 
 procedure TQDataSet.SetFieldData(Field: TField; Buffer: TValueBuffer);
 begin
-  InternalSetFieldData(Field, Pointer(@Buffer[0]));
+  SetFieldData(Field, @Buffer[0]);
 end;
 {$IFEND}
+{$ENDIF !NEXTGEN}
 
 procedure TQDataSet.SetFieldValue(ARecord: PQRecord; AField: TField;
   const AValue: TQValue);
@@ -10221,7 +10233,7 @@ var
   I: Integer;
   ASource, ADest: TMemoryStream;
 begin
-  if FOriginStream <> FStream then
+  if Assigned(FStream) and (FOriginStream <> FStream) then
   begin
     ASource := FStream as TMemoryStream;
     ADest := TMemoryStream.Create;
@@ -10247,8 +10259,11 @@ end;
 
 procedure TQConverter.AfterImport;
 begin
-  if FOriginStream <> FStream then
-    FreeObject(FStream);
+  if Assigned(FStream) then
+  begin
+    if FOriginStream <> FStream then
+      FreeObject(FStream);
+  end;
   DoProgress(csAfterImport, 0, 0);
 end;
 
@@ -10256,9 +10271,14 @@ procedure TQConverter.BeforeExport;
 begin
   DoProgress(csBeforeExport, 0, 0);
   FOriginStream := FStream;
-  if FStreamProcessors.Count > 0 then
-    FStream := TMemoryStream.Create;
-  FStartOffset := FStream.Position;
+  if Assigned(FStream) then
+  begin
+    if FStreamProcessors.Count > 0 then
+      FStream := TMemoryStream.Create;
+    FStartOffset := FStream.Position;
+  end
+  else
+    FStartOffset := 0;
 end;
 
 procedure TQConverter.BeforeImport;
@@ -10268,28 +10288,33 @@ var
 begin
   DoProgress(csBeforeImport, 0, 0);
   FOriginStream := FStream;
-  if FStreamProcessors.Count > 0 then
+  if Assigned(FStream) then
   begin
-    ASource := TMemoryStream.Create;
-    ADest := TMemoryStream.Create;
-    try
-      ASource.CopyFrom(FStream, FStream.Size - FStream.Position);
-      for I := FStreamProcessors.Count - 1 downto 0 do
-      begin
-        ASource.Position := 0;
-        ADest.Size := 0;
-        FStreamProcessors[I].Processor.BeforeLoad(ASource, ADest);
-        ASource.Size := ADest.Size;
-        if ASource.Size > 0 then
-          Move(ADest.Memory^, ASource.Memory^, ASource.Size);
+    if FStreamProcessors.Count > 0 then
+    begin
+      ASource := TMemoryStream.Create;
+      ADest := TMemoryStream.Create;
+      try
+        ASource.CopyFrom(FStream, FStream.Size - FStream.Position);
+        for I := FStreamProcessors.Count - 1 downto 0 do
+        begin
+          ASource.Position := 0;
+          ADest.Size := 0;
+          FStreamProcessors[I].Processor.BeforeLoad(ASource, ADest);
+          ASource.Size := ADest.Size;
+          if ASource.Size > 0 then
+            Move(ADest.Memory^, ASource.Memory^, ASource.Size);
+        end;
+      finally
+        FreeObject(ADest);
+        FStream := ASource;
+        FStream.Position := 0;
       end;
-    finally
-      FreeObject(ADest);
-      FStream := ASource;
-      FStream.Position := 0;
     end;
-  end;
-  FStartOffset := FStream.Position;
+    FStartOffset := FStream.Position;
+  end
+  else
+    FStartOffset := 0;
 end;
 
 procedure TQConverter.BeginExport(AIndex: Integer);
@@ -10331,6 +10356,11 @@ end;
 procedure TQConverter.EndImport(AIndex: Integer);
 begin
   DoProgress(csEndImport, 0, 0);
+end;
+
+function TQConverter.GetActiveRecCount: Integer;
+begin
+  Result := -1;
 end;
 
 procedure TQConverter.LoadFromConverter(AConverter: TQConverterClass;

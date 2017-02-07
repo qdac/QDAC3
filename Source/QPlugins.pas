@@ -14,6 +14,9 @@ uses classes, sysutils, types, qstring, qvalue, qtimetypes, qdac_postqueue,
   本单元实现了Delphi下的 QPlugins 的核心实现（注：不包括额外的加载器和路由器）。
 
   变更说明
+  2017.2.7
+  =========
+  * 修正了 ById 查找指定的接口实例时，多次触发 GetInstance 的问题（勇哥报告）
   2017.1.3
   =========
   * 修正了 HandlePost 处理通知时参数错误（软件高手报告）
@@ -148,7 +151,8 @@ type
     function GetItems(AIndex: Integer): IQService; stdcall;
     function GetCount: Integer; stdcall;
     function ByPath(APath: PWideChar): IQService; stdcall;
-    function ById(const AId: TGuid): IQService; stdcall;
+    function ById(const AId: TGuid; ADoGetInstance: Boolean = true)
+      : IQService; stdcall;
     function Add(AItem: IQService): Integer; stdcall;
     function IndexOf(AItem: IQService): Integer; stdcall;
     procedure Delete(AIndex: Integer); stdcall;
@@ -224,7 +228,7 @@ type
     function LoadServices(const AFileName: PWideChar): THandle;
       stdcall; overload;
     function LoadServices(const AStream: IQStream): THandle; stdcall; overload;
-    function UnloadServices(const AHandle: THandle; AWaitDone: Boolean = True)
+    function UnloadServices(const AHandle: THandle; AWaitDone: Boolean = true)
       : Boolean; stdcall;
     function GetModuleCount: Integer; stdcall;
     function GetModuleName(AIndex: Integer): PWideChar; stdcall;
@@ -355,7 +359,8 @@ type
     constructor Create(const AId: TGuid; AName: QStringW); override;
     destructor Destroy; override;
     function ByPath(APath: PWideChar): IQService; virtual; stdcall;
-    function ById(const AId: TGuid): IQService; virtual; stdcall;
+    function ById(const AId: TGuid; ADoGetInstance: Boolean): IQService;
+      virtual; stdcall;
     function Add(AItem: IQService): Integer; virtual; stdcall;
     function IndexOf(AItem: IQService): Integer; virtual; stdcall;
     procedure Delete(AIndex: Integer); virtual; stdcall;
@@ -451,7 +456,7 @@ type
     procedure Stop; virtual; stdcall;
     function LoadServices(const AStream: IQStream): THandle; overload; stdcall;
     function InternalUnloadServices(const AHandle: THandle): Boolean; virtual;
-    function UnloadServices(const AHandle: THandle; AWaitDone: Boolean = True)
+    function UnloadServices(const AHandle: THandle; AWaitDone: Boolean = true)
       : Boolean; stdcall;
     function GetVersion(var AVerInfo: TQVersion): Boolean; virtual; stdcall;
     function GetModuleCount: Integer; virtual; stdcall;
@@ -739,7 +744,8 @@ type
     function QueryInterface(const IID: TGuid; out Obj): HRESULT;
       override; stdcall;
     function ByPath(APath: PWideChar): IQService; override; stdcall;
-    function ById(const AId: TGuid): IQService; override; stdcall;
+    function ById(const AId: TGuid; ADoGetInstance: Boolean): IQService;
+      override; stdcall;
     function PathOf(AService: IQService): QStringW;
     procedure AsynCall(AProc: TQAsynProc; AParams: IQParams); stdcall;
     procedure ProcessQueuedCalls; stdcall;
@@ -1001,7 +1007,7 @@ end;
 
 function TQService.Execute(AParams, AResult: IQParams): Boolean;
 begin
-  Result := True;
+  Result := true;
 end;
 
 function TQService.GetAttrs: IQParams;
@@ -1142,7 +1148,7 @@ end;
 
 function TQService.Resume(AParams: IQParams): Boolean;
 begin
-  Result := True;
+  Result := true;
 end;
 
 procedure TQService.SetLastError(ACode: Cardinal; AMsg: QStringW);
@@ -1158,7 +1164,7 @@ end;
 
 function TQService.Suspended(AParams: IQParams): Boolean;
 begin
-  Result := True;
+  Result := true;
 end;
 
 procedure TQService.ValidName(const S: QStringW);
@@ -1181,7 +1187,7 @@ begin
   end;
 end;
 
-function TQServices.ById(const AId: TGuid): IQService;
+function TQServices.ById(const AId: TGuid; ADoGetInstance: Boolean): IQService;
 var
   I: Integer;
   AParent: IQServices;
@@ -1196,12 +1202,15 @@ begin
       if SameId(AService.GetId, AId) or
         (AService.QueryInterface(AId, Result) = S_OK) then
       begin
-        Result := AService;
+        if ADoGetInstance then
+          Result := AService.GetInstance
+        else
+          Result := AService;
         break;
       end
       else if Supports(AService, IQServices, AParent) then
       begin
-        Result := AParent.ById(AId);
+        Result := AParent.ById(AId,ADoGetInstance);
         if Assigned(Result) then
           break;
       end;
@@ -1209,8 +1218,6 @@ begin
   finally
     Unlock;
   end;
-  if Assigned(Result) then
-    Result := Result.GetInstance;
 end;
 
 function FindService(AParent: IQServices; APath: PWideChar): IQService;
@@ -1232,21 +1239,21 @@ begin
       AParent := AMgr;
     if not Supports(AParent, IQService, Result) then
       Result := nil;
-    AFound := True;
+    AFound := true;
     Lock;
     try
       while (APath^ <> #0) and (AParent <> nil) and AFound do
       begin
-        AName := DecodeTokenW(APath, PathDelimiter, NullChar, True);
+        AName := DecodeTokenW(APath, PathDelimiter, NullChar, true);
         if Length(AName) > 0 then
         begin
           AFound := false;
           for I := 0 to AParent.Count - 1 do
           begin
             Result := AParent[I];
-            if StrCmpW(Result.Name, PWideChar(AName), True) = 0 then
+            if StrCmpW(Result.Name, PWideChar(AName), true) = 0 then
             begin
-              AFound := True;
+              AFound := true;
               if not Supports(Result, IQServices, AParent) then
                 AParent := nil;
               break;
@@ -1476,7 +1483,7 @@ begin
   Result := inherited QueryInterface(IID, Obj);
   if Result = E_NOINTERFACE then
   begin
-    AService := ById(IID);
+    AService := ById(IID, false);
     if Assigned(AService) then
       Result := AService.QueryInterface(IID, Obj)
     else
@@ -1505,7 +1512,8 @@ begin
   qdac_postqueue.AsynCall(AProc, AParams);
 end;
 
-function TQPluginsManager.ById(const AId: TGuid): IQService;
+function TQPluginsManager.ById(const AId: TGuid; ADoGetInstance: Boolean)
+  : IQService;
 var
   I: Integer;
   AServices: IQServices;
@@ -1518,7 +1526,7 @@ begin
     begin
       if Supports(FRouters[I], IQServices, AServices) then
       begin
-        Result := AServices.ById(AId);
+        Result := AServices.ById(AId, ADoGetInstance);
         if Assigned(Result) then
           break;
       end;
@@ -1527,7 +1535,7 @@ begin
     Unlock;
   end;
   if Result = nil then
-    Result := inherited ById(AId);
+    Result := inherited ById(AId, ADoGetInstance);
 end;
 
 function TQPluginsManager.ByPath(APath: PWideChar): IQService;
@@ -1655,7 +1663,7 @@ var
   APath: QStringW;
   ALoaders: IQServices;
 begin
-  Result := True;
+  Result := true;
   ALoaders := Loaders;
   if ALoaders.Count > 0 then
   begin
@@ -1725,12 +1733,12 @@ begin
   if CharInW(P, PathDelimiter) then
     Inc(P);
   Result := nil;
-  AName := DecodeTokenW(P, PathDelimiter, NullChar, True);
+  AName := DecodeTokenW(P, PathDelimiter, NullChar, true);
   Lock;
   try
     for I := 0 to _PluginsManager.Count - 1 do
     begin
-      if StrCmpW(_PluginsManager[I].Name, PWideChar(AName), True) = 0 then
+      if StrCmpW(_PluginsManager[I].Name, PWideChar(AName), true) = 0 then
       begin
         if Supports(_PluginsManager[I], IQServices, Result) then
           break;
@@ -1756,18 +1764,18 @@ begin
   try
     while P^ <> #0 do
     begin
-      AName := DecodeTokenW(P, PathDelimiter, NullChar, True);
+      AName := DecodeTokenW(P, PathDelimiter, NullChar, true);
       if Length(AName) > 0 then
       begin
         AFound := false;
         for I := 0 to Result.Count - 1 do
         begin
           AService := Result[I];
-          if StrCmpW(AService.Name, PWideChar(AName), True) = 0 then
+          if StrCmpW(AService.Name, PWideChar(AName), true) = 0 then
           begin
             if Supports(AService, IQServices, Result) then
             begin
-              AFound := True;
+              AFound := true;
               break
             end
             else
@@ -1944,7 +1952,7 @@ begin
   AParams.Add('New', ptInt64).AsInt64 := IntPtr(Pointer(ANewManager));
   FNotifyMgr.Send(NID_MANAGER_REPLACED, AParams);
   _PluginsManager := ANewManager;
-  Result := True;
+  Result := true;
 end;
 
 procedure TQPluginsManager.ServiceReady(AService: IQService);
@@ -1999,7 +2007,7 @@ end;
 
 function TQPluginsManager.Stop: Boolean;
 begin
-  Result := DoLoaderAction(NID_LOADERS_STOPPING, NID_LOADERS_STOPPED, True);
+  Result := DoLoaderAction(NID_LOADERS_STOPPING, NID_LOADERS_STOPPED, true);
 end;
 
 function TQPluginsManager.WaitService(const AService: PQCharW;
@@ -2019,7 +2027,7 @@ begin
     finally
       Unlock;
     end;
-    Result := True;
+    Result := true;
   end
   else
     Result := false;
@@ -2040,7 +2048,7 @@ begin
   finally
     Unlock;
   end;
-  Result := True;
+  Result := true;
 end;
 
 function TQPluginsManager._AddRef: Integer;
@@ -2141,7 +2149,7 @@ begin
     DoNotify(NID_NOTIFY_PROCESSING, AProcessParams);
   end;
   try
-    AFireNext := True;
+    AFireNext := true;
     for I := 0 to High(AItems) do
     begin
       AItems[I].Notify(AId, AParams, AFireNext);
@@ -2177,7 +2185,7 @@ begin
     Unlock;
   end;
   Result := 0;
-  AFireNext := True;
+  AFireNext := true;
   for I := 0 to High(AItems) do
   begin
     ACallback(AItems[I], AParam, AFireNext);
@@ -2212,13 +2220,13 @@ begin
   ANotifyParams := AParams as IQParams;
   ALastParam := ANotifyParams[ANotifyParams.Count - 1];
   AEvent := nil;
-  if StrCmpW(ALastParam.Name, '@NID', True) = 0 then
+  if StrCmpW(ALastParam.Name, '@NID', true) = 0 then
   begin
     ANotifyId := Cardinal(ALastParam.AsInteger);
     if ANotifyParams.Count >= 2 then
     begin
       ALastParam := ANotifyParams[ANotifyParams.Count - 2];
-      if StrCmpW(ALastParam.Name, '@EVT', True) = 0 then
+      if StrCmpW(ALastParam.Name, '@EVT', true) = 0 then
       begin
         AEvent := Pointer(ALastParam.AsInt64);
         ANotifyParams.Delete(ANotifyParams.Count - 1);
@@ -2309,7 +2317,7 @@ begin
     begin
       AItem := FItems[ANotifyId];
       AItem.Add(AHandler);
-      Result := True;
+      Result := true;
     end
     else
       Result := false;
@@ -2456,7 +2464,7 @@ end;
 
 function TQBaseLoader.Execute(AParams, AResult: IQParams): Boolean;
 begin
-  Result := True;
+  Result := true;
   case AParams.ByName('Action').AsInteger of
     NID_LOADERS_STARTING:
       Start;
@@ -2542,7 +2550,7 @@ end;
 
 function TQBaseLoader.GetVersion(var AVerInfo: TQVersion): Boolean;
 begin
-  Result := True;
+  Result := true;
   FillChar(AVerInfo, SizeOf(TQVersion), 0);
   AVerInfo.Version.Major := 3;
   AVerInfo.Version.Release := 1;
@@ -2624,7 +2632,7 @@ end;
 
 function TQBaseLoader.InternalUnloadServices(const AHandle: THandle): Boolean;
 begin
-  Result := True;
+  Result := true;
 end;
 
 function TQBaseLoader.LoadServices(const AStream: IQStream): THandle;
@@ -2693,7 +2701,7 @@ var
         Inc(P, Length(AExt));
         if (P^ = #0) or (P^ = ',') or (P^ = ';') then
         begin
-          Result := True;
+          Result := true;
           if Assigned(OnAccept) then
             OnAccept(Self, AName, Result);
         end;
@@ -2850,7 +2858,7 @@ begin
   begin
     begin
       PluginsManager.AsynCall(AsynUnload, NewParams([AHandle]));
-      Result := True;
+      Result := true;
     end;
   end;
 end;
@@ -2890,7 +2898,7 @@ begin
       while J < AParent.Count do
       begin
         AItem := AParent[J];
-        if StrCmpW(AItem.Name, PWideChar(AServices[I]), True) = 0 then
+        if StrCmpW(AItem.Name, PWideChar(AServices[I]), true) = 0 then
           AParent.Remove(AItem)
         else
           Inc(J);

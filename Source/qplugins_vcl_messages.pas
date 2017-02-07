@@ -17,7 +17,7 @@ unit qplugins_vcl_messages;
 }
 interface
 
-uses classes, sysutils, syncobjs, qstring, qplugins,qlog,
+uses classes, sysutils, syncobjs, qstring, qplugins,
   qplugins_params, qplugins_messages, qdac_postqueue, windows, messages,
   controls, forms;
 {$HPPEMIT '#pragma link "qplugins_vcl_messages"'}
