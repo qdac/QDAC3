@@ -5,17 +5,17 @@ interface
 uses classes, sysutils, qstring, qvalue, variants{$IFDEF UNICODE},
   Generics.collections, Rtti{$ENDIF};
 {$HPPEMIT '#pragma link "qplugins_params"'}
-
 {$REGION History}
 {
   Todo:加入只读接口的支持
 
-修订日志
-========
-2017.1.5
+  修订日志
+  ========
+  2017.1.5
   * 修正了 AddRange 忘记减少ACount的值的问题（软件高手报告）
 }
 {$ENDREGION}
+
 type
   // 流
   IQStream = interface
@@ -82,6 +82,7 @@ type
     procedure SetType(const AType: TQParamType); stdcall;
     function GetAsInterface: IInterface; stdcall;
     procedure SetAsInterface(const AIntf: IInterface); stdcall;
+    function GetIndex: Integer; stdcall;
     property AsInteger: Integer read GetAsInteger write SetAsInteger;
     property AsInt64: Int64 read GetAsInt64 write SetAsInt64;
     property AsBoolean: Boolean read GetAsBoolean write SetAsBoolean;
@@ -96,6 +97,7 @@ type
     property Parent: IQParams read GetParent;
     property ParamType: TQParamType read GetType;
     property AsInterface: IInterface read GetAsInterface write SetAsInterface;
+    property Index: Integer read GetIndex;
   end;
 
   // 参数列表
@@ -112,6 +114,7 @@ type
     function GetAsString: IQString; stdcall;
     procedure Delete(AIndex: Integer); stdcall;
     procedure Clear; stdcall;
+    function IndexOf(const AParam: IQParam): Integer; stdcall;
     procedure SaveToStream(AStream: IQStream); stdcall;
     procedure LoadFromStream(AStream: IQStream); stdcall;
     procedure SaveToFile(const AFileName: PWideChar); stdcall;
@@ -268,6 +271,7 @@ type
     procedure SetAsDVariant(const V: Variant);
     function GetAsInterface: IInterface; stdcall;
     procedure SetAsInterface(const AIntf: IInterface); stdcall;
+    function GetIndex: Integer; stdcall;
   public
     constructor Create(AOwner: TQParams); overload;
     destructor Destroy; override;
@@ -356,6 +360,7 @@ type
     function Add(const AName: QStringW; const AValue: PByte; ALen: Integer)
       : Integer; overload;
     function Add(const AName: QStringW; const AValue: TGuid): Integer; overload;
+    function IndexOf(const AParam: IQParam): Integer; stdcall;
     property Items[AIndex: Integer]: TQParam read GetDItems
       write SetDItems; default;
     property Count: Integer read GetCount;
@@ -451,6 +456,7 @@ type
     procedure SetAsDVariant(const V: Variant);
     function GetAsInterface: IInterface; stdcall;
     procedure SetAsInterface(const AIntf: IInterface); stdcall;
+    function GetIndex: Integer; stdcall;
   public
     constructor Create(AIntf: IQParam);
   end;
@@ -490,6 +496,7 @@ type
       : Integer; overload;
     function Add(const AName: PWideChar; AChildren: IQParams): IQParam;
       overload; stdcall;
+    function IndexOf(const AParam:IQParam):Integer;stdcall;
   public
     constructor Create(AIntf: IQParams);
   end;
@@ -1033,6 +1040,14 @@ begin
   else
     Result := FValue.AsString;
   end;
+end;
+
+function TQParam.GetIndex: Integer;
+begin
+  if Assigned(Parent) then
+    Result := Parent.IndexOf(Self)
+  else
+    Result := -1;
 end;
 
 function TQParam.GetIsNull: Boolean;
@@ -1644,6 +1659,21 @@ begin
   Result := TQParam(FItems[AIndex]);
 end;
 
+function TQParams.IndexOf(const AParam: IQParam): Integer;
+var
+  I: Integer;
+begin
+  Result := -1;
+  for I := 0 to FItems.Count - 1 do
+  begin
+    if GetItems(I) = AParam then
+    begin
+      Result := I;
+      Break;
+    end;
+  end;
+end;
+
 function TQParams.InternalAdd(const AName: QStringW; AParamType: TQParamType;
   var AResult: TQParam): Integer;
 begin
@@ -2126,6 +2156,11 @@ begin
   Result := FInterface.AsString.Value;
 end;
 
+function TQParamHelper.GetIndex: Integer;
+begin
+  Result := FInterface.Index;
+end;
+
 function TQParamHelper.GetIsNull: Boolean;
 begin
   Result := FInterface.IsNull;
@@ -2397,6 +2432,11 @@ end;
 function TQParamsHelper.GetItems(AIndex: Integer): IQParam;
 begin
   Result := FInterface[AIndex];
+end;
+
+function TQParamsHelper.IndexOf(const AParam: IQParam): Integer;
+begin
+Result:=FInterface.IndexOf(AParam);
 end;
 
 procedure TQParamsHelper.LoadFromFile(const AFileName: PWideChar);

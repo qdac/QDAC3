@@ -1,3 +1,11 @@
+{$REGION History}
+{修订历史
+
+2017.2.9
+=========
+* 修正了插件中在特定场景下 TabList 顺序切换的问题（墨宝轩报告）
+}
+{$ENDREGION}
 /// <summary>
 /// IQFormService 的 VCL 版实现单元，仅支持 VCL 程序
 /// </summary>
@@ -1191,7 +1199,7 @@ var
   end;
 
 begin
-  // DebugWindow(AHandle);
+   DebugWindow(AHandle);
   Result := False;
   if not Assigned(VCLCtrlTestServices) then
     VCLCtrlTestServices := PluginsManager.ByPath(PQCharW(VCLControlTestRoot))
@@ -1637,8 +1645,7 @@ procedure TQControlHook.HackedFormProc(var AMsg: TMessage);
                   Dec(I);
                 end;
                 CurControl := TWinControl(AList[I]);
-                if CurControl.CanFocus and CurControl.TabStop and
-                  (CurControl.Parent = AForm) then
+                if CurControl.CanFocus and CurControl.TabStop then
                 begin
                   if CurControl is TPageControl then
                   // 如果是PageControl，则尝试定位到当前页的第一个子窗体，暂时非完美实现

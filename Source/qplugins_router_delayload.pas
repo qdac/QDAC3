@@ -28,7 +28,7 @@ type
     constructor Create; overload;override;
     destructor Destroy; override;
     function ByPath(APath: PWideChar): IQService; override; stdcall;
-    function ById(const AId: TGuid): IQService; override; stdcall;
+    function ById(const AId: TGuid; ADoGetInstance: Boolean): IQService; override; stdcall;
     property ConfigFile: QStringW read FConfigFile write SetConfigFile;
   end;
 
@@ -38,7 +38,7 @@ const
   IID_ROUTER_DELAY: TGuid = '{C13FF21A-3B63-4A69-A9D8-9313A3666FFB}';
   { TQDelayRouter }
 
-function TQDelayRouter.ById(const AId: TGuid): IQService;
+function TQDelayRouter.ById(const AId: TGuid; ADoGetInstance: Boolean): IQService;
   function LoadService: IQService;
   var
     I: Integer;
@@ -64,7 +64,7 @@ begin
     Exit;
   FSearching := True;
   try
-    Result := inherited ById(AId);
+    Result := inherited ById(AId,ADoGetInstance);
     if not Assigned(Result) then
       Result := LoadService;
   finally
