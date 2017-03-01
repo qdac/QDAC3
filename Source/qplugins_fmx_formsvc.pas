@@ -5,7 +5,7 @@ interface
 /// <summary>
 /// IQFormService 的 FMX 版实现单元，仅支持 FMX 程序
 /// </summary>
-uses classes, qplugins_formsvc, qstring, fmx.forms;
+uses classes, qplugins_formsvc, qstring, fmx.forms,fmx.Styles;
 
 type
   TFormClass = class of TCommonCustomForm;
@@ -1416,5 +1416,5 @@ finalization
 UnregisterServices(PQCharW(FreeNotificationRoot), [LocalFreeNotifyServiceName]);
 LocalFreeNotifyService.Clear;
 LocalFreeNotifyService := nil;
-
+TStyleManager.SetStyle(nil);
 end.

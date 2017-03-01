@@ -2863,7 +2863,7 @@ begin
   begin
     ABuilder := TQStringCatHelperW.Create;
     try
-      if ANode.TryParseValue(ABuilder, p) <> 0 then
+      if TryParseValue(ABuilder, p) <> 0 then
         AsString := AValue
       else if p^ <> #0 then
         AsString := AValue;

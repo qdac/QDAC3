@@ -333,13 +333,20 @@ var
       AValue := 'NULL'
     else if AFieldVal.ValueType = vdtStream then // 如果是字符串类型的流，则转换为字符串，否则使用二进制串
     begin
-      if ARec.Fields[I].DataType in [ftMemo, ftWideMemo, ftFmtMemo] then
-      begin
-        AFieldVal.AsStream.Position := 0;
-        AValue := QuotedStrW(LoadTextW(AFieldVal.AsStream), Quoter);
-      end
-      else
-        AValue := QuotedStrW(ARec.Values[I].CurrentValue.AsString, Quoter);
+      case ARec.Fields[I].DataType of
+        ftMemo,ftFmtMemo:
+          begin
+            AFieldVal.AsStream.Position:=0;
+            AValue:=QuotedStrW(LoadTextW(AFieldVal.AsStream,teAnsi), Quoter);
+          end;
+        ftWideMemo:
+          begin
+            AFieldVal.AsStream.Position:=0;
+            AValue:=QuotedStrW(LoadTextW(AFieldVal.AsStream,teUnicode16LE), Quoter);
+          end
+        else
+          AValue := QuotedStrW(ARec.Values[I].CurrentValue.AsString, Quoter);
+      end;
     end
     else
       AValue := QuotedStrW(ARec.Values[I].CurrentValue.AsString, Quoter);

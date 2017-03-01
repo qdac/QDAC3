@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics,System.Types,
+  System.Classes, Vcl.Graphics, System.Types,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, VirtualTrees,
   Vcl.ExtCtrls, Winapi.Shellapi, Winapi.ShlObj, System.Generics.Collections,
   Vcl.ComCtrls, System.Actions, Vcl.ActnList, Vcl.StdActns, qworker, qstring,
@@ -64,6 +64,7 @@ type
     Panel4: TPanel;
     sbCloseEncoding: TSpeedButton;
     sbLinkLog: TSpeedButton;
+    SpeedButton1: TSpeedButton;
     procedure actOpenLogAccept(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure vstLogsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -82,6 +83,7 @@ type
     procedure sbCharsetClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure sbLinkLogClick(Sender: TObject);
+    procedure SpeedButton1Click(Sender: TObject);
   private
     { Private declarations }
     FStream: TFileStream;
@@ -100,11 +102,13 @@ type
     procedure DoSearch(AForward: Boolean; ASearchAll: Boolean); overload;
     procedure DoSearch(const AToSearch, AToReplace: String;
       AForward, ASearchAll, ADoReplace, AMergeDuplicaties: Boolean); overload;
-    procedure OpenLog;
     function DoCompareGuid(P1, P2: Pointer): Integer;
     procedure DoDeleteGuid(ASender: TQRBTree; ANode: TQRBNode);
   public
     { Public declarations }
+    procedure OpenLog;
+    property DeleteFileBeforeClose: Boolean read FDeleteFileBeforeClose
+      write FDeleteFileBeforeClose;
   end;
 
 var
@@ -112,7 +116,7 @@ var
 
 implementation
 
-uses about;
+uses about, sftpbrowser;
 {$R *.dfm}
 { 对于大型的日志文件，由于其内容无法全部放入内存，所以我们在内存中，只创建其有限的行的副本，
   其它的行仍存在于文件中，按需加载
@@ -307,9 +311,9 @@ var
       DebugBreak;
     O := ABufOffset;
     ps := @ABuf[ABufOffset];
-    if FEncoding in [teUnicode16LE, teUnicode16BE] then
+    if AEncoding in [teUnicode16LE, teUnicode16BE] then
     begin
-      if FEncoding = teUnicode16LE then
+      if AEncoding = teUnicode16LE then
       begin
         ANL := #$A;
         ACR := #$D;
@@ -328,7 +332,7 @@ var
           if pw[-1] = ACR then
             Dec(ALine.Line.Count, 2);
           if ALine.Line.Count > 0 then
-            ALine.Text := DecodeText(ps, ALine.Line.Count, FEncoding)
+            ALine.Text := DecodeText(ps, ALine.Line.Count, AEncoding)
           else
             ALine.Text := '';
           Inc(O, 2);
@@ -360,7 +364,7 @@ var
           if PQCharA(IntPtr(pa) - 1)^ = 13 then
             Dec(ALine.Line.Count);
           if ALine.Line.Count > 0 then
-            ALine.Text := DecodeText(ps, ALine.Line.Count, FEncoding)
+            ALine.Text := DecodeText(ps, ALine.Line.Count, AEncoding)
           else
             ALine.Text := '';
           Inc(O);
@@ -376,7 +380,7 @@ var
       if (not Result) and AIsEof and (O = AReaded) then
       begin
         ALine.Line.Count := O - ABufOffset;
-        ALine.Text := DecodeText(PQCharA(ps), ALine.Line.Count, FEncoding);
+        ALine.Text := DecodeText(PQCharA(ps), ALine.Line.Count, AEncoding);
         Result := true;
         Inc(AOffset, O - ABufOffset);
         ABufOffset := AReaded;
@@ -417,9 +421,10 @@ begin
         ABufOffset := 3
       else
         ABufOffset := 2;
-      FEncoding := AEncoding;
     end;
-  end;
+  end
+  else
+    AEncoding := FEncoding;
   AOffset := ABufOffset;
   while not AJob.IsTerminated do
   begin
@@ -552,10 +557,10 @@ begin
   if ADoReplace then
   begin
     if AMergeDuplicaties then
-      begin
+    begin
       AHashList := TQRBTree.Create(DoCompareGuid);
-      AHashList.OnDelete:=DoDeleteGuid;
-      end
+      AHashList.OnDelete := DoDeleteGuid;
+    end
     else
       AHashList := nil;
     AMacros := TQMacroManager.Create;
@@ -827,6 +832,7 @@ begin
     else
       FEncoding := TTextEncoding.teUnicode16BE;
     Workers.Post(DoLoadLogs, nil);
+    mmLineText.Text:='打开日志成功';
   end
   else
     mmLineText.Text := '未找到请求打开的日志文件.';
@@ -928,6 +934,15 @@ begin
   pnlSearch.Visible := not pnlSearch.Visible;
   if pnlSearch.Visible then
     pnlEncoding.Visible := false;
+end;
+
+procedure TfrmLogViewer.SpeedButton1Click(Sender: TObject);
+var
+  F: TfrmSftpBrowser;
+begin
+  F := TfrmSftpBrowser.Create(Application);
+  F.ShowModal;
+  F.Free;
 end;
 
 procedure TfrmLogViewer.vstLogsFocusChanged(Sender: TBaseVirtualTree;
