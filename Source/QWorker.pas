@@ -430,7 +430,7 @@ uses
 {$IFDEF UNICODE}, Generics.Collections{$ENDIF}{$IF RTLVersion>=21},
   Rtti{$IFEND >=XE10}
 {$IFNDEF MSWINDOWS}
-    , fmx.Forms, System.Diagnostics
+    {$IFNDEF CONSOLE}, fmx.Forms{$ENDIF}, System.Diagnostics
 {$ELSE}
 {$IFDEF MSWINDOWS}, Windows, Messages, TlHelp32, Activex{$ENDIF}
 {$ENDIF}
@@ -546,6 +546,15 @@ type
   TQJobDataFreeType = (jdfFreeByUser, jdfFreeAsObject, jdfFreeAsSimpleRecord,
     jdfFreeAsInterface, jdfFreeAsC1, jdfFreeAsC2, jdfFreeAsC3, jdfFreeAsC4,
     jdfFreeAsC5, jdfFreeAsC6);
+
+  TQRunonceTask=record
+    CanRun:Integer;
+    {$IFDEF UNICODE}
+    procedure Runonce(ACallback:TProc);overload;
+    {$ENDIF}
+    procedure Runonce(ACallback:TProcedure);overload;
+    procedure Runonce(ACallback:TThreadMethod);overload;
+  end;
 
   TQJobPlanData = record
     NextTime: TDateTime;
@@ -2018,6 +2027,7 @@ var
   AMsg: MSG;
 {$ENDIF}
 begin
+{$IFNDEF CONSOLE}
 {$IFDEF MSWINDOWS}
   Result := True;
   while PeekMessage(AMsg, 0, 0, 0, PM_REMOVE) do
@@ -2032,6 +2042,7 @@ begin
 {$ELSE}
   Application.ProcessMessages;
   AppTerminated := Application.Terminated;
+{$ENDIF}
 {$ENDIF}
   Result := not AppTerminated;
 end;
@@ -2538,7 +2549,7 @@ begin
   while AJob <> nil do
   begin
     ANext := AJob.Next;
-    if (Int64(AJob) = AHandle) and (not AJob.IsPlanRunning) then
+    if (IntPtr(AJob) = AHandle) and (not AJob.IsPlanRunning) then
     begin
       if APrior <> nil then
         APrior.Next := ANext
@@ -3093,7 +3104,7 @@ begin
       while AJob <> nil do
       begin
         ANextJob := AJob.Next;
-        if Int64(AJob) = AHandle then
+        if IntPtr(AJob) = AHandle then
         begin
           if ANode.Data = AJob then
           begin
@@ -7554,6 +7565,35 @@ begin
   begin
     FLastPop := nil;
     FireNext;
+  end;
+end;
+
+{ TQRunonceTask }
+{$IFDEF UNICODE}
+procedure TQRunonceTask.Runonce(ACallback: TProc);
+begin
+  while CanRun=1 do
+  begin
+  if AtomicCmpExchange(CanRun,0,1)=1 then
+    ACallback;
+  end;
+end;
+{$ENDIF}
+procedure TQRunonceTask.Runonce(ACallback: TProcedure);
+begin
+  while CanRun=1 do
+  begin
+  if AtomicCmpExchange(CanRun,0,1)=1 then
+    ACallback;
+  end;
+end;
+
+procedure TQRunonceTask.Runonce(ACallback: TThreadMethod);
+begin
+  while CanRun=1 do
+  begin
+  if AtomicCmpExchange(CanRun,0,1)=1 then
+    ACallback;
   end;
 end;
 

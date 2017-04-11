@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899/12/30 00:00:00.000.769,=D:\work\HgzClientV5\Source\Client\testMenu\AboutFrm.pas</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.704,=\\Mac\Home\Documents\Embarcadero\Studio\Projects\Unit4.pas</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.809,D:\work\HgzClientV5\Source\Client\testMenu\frmMain.dfm=\\Mac\Home\Documents\Embarcadero\Studio\Projects\Unit4.dfm</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.809,D:\work\HgzClientV5\Source\Client\testMenu\frmMain.pas=\\Mac\Home\Documents\Embarcadero\Studio\Projects\Unit4.pas</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.176,D:\work\HgzClientV5\Source\Client\testMenu\TestMenu.dproj=\\Mac\Home\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.889,=\\Mac\Home\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.837,=D:\work\HgzClientV5\Source\Client\testMenu\frmCertList.pas</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.210,=\\Mac\Home\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.741,=\\Mac\Home\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.663,=\\Mac\Home\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+  </Transactions>
+	<ActiveMobileDevice>
+		<NoProfile iOSSimulator="iPhone5"/>
+	</ActiveMobileDevice>
+</BorlandProject>

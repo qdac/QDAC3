@@ -405,7 +405,11 @@ type
   end;
 
 implementation
+{$IFDEF MSWINDOWS}
+var
+  hGdiPlus:HMODULE;
 
+{$ENDIF}
 { TQFormService }
 
 function TQFormService.Execute(AParams, AResult: IQParams): Boolean;
@@ -542,5 +546,9 @@ begin
   else
     FFlags := FFlags and (not(1 shl Index));
 end;
+{$IFDEF MSWINDOWS}
+function GdipAlloc: pointer; stdcall; external 'gdiplus.dll' name 'GdipAlloc';
+
+{$ENDIF}
 
 end.

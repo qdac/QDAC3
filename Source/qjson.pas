@@ -24,6 +24,10 @@ interface
 }
 
 { 修订日志
+  2017.4.10
+  ==========
+  + 修正了大浮点数判断时出错的问题（SeMain报告）
+
   2017.1.1
   ==========
   + 增加 Insert 系列函数，用于在指定的位置插入一个结点（阿木、恢弘建议）
@@ -4832,7 +4836,7 @@ begin
   end;
   SetLength(FName, 0);
   FNameHash := 0;
-  FDataType := jdtUnknown;
+  DataType := jdtUnknown;
   SetLength(FValue, 0);
   SetLength(FComment, 0);
   FCommentStyle := jcsIgnore;
@@ -6372,6 +6376,8 @@ var
   AComment: QStringW;
 const
   JsonEndChars: PWideChar = ',]}';
+  MaxInt64: Int64 = 9223372036854775807;
+  MinInt64: Int64 = -9223372036854775808;
 begin
   Result := 0;
   if p^ = '"' then
@@ -6393,7 +6399,8 @@ begin
       FComment := AComment;
     if (p^ = #0) or CharInW(p, JsonEndChars) then
     begin
-      if SameValue(ANum, Trunc(ANum), 5E-324) then
+      if (ANum >= MinInt64) and (ANum <= MaxInt64) and
+        SameValue(ANum, Trunc(ANum), 5E-324) then
         AsInt64 := Trunc(ANum)
       else
         AsFloat := ANum;
@@ -6418,6 +6425,11 @@ begin
   // Null
   begin
     Inc(p, 4);
+    SkipSpaceAndComment(p, AComment);
+    ResetNull;
+  end
+  else if p^ = ',' then
+  begin
     SkipSpaceAndComment(p, AComment);
     ResetNull;
   end

@@ -7,6 +7,10 @@ unit qdac_fmx_vkhelper;
 
   Changes
   =======
+  2017.3.27
+  =========
+  + Add support for 10.2
+
   2016.9.26
   ========
   * Fixed:When a edit has focused and the virtual keyboard hidden,click back on android will exit directly
@@ -61,7 +65,7 @@ unit qdac_fmx_vkhelper;
 interface
 
 uses classes, sysutils, math, FMX.controls, FMX.Layouts,
-  System.Types;
+  System.Types, System.Messaging;
 
 type
   TControlHelper = class helper for TControl
@@ -76,6 +80,10 @@ type
     procedure ScrollInView(ACtrl: TControl);
   end;
 
+  TFocusChanged = class(TMessage)
+
+  end;
+
 var
   EnableReturnKeyHook: Boolean;
 
@@ -84,13 +92,17 @@ function GetVKBounds: TRectF; overload;
 
 implementation
 
-uses System.UITypes, System.Messaging,
+uses System.UITypes,
   FMX.Types, System.Rtti,
   FMX.text, FMX.scrollbox, FMX.VirtualKeyboard, FMX.Forms,
   FMX.Platform, typinfo
 {$IFDEF ANDROID}, FMX.Platform.Android, FMX.Helpers.Android,
   FMX.VirtualKeyboard.Android, Androidapi.JNI.GraphicsContentViewText,
-  Androidapi.JNI.Embarcadero {$ENDIF}
+  Androidapi.JNI.Embarcadero
+{$IF RTLVersion>=32}
+    , Androidapi.NativeActivity, Androidapi.AppGlue
+{$ENDIF}
+{$ENDIF}
 {$IFDEF IOS}
     , Macapi.Helpers, FMX.Platform.iOS, FMX.VirtualKeyboard.iOS,
   iOSapi.Foundation, iOSapi.UIKit
@@ -139,9 +151,16 @@ type
     FSizeMsgId: Integer; // TSizeChangedMessage 消息的订阅ID
     FIdleMsgId: Integer;
     FLastControl: TControl;
+    [Weak]
+    FLastFocused: IControl;
     FAdjustStack: TQAdjustStack; // 最后一次调整的ScrollBox
 {$IFDEF ANDROID}
     FVKState: PByte;
+    FLastContentRectChanged: TOnContentRectChanged;
+    class var FContentRect: TRect;
+
+    procedure DoContentRectChanged(const App: TAndroidApplicationGlue;
+      const ARect: TRect);
 {$ENDIF}
     procedure DoVKVisibleChanged(const Sender: TObject;
       const Msg: System.Messaging.TMessage);
@@ -165,41 +184,66 @@ type
     constructor Create(AOwner: TComponent); overload; override;
     destructor Destroy; override;
   end;
-
+  TAndroidContentChangeMessage=TMessage<TRect>;
 var
   VKHandler: TVKStateHandler;
 {$IFDEF ANDROID}
 
-function GetVKBounds(var ARect: TRect): Boolean; overload;
+function JRectToRectF(R: JRect): TRectF;
+begin
+  Result.Left := R.Left;
+  Result.Top := R.Top;
+  Result.Right := R.Right;
+  Result.Bottom := R.Bottom;
+end;
+
+function GetVKPixelBounds:TRect;
 var
   ContentRect, TotalRect: JRect;
+  Content, Total: TRectF;
 begin
-  ContentRect := TJRect.Create;
   TotalRect := TJRect.Create;
+  {$IF RTLVersion<32}
+  ContentRect := TJRect.Create;
   MainActivity.getWindow.getDecorView.getWindowVisibleDisplayFrame(ContentRect);
+  Content:=JRectToRectF(ContentRect);
+  {$ELSE}
+  Content := TVKStateHandler.FContentRect;
+  {$ENDIF}
   MainActivity.getWindow.getDecorView.getDrawingRect(TotalRect);
-  Result := TotalRect.Bottom <> ContentRect.Bottom;
-  if Result then
-  begin
-    ARect.Left := TotalRect.Left;
-    ARect.Top := ContentRect.Bottom;
-    ARect.Right := TotalRect.Right;
-    ARect.Bottom := TotalRect.Bottom;
-  end;
+  Total := JRectToRectF(TotalRect);
+  Result.Left:=Trunc(Total.Left);
+  Result.Top:=Trunc(Total.Top+Content.Height);
+  Result.Right:=Trunc(Total.Right);
+  Result.Bottom:=Trunc(Total.Bottom);
 end;
 
 function GetVKBounds: TRectF; overload;
 var
-  ContentRect, TotalRect: JRect;
+  b:TRect;
 begin
-  ContentRect := TJRect.Create;
-  TotalRect := TJRect.Create;
-  MainActivity.getWindow.getDecorView.getWindowVisibleDisplayFrame(ContentRect);
-  MainActivity.getWindow.getDecorView.getDrawingRect(TotalRect);
-  Result := TRectF.Create(ConvertPixelToPoint(TPointF.Create(TotalRect.Left,
-    TotalRect.Top + ContentRect.height)),
-    ConvertPixelToPoint(TPointF.Create(TotalRect.Right, TotalRect.Bottom)));
+  b:=GetVKPixelBounds;
+  Result := TRectF.Create(ConvertPixelToPoint(b.TopLeft),
+    ConvertPixelToPoint(b.BottomRight));
+
 end;
+
+function GetVKBounds(var ARect: TRect): Boolean; overload;
+begin
+  ARect := GetVKPixelBounds;
+  Result := ARect.Bottom <> TVKStateHandler.FContentRect.Bottom;
+  ARect := TRectF.Create(ConvertPixelToPoint(ARect.TopLeft),
+    ConvertPixelToPoint(ARect.BottomRight)).Truncate;
+end;
+
+function GetVKBounds(var ARect: TRectF): Boolean; overload;
+begin
+  ARect := GetVKPixelBounds;
+  Result := ARect.Bottom <> TVKStateHandler.FContentRect.Bottom;
+  ARect := TRectF.Create(ConvertPixelToPoint(ARect.TopLeft),
+    ConvertPixelToPoint(ARect.BottomRight)).Truncate;
+end;
+
 {$ELSE}
 {$IFDEF IOS}
   _IOS_VKBounds: TRectF;
@@ -432,8 +476,8 @@ var
 begin
   FAdjustStack.Save(AScrollBox);
   ALastY := AScrollBox.ViewportPosition.Y;
-  AScrollBox.ViewportPosition.Offset(0,AVOffset+ALastY);
-//  AScrollBox.ScrollBy(0, AVOffset);
+  AScrollBox.ViewportPosition.Offset(0, AVOffset + ALastY);
+  // AScrollBox.ScrollBy(0, AVOffset);
   Result := ALastY - AScrollBox.ViewportPosition.Y;
 end;
 
@@ -531,34 +575,6 @@ end;
 
 procedure TVKStateHandler.AdjustIfNeeded;
 {$IFDEF ANDROID}
-  procedure FMXAndroidFix;
-  var
-    AService: IFMXVirtualKeyboardService;
-    AVK: TVirtualKeyboardAndroid;
-    AListener: TVKListener;
-    AContext: TRttiContext;
-    AType: TRttiType;
-    AField: TRttiField;
-  begin
-    if TPlatformServices.Current.SupportsPlatformService
-      (IFMXVirtualKeyboardService, AService) then
-    begin
-      AVK := AService as TVirtualKeyboardAndroid;
-      AContext := TRttiContext.Create;
-      AType := AContext.GetType(AVK.ClassType);
-      if Assigned(AType) then
-      begin
-        AField := AType.GetField('FVKListener');
-        if Assigned(AField) then
-        begin
-          AListener := AField.GetValue(AVK).AsObject as TVKListener;
-          AListener.onVirtualKeyboardHidden;
-        end;
-      end;
-      Screen.ActiveForm.Focused := nil;
-    end;
-  end;
-
   procedure UpdateAndroidKeyboardServiceState;
   var
     ASvc: IFMXVirtualKeyboardService;
@@ -601,8 +617,8 @@ procedure TVKStateHandler.AdjustIfNeeded;
   procedure RestoreCtrls;
   begin
 {$IFDEF ANDROID}
-    if not Assigned(Screen.FocusControl) then
-      UpdateAndroidKeyboardServiceState;
+    // if not Assigned(Screen.FocusControl) then
+    // UpdateAndroidKeyboardServiceState;
 {$ENDIF}
     if Assigned(FLastControl) then
       AdjustCtrl(FLastControl, RectF(0, 0, 0, 0),
@@ -649,6 +665,14 @@ begin
     (TSizeChangedMessage, DoSizeChanged);
   FIdleMsgId := TMessageManager.DefaultManager.SubscribeToMessage(TIdleMessage,
     DoAppIdle);
+{$IF DEFINED(Android) and (RTLVersion>=32)}
+  with TAndroidApplicationGlue(PANativeActivity(System.DelphiActivity)
+    .instance) do
+  begin
+    FLastContentRectChanged := OnContentRectEvent;
+    OnContentRectEvent := DoContentRectChanged;
+  end;
+{$ENDIF}
 end;
 
 /// 析构函数，取消消息订阅
@@ -665,12 +689,41 @@ end;
 procedure TVKStateHandler.DoAppIdle(const Sender: TObject;
   const Msg: System.Messaging.TMessage);
 begin
+  if FLastFocused <> Screen.FocusControl then
+  begin
+    TMessageManager.DefaultManager.SendMessage(Sender, TFocusChanged.Create);
+    FLastFocused := Screen.FocusControl;
+  end;
   AdjustIfNeeded;
 end;
+{$IF DEFINED(ANDROID) and (RTLVersion>=32)}
+
+procedure TVKStateHandler.DoContentRectChanged
+  (const App: TAndroidApplicationGlue; const ARect: TRect);
+var
+  svc: IFMXScreenService;
+  AScale: Single;
+  ACtrl:TControl;
+  AVKRect:TRectF;
+begin
+  if ARect<>FContentRect then
+  begin
+    if TPlatformServices.Current.SupportsPlatformService(IFMXScreenService, svc)
+    then
+    begin
+      AScale := svc.GetScreenScale;
+      FContentRect := ARect;
+      // TRectF.Create(ARect.Left/AScale,ARect.Top/AScale,ARect.Right/AScale,ARect.Bottom/AScale).Truncate;
+    end;
+    FLastContentRectChanged(App, ARect);
+    AdjustIfNeeded;
+  end;
+end;
+{$ENDIF}
 
 /// 在横竖屏切换时，处理控件位置
 procedure TVKStateHandler.DoSizeChanged(const Sender: TObject;
-const Msg: System.Messaging.TMessage);
+  const Msg: System.Messaging.TMessage);
 var
   ASizeMsg: TSizeChangedMessage absolute Msg;
   R: TRect;
@@ -688,7 +741,7 @@ end;
 
 /// 虚拟键盘可见性变更消息，调整或恢复控件位置
 procedure TVKStateHandler.DoVKVisibleChanged(const Sender: TObject;
-const Msg: System.Messaging.TMessage);
+  const Msg: System.Messaging.TMessage);
 var
   AVKMsg: TVKStateChangeMessage absolute Msg;
   ACtrl: TControl;
@@ -735,7 +788,7 @@ end;
 
 /// 响应组件释放通知，以避免访问无效地址
 function TVKStateHandler.NeedAdjust(ACtrl: TControl;
-var ACaretRect: TRectF): Boolean;
+  var ACaretRect: TRectF): Boolean;
 var
   ACaret: ICaret;
   ACaretObj: TCustomCaret;
@@ -788,7 +841,7 @@ begin
 end;
 
 procedure TVKStateHandler.Notification(AComponent: TComponent;
-Operation: TOperation);
+  Operation: TOperation);
 begin
   if Operation = opRemove then
   begin
@@ -925,7 +978,7 @@ end;
 { TVKNextHelper }
 
 procedure TVKNextHelper.DoFocusNext(Sender: TObject; var Key: Word;
-var KeyChar: Char; Shift: TShiftState);
+  var KeyChar: Char; Shift: TShiftState);
 var
   AVKCtrl: IVirtualKeyboardControl;
   procedure FocusNext(ACtrl: TControl);

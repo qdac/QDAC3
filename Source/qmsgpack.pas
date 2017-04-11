@@ -988,6 +988,8 @@ type
     procedure DoParsed; override;
     function CreateNew: TQMsgPack; override;
     procedure DoNodeMoved(ANode: TQMsgPack); override;
+    function GetHashTable: TQHashTable;
+    property HashTable: TQHashTable read GetHashTable;
   public
     constructor Create; overload;
     destructor Destroy; override;
@@ -2310,7 +2312,7 @@ var
           tkRecord:
             begin
               DataType := mptMap;
-//              AValue := AFields[J].GetValue(ASource);
+              // AValue := AFields[J].GetValue(ASource);
               if AFields[J].FieldType.Handle = TypeInfo(TGuid) then
                 Add(AFields[J].Name).AsString :=
                   GUIDToString
@@ -5808,28 +5810,31 @@ begin
   if (Length(FKey) > 0) and (FKeyHash = 0) then
   begin
     FKeyHash := HashName(Name);
-    if Assigned(Parent) then
-      TQHashedMsgPack(Parent).FHashTable.Add(Self, FKeyHash);
+    if Assigned(Parent) and (Parent.DataType=mptMap) then
+      TQHashedMsgPack(Parent).HashTable.Add(Self, FKeyHash);
   end;
-  for I := 0 to Count - 1 do
+  if DataType = mptMap then
   begin
-    ANode := Items[I];
-    ANode.HashNeeded;
-    FHashTable.Add(ANode, ANode.NameHash);
+    for I := 0 to Count - 1 do
+    begin
+      ANode := Items[I];
+      ANode.HashNeeded;
+      HashTable.Add(ANode, ANode.NameHash);
+    end;
   end;
 end;
 
 procedure TQHashedMsgPack.Clear;
 begin
   inherited;
-  FHashTable.Clear;
+  if DataType = mptMap then
+    HashTable.Clear;
 end;
 
 constructor TQHashedMsgPack.Create;
 begin
   inherited;
-  FHashTable := TQHashTable.Create();
-  FHashTable.AutoSize := True;
+
 end;
 
 function TQHashedMsgPack.CreateItem: TQMsgPack;
@@ -5848,7 +5853,8 @@ end;
 destructor TQHashedMsgPack.Destroy;
 begin
   inherited;
-  FreeAndNilObject(FHashTable);
+  if Assigned(FHashTable) then
+    FreeAndNilObject(FHashTable);
 end;
 
 procedure TQHashedMsgPack.DoNodeMoved(ANode: TQMsgPack);
@@ -5860,8 +5866,9 @@ begin
   begin
     AParent := FParent as TQHashedMsgPack;
     HashNeeded;
-    if not AParent.FHashTable.Exists(ANode, ANode.FKeyHash) then
-      AParent.FHashTable.Add(ANode, ANode.FKeyHash);
+    if (AParent.DataType = mptMap) and
+      (not AParent.HashTable.Exists(ANode, ANode.FKeyHash)) then
+      AParent.HashTable.Add(ANode, ANode.FKeyHash);
   end;
 end;
 
@@ -5875,33 +5882,36 @@ procedure TQHashedMsgPack.DoNodeNameChanged(ANode: TQMsgPack);
     AHash := HashName(ANode.Name);
     if AHash <> ANode.FKeyHash then
     begin
-      AList := TQHashedMsgPack(ANode.Parent).FHashTable.FindFirst
+      AList := TQHashedMsgPack(ANode.Parent).HashTable.FindFirst
         (ANode.FKeyHash);
       while AList <> nil do
       begin
         AItem := AList.Data;
         if AItem = ANode then
         begin
-          TQHashedMsgPack(ANode.Parent).FHashTable.ChangeHash(ANode,
+          TQHashedMsgPack(ANode.Parent).HashTable.ChangeHash(ANode,
             ANode.FKeyHash, AHash);
           ANode.FKeyHash := AHash;
           Break;
         end
         else
-          AList := TQHashedMsgPack(ANode.Parent).FHashTable.FindNext(AList);
+          AList := TQHashedMsgPack(ANode.Parent).HashTable.FindNext(AList);
       end;
     end;
   end;
 
 begin
-  if ANode.FKeyHash = 0 then
+  if ANode.Parent.DataType = mptMap then
   begin
-    ANode.FKeyHash := HashName(ANode.Name);
-    if Assigned(ANode.Parent) then
-      TQHashedMsgPack(ANode.Parent).FHashTable.Add(ANode, ANode.FKeyHash);
-  end
-  else
-    Rehash;
+    if ANode.FKeyHash = 0 then
+    begin
+      ANode.FKeyHash := HashName(ANode.Name);
+      if Assigned(ANode.Parent) then
+        TQHashedMsgPack(ANode.Parent).HashTable.Add(ANode, ANode.FKeyHash);
+    end
+    else
+      Rehash;
+  end;
 end;
 
 procedure TQHashedMsgPack.DoParsed;
@@ -5909,21 +5919,32 @@ var
   I: Integer;
   AMsgPack: TQMsgPack;
 begin
-  FHashTable.Resize(Count);
+  if DataType = mptMap then
+    HashTable.Resize(Count);
   for I := 0 to Count - 1 do
   begin
     AMsgPack := Items[I];
-    if Length(AMsgPack.FKey) > 0 then
+    if (Length(AMsgPack.FKey) > 0) and (DataType=mptMap) then
     begin
       if AMsgPack.FKeyHash = 0 then
       begin
         AMsgPack.FKeyHash := HashName(AMsgPack.Name);
-        FHashTable.Add(AMsgPack, AMsgPack.FKeyHash);
+        HashTable.Add(AMsgPack, AMsgPack.FKeyHash);
       end;
     end;
     if AMsgPack.Count > 0 then
       AMsgPack.DoParsed;
   end;
+end;
+
+function TQHashedMsgPack.GetHashTable: TQHashTable;
+begin
+  if not Assigned(FHashTable) then
+  begin
+    FHashTable := TQHashTable.Create();
+    FHashTable.AutoSize := True;
+  end;
+  Result := FHashTable;
 end;
 
 function TQHashedMsgPack.IndexOf(const AName: QStringW): Integer;
@@ -5932,20 +5953,25 @@ var
   AList: PQHashList;
   AItem: TQMsgPack;
 begin
-  AHash := HashName(AName);
-  AList := FHashTable.FindFirst(AHash);
-  Result := -1;
-  while AList <> nil do
+  if DataType = mptMap then
   begin
-    AItem := AList.Data;
-    if StrCmpW(PQCharW(AItem.Name), PQCharW(AName), IgnoreCase) = 0 then
+    AHash := HashName(AName);
+    AList := HashTable.FindFirst(AHash);
+    Result := -1;
+    while AList <> nil do
     begin
-      Result := AItem.ItemIndex;
-      Break;
-    end
-    else
-      AList := FHashTable.FindNext(AList);
-  end;
+      AItem := AList.Data;
+      if StrCmpW(PQCharW(AItem.Name), PQCharW(AName), IgnoreCase) = 0 then
+      begin
+        Result := AItem.ItemIndex;
+        Break;
+      end
+      else
+        AList := HashTable.FindNext(AList);
+    end;
+  end
+  else
+    Result := -1;
 end;
 
 function TQHashedMsgPack.ItemByName(AName: QStringW): TQMsgPack;
@@ -5956,7 +5982,7 @@ function TQHashedMsgPack.ItemByName(AName: QStringW): TQMsgPack;
     AItem: TQMsgPack;
   begin
     AHash := HashName(AName);
-    AList := FHashTable.FindFirst(AHash);
+    AList := HashTable.FindFirst(AHash);
     Result := nil;
     while AList <> nil do
     begin
@@ -5967,7 +5993,7 @@ function TQHashedMsgPack.ItemByName(AName: QStringW): TQMsgPack;
         Break;
       end
       else
-        AList := FHashTable.FindNext(AList);
+        AList := HashTable.FindNext(AList);
     end;
   end;
 
@@ -5981,8 +6007,8 @@ end;
 function TQHashedMsgPack.Remove(AIndex: Integer): TQMsgPack;
 begin
   Result := inherited Remove(AIndex);
-  if Assigned(Result) then
-    FHashTable.Delete(Result, Result.NameHash);
+  if Assigned(Result) and (DataType = mptMap) then
+    HashTable.Delete(Result, Result.NameHash);
 end;
 
 procedure TQHashedMsgPack.Replace(AIndex: Integer; ANewItem: TQMsgPack);
@@ -5992,13 +6018,15 @@ begin
   if not(ANewItem is TQHashedMsgPack) then
     raise Exception.CreateFmt(SReplaceTypeNeed, ['TQHashedMsgPack']);
   AOld := Items[AIndex];
-  FHashTable.Delete(AOld, AOld.NameHash);
+  if DataType = mptMap then
+    HashTable.Delete(AOld, AOld.NameHash);
   inherited;
   if Length(ANewItem.FKey) > 0 then
   begin
     if ANewItem.FKeyHash = 0 then
       ANewItem.FKeyHash := HashName(ANewItem.Name);
-    FHashTable.Add(ANewItem, ANewItem.FKeyHash);
+    if DataType = mptMap then
+      HashTable.Add(ANewItem, ANewItem.FKeyHash);
   end;
 end;
 

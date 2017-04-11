@@ -3107,7 +3107,7 @@ procedure TQValueHelper.SetAsVariant(const AValue: Variant);
         W8Stream(AValue);
 {$IFEND}
       varString:
-        AnsiStream(AValue);
+        AnsiStream(String(AValue));
       varArray or varByte:
         begin
           L := VarArrayHighBound(AValue, 1) + 1;

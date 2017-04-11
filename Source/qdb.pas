@@ -1230,6 +1230,8 @@ type
     function GetBlobFieldData(FieldNo: Integer; var Buffer: TBlobByteData)
       : Integer; override;
     function GetFieldData(Field: TField; Buffer: Pointer): Boolean; overload;
+    function BookmarkValid(Bookmark: TBookmark): Boolean;
+    function GetBookmark: TBookmark;
 {$IFNDEF NEXTGEN}override; {$ENDIF}
     procedure MoveTo(const AIndex: Cardinal); // 移动到指定的记录
     function ActiveRecordBuffer: TQRecord; // 当前记录缓冲区
@@ -1393,6 +1395,7 @@ type
     procedure ApplyChanges;
     procedure CancelChanges;
     procedure Empty;
+    procedure ClearRecords(AVisibleOnly: Boolean);
     procedure AddDataSet(ADataSet: TQDataSet);
     procedure DeleteDataSet(AIndex: Integer);
     function Sum(AFieldName: QStringW): Variant;
@@ -2861,6 +2864,18 @@ begin
   end;
 end;
 
+function TQDataSet.BookmarkValid(Bookmark: TBookmark): Boolean;
+begin
+  Result := False;
+  if Assigned(Bookmark) and (PPointer(Bookmark)^<>nil) then
+  try
+    InternalGotobookmark(Bookmark);
+    CursorPosChanged;
+    Result := True;
+  except
+  end;
+end;
+
 function TQDataSet.BufferOfRecNo(ARecNo: Integer): TQRecord;
 begin
   if PageSize <> 0 then
@@ -2940,6 +2955,17 @@ begin
     end;
   end;
   AHashs.Clear;
+end;
+
+procedure TQDataSet.ClearRecords(AVisibleOnly: Boolean);
+begin
+  if AVisibleOnly then
+  begin
+
+  end
+  else
+  begin
+  end;
 end;
 
 procedure TQDataSet.ClearSort(var AExp: PQSortExp);
@@ -4481,6 +4507,11 @@ begin
       Move(AValue.AsStream.Memory^, Buffer[0], Result);
     end;
   end;
+end;
+
+function TQDataSet.GetBookmark: TBookmark;
+begin
+
 end;
 
 {$IFNDEF NEXTGEN}
@@ -6714,7 +6745,7 @@ var
                 ARec.Values[ADestIdx].OldValue.TypeNeeded
                   (AFields[J].FValueType);
                 ARec.Values[ADestIdx].OldValue.Copy
-                  (ASrc.Values[ASrcIdx].NewValue, False);
+                  (ASrc.Values[ASrcIdx].OldValue, False);
               end;
               if (ASrc.Values[ASrcIdx].Changed) and
                 (not ASrc.Values[ASrcIdx].NewValue.IsNull) then
@@ -8721,13 +8752,13 @@ var
   ASchema, ACmdText: QStringW;
 begin
   ASchema := ParseNameToken(ATableName);
-  if Length(ATableName) > 0 then
+  if Length(ASchema) > 0 then
     ACmdText := 'select * from information_schema.columns where table_schema=' +
       QuotedStrW(ASchema, '''') + ' and table_name=' + QuotedStrW(ATableName,
       '''') + ' and column_name=' + QuotedStrW(AColName, '''') + ';'
   else
     ACmdText := 'select * from information_schema.columns where table_name=' +
-      QuotedStrW(ASchema, '''') + ' and column_name=' +
+      QuotedStrW(ATableName, '''') + ' and column_name=' +
       QuotedStrW(AColName, '''') + ';';
   Result := RecordExists(ACmdText);
 end;
@@ -9044,14 +9075,14 @@ var
   ASchema: QStringW;
 begin
   ASchema := ParseNameToken(AName);
-  if Length(AName) > 0 then
+  if Length(ASchema) > 0 then
     ACmdText :=
       'select * from information_schema.routines where routine_schema=' +
       QuotedStrW(ASchema, '''') + ' and routine_name=' + QuotedStrW(AName, '''')
       + ' and routine_type=''FUNCTION'';'
   else
     ACmdText := 'select * from information_schema.routines where routine_name='
-      + QuotedStrW(ASchema, '''') + ' and routine_type=''FUNCTION'';';
+      + QuotedStrW(AName, '''') + ' and routine_type=''FUNCTION'';';
   Result := RecordExists(ACmdText);
 end;
 
@@ -9596,14 +9627,14 @@ var
   ASchema: QStringW;
 begin
   ASchema := ParseNameToken(AName);
-  if Length(AName) > 0 then
+  if Length(ASchema) > 0 then
     ACmdText :=
       'select * from information_schema.routines where routine_schema=' +
       QuotedStrW(ASchema, '''') + ' and routine_name=' + QuotedStrW(AName, '''')
       + ' and routine_type=''PROCEDURE'';'
   else
     ACmdText := 'select * from information_schema.routines where routine_name='
-      + QuotedStrW(ASchema, '''') + ' and routine_type=''PROCEDURE'';';
+      + QuotedStrW(AName, '''') + ' and routine_type=''PROCEDURE'';';
   Result := RecordExists(ACmdText);
 
 end;
@@ -9737,13 +9768,13 @@ var
   ASchema: QStringW;
 begin
   ASchema := ParseNameToken(ATableName);
-  if Length(ATableName) > 0 then
+  if Length(ASchema) > 0 then
     ACmdText := 'select * from information_schema.tables where table_schema=' +
       QuotedStrW(ASchema, '''') + ' and table_name=' + QuotedStrW(ATableName,
       '''') + ' and table_type=''BASE TABLE'''
   else
     ACmdText := 'select * from information_schema.tables where table_name=' +
-      QuotedStrW(ASchema, '''') + ' and table_type=''BASE TABLE''';
+      QuotedStrW(ATableName, '''') + ' and table_type=''BASE TABLE''';
   Result := RecordExists(ACmdText);
 end;
 
@@ -9753,14 +9784,14 @@ var
   ASchema: QStringW;
 begin
   ASchema := ParseNameToken(AName);
-  if Length(AName) > 0 then
+  if Length(ASchema) > 0 then
     ACmdText :=
       'select * from information_schema.triggers where trigger_schema=' +
       QuotedStrW(ASchema, '''') + ' and trigger_name=' +
       QuotedStrW(AName, '''') + ';'
   else
     ACmdText := 'select * from information_schema.triggers where trigger_name='
-      + QuotedStrW(ASchema, '''') + ';';
+      + QuotedStrW(AName, '''') + ';';
   Result := RecordExists(ACmdText);
 end;
 
@@ -9790,13 +9821,13 @@ var
   ASchema: QStringW;
 begin
   ASchema := ParseNameToken(AName);
-  if Length(AName) > 0 then
+  if Length(ASchema) > 0 then
     ACmdText := 'select * from information_schema.views where table_schema=' +
       QuotedStrW(ASchema, '''') + ' and table_name=' +
       QuotedStrW(AName, '''') + ';'
   else
     ACmdText := 'select * from information_schema.views where table_name=' +
-      QuotedStrW(ASchema, '''') + ';';
+      QuotedStrW(AName, '''') + ';';
   Result := RecordExists(ACmdText);
 end;
 
@@ -11208,7 +11239,7 @@ begin
       end
       else if rc < 0 then
       begin
-        if FHandle <> 0 then
+        if (FHandle <> 0) and (not AJob.IsTerminated) then
         begin
           RaiseLastOSError;
           Break;

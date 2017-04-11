@@ -1975,7 +1975,9 @@ begin
         else
           FWaitingServices := ANext;
         if Assigned(AFirst) then
-          AItem.Next := AFirst;
+          AItem.Next := AFirst
+        else
+          AItem.Next:=nil;
         AFirst := AItem;
       end
       else
@@ -2289,7 +2291,7 @@ procedure TQNotifyManager.Send(AId: Cardinal; AParams: IQParams);
 var
   AEvent: TEvent;
 begin
-  if MainThreadId = GetCurrentThreadId then
+  if MainThreadId = {$IFDEF NEXTGEN}TThread.Current.ThreadID {$ELSE}GetCurrentThreadId {$ENDIF}then
     DoNotify(AId, AParams)
   else
   begin

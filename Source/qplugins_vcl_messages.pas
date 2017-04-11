@@ -56,7 +56,7 @@ type
     function Accept(AInstance: HMODULE): Boolean; override; stdcall;
     function Terminating: Boolean;
     function Terminated: Boolean;
-    function IsShareForm(AFormClassInstance: HMODULE): Boolean;
+    function IsShareForm(AFormClass:Pointer): Boolean;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -149,34 +149,44 @@ begin
   end;
 end;
 
-// 查找 TForm 声明所在的模块地址，如果找不到，返回0
-function FormInstance: HMODULE;
-type
-  TTestMethod = procedure of object;
-
-  TJmpInst = packed record
-    Inst: Word;
-    Offset: PPointer;
-  end;
-
-  PJmpInst = ^TJmpInst;
-var
-  AMethod: TTestMethod;
-  AJump: PJmpInst;
-  AForm: TForm;
-begin
-  AForm := TForm.Create(nil);
-  try
-    AMethod := AForm.Cascade;
-    AJump := PJmpInst(TMethod(AMethod).Code);
-    if AJump.Inst = $25FF then
-      Result := FindHInstance(AJump.Offset^)
-    else // 不认识
-      Result := HInstance;
-  finally
-    FreeAndNil(AForm);
-  end;
-end;
+//// 查找 TForm 声明所在的模块地址，如果找不到，返回0
+//function FormInstance: HMODULE;
+//type
+//  TTestMethod = procedure of object;
+//
+//  TJmpInst = packed record
+//    Inst: Word;
+//    Offset: IntPtr;
+//  end;
+//
+//  PJmpInst = ^TJmpInst;
+//var
+//  AMethod: TTestMethod;
+//  Alias: TMethod absolute AMethod;
+//  AJump: PJmpInst;
+//  AForm: TForm;
+//  AContext: CONTEXT;
+//  ATargetAddr: IntPtr;
+//  AClass:TFormClass;
+//begin
+//  AForm := TForm.Create(nil);
+//  try
+//    AMethod := AForm.Cascade;
+//    AJump := PJmpInst(Alias.Code);
+//    if AJump.Inst = $25FF then // JMP Offset
+//    begin
+//      ATargetAddr:=HInstance;
+//      if AJump.Offset<0 then
+//        Dec(ATargetAddr,AJump.Offset and $FFFFFFFF)
+//      else
+//        Inc(ATargetAddr,AJump.Offset and $FFFFFFFF);
+//      Result:=FindHInstance(PPointer(ATargetAddr)^);
+//    end
+//    else // 不认识
+//  finally
+//    FreeAndNil(AForm);
+//  end;
+//end;
 
 function IsSharePackage: Boolean;
 var
@@ -186,7 +196,7 @@ begin
   // 如果要在子程序使用窗体服务，则主程序必需实现 IQHostService
   if Supports(PluginsManager, IQHostService, AService) then
   begin
-    Result := AService.IsShareForm(FormInstance);
+    Result := AService.IsShareForm(TFormClass.ClassInfo);
   end
   else
     Result := False;
@@ -354,9 +364,9 @@ begin
   end;
 end;
 
-function TQMsgFilters.IsShareForm(AFormClassInstance: HMODULE): Boolean;
+function TQMsgFilters.IsShareForm(AFormClass:Pointer): Boolean;
 begin
-  Result := FormInstance = AFormClassInstance;
+  Result := AFormClass=TFormClass.ClassInfo;
 end;
 
 function TQMsgFilters.Terminated: Boolean;

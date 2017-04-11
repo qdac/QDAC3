@@ -23,7 +23,7 @@ type
     function GetAppWnd: HWND;
     function Terminating: Boolean;
     function Terminated: Boolean;
-    function IsShareForm(AFormClassInstance: HMODULE): Boolean;
+    function IsShareForm(AFormClass:Pointer): Boolean;
   end;
 
 implementation

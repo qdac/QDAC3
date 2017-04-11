@@ -5,7 +5,7 @@ interface
 {$I 'qdac.inc'}
 
 uses classes, sysutils, db, qstring, qrbtree, fmtbcd, qvalue, qdb, qworker,
-  qdigest, qlog, syncobjs{$IFDEF UNICODE}, ZLib{$ENDIF}
+  qdigest, qlog, syncobjs, math{$IFDEF UNICODE}, ZLib{$ENDIF}
 {$IFDEF POSIX}
     , Posix.Base, Posix.Stdio, Posix.Pthread, Posix.UniStd, System.IOUtils,
 {$WARN UNIT_PLATFORM OFF}Posix.StrOpts, {$WARN UNIT_PLATFORM ON}
@@ -18,6 +18,9 @@ uses classes, sysutils, db, qstring, qrbtree, fmtbcd, qvalue, qdb, qworker,
 
 // 进度：参数化查询支持待加入
 {
+  2017.3.26
+  ==========
+  * 修正了非空列有默认值未赋值时无法保存的问题（layeka报告）
   2015.9.25
   ==========
   * 修正了登录过程未完成就可以开始查询的问题
@@ -1310,9 +1313,9 @@ procedure TQPgSQLProvider.DispatchPgMessage(AMsg: PPQMsg);
   end;
 
 begin
-//  OutputDebugString(PChar('Recv Message ' + PQServerMsgName(AMsg.Msg) + '(' +
-//    IntToStr(Integer(AMsg.Msg)) + ',0x' + IntToHex(Integer(AMsg.Msg),
-//    4) + ')'));
+  // OutputDebugString(PChar('Recv Message ' + PQServerMsgName(AMsg.Msg) + '(' +
+  // IntToStr(Integer(AMsg.Msg)) + ',0x' + IntToHex(Integer(AMsg.Msg),
+  // 4) + ')'));
   case AMsg.Msg of
     smParsed:
       DoParsed;
@@ -1549,13 +1552,30 @@ var
       raise QException.Create(SNoTableFound);
   end;
 
-  function ToPgString(const AValue: TQValue): QStringW;
+  function DateTimeValue(Value: TDateTime): String;
+  var
+    iVal: Integer;
+  begin
+    iVal := Trunc(Value);
+    if IsZero(Value - iVal) then
+      Result := FormatDateTime('yyyy-mm-dd', Value)
+    else if iVal = 0 then
+      Result := FormatDateTime('hh:nn:ss.zzz', Value)
+    else
+      Result := FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Value);
+  end;
+  function ToPgString(const AValue: TQValue; AllowNull: Boolean): QStringW;
   var
     I: Integer;
   begin
     case AValue.ValueType of
       vdtUnset, vdtNull:
-        Result := 'null';
+        begin
+          if AllowNull then
+            Result := 'null'
+          else
+            Result := 'default';
+        end;
       vdtBoolean:
         begin
           if AValue.Value.AsBoolean then
@@ -1578,7 +1598,7 @@ var
       vdtGuid:
         Result := '''' + GuidToString(AValue.Value.AsGuid^) + '''';
       vdtDateTime:
-        Result := '''' + AValue.AsString + '''';
+        Result := '''' + DateTimeValue(AValue.AsDateTime) + '''';
       vdtInterval:
         Result := '''' + AValue.Value.AsInterval.AsPgString + '''';
       vdtString:
@@ -1590,12 +1610,13 @@ var
         begin
           Result := '{';
           for I := 0 to AValue.Value.Size - 1 do
-            Result := Result + ToPgString(AValue.Items[I]^) + ',';
+            Result := Result + ToPgString(AValue.Items[I]^, AllowNull) + ',';
           SetLength(Result, Length(Result) - 1);
           Result := Result + '}';
         end;
     end;
   end;
+
   procedure AppendSQL;
   var
     J: Integer;
@@ -1612,7 +1633,8 @@ var
             begin
               if ARec.Values[J].Changed then
                 ASQLBuilder.Cat(QuotedIdent(AField.BaseName)).Cat('=')
-                  .Cat(ToPgString(ARec.Values[J].NewValue)).Cat(',');
+                  .Cat(ToPgString(ARec.Values[J].NewValue, AField.Nullable)
+                  ).Cat(',');
             end;
           end;
           ASQLBuilder.Back(1);
@@ -1624,7 +1646,8 @@ var
               ASQLBuilder.Cat(QuotedIdent(AField.BaseName)).Cat(' is null')
             else
               ASQLBuilder.Cat(QuotedIdent(AField.BaseName)).Cat('=')
-                .Cat(ToPgString(ARec.Values[AField.FieldNo - 1].OldValue));
+                .Cat(ToPgString(ARec.Values[AField.FieldNo - 1].OldValue,
+                AField.Nullable));
             ASQLBuilder.Cat(' and ');
           end;
           ASQLBuilder.Back(5);
@@ -1641,7 +1664,11 @@ var
           ASQLBuilder.Back(1);
           ASQLBuilder.Cat(') values (');
           for J := 0 to AFields.Count - 1 do
-            ASQLBuilder.Cat(ToPgString(ARec.Values[J].NewValue)).Cat(',');
+            begin
+            AField := AFields[J] as TQFieldDef;
+            ASQLBuilder.Cat(ToPgString(ARec.Values[J].NewValue, AField.Nullable)
+              ).Cat(',');
+            end;
           ASQLBuilder.Back(1);
           ASQLBuilder.Cat(');'#13#10);
         end;
@@ -1652,8 +1679,8 @@ var
           begin
             AField := AWhereFields[J];
             ASQLBuilder.Cat(QuotedIdent(AField.BaseName)).Cat('=')
-              .Cat(ToPgString(ARec.Values[AField.FieldNo - 1].OldValue))
-              .Cat(' and ');
+              .Cat(ToPgString(ARec.Values[AField.FieldNo - 1].OldValue,
+              AField.Nullable)).Cat(' and ');
           end;
           ASQLBuilder.Back(5);
           ASQLBuilder.Cat(';'#13#10);

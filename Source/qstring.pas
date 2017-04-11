@@ -393,6 +393,17 @@ type
     property Data: PByte read GetData;
   end;
 
+  TQSingleton{$IFDEF UNICODE}<T:class>{$ENDIF}=record
+    InitToNull:{$IFDEF UNICODE}T{$ELSE}Pointer{$ENDIF};
+    type
+    {$IFDEF UNICODE}
+    TGetInstanceCallback=reference to function:T;
+    {$ELSE}
+    TGetInstanceCallback=function:Pointer;
+    {$ENDIF}
+    function Instance(ACallback:TGetInstanceCallback):{$IFDEF UNICODE}T{$ELSE}Pointer{$ENDIF};
+  end;
+
   QException = class(Exception)
 
   end;
@@ -1304,6 +1315,7 @@ function ParseHex(var p: PQCharW; var Value: Int64): Integer;
 function ParseNumeric(var S: PQCharW; var ANum: Extended): Boolean;
 function ParseDateTime(S: PWideChar; var AResult: TDateTime): Boolean;
 function ParseWebTime(p: PWideChar; var AResult: TDateTime): Boolean;
+function EncodeWebTime(ATime: TDateTime): String;
 function RollupSize(ASize: Int64): QStringW;
 function RollupTime(ASeconds: Int64; AHideZero: Boolean = True): QStringW;
 function DetectTextEncoding(const p: Pointer; l: Integer; var b: Boolean)
@@ -1424,7 +1436,7 @@ const
 
 implementation
 
-uses dateutils, math, variants
+uses dateutils, math, sysconst, variants
 {$IF (RTLVersion>=25) and (not Defined(NEXTGEN))}
     , AnsiStrings
 {$IFEND >=XE4}
@@ -7471,8 +7483,8 @@ begin
         while p^ <> #0 do
         begin
           V := DecodeTokenW(p, ParamDelimiter, QCharW(0), false, True);
-          if DecodeUrlStr(NameOfW(V, '='), N) and DecodeUrlStr(ValueOfW(V, '='),V)
-          then
+          if DecodeUrlStr(NameOfW(V, '='), N) and
+            DecodeUrlStr(ValueOfW(V, '='), V) then
             AParams.Add(N + '=' + V)
           else
           begin
@@ -7797,6 +7809,21 @@ begin
   while p^ = ':' do
     Inc(p);
   Result := TryEncodeDateTime(Y, M, d, H, N, S, 0, AResult);
+end;
+
+function EncodeWebTime(ATime: TDateTime): String;
+var
+  Y, M, d, H, N, S, MS: Word;
+const
+  DefShortMonthNames: array [1 .. 12] of String = ('Jan', 'Feb', 'Mar', 'Apr',
+    'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
+  DefShortDayNames: array [1 .. 7] of String = ('Sun', 'Mon', 'Tue', 'Wed',
+    'Thu', 'Fri', 'Sat');
+begin
+  DecodeDateTime(ATime, Y, M, d, H, N, S, MS);
+  Result := DefShortDayNames[DayOfWeek(ATime)] + ',' + IntToStr(d) + ' ' +
+    DefShortMonthNames[M] + ' ' + IntToStr(Y) + ' ' + IntToStr(H) + ':' +
+    IntToStr(N) + ':' + IntToStr(S);
 end;
 
 function RollupSize(ASize: Int64): QStringW;
@@ -11408,6 +11435,23 @@ end;
 procedure Debugout(const AFmt: String; const AParams: array of const);
 begin
   Debugout(Format(AFmt, AParams));
+end;
+
+{ TQSingleton<T> }
+
+function TQSingleton{$IFDEF UNICODE}<T>{$ENDIF}.Instance(ACallback: TGetInstanceCallback): {$IFDEF UNICODE}T{$ELSE}Pointer{$ENDIF};
+begin
+  if not Assigned(InitToNull) then
+  begin
+    GlobalNameSpace.BeginWrite;
+    try
+      if not Assigned(InitToNull) then
+        InitToNull:=ACallback;
+    finally
+      GlobalNameSpace.EndWrite;
+    end;
+  end;
+Result:=InitToNull;
 end;
 
 initialization
