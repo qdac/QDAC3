@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2017/03/05 20:59:11.000.104,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/03/19 11:05:19.000.625,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/04/11 08:41:52.000.746,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/04/11 10:06:54.000.897,C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.dfm=E:\User\QDAC3\Demos\Delphi\VCL\Singleton\Unit1.dfm</Transaction>
+    <Transaction>2017/04/11 10:06:54.000.897,C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas=E:\User\QDAC3\Demos\Delphi\VCL\Singleton\Unit1.pas</Transaction>
+    <Transaction>2017/04/11 10:06:59.000.823,C:\Users\swish\Documents\Embarcadero\Studio\Projects\Project1.dproj=E:\User\QDAC3\Demos\Delphi\VCL\Singleton\singleton.dproj</Transaction>
+  </Transactions>
+	<ActiveMobileDevice>
+		<NoProfile iOSSimulator="iPhone5"/>
+	</ActiveMobileDevice>
+</BorlandProject>

@@ -146,8 +146,8 @@ type
 
   IQParamsHelper = interface(IQParams)
     ['{8F199BB7-665B-476E-B5BB-72A813539AF0}']
-    function ByName(const AName: QStringW): IQParam;
-    function ByPath(APath: QStringW): IQParam;
+    function ByName(const AName: QStringW): IQParamHelper;
+    function ByPath(APath: QStringW): IQParamHelper;
     function Add(const AName: QStringW; AValue: Int64): Integer; overload;
     function Add(const AName: QStringW; AValue: Double): Integer; overload;
     function Add(const AName: QStringW; AValue: Boolean): Integer; overload;
@@ -347,8 +347,8 @@ type
     procedure LoadFromFile(const AFileName: PWideChar); overload; stdcall;
     procedure LoadFromFile(const AFileName: QStringW); overload;
     procedure SaveToFile(const AFileName: QStringW); overload;
-    function ByName(const AName: QStringW): IQParam; overload;
-    function ByPath(APath: QStringW): IQParam; overload;
+    function ByName(const AName: QStringW): IQParamHelper; overload;
+    function ByPath(APath: QStringW): IQParamHelper; overload;
     function Add(const AName: QStringW; AValue: Int64): Integer; overload;
     function Add(const AName: QStringW; AValue: Double): Integer; overload;
     function Add(const AName: QStringW; AValue: Boolean): Integer; overload;
@@ -481,8 +481,8 @@ type
     procedure LoadFromStream(AStream: TStream); overload;
     procedure SaveToFile(const AFileName: QStringW); overload;
     procedure SaveToStream(AStream: TStream); overload;
-    function ByName(const AName: QStringW): IQParam; overload;
-    function ByPath(APath: QStringW): IQParam; overload;
+    function ByName(const AName: QStringW): IQParamHelper; overload;
+    function ByPath(APath: QStringW): IQParamHelper; overload;
     function Add(const AName: QStringW; AValue: Int64): Integer; overload;
     function Add(const AName: QStringW; AValue: Double): Integer; overload;
     function Add(const AName: QStringW; AValue: Boolean): Integer; overload;
@@ -496,7 +496,7 @@ type
       : Integer; overload;
     function Add(const AName: PWideChar; AChildren: IQParams): IQParam;
       overload; stdcall;
-    function IndexOf(const AParam:IQParam):Integer;stdcall;
+    function IndexOf(const AParam: IQParam): Integer; stdcall;
   public
     constructor Create(AIntf: IQParams);
   end;
@@ -521,14 +521,24 @@ end;
 
 function ParamHelper(AParam: IQParam): IQParamHelper;
 begin
-  if not Supports(AParam, IQParamHelper, Result) then
-    Result := TQParamHelper.Create(AParam);
+  if Assigned(AParam) then
+  begin
+    if not Supports(AParam, IQParamHelper, Result) then
+      Result := TQParamHelper.Create(AParam);
+  end
+  else
+    Result := nil;
 end;
 
 function ParamsHelper(AParams: IQParams): IQParamsHelper;
 begin
-  if not Supports(AParams, IQParamsHelper, Result) then
-    Result := TQParamsHelper.Create(AParams);
+  if Assigned(AParams) then
+  begin
+    if not Supports(AParams, IQParamsHelper, Result) then
+      Result := TQParamsHelper.Create(AParams);
+  end
+  else
+    Result := nil;
 end;
 { TQInterfacedObject }
 
@@ -1868,14 +1878,14 @@ begin
   Result := TQParams.Create;
 end;
 
-function TQParams.ByName(const AName: QStringW): IQParam;
+function TQParams.ByName(const AName: QStringW): IQParamHelper;
 begin
-
+  Result := ParamHelper(ByName(PQCharW(AName)));
 end;
 
-function TQParams.ByPath(APath: QStringW): IQParam;
+function TQParams.ByPath(APath: QStringW): IQParamHelper;
 begin
-
+  Result := ParamHelper(ByPath(PQCharW(APath)));
 end;
 
 { TQUnicodeString }
@@ -2383,9 +2393,9 @@ begin
     FInterface.Add(PQCharW(AName), ptBytes);
 end;
 
-function TQParamsHelper.ByName(const AName: QStringW): IQParam;
+function TQParamsHelper.ByName(const AName: QStringW): IQParamHelper;
 begin
-  Result := FInterface.ByName(PQCharW(AName));
+  Result := ParamHelper(FInterface.ByName(PQCharW(AName)));
 end;
 
 function TQParamsHelper.ByName(const AName: PWideChar): IQParam;
@@ -2398,9 +2408,9 @@ begin
   Result := FInterface.ByPath(APath);
 end;
 
-function TQParamsHelper.ByPath(APath: QStringW): IQParam;
+function TQParamsHelper.ByPath(APath: QStringW): IQParamHelper;
 begin
-  Result := FInterface.ByPath(PQCharW(APath));
+  Result := ParamHelper(FInterface.ByPath(PQCharW(APath)));
 end;
 
 procedure TQParamsHelper.Clear;
@@ -2436,7 +2446,7 @@ end;
 
 function TQParamsHelper.IndexOf(const AParam: IQParam): Integer;
 begin
-Result:=FInterface.IndexOf(AParam);
+  Result := FInterface.IndexOf(AParam);
 end;
 
 procedure TQParamsHelper.LoadFromFile(const AFileName: PWideChar);
