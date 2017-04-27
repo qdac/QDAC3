@@ -1414,7 +1414,7 @@ end;
 
 procedure TQMsgPack.DoNodeNameChanged(ANode: TQMsgPack);
 begin
-
+  FKeyHash := 0;
 end;
 
 procedure TQMsgPack.DoParsed;
@@ -4348,6 +4348,7 @@ begin
   FKeyType := mptBoolean;
   SetLength(FKey, 1);
   FKey[0] := Integer(Value);
+  DoNodeNameChanged(Self);
 end;
 
 procedure TQMsgPack.SetKeyAsBytes(const Value: TBytes);
@@ -4356,6 +4357,7 @@ begin
   SetLength(FKey, Length(Value));
   if Length(Value) > 0 then
     Move(Value[0], FKey[0], Length(Value));
+  DoNodeNameChanged(Self);
 end;
 
 procedure TQMsgPack.SetKeyAsDateTime(const Value: TDateTime);
@@ -4363,6 +4365,7 @@ begin
   FKeyType := mptDateTime;
   SetLength(FKey, SizeOf(TDateTime));
   PDateTime(@FKey[0])^ := Value;
+  DoNodeNameChanged(Self);
 end;
 
 procedure TQMsgPack.SetKeyAsFloat(const Value: Double);
@@ -4370,6 +4373,7 @@ begin
   FKeyType := mptFloat;
   SetLength(FKey, SizeOf(Double));
   PDouble(@FKey[0])^ := Value;
+  DoNodeNameChanged(Self);
 end;
 
 procedure TQMsgPack.SetKeyAsInt64(const Value: Int64);
@@ -4377,6 +4381,7 @@ begin
   FKeyType := mptInteger;
   SetLength(FKey, SizeOf(Int64));
   PInt64(@FKey[0])^ := Value;
+  DoNodeNameChanged(Self);
 end;
 
 procedure TQMsgPack.SetKeyAsInteger(const Value: Integer);
@@ -4389,6 +4394,7 @@ begin
   FKeyType := mptSingle;
   SetLength(FKey, SizeOf(Single));
   PSingle(@FKey[0])^ := Value;
+  DoNodeNameChanged(Self);
 end;
 
 procedure TQMsgPack.SetKeyAsString(const Value: QStringW);
@@ -5810,7 +5816,7 @@ begin
   if (Length(FKey) > 0) and (FKeyHash = 0) then
   begin
     FKeyHash := HashName(Name);
-    if Assigned(Parent) and (Parent.DataType=mptMap) then
+    if Assigned(Parent) and (Parent.DataType = mptMap) then
       TQHashedMsgPack(Parent).HashTable.Add(Self, FKeyHash);
   end;
   if DataType = mptMap then
@@ -5924,7 +5930,7 @@ begin
   for I := 0 to Count - 1 do
   begin
     AMsgPack := Items[I];
-    if (Length(AMsgPack.FKey) > 0) and (DataType=mptMap) then
+    if (Length(AMsgPack.FKey) > 0) and (DataType = mptMap) then
     begin
       if AMsgPack.FKeyHash = 0 then
       begin
