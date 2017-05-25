@@ -7,13 +7,15 @@ unit qplugins_loader_lib;
 }
 interface
 
-uses classes, sysutils{$IFDEF MSWINDOWS}, windows, MemoryModule{$ENDIF},
-  qstring, qplugins;
+uses classes, sysutils{$IFDEF MSWINDOWS}, windows, qdac_memmodule{$ENDIF},
+  qstring, qplugins, qplugins_base;
 {$HPPEMIT '#pragma link "qplugins_loader_lib"'}
+
 type
   // 基类
   TQLibLoader = class(TQBaseLoader)
   protected
+    function GetLoadingModule: HINST; override; stdcall;
     function GetServiceSource(AService: IQService; ABuf: PWideChar;
       ALen: Integer): Integer; override; stdcall;
   public
@@ -22,13 +24,15 @@ type
 
   TQDLLLoader = class(TQLibLoader)
   protected
+    function CanLoad(const AFileName: QStringW): Boolean;
     function InternalLoadServices(const AFileName: PWideChar): THandle;
       overload; override;
     function InternalLoadServices(const AStream: TStream): THandle;
       overload; override;
     function InternalUnloadServices(const AHandle: THandle): Boolean; override;
   public
-    constructor Create(APath, AExt: QStringW); overload;
+    constructor Create(APath, AExt: QStringW;
+      AIncludeSubDir: Boolean = false); overload;
   end;
 
   TQBPLLoader = class(TQLibLoader)
@@ -39,7 +43,8 @@ type
       overload; override;
     function InternalUnloadServices(const AHandle: THandle): Boolean; override;
   public
-    constructor Create(APath, AExt: QStringW;AIncludeSubDir:Boolean=false); overload;
+    constructor Create(APath, AExt: QStringW;
+      AIncludeSubDir: Boolean = false); overload;
   end;
 
 {$ELSE}
@@ -64,13 +69,22 @@ const
 implementation
 
 resourcestring
-  SServiceAlreayLoaded = '服务可能已经被静态加载，不需要再动态导入。';
+  SServiceAlreayLoaded = '服务插件 %s 可能已经被静态加载，不需要再动态导入。';
+  SCanLoadDiffPlatformLibrary =
+{$IFDEF CPU64BITS}'不能在64位宿主中加载32位插件 %s 。'{$ELSE}'不能在32位宿主中加载64位插件 %s 。'{$ENDIF};
   { TQLibLoader }
+
+function TQLibLoader.GetLoadingModule: HINST;
+begin
+  Result := inherited;
+  if (Result = 0) and (Length(FActiveFileName) > 0) then
+    Result := GetModuleHandle{$IFNDEF UNICODE}W{$ENDIF}(PWideChar(FActiveFileName));
+end;
 
 function TQLibLoader.GetServiceSource(AService: IQService; ABuf: PWideChar;
   ALen: Integer): Integer;
 begin
-Result:={$IFDEF UNICODE}GetModuleFileName{$ELSE}GetModuleFileNameW{$ENDIF}(AService.GetOwnerInstance, ABuf, ALen);
+  Result := {$IFDEF UNICODE}GetModuleFileName{$ELSE}GetModuleFileNameW{$ENDIF}(AService.GetOwnerInstance, ABuf, ALen);
 end;
 
 function GetCodeFileName(Addr: Pointer): QStringW;
@@ -84,11 +98,48 @@ end;
 {$IFDEF MSWINDOWS}
 { TQDLLLoader }
 
-constructor TQDLLLoader.Create(APath, AExt: QStringW);
+function TQDLLLoader.CanLoad(const AFileName: QStringW): Boolean;
+{$IFDEF MSWINDOWS}
+  function WinLibCheck: Boolean;
+  var
+    AStream: TFileStream;
+    wMachine: Word;
+    ADosHeader: TImageDosHeader;
+  begin
+    AStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyNone);
+    try
+      Result := false;
+      if AStream.Read(ADosHeader, SizeOf(TImageDosHeader))
+        = SizeOf(TImageDosHeader) then
+      begin
+        AStream.Position := ADosHeader._lfanew;
+        if (AStream.Read(wMachine, 2) = 2) and (wMachine = $4550) then
+        begin
+          AStream.Position := ADosHeader._lfanew + 4;
+          if AStream.Read(wMachine, 2) = 2 then
+            Result := (wMachine =
+{$IFDEF CPUX64}IMAGE_FILE_MACHINE_AMD64{$ELSE}IMAGE_FILE_MACHINE_I386{$ENDIF});
+        end;
+      end;
+    finally
+      FreeAndNil(AStream);
+    end;
+  end;
+{$ENDIF}
+
+begin
+{$IFDEF MSWINDOWS}
+  Result := WinLibCheck;
+{$ELSE}
+  Result := true;
+{$ENDIF}
+end;
+
+constructor TQDLLLoader.Create(APath, AExt: QStringW; AIncludeSubDir: Boolean);
 begin
   if Length(AExt) = 0 then
     AExt := '.DLL';
-  inherited Create(LID_DLL, 'Loader_DLL', APath, AExt);
+  inherited Create(LID_DLL, 'Loader_DLL', APath, AExt, AIncludeSubDir);
 end;
 
 function TQDLLLoader.InternalLoadServices(const AStream: TStream): THandle;
@@ -119,20 +170,31 @@ begin
     MemFreeLibrary(AHandle and (not THandle(1)))
   else
     FreeLibrary(AHandle);
-  Result := True;
+  Result := true;
 end;
 
 function TQDLLLoader.InternalLoadServices(const AFileName: PWideChar): THandle;
+var
+  AErrorCode: Integer;
 begin
   try
     Result := GetModuleHandleW(AFileName);
     if Result <> 0 then
     begin
       Result := 0;
-      SetLastError(1, SServiceAlreayLoaded);
+      SetLastError(1, Format(SServiceAlreayLoaded,[AFileName]));
+    end
+    else if CanLoad(AFileName) then
+    begin
+      Result := {$IFDEF UNICODE}LoadLibrary{$ELSE}LoadLibraryW{$ENDIF}(PWideChar(AFileName));
+      if Result = 0 then
+      begin
+        AErrorCode := GetLastError;
+        SetLastError(AErrorCode, SysErrorMessage(AErrorCode));
+      end;
     end
     else
-      Result := {$IFDEF UNICODE}LoadLibrary{$ELSE}LoadLibraryW{$ENDIF}(PWideChar(AFileName));
+      SetLastError(2, Format(SCanLoadDiffPlatformLibrary,[AFileName]));
   except
     on E: Exception do
     begin
@@ -144,11 +206,11 @@ end;
 
 { TQBPLLoader }
 
-constructor TQBPLLoader.Create(APath, AExt: QStringW;AIncludeSubDir:Boolean);
+constructor TQBPLLoader.Create(APath, AExt: QStringW; AIncludeSubDir: Boolean);
 begin
   if Length(AExt) = 0 then
     AExt := '.BPL';
-  inherited Create(LID_PACKAGE, 'Loader_BPL', APath, AExt,AIncludeSubDir);
+  inherited Create(LID_PACKAGE, 'Loader_BPL', APath, AExt, AIncludeSubDir);
 end;
 
 function TQBPLLoader.InternalLoadServices(const AFileName: PWideChar): THandle;
@@ -189,7 +251,7 @@ end;
 function TQBPLLoader.InternalUnloadServices(const AHandle: THandle): Boolean;
 begin
   UnloadPackage(AHandle);
-  Result := True;
+  Result := true;
 end;
 {$ELSE}
 { TQSOLoader }
@@ -217,7 +279,7 @@ end;
 function TQSOLoader.InternalUnloadServices(const AHandle: THandle): Boolean;
 begin
   FreeLibrary(AHandle);
-  Result := True;
+  Result := true;
 end;
 {$ENDIF}
 

@@ -393,15 +393,17 @@ type
     property Data: PByte read GetData;
   end;
 
-  TQSingleton{$IFDEF UNICODE}<T:class>{$ENDIF}=record
-    InitToNull:{$IFDEF UNICODE}T{$ELSE}Pointer{$ENDIF};
-    type
-    {$IFDEF UNICODE}
-    TGetInstanceCallback=reference to function:T;
-    {$ELSE}
-    TGetInstanceCallback=function:Pointer;
-    {$ENDIF}
-    function Instance(ACallback:TGetInstanceCallback):{$IFDEF UNICODE}T{$ELSE}Pointer{$ENDIF};
+  TQSingleton{$IFDEF UNICODE}<T: class>{$ENDIF} = record
+    InitToNull: {$IFDEF UNICODE}T{$ELSE}Pointer{$ENDIF};
+
+  type
+{$IFDEF UNICODE}
+    TGetInstanceCallback = reference to function: T;
+{$ELSE}
+    TGetInstanceCallback = function: Pointer;
+{$ENDIF}
+  function Instance(ACallback: TGetInstanceCallback):
+{$IFDEF UNICODE}T{$ELSE}Pointer{$ENDIF};
   end;
 
   QException = class(Exception)
@@ -837,6 +839,15 @@ type
     property IsSet[AIndex: Integer]: Boolean read GetIsSet
       write SetIsSet; default;
     property Bytes: TBytes read FBits write FBits;
+  end;
+
+  TQReadOnlyMemoryStream = class(TCustomMemoryStream)
+  private
+  protected
+    constructor Create();overload;
+  public
+    constructor Create(AData: Pointer; ASize: Integer);overload;
+    function Write(const Buffer; count: Longint): Longint; override;
   end;
 
   TQFilterCharEvent = procedure(const AChar, AIndex: Cardinal;
@@ -1456,6 +1467,7 @@ resourcestring
   SUnsupportNow = '指定的函数 %s 目前不受支持';
   SBadJavaEscape = '无效的 Java 转义序列：%s';
   SBadHexChar = '无效的十六进制字符 %s';
+  SStreamReadOnly = '不能在一个只读的数据流上写入数据';
 
 type
   TGBKCharSpell = record
@@ -10848,11 +10860,11 @@ end;
   Returns
   返回格式化后的字符串
   Examples
-  MoneyCap(1.235,MC_READ,L"",L"",L"",0)=壹元贰角肆分
-  MoneyCap(1.235,MC_READ,L"",L"",L"",4)=零拾壹元贰角肆分
-  MoneyCap(100.24,MC_READ,L"",L"",L"",4)=壹佰元零贰角肆分
-  MoneyCap(-10012.235,MC_READ,L"负",L"￥",L"",0)=￥负壹万零壹拾贰元贰角肆分
-  MoneyCap(101005,MC_READ,L"负",L"",L"",0)=壹拾万壹仟零伍元
+  CapMoney(1.235,MC_READ,L"",L"",L"",0)=壹元贰角肆分
+  CapMoney(1.235,MC_READ,L"",L"",L"",4)=零拾壹元贰角肆分
+  CapMoney(100.24,MC_READ,L"",L"",L"",4)=壹佰元零贰角肆分
+  CapMoney(-10012.235,MC_READ,L"负",L"￥",L"",0)=￥负壹万零壹拾贰元贰角肆分
+  CapMoney(101005,MC_READ,L"负",L"",L"",0)=壹拾万壹仟零伍元
 }
 
 function CapMoney(AVal: Currency; AFlags: Integer;
@@ -11439,19 +11451,39 @@ end;
 
 { TQSingleton<T> }
 
-function TQSingleton{$IFDEF UNICODE}<T>{$ENDIF}.Instance(ACallback: TGetInstanceCallback): {$IFDEF UNICODE}T{$ELSE}Pointer{$ENDIF};
+function TQSingleton{$IFDEF UNICODE}<T>{$ENDIF}.Instance
+  (ACallback: TGetInstanceCallback): {$IFDEF UNICODE}T{$ELSE}Pointer{$ENDIF};
 begin
   if not Assigned(InitToNull) then
   begin
     GlobalNameSpace.BeginWrite;
     try
       if not Assigned(InitToNull) then
-        InitToNull:=ACallback;
+        InitToNull := ACallback;
     finally
       GlobalNameSpace.EndWrite;
     end;
   end;
-Result:=InitToNull;
+  Result := InitToNull;
+end;
+
+{ TQReadOnlyMemoryStream }
+
+constructor TQReadOnlyMemoryStream.Create(AData: Pointer; ASize: Integer);
+begin
+  inherited Create;
+  SetPointer(AData, ASize);
+end;
+
+constructor TQReadOnlyMemoryStream.Create;
+begin
+  inherited;
+  //这个构造函数变成保护的，以避免外部访问
+end;
+
+function TQReadOnlyMemoryStream.Write(const Buffer; count: Integer): Longint;
+begin
+  raise EStreamError.Create(SStreamReadOnly);
 end;
 
 initialization

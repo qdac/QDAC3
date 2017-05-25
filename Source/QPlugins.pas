@@ -5,7 +5,7 @@ interface
 {$I qdac.inc}
 {$HPPEMIT '#pragma link "qplugins"'}
 
-uses classes, sysutils, types, qstring, qvalue, qtimetypes, qdac_postqueue,
+uses classes, sysutils, types, qstring, qvalue, qtimetypes, qdac_postqueue,qplugins_base,
   qplugins_params, syncobjs, math{$IFDEF MSWINDOWS}, windows{$ENDIF} {$IFDEF POSIX},
   Posix.Unistd{$ENDIF}{$IFDEF UNICODE},
   Generics.collections{$ENDIF};
@@ -57,232 +57,11 @@ uses classes, sysutils, types, qstring, qvalue, qtimetypes, qdac_postqueue,
   =========
   + 初始版本
 }
-const
-  // 日志记录级别
-  LOG_EMERGENCY: BYTE = 0;
-  LOG_ALERT = 1;
-  LOG_FATAL = 2;
-  LOG_ERROR = 3;
-  LOG_WARN = 4;
-  LOG_HINT = 5;
-  LOG_MESSAGE = 6;
-  LOG_DEBUG = 7;
-  // 预定义通知的ID
-  NID_MANAGER_REPLACED = 0; // 服务管理器被替换（这个通知只需要进程内插件响应）
-  NID_MANAGER_FREE = 1; // 插件管理器需要被立即释放
-  NID_LOADERS_STARTING = 2; // 正在启动加载器
-  NID_LOADERS_STARTED = 3; // 启动器加载完成
-  NID_LOADERS_STOPPING = 4; // 启动器停止中
-  NID_LOADERS_STOPPED = 5; // 启动器已停止
-  NID_LOADERS_PROGRESS = 6; // 启动器加载/停止进度
-  NID_LOADER_ERROR = 7; // 启动器加载出错
-  NID_PLUGIN_LOADING = 8; // 正在加载插件
-  NID_PLUGIN_LOADED = 9; // 加载插件完成
-  NID_PLUGIN_UNLOADING = 10; // 服务准备卸载
-  NID_PLUGIN_UNLOADED = 11; // 服务卸载完成
-  NID_NOTIFY_PROCESSING = 12; // 通知将要被处理
-  NID_NOTIFY_PROCESSED = 13; // 通知已经处理完成
-  NID_SERVICE_READY = 14; // 服务注册完成
 
 type
-  // 版本信息
-  TQShortVersion = packed record
-    case Integer of
-      0:
-        (Major, Minor, Release, Build: BYTE); // 主、副、发布、构建的版本号
-      1:
-        (Value: Integer);
-  end;
-{$IF RTLVersion>=21}
-{$M+}
-{$IFEND}
 
-  // 版本信息结构
-  TQVersion = packed record
-    Version: TQShortVersion; // 版本
-    Company: array [0 .. 63] of WideChar; // 公司名
-    Name: array [0 .. 63] of WideChar; // 模块名称
-    Description: array [0 .. 255] of WideChar; // 描述
-    FileName: array [0 .. MAX_PATH] of WideChar; // 原始文件名
-  end;
 
-  // 插件版本信息
-  IQVersion = interface
-    ['{4AD82500-4148-45D1-B0F8-F6B6FB8B7F1C}']
-    function GetVersion(var AVerInfo: TQVersion): Boolean; stdcall;
-  end;
 
-  IQServices = interface;
-  IQLoader = interface;
-
-  // 单个服务
-  IQService = interface
-    ['{0DA5CBAC-6AB0-49FA-B845-FDF493D9E639}']
-    function GetInstance: IQService; stdcall;
-    function GetOwnerInstance: THandle; stdcall;
-    function Execute(AParams: IQParams; AResult: IQParams): Boolean; stdcall;
-    function Suspended(AParams: IQParams): Boolean; stdcall;
-    function Resume(AParams: IQParams): Boolean; stdcall;
-    function GetParent: IQServices; stdcall;
-    function GetInstanceCreator: IQService; stdcall;
-    procedure AddExtension(AInterface: IInterface); stdcall;
-    procedure RemoveExtension(AInterface: IInterface); stdcall;
-    procedure SetParent(AParent: IQServices); stdcall;
-    function GetName: PWideChar; stdcall;
-    function GetAttrs: IQParams; stdcall;
-    function GetLastErrorMsg: PWideChar; stdcall;
-    function GetLastErrorCode: Cardinal; stdcall;
-    function GetId: TGuid; stdcall;
-    function GetLoader: IQLoader; stdcall;
-    function GetOriginObject: Pointer; stdcall;
-    function IsInModule(AModule: THandle): Boolean; stdcall;
-    property Parent: IQServices read GetParent write SetParent;
-    property Name: PWideChar read GetName;
-    property Attrs: IQParams read GetAttrs;
-    property LastError: Cardinal read GetLastErrorCode;
-    property LastErrorMsg: PWideChar read GetLastErrorMsg;
-    property Loader: IQLoader read GetLoader;
-    property Creator: IQService read GetInstanceCreator;
-  end;
-
-  // 多个服务列表
-  IQServices = interface
-    ['{7325DF17-BC83-4163-BB72-0AE0208352ED}']
-    function GetItems(AIndex: Integer): IQService; stdcall;
-    function GetCount: Integer; stdcall;
-    function ByPath(APath: PWideChar): IQService; stdcall;
-    function ById(const AId: TGuid; ADoGetInstance: Boolean = true)
-      : IQService; stdcall;
-    function Add(AItem: IQService): Integer; stdcall;
-    function IndexOf(AItem: IQService): Integer; stdcall;
-    procedure Delete(AIndex: Integer); stdcall;
-    procedure Remove(AItem: IQService); stdcall;
-    function MoveTo(AIndex, ANewIndex: Integer): Boolean; stdcall;
-    procedure Clear; stdcall;
-    function GetParent: IQServices; stdcall;
-    function GetName: PWideChar; stdcall;
-    function GetOwnerInstance: HINST; stdcall;
-    property Name: PWideChar read GetName;
-    property Parent: IQServices read GetParent;
-    property Count: Integer read GetCount;
-    property Items[AIndex: Integer]: IQService read GetItems; default;
-  end;
-
-  // 通知响应接口
-  IQNotify = interface
-    ['{00C7F80F-44BF-4E60-AA58-5992B2B71754}']
-    procedure Notify(const AId: Cardinal; AParams: IQParams;
-      var AFireNext: Boolean); stdcall;
-  end;
-
-  TQSubscribeEnumCallback = procedure(ANotify: IQNotify; AParam: Int64;
-    var AContinue: Boolean);
-
-  // 通知管理器
-  IQNotifyManager = interface
-    ['{037DCCD1-6877-4917-A315-120CD3E403F4}']
-    function Subscribe(ANotifyId: Cardinal; AHandler: IQNotify)
-      : Boolean; stdcall;
-    procedure Unsubscribe(ANotifyId: Cardinal; AHandler: IQNotify); stdcall;
-    function IdByName(const AName: PWideChar): Cardinal; stdcall;
-    function NameOfId(const AId: Cardinal): PWideChar; stdcall;
-    procedure Send(AId: Cardinal; AParams: IQParams); stdcall;
-    procedure Post(AId: Cardinal; AParams: IQParams); stdcall;
-    procedure Clear;
-    function EnumSubscribe(ANotifyId: Cardinal;
-      ACallback: TQSubscribeEnumCallback; AParam: Int64): Integer; stdcall;
-    function GetCount: Integer; stdcall;
-    function GetId(const AIndex: Integer): Cardinal; stdcall;
-    function GetName(const AIndex: Integer): PWideChar; stdcall;
-    property Count: Integer read GetCount;
-    property Id[const AIndex: Integer]: Cardinal read GetId;
-    property Name[const AIndex: Integer]: PWideChar read GetName;
-  end;
-
-  // 基于文本的路由规则项目，此接口仅为显示和修改使用
-  IQTextRouter = interface(IQService)
-    ['{F3834278-4D2F-46D5-AA72-6EF016CE7F3A}']
-    function GetSource: PWideChar; stdcall; // 规则源
-    function GetTarget: PWideChar; stdcall; // 规则目标
-    procedure SetRule(const ASource, ATarget: PWideChar); stdcall; // 设置目标和源
-  end;
-
-  // 基于 ID 映射的规则项目
-  IQIdRouter = interface(IQService)
-    ['{C2390553-ABE3-489A-8713-CB28A938C000}']
-    function GetSource: TGuid; stdcall;
-    function GetTarget: TGuid; stdcall;
-    procedure SetRule(const ASource, ATarget: TGuid); stdcall;
-  end;
-
-  TQModuleState = (msUnknown, msLoading, msLoaded, msUnloading);
-  TQLoaderState = (lsIdle, lsLoading, lsUnloading);
-
-  // 加载器接口，它的实现基类是 TQBaseLoader
-  IQLoader = interface(IQService)
-    ['{3F576A14-D251-47C4-AB6E-0F89B849B71F}']
-    function GetServiceSource(AService: IQService; ABuf: PWideChar;
-      ALen: Integer): Integer; stdcall;
-    procedure Start; stdcall;
-    procedure Stop; stdcall;
-    function LoadServices(const AFileName: PWideChar): THandle;
-      stdcall; overload;
-    function LoadServices(const AStream: IQStream): THandle; stdcall; overload;
-    function UnloadServices(const AHandle: THandle; AWaitDone: Boolean = true)
-      : Boolean; stdcall;
-    function GetModuleCount: Integer; stdcall;
-    function GetModuleName(AIndex: Integer): PWideChar; stdcall;
-    function GetModules(AIndex: Integer): HMODULE; stdcall;
-    function GetModuleState(AInstance: HINST): TQModuleState; stdcall;
-    procedure SetLoadingModule(AInstance: HINST); stdcall;
-    function GetState: TQLoaderState; stdcall;
-  end;
-
-  // 日志接口，如果需要封装下
-  IQLog = interface(IQService)
-    ['{14F4C543-2D43-4AAD-BAFE-B25784BC917D}']
-    procedure Post(ALevel: BYTE; AMsg: PWideChar); stdcall;
-    procedure Flush; stdcall;
-  end;
-
-  TQServiceCallback = procedure(const AService: IQService); stdcall;
-
-  // 插件管理器，所有服务的总管家
-  IQPluginsManager = interface(IQServices)
-    ['{BDE6247B-87AD-4105-BDC9-1EA345A9E4B0}']
-    function GetLoaders: IQServices; stdcall;
-    function GetRouters: IQServices; stdcall;
-    function GetServices: IQServices; stdcall;
-    function ForcePath(APath: PWideChar): IQServices; stdcall;
-    function GetActiveLoader: IQLoader; stdcall;
-    procedure SetActiveLoader(ALoader: IQLoader); stdcall;
-    procedure Start; stdcall;
-    procedure ModuleUnloading(AInstance: HINST); stdcall;
-    procedure AsynCall(AProc: TQAsynProc; AParams: IQParams); stdcall;
-    procedure ProcessQueuedCalls; stdcall;
-    function Stop: Boolean; stdcall;
-    function Replace(ANewManager: IQPluginsManager): Boolean; stdcall;
-    function WaitService(const AService: PQCharW; ANotify: TQServiceCallback)
-      : Boolean; overload; stdcall;
-    function WaitService(const AId: TGuid; ANotify: TQServiceCallback): Boolean;
-      overload; stdcall;
-    procedure RemoveServiceWait(ANotify: TQServiceCallback); overload; stdcall;
-    procedure RemoveServiceWait(const AService: PQCharW;
-      ANotify: TQServiceCallback); overload; stdcall;
-    procedure RemoveServiceWait(const AId: TGuid; ANotify: TQServiceCallback);
-      overload; stdcall;
-    procedure ServiceReady(AService: IQService); stdcall;
-    property Services: IQServices read GetServices;
-    property Routers: IQServices read GetRouters;
-    property Loaders: IQServices read GetLoaders;
-    property ActiveLoader: IQLoader read GetActiveLoader write SetActiveLoader;
-  end;
-
-  IQLocker = interface
-    ['{5008B5D4-EE67-419D-80CB-E5C62FA95243}']
-    procedure Lock; stdcall;
-    procedure Unlock; stdcall;
-  end;
 {$IF RTLVersion>=21}
 {$M-}
 {$IFEND}
@@ -310,6 +89,7 @@ type
     FLoader: Pointer;
     FCreator: Pointer; // 服务的创建者实例，多实例时用于指向主服务
     FFirstExt, FLastExt: PQServiceExtension;
+    FOwnerInst: HINST;
     function GetParent: IQServices; stdcall;
     procedure SetParent(AParent: IQServices); stdcall;
     function GetName: PWideChar; stdcall;
@@ -470,6 +250,8 @@ type
     procedure AsynUnload(AParams: IInterface);
     function GetModuleState(AInstance: HINST): TQModuleState; stdcall;
     procedure SetLoadingModule(AInstance: HINST); stdcall;
+    function GetLoadingModule: HINST; virtual; stdcall;
+    function GetLoadingFileName: PWideChar; stdcall;
     function GetState: TQLoaderState; stdcall;
   public
     constructor Create(const AId: TGuid; AName: QStringW; APath, AExt: QStringW;
@@ -747,7 +529,7 @@ type
     function ById(const AId: TGuid; ADoGetInstance: Boolean): IQService;
       override; stdcall;
     function PathOf(AService: IQService): QStringW;
-    procedure AsynCall(AProc: TQAsynProc; AParams: IQParams); stdcall;
+    procedure AsynCall(AProc: TQAsynProcG; AParams: IQParams); stdcall;
     procedure ProcessQueuedCalls; stdcall;
     procedure ModuleUnloading(AInstance: HINST); stdcall;
     function _AddRef: Integer; override; stdcall;
@@ -996,6 +778,10 @@ begin
   FId := AId;
   FName := AName;
   FLoader := Pointer(_ActiveLoader);
+  if Assigned(FLoader) then
+    FOwnerInst := _ActiveLoader.GetLoadingModule;
+  if FOwnerInst = 0 then
+    FOwnerInst := HInstance;
 end;
 
 destructor TQService.Destroy;
@@ -1029,7 +815,7 @@ end;
 
 function TQService.GetOwnerInstance: THandle;
 begin
-  Result := HInstance;
+  Result := FOwnerInst;
 end;
 
 function TQService.GetId: TGuid;
@@ -1155,6 +941,10 @@ procedure TQService.SetLastError(ACode: Cardinal; AMsg: QStringW);
 begin
   FErrorCode := ACode;
   FErrorMsg := AMsg;
+  {$IFDEF DEBUG}
+  if ACode<>0 then
+    DebugOut('服务 %s 遇到错误 %d:%s',[Name,ACode,AMsg]);
+  {$ENDIF}
 end;
 
 procedure TQService.SetParent(AParent: IQServices);
@@ -1210,7 +1000,7 @@ begin
       end
       else if Supports(AService, IQServices, AParent) then
       begin
-        Result := AParent.ById(AId,ADoGetInstance);
+        Result := AParent.ById(AId, ADoGetInstance);
         if Assigned(Result) then
           break;
       end;
@@ -1507,7 +1297,7 @@ end;
 
 { TQPluginsManager }
 
-procedure TQPluginsManager.AsynCall(AProc: TQAsynProc; AParams: IQParams);
+procedure TQPluginsManager.AsynCall(AProc: TQAsynProcG; AParams: IQParams);
 begin
   qdac_postqueue.AsynCall(AProc, AParams);
 end;
@@ -1977,7 +1767,7 @@ begin
         if Assigned(AFirst) then
           AItem.Next := AFirst
         else
-          AItem.Next:=nil;
+          AItem.Next := nil;
         AFirst := AItem;
       end
       else
@@ -2000,6 +1790,7 @@ end;
 procedure TQPluginsManager.SetActiveLoader(ALoader: IQLoader);
 begin
   FActiveLoader := ALoader;
+  _ActiveLoader := ALoader;
 end;
 
 procedure TQPluginsManager.Start;
@@ -2291,7 +2082,8 @@ procedure TQNotifyManager.Send(AId: Cardinal; AParams: IQParams);
 var
   AEvent: TEvent;
 begin
-  if MainThreadId = {$IFDEF NEXTGEN}TThread.Current.ThreadID {$ELSE}GetCurrentThreadId {$ENDIF}then
+  if MainThreadId = {$IFDEF NEXTGEN}TThread.Current.ThreadID
+  {$ELSE}GetCurrentThreadId {$ENDIF} then
     DoNotify(AId, AParams)
   else
   begin
@@ -2495,6 +2287,16 @@ end;
 function TQBaseLoader.GetLoader: IQLoader;
 begin
   Result := Self;
+end;
+
+function TQBaseLoader.GetLoadingFileName: PWideChar;
+begin
+  Result := PWideChar(FActiveFileName);
+end;
+
+function TQBaseLoader.GetLoadingModule: HINST;
+begin
+  Result := FLoadingModule;
 end;
 
 function TQBaseLoader.GetModuleCount: Integer;
@@ -2796,6 +2598,7 @@ begin
     (PluginsManager as IQNotifyManager).Send(NID_PLUGIN_LOADING, AParams);
     PluginsManager.ActiveLoader := Self;
     try
+      FActiveFileName := AFileName;
       Result := InternalLoadServices(AFileName);
       if (ALastState = lsIdle) then
       begin
@@ -2811,6 +2614,7 @@ begin
         PluginsManager.ActiveLoader := nil;
       end;
       FLoadingModule := 0;
+      SetLength(FActiveFileName, 0);
       FState := ALastState;
     end;
   end;
@@ -2859,7 +2663,7 @@ begin
   else
   begin
     begin
-      PluginsManager.AsynCall(AsynUnload, NewParams([AHandle]));
+      AsynCall(AsynUnload, NewParams([AHandle]));
       Result := true;
     end;
   end;

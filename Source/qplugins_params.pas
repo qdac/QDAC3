@@ -2,7 +2,7 @@ unit qplugins_params;
 
 interface
 
-uses classes, sysutils, qstring, qvalue, variants{$IFDEF UNICODE},
+uses classes, sysutils, qstring, qvalue, qplugins_base,variants{$IFDEF UNICODE},
   Generics.collections, Rtti{$ENDIF};
 {$HPPEMIT '#pragma link "qplugins_params"'}
 {$REGION History}
@@ -17,112 +17,6 @@ uses classes, sysutils, qstring, qvalue, variants{$IFDEF UNICODE},
 {$ENDREGION}
 
 type
-  // 流
-  IQStream = interface
-    ['{BCFD2F69-CCB8-4E0B-9FE9-A7D58797D1B8}']
-    function Read(pv: Pointer; cb: Cardinal): Cardinal; stdcall;
-    function Write(pv: Pointer; cb: Cardinal): Cardinal; stdcall;
-    function Seek(AOffset: Int64; AFrom: BYTE): Int64; stdcall;
-    procedure SetSize(ANewSize: UInt64); stdcall;
-    function CopyFrom(AStream: IQStream; ACount: Int64): Int64; stdcall;
-  end;
-
-  // 参数规格化，用于使用不同语言之间交互
-  TQParamType = (ptUnknown,
-    // Integer Types
-    ptInt8, ptUInt8, ptInt16, ptUInt16, ptInt32, ptUInt32, ptInt64, ptUInt64,
-    ptFloat4, ptFloat8, // Float types
-    ptDateTime, ptInterval, // DateTime types
-    ptAnsiString, ptUtf8String, ptUnicodeString, // String types
-    ptBoolean, // Boolean
-    ptGuid, // Guid
-    ptBytes, // Binary
-    ptStream, // 流
-    ptArray, // Array
-    ptInterface);
-  IQParams = interface;
-
-  IQString = interface
-    ['{B2FB1524-A06D-47F6-AA85-87C2251F2FCF}']
-    procedure SetValue(const S: PWideChar); stdcall;
-    function GetValue: PWideChar; stdcall;
-    function GetLength: Integer; stdcall;
-    procedure SetLength(ALen: Integer); stdcall;
-    property Value: PWideChar read GetValue write SetValue;
-    property Length: Integer read GetLength write SetLength;
-  end;
-
-  // 单个参数
-  IQParam = interface
-    ['{8641FD44-1BC3-4F04-B730-B5406CDA17E3}']
-    function GetName: PWideChar; stdcall;
-    function GetAsInteger: Integer; stdcall;
-    procedure SetAsInteger(const AValue: Integer); stdcall;
-    function GetAsInt64: Int64; stdcall;
-    procedure SetAsInt64(const AValue: Int64); stdcall;
-    function GetAsBoolean: Boolean; stdcall;
-    procedure SetAsBoolean(const AValue: Boolean); stdcall;
-    function GetAsSingle: Single; stdcall;
-    procedure SetAsSingle(const AValue: Single); stdcall;
-    function GetAsFloat: Double; stdcall;
-    procedure SetAsFloat(const AValue: Double); stdcall;
-    function GetAsString: IQString; stdcall;
-    procedure SetAsString(const AValue: IQString); stdcall;
-    function GetAsGuid: TGuid; stdcall;
-    procedure SetAsGuid(const Value: TGuid); stdcall;
-    function GetAsBytes(ABuf: PByte; ABufLen: Cardinal): Cardinal; stdcall;
-    procedure SetAsBytes(ABuf: PByte; ABufLen: Cardinal); stdcall;
-    function GetIsNull: Boolean; stdcall;
-    procedure SetNull; stdcall;
-    function GetAsArray: IQParams; stdcall;
-    function GetAsStream: IQStream; stdcall;
-    procedure SetAsStream(AStream: IQStream); stdcall;
-    function GetParent: IQParams; stdcall;
-    function GetType: TQParamType; stdcall;
-    procedure SetType(const AType: TQParamType); stdcall;
-    function GetAsInterface: IInterface; stdcall;
-    procedure SetAsInterface(const AIntf: IInterface); stdcall;
-    function GetIndex: Integer; stdcall;
-    property AsInteger: Integer read GetAsInteger write SetAsInteger;
-    property AsInt64: Int64 read GetAsInt64 write SetAsInt64;
-    property AsBoolean: Boolean read GetAsBoolean write SetAsBoolean;
-    property AsSingle: Single read GetAsSingle write SetAsSingle;
-    property AsFloat: Double read GetAsFloat write SetAsFloat;
-    property AsGuid: TGuid read GetAsGuid write SetAsGuid;
-    property IsNull: Boolean read GetIsNull;
-    property Name: PWideChar read GetName;
-    property AsArray: IQParams read GetAsArray;
-    property AsStream: IQStream read GetAsStream write SetAsStream;
-    property AsString: IQString read GetAsString write SetAsString;
-    property Parent: IQParams read GetParent;
-    property ParamType: TQParamType read GetType;
-    property AsInterface: IInterface read GetAsInterface write SetAsInterface;
-    property Index: Integer read GetIndex;
-  end;
-
-  // 参数列表
-  IQParams = interface
-    ['{B5746B65-7586-4DED-AE20-D4FF9B6ECD9E}']
-    function GetItems(AIndex: Integer): IQParam; stdcall;
-    function GetCount: Integer; stdcall;
-    function ByName(const AName: PWideChar): IQParam; stdcall;
-    function ByPath(APath: PWideChar): IQParam; stdcall;
-    function Add(const AName: PWideChar; AParamType: TQParamType): IQParam;
-      overload; stdcall;
-    function Add(const AName: PWideChar; AChildren: IQParams): IQParam;
-      overload; stdcall;
-    function GetAsString: IQString; stdcall;
-    procedure Delete(AIndex: Integer); stdcall;
-    procedure Clear; stdcall;
-    function IndexOf(const AParam: IQParam): Integer; stdcall;
-    procedure SaveToStream(AStream: IQStream); stdcall;
-    procedure LoadFromStream(AStream: IQStream); stdcall;
-    procedure SaveToFile(const AFileName: PWideChar); stdcall;
-    procedure LoadFromFile(const AFileName: PWideChar); stdcall;
-    property Items[AIndex: Integer]: IQParam read GetItems; default;
-    property Count: Integer read GetCount;
-    property AsString: IQString read GetAsString;
-  end;
 
   IQStringService = interface
     ['{9B9384C6-8E8C-4E32-B07B-3F60A7D0A595}']

@@ -9,6 +9,7 @@ uses classes, sysutils, syncobjs, qstring{$IFDEF MSWINDOWS}, windows,
 type
 
   TQAsynProc = procedure(AParams: IInterface) of object;
+  TQAsynStdProc = procedure(AParams: IInterface); stdcall;
   TQAsynProcG = procedure(AParams: IInterface);
 {$IFDEF UNICODE}
   TQAsynProcA = reference to procedure(AParams: IInterface);
@@ -27,6 +28,7 @@ type
     procedure ProcessQueue;
     procedure Post(ACallback: TQAsynProc; AParams: IInterface); overload;
     procedure Post(ACallback: TQAsynProcG; AParams: IInterface); overload;
+    procedure Post(ACallback: TQAsynStdProc; AParams: IInterface); overload;
 {$IFDEF UNICODE}
     procedure Post(ACallback: TQAsynProcA; AParams: IInterface); overload;
 {$ENDIF}
@@ -50,6 +52,7 @@ type
     destructor Destroy; override;
     procedure Post(ACallback: TQAsynProc; AParams: IInterface); overload;
     procedure Post(ACallback: TQAsynProcG; AParams: IInterface); overload;
+    procedure Post(ACallback: TQAsynStdProc; AParams: IInterface); overload;
 {$IFDEF UNICODE}
     procedure Post(ACallback: TQAsynProcA; AParams: IInterface); overload;
 {$ENDIF}
@@ -57,6 +60,7 @@ type
 
 procedure AsynCall(ACallback: TQAsynProc; AParams: IInterface); overload;
 procedure AsynCall(ACallback: TQAsynProcG; AParams: IInterface); overload;
+procedure AsynCall(ACallback: TQAsynStdProc; AParams: IInterface); overload;
 {$IFDEF UNICODE}
 procedure AsynCall(ACallback: TQAsynProcA; AParams: IInterface); overload;
 {$ENDIF}
@@ -154,7 +158,17 @@ begin
   PQAsynProcA(@TMethod(ATemp).Code)^ := ACallback;
   Post(ATemp, AParams);
 end;
+
 {$ENDIF}
+
+procedure TQPostQueue.Post(ACallback: TQAsynStdProc; AParams: IInterface);
+var
+  ATemp: TQAsynProc;
+begin
+  TMethod(ATemp).Data := Pointer(-2);
+  TQAsynStdProc(TMethod(ATemp).Code) := ACallback;
+  Post(ATemp, AParams);
+end;
 
 function TQPostQueue.ProcessItem: Boolean;
 var
@@ -174,6 +188,8 @@ begin
       try
         if TMethod(AItem.Handler).Data = nil then
           TQAsynProcG(TMethod(AItem.Handler).Code)(AItem.Params)
+        else if TMethod(AItem.Handler).Data = Pointer(-1) then
+          TQAsynStdProc(TMethod(AItem.Handler).Code)(AItem.Params)
 {$IFDEF UNICODE}
         else if TMethod(AItem.Handler).Data = Pointer(-1) then
         begin
@@ -243,7 +259,7 @@ begin
   begin
     Result := TQPostQueue.Create;
     if AtomicCmpExchange(Pointer(_PostQueue), Pointer(Result), nil) <> nil then
-      FreeAndNil(Result)
+      Result := nil
     else // 由于直接交换指针没有增加引用计数，所以手动增加下
       _PostQueue._AddRef;
   end;
@@ -282,6 +298,11 @@ begin
 end;
 
 procedure AsynCall(ACallback: TQAsynProcG; AParams: IInterface);
+begin
+  AsynQueue.Post(ACallback, AParams);
+end;
+
+procedure AsynCall(ACallback: TQAsynStdProc; AParams: IInterface);
 begin
   AsynQueue.Post(ACallback, AParams);
 end;

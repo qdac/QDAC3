@@ -32,6 +32,10 @@ interface
 }
 {$REGION '修订日志'}
 { 修订日志
+  2017.5.8
+  ==========
+  * 修订了 DLL 中主线程作业可能无法执行的问题
+  * 修订了调用 Clear 清理作业后投递新计划任务作业无法执行的问题（麦子仲肥报告）
   2017.1.10
   ==========
   * 修订了延迟重复作业无法通过作业中设置 AJob.IsTerminated 停止的问题（九木报告）
@@ -3373,7 +3377,7 @@ begin
                 SizeOf(Pointer) shl 1)));
 {$ENDIF}
               if FActiveJob.InMainThread then
-{$IFDEF DEBUGOUT}
+{$IFDEF MSWINDOWS}
               begin
                 if PostMessage(FOwner.FMainWorker, WM_APP, WPARAM(FActiveJob),
                   LPARAM(SyncEvent)) then
@@ -5814,6 +5818,7 @@ begin
       AParam.WaitType := $FF;
       WaitRunningDone(AParam);
     end;
+    FPlanCheckJob:=0;
   finally
     EnableWorkers;
   end;
