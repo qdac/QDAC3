@@ -358,7 +358,7 @@ type
       AStart, AStop: Integer; AMsgWait: Boolean); stdcall;
     procedure Clear(AHandle: THandle); stdcall;
     function CreateJobGroup(AByOrder: Boolean): IQJobGroup; stdcall;
-    function SetWorkers(const AMinWorkers, AMaxWorkers: Integer); stdcall;
+    procedure SetWorkers(const AMinWorkers, AMaxWorkers: Integer); stdcall;
     procedure PeekCurrentWorkers(var ATotal, AIdle, ABusy: Integer); stdcall;
   end;
 

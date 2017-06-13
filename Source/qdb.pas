@@ -10,6 +10,10 @@ interface
   1.QDB 在字段列表太多时，效率会明显下降(五月光报告）
   2.QDB
   Changes:
+  2017.6.13
+  ==========
+  * 修正了TQProvider没有监听数据集对应的释放造成的AV错误（云大第一菜籽报告）
+
   2015.12.14
   ==========
   * 修正了 SetRecNo 没有正确定位到指定位置的问题(蜗牛也是牛报告）
@@ -2481,12 +2485,12 @@ begin
   end
   else
     SetLength(FValues, FFields.Count);
-  // OutputDebugString(PChar(IntToHex(IntPtr(Self),8)+' Created.'));
+  OutputDebugString(PChar(IntToHex(IntPtr(Self), 8) + ' Created.'));
 end;
 
 destructor TQRecord.Destroy;
 begin
-  // OutputDebugString(PChar(IntToHex(IntPtr(Self),8)+' free.'));
+  OutputDebugString(PChar(IntToHex(IntPtr(Self), 8) + ' free.'));
   ClearValues;
   TQRecord(FBookmark) := nil;
   inherited;
@@ -2867,13 +2871,13 @@ end;
 function TQDataSet.BookmarkValid(Bookmark: TBookmark): Boolean;
 begin
   Result := False;
-  if Assigned(Bookmark) and (PPointer(Bookmark)^<>nil) then
-  try
-    InternalGotobookmark(Bookmark);
-    CursorPosChanged;
-    Result := True;
-  except
-  end;
+  if Assigned(Bookmark) and (PPointer(Bookmark)^ <> nil) then
+    try
+      InternalGotoBookmark(Bookmark);
+      CursorPosChanged;
+      Result := True;
+    except
+    end;
 end;
 
 function TQDataSet.BufferOfRecNo(ARecNo: Integer): TQRecord;
@@ -3202,6 +3206,7 @@ var
       ARec.FStatus := ASource.UpdateStatus;
       if ARec.FStatus <> usUnmodified then
         ARec.FChangedIndex := FChangedRecords.Add(ARec);
+      ARec.Release;
       ASource.Next;
     end;
     Open;
@@ -3320,6 +3325,7 @@ var
             ACopy.Values[J].OldValue.Copy(AValue.OldValue, False);
           Inc(J);
         end;
+        ACopy.Release;
       end;
       Inc(I);
       Dec(ACount);
@@ -3623,7 +3629,6 @@ end;
 
 destructor TQDataSet.Destroy;
 begin
-  inherited;
   FreeObject(FSortedRecords);
   FreeObject(FChangedRecords);
   FreeObject(FFilteredRecords);
@@ -3631,6 +3636,7 @@ begin
   FreeObject(FClones);
   FreeObject(FChecks);
   FreeObject(FMasterLink);
+  inherited;
 end;
 
 procedure TQDataSet.Diff(ASource1, ASource2: TQDataSet; AFields: QStringW;
@@ -4773,7 +4779,9 @@ begin
             Inc(FRecordNo);
         end
         else if FRecordNo < RecordCount then
+        begin
           Result := grOK
+        end
         else
           Result := grError;
       end;
@@ -5776,6 +5784,7 @@ var
         FEditingRow := ACopy;
       end;
       FOriginRecords.Insert(FEditingRow.FOriginIndex, FEditingRow);
+      FEditingRow.Release;
     end;
     if FEditingRow.Status in [usModified, usInserted] then
     begin
@@ -6355,12 +6364,12 @@ var
         DatabaseError(SBadLocateValues);
       SetLength(AValues, I);
       for I := 0 to High(AValues) do
-        AValues[I] := KeyValues[I];
+        AValues[I] := VarToStr(KeyValues[I]);
     end
     else
     begin
       SetLength(AValues, 1);
-      AValues[0] := KeyValues;
+      AValues[0] := VarToStr(KeyValues);
     end;
   end;
 
@@ -8796,8 +8805,11 @@ var
 begin
   Close;
   FreeObject(FParams);
-  for I := 0 to FDataSets.Count - 1 do
-    FreeObject(FDataSets[I]);
+  for I := FDataSets.Count - 1 downto 0 do
+  begin
+    if FDataSets[I].Owner = nil then
+      FreeObject(FDataSets[I]);
+  end;
   FreeObject(FDataSets);
   inherited;
 end;
@@ -9169,9 +9181,15 @@ begin
   if AComponent is TQDataSet then
   begin
     if Operation = opInsert then
-      FDataSets.Add(AComponent as TQDataSet)
+    begin
+      FDataSets.Add(AComponent as TQDataSet);
+      AComponent.FreeNotification(Self);
+    end
     else
+    begin
+      AComponent.RemoveFreeNotification(Self);
       FDataSets.Remove(AComponent as TQDataSet);
+    end;
   end;
 end;
 
