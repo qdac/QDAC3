@@ -156,11 +156,12 @@ type
     FAdjustStack: TQAdjustStack; // 最后一次调整的ScrollBox
 {$IFDEF ANDROID}
     FVKState: PByte;
-    FLastContentRectChanged: TOnContentRectChanged;
     class var FContentRect: TRect;
-
+    {$IF RTLVersion>=32}
+    FLastContentRectChanged: TOnContentRectChanged;
     procedure DoContentRectChanged(const App: TAndroidApplicationGlue;
       const ARect: TRect);
+    {$ENDIF}
 {$ENDIF}
     procedure DoVKVisibleChanged(const Sender: TObject;
       const Msg: System.Messaging.TMessage);
@@ -207,6 +208,7 @@ begin
   ContentRect := TJRect.Create;
   MainActivity.getWindow.getDecorView.getWindowVisibleDisplayFrame(ContentRect);
   Content:=JRectToRectF(ContentRect);
+  TVKStateHandler.FContentRect:=Content.Truncate;
   {$ELSE}
   Content := TVKStateHandler.FContentRect;
   {$ENDIF}
@@ -231,6 +233,7 @@ end;
 function GetVKBounds(var ARect: TRect): Boolean; overload;
 begin
   ARect := GetVKPixelBounds;
+
   Result := ARect.Bottom <> TVKStateHandler.FContentRect.Bottom;
   ARect := TRectF.Create(ConvertPixelToPoint(ARect.TopLeft),
     ConvertPixelToPoint(ARect.BottomRight)).Truncate;

@@ -9,7 +9,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls,
-  Vcl.ExtCtrls, qplugins, qplugins_loader_lib, QPlugins_Vcl_messages;
+  Vcl.ExtCtrls, qplugins, qplugins_base,qplugins_loader_lib, QPlugins_Vcl_messages;
 
 type
   TForm1 = class(TForm)

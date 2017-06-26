@@ -11,7 +11,7 @@ const
 
 implementation
 
-uses classes, sysutils, syncobjs, qstring, qplugins,
+uses classes, sysutils, syncobjs, qstring, qplugins,qplugins_base,
   qplugins_params, qplugins_messages, qdac_postqueue, system.messaging,
   fmx.types, fmx.platform, fmx.controls, fmx.forms
 {$IFDEF MSWINDOWS}, fmx.platform.Win, windows, messages{$ENDIF};
@@ -57,7 +57,7 @@ type
     function IsFilterShowModal: Boolean;
     procedure Notify(const AId: Cardinal; AParams: IQParams;
       var AFireNext: Boolean); stdcall;
-    function IsShareForm(AFormClassInstance: HMODULE): Boolean;
+    function IsShareForm(AFormClass:Pointer): Boolean;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -269,7 +269,7 @@ begin
   // 如果要在子程序使用窗体服务，则主程序必需实现 IQHostService
   if Supports(PluginsManager, IQHostService, AService) then
   begin
-    Result := AService.IsShareForm(FormInstance);
+    Result := AService.IsShareForm(TForm);
   end
   else
     Result := false;
@@ -474,7 +474,7 @@ begin
   end;
 end;
 
-function TQHostMessageService.IsShareForm(AFormClassInstance: HMODULE): Boolean;
+function TQHostMessageService.IsShareForm(AFormClass:Pointer): Boolean;
   function FormInstance: HMODULE;
   type
     TTestMethod = procedure of object;
@@ -504,7 +504,7 @@ function TQHostMessageService.IsShareForm(AFormClassInstance: HMODULE): Boolean;
   end;
 
 begin
-  Result := FormInstance = AFormClassInstance;
+  Result := true;// FormInstance = AFormClassInstance;
 end;
 
 procedure TQHostMessageService.Notify(const AId: Cardinal; AParams: IQParams;

@@ -1,25 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Transactions>
-    <Transaction>2015/12/02 14:06:24.000.109,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2015/12/07 14:09:11.000.419,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2015/12/07 14:22:41.000.447,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2015/12/21 15:23:08.000.114,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2016/01/11 09:25:28.000.100,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2016/01/14 11:12:55.000.313,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2016/01/18 16:20:33.000.888,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2016/01/23 10:12:44.000.162,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2016/03/14 15:11:12.000.551,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2016/03/18 11:01:31.000.707,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2016/03/25 16:50:17.000.588,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2016/03/28 15:48:28.000.629,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2016/03/30 22:22:48.000.324,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2016/03/31 13:59:17.000.629,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2016/03/31 15:47:51.000.272,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2016/04/05 21:16:29.000.663,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2016/04/05 21:17:40.000.310,D:\User\QDAC3\QPlugins\Demos\Delphi\MDI\hostmain.pas=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>2016/04/05 21:17:40.000.310,D:\User\QDAC3\QPlugins\Demos\Delphi\MDI\hostmain.dfm=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.dfm</Transaction>
-    <Transaction>2016/04/05 21:17:43.000.450,D:\User\QDAC3\QPlugins\Demos\Delphi\MDI\mdihost.dproj=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>2016/04/05 21:17:40.000.310,C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.dfm=D:\User\QDAC3\QPlugins\Demos\Delphi\MDI\hostmain.dfm</Transaction>
+    <Transaction>2016/04/05 21:17:43.000.450,C:\Users\swish\Documents\Embarcadero\Studio\Projects\Project1.dproj=D:\User\QDAC3\QPlugins\Demos\Delphi\MDI\mdihost.dproj</Transaction>
   </Transactions>
 	<ActiveMobileDevice>
 		<NoProfile iOSSimulator="iPhone5" Android="021YLJ212C031271"/>

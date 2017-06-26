@@ -2,7 +2,7 @@ unit dynsvc;
 
 interface
 
-uses classes, qstring, qplugins_params, qplugins;
+uses classes, qstring, qplugins_params, qplugins,qplugins_base;
 
 type
   TQSumService = class(TQService)

@@ -844,9 +844,9 @@ type
   TQReadOnlyMemoryStream = class(TCustomMemoryStream)
   private
   protected
-    constructor Create();overload;
+    constructor Create(); overload;
   public
-    constructor Create(AData: Pointer; ASize: Integer);overload;
+    constructor Create(AData: Pointer; ASize: Integer); overload;
     function Write(const Buffer; count: Longint): Longint; override;
   end;
 
@@ -3670,10 +3670,18 @@ begin
         S := pe;
       end
       else
+      begin
         SetLength(Result, 0);
+        while S^ <> #0 do
+          Inc(S);
+      end;
     end
     else
+    begin
       SetLength(Result, 0);
+      while S^ <> #0 do
+        Inc(S);
+    end;
   end
   else
   begin
@@ -3686,15 +3694,23 @@ begin
       begin
         l := pe - ps;
         SetLength(Result, l);
-        Move(ps, PQCharW(Result)^, l shl 1);
+        Move(ps^, PQCharW(Result)^, l shl 1);
         Inc(pe, Length(AEndTag));
         S := pe;
       end
       else
+      begin
         SetLength(Result, 0);
+        while S^ <> #0 do
+          Inc(S);
+      end
     end
     else
+    begin
       SetLength(Result, 0);
+      while S^ <> #0 do
+        Inc(S);
+    end;
   end;
 end;
 
@@ -7289,7 +7305,7 @@ begin
       (PByte(IntPtr(ps) + 1)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
       Ord('0') .. Ord('9')]) and
       (PByte(IntPtr(ps) + 2)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
-      Ord('0') .. Ord('9')]) then // 原来就是%xx?
+      Ord('0') .. Ord('9')]) then // 原来就是%xx?     %09%32
       Inc(ps, 3)
     else
     begin
@@ -11478,7 +11494,7 @@ end;
 constructor TQReadOnlyMemoryStream.Create;
 begin
   inherited;
-  //这个构造函数变成保护的，以避免外部访问
+  // 这个构造函数变成保护的，以避免外部访问
 end;
 
 function TQReadOnlyMemoryStream.Write(const Buffer; count: Integer): Longint;

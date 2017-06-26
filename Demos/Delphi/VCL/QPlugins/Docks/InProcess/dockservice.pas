@@ -2,7 +2,7 @@ unit dockservice;
 
 interface
 
-uses classes, qstring, qplugins,qplugins_params, controls;
+uses classes, qstring, qplugins,qplugins_params,qplugins_base, controls;
 
 type
   TDockService = class(TQService)

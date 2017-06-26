@@ -3,7 +3,7 @@ unit qplugins_mgr;
 interface
 
 uses classes, types, sysutils, syncobjs, qstring, qtimetypes, qvalue, qjson,
-  qpluginsintf, qplugins{$IFDEF UNICODE},
+  qpluginsintf, qplugins,qplugins_base{$IFDEF UNICODE},
   system.Generics.collections{$ENDIF};
 
 type

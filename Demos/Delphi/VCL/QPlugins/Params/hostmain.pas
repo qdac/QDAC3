@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, Types, System.Variants,
   System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, QString, QPlugins, Vcl.StdCtrls,
-  Vcl.ExtCtrls, QPlugins_params, QPlugins_loader_lib;
+  Vcl.ExtCtrls, qplugins_base,QPlugins_params, QPlugins_loader_lib;
 
 type
   // 这个演示如何将对象进行封装，做为参数在服务间传递

@@ -31,8 +31,8 @@ object Form2: TForm2
     object Image1: TImage
       Left = 0
       Top = 0
-      Width = 694
-      Height = 197
+      Width = 960
+      Height = 600
       Align = alClient
       AutoSize = True
       Picture.Data = {
@@ -5643,8 +5643,6 @@ object Form2: TForm2
         9FA5B27FF452EC0FFEB2FBF78AFEBD7B42FA75EFF87EAFE64DFF003F4B64FF00
         E8A5D81FFD65F7EF15FD7AF685F4EBDFF0FD5FCC9BFE7E96C9FF00D14BB03FFA
         CBEFDE2BFAF5ED0BE9D7FFD9}
-      ExplicitWidth = 960
-      ExplicitHeight = 600
     end
     object Label1: TLabel
       Left = 391

@@ -40,7 +40,7 @@ var
 
 implementation
 
-uses qpluginsintf, qplugins, qplugins_mgr, directsvc;
+uses qpluginsintf, qplugins,qplugins_base, qplugins_mgr, directsvc;
 {$R *.dfm}
 
 procedure TForm1.Button1Click(Sender: TObject);

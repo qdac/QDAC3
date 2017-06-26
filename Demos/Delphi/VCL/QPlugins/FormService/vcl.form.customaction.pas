@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, vcl.Graphics,
-  vcl.Controls, vcl.Forms, vcl.Dialogs, vcl.StdCtrls, qplugins,
+  vcl.Controls, vcl.Forms, vcl.Dialogs, vcl.StdCtrls, qplugins,qplugins_base,
   qplugins_params, qplugins_formsvc, qplugins_vcl_formsvc;
 
 type

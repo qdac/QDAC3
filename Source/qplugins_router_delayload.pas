@@ -2,7 +2,7 @@ unit qplugins_router_delayload;
 
 interface
 
-uses classes, sysutils, qstring, qplugins_params, qplugins, qjson;
+uses classes, sysutils, qstring, qplugins_params, qplugins, qplugins_base,qjson;
 {$HPPEMIT '#pragma link "qplugins_router_delayload"'}
 type
   (*

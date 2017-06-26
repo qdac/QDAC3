@@ -2815,17 +2815,30 @@ function TQJson.FormatParseError(ACode: Integer; AMsg: QStringW; ps, p: PQCharW)
 var
   ACol, ARow: Integer;
   ALine: QStringW;
+  pLine: PQCharW;
+  ALineText: array [0 .. 102] of QCharW;
+  procedure ErrorLine;
+  var
+    pl, pls,pe: PQCharW;
+  begin
+    pl := PQCharW(ALine);
+    pls := pl;
+    Inc(pl, ACol);
+    pe:=pl;
+    while (pl>=pls) and (IntPtr(pe) - IntPtr(pl)<100) do
+      Dec(pl);
+    ALine := StrDupX(pl, 50) + SLineBreak + StringReplicateW('0',
+      (IntPtr(pl) - IntPtr(pls)) shr 1)+'^';
+  end;
+
 begin
   if ACode <> 0 then
   begin
-    p := StrPosW(ps, p, ACol, ARow);
-    ALine := DecodeLineW(p, False);
+    pLine := StrPosW(ps, p, ACol, ARow);
+    ALine := DecodeLineW(pLine, False);
     if Length(ALine) > 1024 then // 一行最长允许1024个字符
     begin
-      SetLength(ALine, 1024);
-      PQCharW(ALine)[1023] := '.';
-      PQCharW(ALine)[1022] := '.';
-      PQCharW(ALine)[1021] := '.';
+      ErrorLine;
     end;
     Result := Format(SJsonParseError, [ARow, ACol, AMsg, ALine]);
   end

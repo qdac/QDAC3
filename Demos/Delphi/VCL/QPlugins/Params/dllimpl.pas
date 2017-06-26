@@ -2,7 +2,7 @@ unit dllimpl;
 
 interface
 
-uses classes, sysutils, types, qplugins, qstring,qplugins_params;
+uses classes, sysutils, types, qplugins, qstring,qplugins_base,qplugins_params;
 
 type
   IList = interface

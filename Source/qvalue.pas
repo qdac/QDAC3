@@ -2,7 +2,8 @@
 
 interface
 
-uses classes, sysutils, variants, varutils, math, qstring, fmtbcd, qtimetypes,qjson,qmsgpack;
+uses classes, sysutils, variants, varutils, math, qstring, fmtbcd, qtimetypes,
+  qjson, qmsgpack;
 {$I qdac.inc}
 
 {
@@ -675,8 +676,16 @@ begin
 end;
 
 function Comp_Currency_Currency(const V1, V2: PQValue): Integer;
+var
+  T: Int64;
 begin
-  Result := V1.Value.AsInt64 - V2.Value.AsInt64;
+  T := V1.Value.AsInt64 - V2.Value.AsInt64;
+  if T > 0 then
+    Result := 1
+  else if T < 0 then
+    Result := -1
+  else
+    Result := 0;
 end;
 
 /// Bcd vs *

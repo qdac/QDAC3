@@ -4,7 +4,7 @@ interface
 
 {$I 'qdac.inc'}
 
-uses classes, sysutils, types, qstring, qplugins,
+uses classes, sysutils, types, qstring, qplugins,qplugins_base,
   qplugins_params{$IF RTLVERSION<23}, controls, forms{$ELSE}, uitypes{$IFEND};
 {$HPPEMIT '#pragma link "qplugins_formsvc"'}
 

@@ -2,7 +2,8 @@ unit qplugins_params;
 
 interface
 
-uses classes, sysutils, qstring, qvalue, qplugins_base,variants{$IFDEF UNICODE},
+uses classes, sysutils, qstring, qvalue, qplugins_base,
+  variants{$IFDEF UNICODE},
   Generics.collections, Rtti{$ENDIF};
 {$HPPEMIT '#pragma link "qplugins_params"'}
 {$REGION History}
@@ -20,7 +21,7 @@ type
 
   IQStringService = interface
     ['{9B9384C6-8E8C-4E32-B07B-3F60A7D0A595}']
-    function NewString(S: PWideChar): IQString; stdcall;
+    function NewString(const S: PWideChar): IQString; stdcall;
   end;
 
   // 下面的封装是仅面向Delphi的，以便简化编码
@@ -166,6 +167,10 @@ type
     function GetAsInterface: IInterface; stdcall;
     procedure SetAsInterface(const AIntf: IInterface); stdcall;
     function GetIndex: Integer; stdcall;
+    function _GetAsArray: StandInterfaceResult; stdcall;
+    function _GetAsStream: StandInterfaceResult; stdcall;
+    function _GetParent: StandInterfaceResult; overload; stdcall;
+    function _GetAsInterface: StandInterfaceResult; overload; stdcall;
   public
     constructor Create(AOwner: TQParams); overload;
     destructor Destroy; override;
@@ -255,6 +260,17 @@ type
       : Integer; overload;
     function Add(const AName: QStringW; const AValue: TGuid): Integer; overload;
     function IndexOf(const AParam: IQParam): Integer; stdcall;
+
+    function _GetItems(AIndex: Integer): StandInterfaceResult;
+      overload; stdcall;
+    function _ByName(const AName: PWideChar): StandInterfaceResult; stdcall;
+    function _ByPath(APath: PWideChar): StandInterfaceResult; stdcall;
+    function _Add(const AName: PWideChar; AParamType: TQParamType)
+      : StandInterfaceResult; overload; stdcall;
+    function _Add(const AName: PWideChar; AChildren: IQParams)
+      : StandInterfaceResult; overload; stdcall;
+    function _GetAsString: StandInterfaceResult; stdcall;
+
     property Items[AIndex: Integer]: TQParam read GetDItems
       write SetDItems; default;
     property Count: Integer read GetCount;
@@ -294,7 +310,7 @@ function ParamsHelper(AParams: IQParams): IQParamsHelper;
 // Interface to object
 function InstanceOf(AIntf: IInterface): TObject; overload;
 function InstanceOf(AIntf: IInterface; var AObj: TObject): Boolean; overload;
-
+function PointerOf(AIntf: IInterface): Pointer; inline;
 var
   StringService: IQStringService = nil;
 
@@ -351,6 +367,10 @@ type
     function GetAsInterface: IInterface; stdcall;
     procedure SetAsInterface(const AIntf: IInterface); stdcall;
     function GetIndex: Integer; stdcall;
+    function _GetAsArray: StandInterfaceResult; stdcall;
+    function _GetAsStream: StandInterfaceResult; stdcall;
+    function _GetParent: StandInterfaceResult; overload; stdcall;
+    function _GetAsInterface: StandInterfaceResult; overload; stdcall;
   public
     constructor Create(AIntf: IQParam);
   end;
@@ -391,9 +411,29 @@ type
     function Add(const AName: PWideChar; AChildren: IQParams): IQParam;
       overload; stdcall;
     function IndexOf(const AParam: IQParam): Integer; stdcall;
+    function _GetItems(AIndex: Integer): StandInterfaceResult;
+      overload; stdcall;
+    function _ByName(const AName: PWideChar): StandInterfaceResult; stdcall;
+    function _ByPath(APath: PWideChar): StandInterfaceResult; stdcall;
+    function _Add(const AName: PWideChar; AParamType: TQParamType)
+      : StandInterfaceResult; overload; stdcall;
+    function _Add(const AName: PWideChar; AChildren: IQParams)
+      : StandInterfaceResult; overload; stdcall;
+    function _GetAsString: StandInterfaceResult; stdcall;
   public
     constructor Create(AIntf: IQParams);
   end;
+
+function PointerOf(AIntf: IInterface): Pointer; inline;
+begin
+  if Assigned(AIntf) then
+  begin
+    AIntf._AddRef;
+    Result := Pointer(AIntf);
+  end
+  else
+    Result := nil;
+end;
 
 function InstanceOf(AIntf: IInterface): TObject;
 var
@@ -1181,6 +1221,26 @@ begin
   end;
 end;
 
+function TQParam._GetAsArray: StandInterfaceResult;
+begin
+  Result := PointerOf(GetAsArray);
+end;
+
+function TQParam._GetAsInterface: StandInterfaceResult;
+begin
+  Result := PointerOf(GetAsInterface);
+end;
+
+function TQParam._GetAsStream: StandInterfaceResult;
+begin
+  Result := PointerOf(GetAsStream);
+end;
+
+function TQParam._GetParent: StandInterfaceResult;
+begin
+  Result := PointerOf(GetParent);
+end;
+
 { TQParams }
 
 function TQParams.Add(const AName: PWideChar; AParamType: TQParamType): IQParam;
@@ -1696,6 +1756,38 @@ begin
     FItems[AIndex] := Value;
 {$ENDIF}
   end;
+end;
+
+function TQParams._Add(const AName: PWideChar; AChildren: IQParams)
+  : StandInterfaceResult;
+begin
+  Result := PointerOf(Add(AName, AChildren));
+end;
+
+function TQParams._Add(const AName: PWideChar; AParamType: TQParamType)
+  : StandInterfaceResult;
+begin
+  Result := PointerOf(Add(AName, AParamType));
+end;
+
+function TQParams._ByName(const AName: PWideChar): StandInterfaceResult;
+begin
+  Result := PointerOf(ByName(AName));
+end;
+
+function TQParams._ByPath(APath: PWideChar): StandInterfaceResult;
+begin
+  Result := PointerOf(ByPath(APath));
+end;
+
+function TQParams._GetAsString: StandInterfaceResult;
+begin
+  Result := PointerOf(GetAsString);
+end;
+
+function TQParams._GetItems(AIndex: Integer): StandInterfaceResult;
+begin
+  Result := PointerOf(GetItems(AIndex));
 end;
 
 function NewParams(const AValues: array of const): IQParams;
@@ -2217,6 +2309,26 @@ begin
   FInterface.SetType(AType);
 end;
 
+function TQParamHelper._GetAsArray: StandInterfaceResult;
+begin
+  Result := PointerOf(GetAsArray);
+end;
+
+function TQParamHelper._GetAsInterface: StandInterfaceResult;
+begin
+  Result := PointerOf(GetAsInterface);
+end;
+
+function TQParamHelper._GetAsStream: StandInterfaceResult;
+begin
+  Result := PointerOf(GetAsStream);
+end;
+
+function TQParamHelper._GetParent: StandInterfaceResult;
+begin
+  Result := PointerOf(GetParent);
+end;
+
 { TQParamsHelper }
 
 function TQParamsHelper.Add(const AName, AValue: QStringW): Integer;
@@ -2381,6 +2493,38 @@ end;
 procedure TQParamsHelper.SaveToStream(AStream: TStream);
 begin
   FInterface.SaveToStream(NewStream(AStream, False));
+end;
+
+function TQParamsHelper._Add(const AName: PWideChar; AChildren: IQParams)
+  : StandInterfaceResult;
+begin
+  Result := PointerOf(Add(AName, AChildren));
+end;
+
+function TQParamsHelper._Add(const AName: PWideChar; AParamType: TQParamType)
+  : StandInterfaceResult;
+begin
+  Result := PointerOf(Add(AName, AParamType));
+end;
+
+function TQParamsHelper._ByName(const AName: PWideChar): StandInterfaceResult;
+begin
+  Result := PointerOf(ByName(AName));
+end;
+
+function TQParamsHelper._ByPath(APath: PWideChar): StandInterfaceResult;
+begin
+  Result := PointerOf(ByPath(APath));
+end;
+
+function TQParamsHelper._GetAsString: StandInterfaceResult;
+begin
+  Result := PointerOf(GetAsString);
+end;
+
+function TQParamsHelper._GetItems(AIndex: Integer): StandInterfaceResult;
+begin
+  Result := PointerOf(GetItems(AIndex));
 end;
 
 function TQParamsHelper.Add(const AName: PWideChar;

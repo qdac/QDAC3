@@ -7,7 +7,7 @@ uses
   Classes, Graphics,
   Controls, Forms, Dialogs, QPlugins, DB, AdoInt,
   ADODB,
-  ExtCtrls, Grids, DBGrids, StdCtrls, QString, QSimplePool, QPlugins_params,
+  ExtCtrls, Grids, DBGrids, StdCtrls, QString, QSimplePool,qplugins_base, QPlugins_params,
   QPlugins_loader_lib, QPlugins_Vcl_Messages;
 
 type

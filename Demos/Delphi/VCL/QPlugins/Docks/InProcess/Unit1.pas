@@ -9,7 +9,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, qplugins, qplugins_params, Vcl.StdCtrls,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, qplugins, qplugins_base,qplugins_params, Vcl.StdCtrls,
   Vcl.ComCtrls;
 
 type

@@ -2,7 +2,7 @@ unit dllsvc;
 
 interface
 
-uses classes, qstring, qplugins, qplugins_params;
+uses classes, qstring, qplugins,qplugins_base, qplugins_params;
 
 type
   TQSumService = class(TQService)

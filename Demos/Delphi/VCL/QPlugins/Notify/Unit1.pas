@@ -9,6 +9,7 @@ uses
 
   QString,
   QPlugins,
+  QPlugins_base,
   qplugins_loader_lib,
   QPlugins_params,
   qplugins_Vcl_formsvc,

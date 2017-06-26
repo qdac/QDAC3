@@ -5,9 +5,9 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, qplugins_vcl_formsvc, qplugins_loader_lib,
-  qstring, qplugins, qplugins_params, qplugins_vcl_Messages, qplugins_formsvc,
+  qstring, qplugins,qplugins_base, qplugins_params, qplugins_vcl_Messages, qplugins_formsvc,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.ComCtrls;
+  Vcl.ComCtrls, Winapi.GDIPOBJ;
 
 type
   TForm1 = class(TForm)
@@ -178,7 +178,7 @@ end;
 
 procedure TForm1.Button8Click(Sender: TObject);
 begin
-ShowMessage(IntToHex(IntPtr(InstanceOf(PluginsManager) as TQServices),8));
+  ShowMessage(IntToHex(IntPtr(InstanceOf(PluginsManager) as TQServices), 8));
 end;
 
 procedure TForm1.ComboBox1Change(Sender: TObject);

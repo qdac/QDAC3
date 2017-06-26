@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, qplugins,
-  qplugins_params, qplugins_loader_lib, Vcl.ComCtrls, qplugins_formsvc,
+  qplugins_base,qplugins_params, qplugins_loader_lib, Vcl.ComCtrls, qplugins_formsvc,
   qplugins_vcl_formsvc;
 
 { 要安全的移除一项服务，则使用该服务的模块必需实现IQNotify接口，并对NID_PLUGIN_UNLOADING

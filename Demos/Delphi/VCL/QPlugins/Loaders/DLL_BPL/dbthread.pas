@@ -2,7 +2,7 @@ unit dbthread;
 
 interface
 
-uses classes, sysutils, adodb, adoint, db, qstring, qplugins_params, qplugins,
+uses classes, sysutils, adodb, adoint, db, qstring, qplugins_params, qplugins,qplugins_base,
   qplugins_vcl_messages, activex;
 
 type

@@ -3,7 +3,7 @@ unit qplugins_pas_ldr;
 interface
 
 uses classes, sysutils, JvComponentBase, JvInterpreter, JvInterpreterFm,
-  qstring, qpluginsintf, qplugins;
+  qstring, qpluginsintf, qplugins,qplugins_base;
 
 type
   TQPascalScriptLoader = class(TQPluginService, IQPluginsLoader)

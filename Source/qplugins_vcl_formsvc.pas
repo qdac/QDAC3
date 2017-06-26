@@ -14,7 +14,7 @@ unit qplugins_vcl_formsvc;
 interface
 
 uses classes, sysutils, types, windows, messages, controls, comctrls, forms,
-  qstring, qplugins, qplugins_params, qplugins_vcl_messages,
+  qstring, qplugins,qplugins_base, qplugins_params, qplugins_vcl_messages,
   qplugins_formsvc{$IF RTLVERSION>=23}, uitypes{$IFEND};
 {$HPPEMIT '#pragma link "qplugins_vcl_formsvc"'}
 

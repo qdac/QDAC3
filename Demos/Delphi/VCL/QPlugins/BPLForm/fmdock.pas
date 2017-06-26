@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, QString, QPlugins, Vcl.Imaging.jpeg,
-  Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.AxCtrls, qplugins_vcl_messages;
+  Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.AxCtrls,qplugins_base, qplugins_vcl_messages;
 
 type
 

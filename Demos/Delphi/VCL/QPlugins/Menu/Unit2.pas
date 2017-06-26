@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, CommCtrl,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, qplugins, qplugins_params,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, qplugins, qplugins_params,qplugins_base,
   menusvc, System.ImageList, Vcl.ImgList, Vcl.ExtCtrls, Vcl.StdCtrls;
 
 type
@@ -21,7 +21,7 @@ type
     destructor Destroy; override;
   end;
 
-  TQMenuItem = class(TQInterfacedObject, IQMenuItem)
+  TQMenuItem = class(TInterfacedObject, IQMenuItem)
   private
   protected
     FMenuItem: TMenuItem;
@@ -122,7 +122,7 @@ begin
           AChildMenu := TQMenuItem.Create(ANewMenu, AOnEvent)
         else
           AChildMenu := TQMenuItem.Create(ANewMenu, nil);
-        AChildMenu.Name:=AName;
+        AChildMenu.Name := AName;
         Result := AChildMenu;
         Result._AddRef;
         ANewMenu.Tag := IntPtr(Pointer(Result));
@@ -145,24 +145,12 @@ begin
 
 end;
 
-type
-  MyRec = record
-    V: String;
-    I: Integer;
-    V2: String;
-  end;
-
-  PMyRec = ^MyRec;
-
 procedure TForm2.FormCreate(Sender: TObject);
-var
-  R: PMyRec;
 begin
-  New(R);
-  ShowMessage(R.V);
   MainMenu := MainMenu1;
   RegisterServices('/Services/Menus', [TQMenuService.Create(IQMenuService,
     'MenuService')]);
+  PluginsManager.ById(IQMenuService);
 end;
 
 { TQMenuItem }

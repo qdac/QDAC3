@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics,
   Controls, Forms, Dialogs,
-  qplugins, qplugins_params, menusvc, StdCtrls, ExtCtrls;
+  qplugins, qplugins_base,qplugins_params, menusvc, StdCtrls, ExtCtrls;
 
 type
   TForm3 = class(TForm)

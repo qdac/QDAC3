@@ -3,7 +3,7 @@ unit MenuSvc;
 interface
 uses
   windows,classes, SysUtils,Graphics,ImgList, menus,
-  qstring, qplugins, qplugins_params;
+  qstring, qplugins, qplugins_params,qplugins_base;
 
 
 

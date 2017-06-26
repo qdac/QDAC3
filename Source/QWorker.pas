@@ -1228,18 +1228,18 @@ type
     /// <param name="ARunInMainThread">作业要求在主线程中执行</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Wait(AProc: TQJobProc; ASignalId: Integer;
-      ARunInMainThread: Boolean = false): IntPtr; overload;
+      ARunInMainThread: Boolean = false;AData:Pointer=nil;AFreeType:TQJobDataFreeType=jdfFreeByUser): IntPtr; overload;
     function Wait(AProc: TQJobProc; const ASignalName: QStringW;
-      ARunInMainThread: Boolean = false): IntPtr; overload;
+      ARunInMainThread: Boolean = false;AData:Pointer=nil;AFreeType:TQJobDataFreeType=jdfFreeByUser): IntPtr; overload;
     /// <summary>投寄一个等待信号才开始的作业</summary>
     /// <param name="AProc">要执行的作业过程</param>
     /// <param name="ASignalId">等待的信号编码，该编码由RegisterSignal函数返回</param>
     /// <param name="ARunInMainThread">作业要求在主线程中执行</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Wait(AProc: TQJobProcG; ASignalId: Integer;
-      ARunInMainThread: Boolean = false): IntPtr; overload;
+      ARunInMainThread: Boolean = false;AData:Pointer=nil;AFreeType:TQJobDataFreeType=jdfFreeByUser): IntPtr; overload;
     function Wait(AProc: TQJobProcG; const ASignalName: QStringW;
-      ARunInMainThread: Boolean = false): IntPtr; overload;
+      ARunInMainThread: Boolean = false;AData:Pointer=nil;AFreeType:TQJobDataFreeType=jdfFreeByUser): IntPtr; overload;
 {$IFDEF UNICODE}
     /// <summary>投寄一个等待信号才开始的作业</summary>
     /// <param name="AProc">要执行的作业过程</param>
@@ -1248,9 +1248,9 @@ type
     /// <param name="ARunInMainThread">作业要求在主线程中执行</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Wait(AProc: TQJobProcA; ASignalId: Integer;
-      ARunInMainThread: Boolean = false): IntPtr; overload;
+      ARunInMainThread: Boolean = false;AData:Pointer=nil;AFreeType:TQJobDataFreeType=jdfFreeByUser): IntPtr; overload;
     function Wait(AProc: TQJobProcA; const ASignalName: QStringW;
-      ARunInMainThread: Boolean = false): IntPtr; overload;
+      ARunInMainThread: Boolean = false;AData:Pointer=nil;AFreeType:TQJobDataFreeType=jdfFreeByUser): IntPtr; overload;
 {$ENDIF}
     /// <summary>投寄一个在指定时间才开始的重复作业</summary>
     /// <param name="AProc">要定时执行的作业过程</param>
@@ -5349,7 +5349,7 @@ begin
 end;
 
 function TQWorkers.Wait(AProc: TQJobProc; ASignalId: Integer;
-  ARunInMainThread: Boolean): IntPtr;
+  ARunInMainThread: Boolean;AData:Pointer;AFreeType:TQJobDataFreeType): IntPtr;
 var
   AJob: PQJob;
   ASignal: PQSignal;
@@ -5357,7 +5357,7 @@ begin
   if (not FTerminating) and Assigned(AProc) then
   begin
     AJob := JobPool.Pop;
-    JobInitialize(AJob, nil, jdfFreeByUser, false, ARunInMainThread);
+    JobInitialize(AJob, AData, AFreeType, false, ARunInMainThread);
 {$IFDEF NEXTGEN}
     PQJobProc(@AJob.WorkerProc)^ := AProc;
 {$ELSE}
@@ -5387,15 +5387,16 @@ begin
 end;
 
 function TQWorkers.Wait(AProc: TQJobProc; const ASignalName: QStringW;
-  ARunInMainThread: Boolean): IntPtr;
+  ARunInMainThread: Boolean;AData:Pointer;AFreeType:TQJobDataFreeType): IntPtr;
 begin
-  Result := Wait(AProc, RegisterSignal(ASignalName), ARunInMainThread);
+  Result := Wait(AProc, RegisterSignal(ASignalName), ARunInMainThread,AData,AFreeType);
 end;
+
 
 {$IFDEF UNICODE}
 
 function TQWorkers.Wait(AProc: TQJobProcA; ASignalId: Integer;
-  ARunInMainThread: Boolean): IntPtr;
+  ARunInMainThread: Boolean;AData:Pointer;AFreeType:TQJobDataFreeType): IntPtr;
 var
   AJob: PQJob;
   ASignal: PQSignal;
@@ -5403,7 +5404,7 @@ begin
   if (not FTerminating) and Assigned(AProc) then
   begin
     AJob := JobPool.Pop;
-    JobInitialize(AJob, nil, jdfFreeByUser, false, ARunInMainThread);
+    JobInitialize(AJob, AData, AFreeType, false, ARunInMainThread);
     TQJobProcA(AJob.WorkerProc.ProcA) := AProc;
     AJob.IsAnonWorkerProc := True;
     AJob.SetFlags(JOB_SIGNAL_WAKEUP, True);
@@ -5429,9 +5430,9 @@ begin
 end;
 
 function TQWorkers.Wait(AProc: TQJobProcA; const ASignalName: QStringW;
-  ARunInMainThread: Boolean): IntPtr;
+  ARunInMainThread: Boolean;AData:Pointer;AFreeType:TQJobDataFreeType): IntPtr;
 begin
-  Result := Wait(AProc, RegisterSignal(ASignalName), ARunInMainThread);
+  Result := Wait(AProc, RegisterSignal(ASignalName), ARunInMainThread,AData,AFreeType);
 end;
 
 {$ENDIF}
@@ -5567,15 +5568,15 @@ begin
 end;
 
 function TQWorkers.Wait(AProc: TQJobProcG; ASignalId: Integer;
-  ARunInMainThread: Boolean): IntPtr;
+  ARunInMainThread: Boolean;AData:Pointer;AFreeType:TQJobDataFreeType): IntPtr;
 begin
-  Result := Wait(MakeJobProc(AProc), ASignalId, ARunInMainThread);
+  Result := Wait(MakeJobProc(AProc), ASignalId, ARunInMainThread,AData,AFreeType);
 end;
 
 function TQWorkers.Wait(AProc: TQJobProcG; const ASignalName: QStringW;
-  ARunInMainThread: Boolean): IntPtr;
+  ARunInMainThread: Boolean;AData:Pointer;AFreeType:TQJobDataFreeType): IntPtr;
 begin
-  Result := Wait(AProc, RegisterSignal(ASignalName), ARunInMainThread);
+  Result := Wait(AProc, RegisterSignal(ASignalName), ARunInMainThread,AData,AFreeType);
 end;
 
 procedure TQWorkers.WaitRunningDone(const AParam: TWorkerWaitParam;

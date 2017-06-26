@@ -2,7 +2,7 @@ unit menusvc;
 
 interface
 
-uses windows, menus, qplugins, qplugins_params;
+uses windows, menus, qplugins, qplugins_base,qplugins_params;
 
 const
 

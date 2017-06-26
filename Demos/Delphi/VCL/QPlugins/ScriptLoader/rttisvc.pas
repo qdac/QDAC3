@@ -2,7 +2,7 @@ unit rttisvc;
 
 interface
 
-uses classes, sysutils, qpluginsintf, qplugins, typinfo, system.rtti, qstring,
+uses classes, sysutils, qpluginsintf, qplugins,qplugins_base, typinfo, system.rtti, qstring,
   qtimetypes;
 
 type

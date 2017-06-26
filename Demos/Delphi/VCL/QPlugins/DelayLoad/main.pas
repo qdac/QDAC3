@@ -24,7 +24,7 @@ var
 
 implementation
 
-uses qstring, qjson, qplugins, qplugins_loader_lib, qplugins_params,
+uses qstring, qjson, qplugins, qplugins_base,qplugins_loader_lib, qplugins_params,
   qplugins_router_delayload;
 {$R *.dfm}
 

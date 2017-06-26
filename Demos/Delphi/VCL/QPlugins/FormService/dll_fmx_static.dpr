@@ -13,7 +13,9 @@ library dll_fmx_static;
 uses
   System.SysUtils,
   System.Classes,
-  Unit5 in 'Unit5.pas' {Form5};
+  Unit5 in 'Unit5.pas' {Form5},
+  qplugins_fmx_messages in '..\..\..\..\..\Source\qplugins_fmx_messages.pas',
+  qplugins_fmx_formsvc in '..\..\..\..\..\Source\qplugins_fmx_formsvc.pas';
 
 {$R *.res}
 

@@ -4,7 +4,7 @@ interface
 
 {$I 'qdac.inc'}
 
-uses classes, sysutils, qstring, qplugins, qplugins_params, windows,
+uses classes, sysutils, qstring, qplugins, qplugins_base,qplugins_params, windows,
   messages, syncobjs{$IF RTLVersion>21}, Generics.collections{$IFEND},
   qsimplepool;
 {$HPPEMIT '#pragma link "qplugins_proxy"'}

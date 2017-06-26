@@ -18,6 +18,9 @@
         <Projects Include="bpl_dock.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="dll_fmx_static.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -71,14 +74,23 @@
     <Target Name="bpl_dock:Make">
         <MSBuild Projects="bpl_dock.dproj" Targets="Make"/>
     </Target>
+    <Target Name="dll_fmx_static">
+        <MSBuild Projects="dll_fmx_static.dproj"/>
+    </Target>
+    <Target Name="dll_fmx_static:Clean">
+        <MSBuild Projects="dll_fmx_static.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="dll_fmx_static:Make">
+        <MSBuild Projects="dll_fmx_static.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="host;dll_shared;dll_static;qdb_plugin;bpl_dock"/>
+        <CallTarget Targets="host;dll_shared;dll_static;qdb_plugin;bpl_dock;dll_fmx_static"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="host:Clean;dll_shared:Clean;dll_static:Clean;qdb_plugin:Clean;bpl_dock:Clean"/>
+        <CallTarget Targets="host:Clean;dll_shared:Clean;dll_static:Clean;qdb_plugin:Clean;bpl_dock:Clean;dll_fmx_static:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="host:Make;dll_shared:Make;dll_static:Make;qdb_plugin:Make;bpl_dock:Make"/>
+        <CallTarget Targets="host:Make;dll_shared:Make;dll_static:Make;qdb_plugin:Make;bpl_dock:Make;dll_fmx_static:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

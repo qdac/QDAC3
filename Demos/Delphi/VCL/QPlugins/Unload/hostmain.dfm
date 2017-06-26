@@ -62,6 +62,9 @@ object Form1: TForm1
     object TabSheet1: TTabSheet
       Caption = 'Logs'
       ExplicitLeft = 8
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object mmLogs: TMemo
         Left = 0
         Top = 0
@@ -77,8 +80,6 @@ object Form1: TForm1
     object TabSheet2: TTabSheet
       Caption = 'Dock'
       ImageIndex = 1
-      ExplicitWidth = 281
-      ExplicitHeight = 165
     end
   end
 end

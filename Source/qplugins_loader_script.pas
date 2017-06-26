@@ -4,7 +4,7 @@ unit qplugins_loader_script;
 }
 interface
 
-uses classes, sysutils, syncobjs, variants, qstring, qplugins,qplugins_params,
+uses classes, sysutils, syncobjs, variants, qstring, qplugins,qplugins_base,qplugins_params,
   jvInterpreter, jvInterpreterFM;
 {$HPPEMIT '#pragma link "qplugins_loader_script"'}
 type

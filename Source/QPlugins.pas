@@ -5,7 +5,8 @@ interface
 {$I qdac.inc}
 {$HPPEMIT '#pragma link "qplugins"'}
 
-uses classes, sysutils, types, qstring, qvalue, qtimetypes, qdac_postqueue,qplugins_base,
+uses classes, sysutils, types, qstring, qvalue, qtimetypes, qdac_postqueue,
+  qplugins_base,
   qplugins_params, syncobjs, math{$IFDEF MSWINDOWS}, windows{$ENDIF} {$IFDEF POSIX},
   Posix.Unistd{$ENDIF}{$IFDEF UNICODE},
   Generics.collections{$ENDIF};
@@ -60,8 +61,6 @@ uses classes, sysutils, types, qstring, qvalue, qtimetypes, qdac_postqueue,qplug
 
 type
 
-
-
 {$IF RTLVersion>=21}
 {$M-}
 {$IFEND}
@@ -106,6 +105,10 @@ type
     function IsInModule(AModule: THandle): Boolean; stdcall;
     function GetInstanceCreator: IQService; virtual; stdcall;
     procedure ClearExts;
+    function _GetParent: StandInterfaceResult; stdcall;
+    function _GetInstanceCreator: StandInterfaceResult; stdcall;
+    function _GetAttrs: StandInterfaceResult; stdcall;
+    function _GetInstance: StandInterfaceResult; virtual; stdcall;
   public
     constructor Create(const AId: TGuid; AName: QStringW); overload; virtual;
     destructor Destroy; override;
@@ -149,6 +152,13 @@ type
     procedure Clear; virtual; stdcall;
     function QueryInterface(const IID: TGuid; out Obj): HRESULT;
       override; stdcall;
+    function _GetItems(AIndex: Integer): StandInterfaceResult; stdcall;
+    function _ByPath(APath: PWideChar): StandInterfaceResult; stdcall;
+    function _ById(const AId: TGuid; ADoGetInstance: Boolean = true)
+      : StandInterfaceResult; stdcall;
+    function _GetParent: StandInterfaceResult; stdcall;
+    function _GetInstanceCreator: StandInterfaceResult; stdcall;
+    function _GetAttrs: StandInterfaceResult; stdcall;
   end;
 
   TQNotifyManager = class;
@@ -471,7 +481,7 @@ type
 
   TQStringService = class(TQService, IQStringService)
   public
-    function NewString(S: PWideChar): IQString; stdcall;
+    function NewString(const S: PWideChar): IQString; stdcall;
   end;
 
   PServiceWaitItem = ^TServiceWaitItem;
@@ -488,7 +498,8 @@ type
   end;
 
   // TQPluginsManager 实现了IQService/IQServices/IQNotify接口
-  TQPluginsManager = class(TQServices, IQPluginsManager, IQNotify)
+  TQPluginsManager = class(TQServices, IQPluginsManager, IQNotify,
+    IQStringService)
   private
   protected
     FRouters: IQServices;
@@ -529,9 +540,23 @@ type
     function ById(const AId: TGuid; ADoGetInstance: Boolean): IQService;
       override; stdcall;
     function PathOf(AService: IQService): QStringW;
-    procedure AsynCall(AProc: TQAsynProcG; AParams: IQParams); stdcall;
+    procedure AsynCall(AProc: TQAsynProc; AParams: IQParams); stdcall;
     procedure ProcessQueuedCalls; stdcall;
     procedure ModuleUnloading(AInstance: HINST); stdcall;
+    function NewParams: IQParams; stdcall;
+    function NewString: IQString; overload; stdcall;
+    function NewString(const ASource: PWideChar): IQString; overload; stdcall;
+    function NewString(const S: QStringW): IQString; overload;
+    function _GetLoaders: StandInterfaceResult; stdcall;
+    function _GetRouters: StandInterfaceResult; stdcall;
+    function _GetServices: StandInterfaceResult; stdcall;
+    function _ForcePath(APath: PWideChar): StandInterfaceResult; stdcall;
+    function _GetActiveLoader: StandInterfaceResult; stdcall;
+    function _NewParams: StandInterfaceResult; stdcall;
+    function _NewString: StandInterfaceResult; overload; stdcall;
+    function _NewString(const ASource: PWideChar): StandInterfaceResult;
+      overload; stdcall;
+    procedure _AsynCall(AProc: TQAsynProcG; AParams: IQParams); stdcall;
     function _AddRef: Integer; override; stdcall;
     function _Release: Integer; override; stdcall;
     property Services: IQServices read GetServices;
@@ -875,6 +900,8 @@ function TQService.QueryInterface(const IID: TGuid; out Obj): HRESULT;
   function QueryExt: HRESULT;
   var
     AItem: PQServiceExtension;
+    AExt: IQMultiInstanceExtension;
+    AResult: IInterface;
   begin
     Result := E_NOINTERFACE;
     AItem := FFirstExt;
@@ -882,7 +909,17 @@ function TQService.QueryInterface(const IID: TGuid; out Obj): HRESULT;
     begin
       Result := AItem.Instance.QueryInterface(IID, Obj);
       if Result = S_OK then
+      begin
+        AResult := IInterface(Obj);
+        if Supports(AResult, IQMultiInstanceExtension, AExt) then
+        begin
+          if AExt.GetInstance(AResult) then
+            AResult.QueryInterface(IID, Obj)
+          else
+            IInterface(Obj) := nil;
+        end;
         break;
+      end;
       AItem := AItem.Next;
     end;
   end;
@@ -941,10 +978,10 @@ procedure TQService.SetLastError(ACode: Cardinal; AMsg: QStringW);
 begin
   FErrorCode := ACode;
   FErrorMsg := AMsg;
-  {$IFDEF DEBUG}
-  if ACode<>0 then
-    DebugOut('服务 %s 遇到错误 %d:%s',[Name,ACode,AMsg]);
-  {$ENDIF}
+{$IFDEF DEBUG}
+  if ACode <> 0 then
+    DebugOut('服务 %s 遇到错误 %d:%s', [Name, ACode, AMsg]);
+{$ENDIF}
 end;
 
 procedure TQService.SetParent(AParent: IQServices);
@@ -961,6 +998,26 @@ procedure TQService.ValidName(const S: QStringW);
 begin
   if ContainsCharW(S, PathDelimiter) then
     raise QException.Create(SInvalidName);
+end;
+
+function TQService._GetAttrs: StandInterfaceResult;
+begin
+  Result := PointerOf(GetAttrs);
+end;
+
+function TQService._GetInstance: StandInterfaceResult;
+begin
+  Result := PointerOf(GetInstance);
+end;
+
+function TQService._GetInstanceCreator: StandInterfaceResult;
+begin
+  Result := PointerOf(GetInstanceCreator);
+end;
+
+function TQService._GetParent: StandInterfaceResult;
+begin
+  Result := PointerOf(GetParent);
 end;
 
 { TQServices }
@@ -1295,9 +1352,40 @@ begin
   end;
 end;
 
+function TQServices._ById(const AId: TGuid; ADoGetInstance: Boolean)
+  : StandInterfaceResult;
+begin
+  Result := PointerOf(ById(AId, ADoGetInstance));
+end;
+
+function TQServices._ByPath(APath: PWideChar): StandInterfaceResult;
+begin
+  Result := PointerOf(ByPath(APath));
+end;
+
+function TQServices._GetAttrs: StandInterfaceResult;
+begin
+  Result := PointerOf(GetAttrs);
+end;
+
+function TQServices._GetInstanceCreator: StandInterfaceResult;
+begin
+  Result := PointerOf(GetInstanceCreator);
+end;
+
+function TQServices._GetItems(AIndex: Integer): StandInterfaceResult;
+begin
+  Result := PointerOf(GetItems(AIndex));
+end;
+
+function TQServices._GetParent: StandInterfaceResult;
+begin
+  Result := PointerOf(GetParent);
+end;
+
 { TQPluginsManager }
 
-procedure TQPluginsManager.AsynCall(AProc: TQAsynProcG; AParams: IQParams);
+procedure TQPluginsManager.AsynCall(AProc: TQAsynProc; AParams: IQParams);
 begin
   qdac_postqueue.AsynCall(AProc, AParams);
 end;
@@ -1605,6 +1693,21 @@ begin
   Result := FServices;
 end;
 
+function TQPluginsManager.NewParams: IQParams;
+begin
+  Result := TQParams.Create;
+end;
+
+function TQPluginsManager.NewString(const ASource: PWideChar): IQString;
+begin
+  Result := TQUnicodeString.Create(ASource);
+end;
+
+function TQPluginsManager.NewString: IQString;
+begin
+  Result := TQUnicodeString.Create;
+end;
+
 procedure TQPluginsManager.Notify(const AId: Cardinal; AParams: IQParams;
   var AFireNext: Boolean);
 begin
@@ -1849,9 +1952,60 @@ begin
   Result := inherited _AddRef;
 end;
 
+procedure TQPluginsManager._AsynCall(AProc: TQAsynProcG; AParams: IQParams);
+begin
+  qdac_postqueue.AsynCall(AProc, AParams);
+end;
+
+function TQPluginsManager._ForcePath(APath: PWideChar): StandInterfaceResult;
+begin
+  Result := PointerOf(ForcePath(APath));
+end;
+
+function TQPluginsManager._GetActiveLoader: StandInterfaceResult;
+begin
+  Result := PointerOf(GetActiveLoader);
+end;
+
+function TQPluginsManager._GetLoaders: StandInterfaceResult;
+begin
+  Result := PointerOf(GetLoaders);
+end;
+
+function TQPluginsManager._GetRouters: StandInterfaceResult;
+begin
+  Result := PointerOf(GetRouters);
+end;
+
+function TQPluginsManager._GetServices: StandInterfaceResult;
+begin
+  Result := PointerOf(GetServices);
+end;
+
+function TQPluginsManager._NewParams: StandInterfaceResult;
+begin
+  Result := PointerOf(NewParams);
+end;
+
+function TQPluginsManager._NewString: StandInterfaceResult;
+begin
+  Result := PointerOf(NewString);
+end;
+
+function TQPluginsManager._NewString(const ASource: PWideChar)
+  : StandInterfaceResult;
+begin
+  Result := PointerOf(NewString(ASource));
+end;
+
 function TQPluginsManager._Release: Integer;
 begin
   Result := inherited _Release;
+end;
+
+function TQPluginsManager.NewString(const S: QStringW): IQString;
+begin
+  Result := TQUnicodeString.Create(S);
 end;
 
 { TQNotifyManager }
@@ -2083,7 +2237,7 @@ var
   AEvent: TEvent;
 begin
   if MainThreadId = {$IFDEF NEXTGEN}TThread.Current.ThreadID
-  {$ELSE}GetCurrentThreadId {$ENDIF} then
+{$ELSE}GetCurrentThreadId {$ENDIF} then
     DoNotify(AId, AParams)
   else
   begin
@@ -2605,6 +2759,8 @@ begin
         if Result <> 0 then
           AddModule(AFileName, Result);
       end;
+      if Result = 0 then
+        RaiseLastOSError;
       AParams.Add('Instance', ptInt64).AsInt64 := Result;
     finally
       (PluginsManager as IQNotifyManager).Send(NID_PLUGIN_LOADED, AParams);
@@ -2746,7 +2902,7 @@ end;
 
 { TQStringService }
 
-function TQStringService.NewString(S: PWideChar): IQString;
+function TQStringService.NewString(const S: PWideChar): IQString;
 begin
   Result := TQUnicodeString.Create(S);
 end;

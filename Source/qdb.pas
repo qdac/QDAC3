@@ -2485,12 +2485,12 @@ begin
   end
   else
     SetLength(FValues, FFields.Count);
-  OutputDebugString(PChar(IntToHex(IntPtr(Self), 8) + ' Created.'));
+//  OutputDebugString(PChar(IntToHex(IntPtr(Self), 8) + ' Created.'));
 end;
 
 destructor TQRecord.Destroy;
 begin
-  OutputDebugString(PChar(IntToHex(IntPtr(Self), 8) + ' free.'));
+//  OutputDebugString(PChar(IntToHex(IntPtr(Self), 8) + ' free.'));
   ClearValues;
   TQRecord(FBookmark) := nil;
   inherited;
@@ -3629,6 +3629,7 @@ end;
 
 destructor TQDataSet.Destroy;
 begin
+  inherited;
   FreeObject(FSortedRecords);
   FreeObject(FChangedRecords);
   FreeObject(FFilteredRecords);
@@ -3636,7 +3637,6 @@ begin
   FreeObject(FClones);
   FreeObject(FChecks);
   FreeObject(FMasterLink);
-  inherited;
 end;
 
 procedure TQDataSet.Diff(ASource1, ASource2: TQDataSet; AFields: QStringW;

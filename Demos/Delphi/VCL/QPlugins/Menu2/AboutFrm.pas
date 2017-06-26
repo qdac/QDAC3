@@ -16,7 +16,7 @@ uses
   ExtCtrls,
   ComCtrls,
   ShellAPI,
-  qplugins, qplugins_params, menusvc;
+  qplugins, qplugins_base,qplugins_params, menusvc;
 
 type
   TfrmAbout = class(TForm)

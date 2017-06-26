@@ -7,7 +7,7 @@ uses
   System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
   FMX.Controls.Presentation, FMX.StdCtrls, FMX.Ani, FMX.Objects, QPlugins,
-  QPlugins_FMX_Messages, qplugins_formsvc, QPlugins_FMX_formsvc, FMX.Edit;
+  qplugins_fmx_messages, qplugins_formsvc, qplugins_fmx_formsvc, FMX.Edit;
 
 type
   TForm5 = class(TForm)
