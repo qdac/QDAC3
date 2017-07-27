@@ -434,7 +434,7 @@ uses
 {$IFDEF UNICODE}, Generics.Collections{$ENDIF}{$IF RTLVersion>=21},
   Rtti{$IFEND >=XE10}
 {$IFNDEF MSWINDOWS}
-    {$IFNDEF CONSOLE}, fmx.Forms{$ENDIF}, System.Diagnostics
+{$IFNDEF CONSOLE}, fmx.Forms{$ENDIF}, System.Diagnostics
 {$ELSE}
 {$IFDEF MSWINDOWS}, Windows, Messages, TlHelp32, Activex{$ENDIF}
 {$ENDIF}
@@ -551,13 +551,13 @@ type
     jdfFreeAsInterface, jdfFreeAsC1, jdfFreeAsC2, jdfFreeAsC3, jdfFreeAsC4,
     jdfFreeAsC5, jdfFreeAsC6);
 
-  TQRunonceTask=record
-    CanRun:Integer;
-    {$IFDEF UNICODE}
-    procedure Runonce(ACallback:TProc);overload;
-    {$ENDIF}
-    procedure Runonce(ACallback:TProcedure);overload;
-    procedure Runonce(ACallback:TThreadMethod);overload;
+  TQRunonceTask = record
+    CanRun: Integer;
+{$IFDEF UNICODE}
+    procedure Runonce(ACallback: TProc); overload;
+{$ENDIF}
+    procedure Runonce(ACallback: TProcedure); overload;
+    procedure Runonce(ACallback: TThreadMethod); overload;
   end;
 
   TQJobPlanData = record
@@ -936,12 +936,23 @@ type
     property MaxItems: Integer read FMaxItems write FMaxItems;
     property Count: Integer read FCount;
   end;
+  //
+  TQWorkerExtClass = class of TQWorkerExt;
+
+  TQWorkerExt = class
+  protected
+    FOwner: TQWorker;
+  public
+    constructor Create(AOwner: TQWorker); overload; virtual;
+    property Owner: TQWorker read FOwner;
+  end;
 
   { 工作者线程使用数组管理，而不是进行排序检索是因为对于工作者数量有限，额外
     的处理反而不会直接最简单的循环直接有效
   }
   TQWorker = class(TThread)
   private
+
   protected
     FOwner: TQWorkers;
     FEvent: TEvent;
@@ -959,12 +970,15 @@ type
     FTerminatingJob: PQJob;
     FLastActiveTime: Int64;
     FPending: Boolean; // 已经计划作业
+    FTag: IntPtr;
+    FExtObject: TQWorkerExt;
 {$IFDEF MSWINDOWS}
     FThreadName: String;
 {$ENDIF}
     procedure Execute; override;
     procedure FireInMainThread;
     procedure DoJob(AJob: PQJob);
+    function GetExtObject: TQWorkerExt;
     function GetIsIdle: Boolean; inline;
     procedure SetFlags(AIndex: Integer; AValue: Boolean); inline;
     function GetFlags(AIndex: Integer): Boolean; inline;
@@ -988,6 +1002,8 @@ type
     property IsCleaning: Boolean index WORKER_CLEANING read GetFlags;
     /// <summary>判断COM是否已经初始化为支持COM
     property ComInitialized: Boolean index WORKER_COM_INITED read GetFlags;
+    property ExtObject: TQWorkerExt read GetExtObject;
+    property Tag: IntPtr read FTag write FTag;
   end;
 
   /// <summary>信号的内部定义</summary>
@@ -1079,6 +1095,7 @@ type
     FLastWaitChain: PQJobWaitChain; // 作业等待链表
     FSignalQueue: TQSignalQueue; // 信号作业调度管理器
     FOnCustomFreeData: TQCustomFreeDataEvent; // 自定义的释放数据回调函数
+    FWorkerExtClass: TQWorkerExtClass;
 {$IFDEF MSWINDOWS}
     FMainWorker: HWND; // 用于接收主线程作业的窗口（目前仅调试模式下用）
     procedure DoMainThreadWork(var AMsg: TMessage); // FMainWorker 的消息处理函数
@@ -1228,18 +1245,22 @@ type
     /// <param name="ARunInMainThread">作业要求在主线程中执行</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Wait(AProc: TQJobProc; ASignalId: Integer;
-      ARunInMainThread: Boolean = false;AData:Pointer=nil;AFreeType:TQJobDataFreeType=jdfFreeByUser): IntPtr; overload;
+      ARunInMainThread: Boolean = false; AData: Pointer = nil;
+      AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
     function Wait(AProc: TQJobProc; const ASignalName: QStringW;
-      ARunInMainThread: Boolean = false;AData:Pointer=nil;AFreeType:TQJobDataFreeType=jdfFreeByUser): IntPtr; overload;
+      ARunInMainThread: Boolean = false; AData: Pointer = nil;
+      AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
     /// <summary>投寄一个等待信号才开始的作业</summary>
     /// <param name="AProc">要执行的作业过程</param>
     /// <param name="ASignalId">等待的信号编码，该编码由RegisterSignal函数返回</param>
     /// <param name="ARunInMainThread">作业要求在主线程中执行</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Wait(AProc: TQJobProcG; ASignalId: Integer;
-      ARunInMainThread: Boolean = false;AData:Pointer=nil;AFreeType:TQJobDataFreeType=jdfFreeByUser): IntPtr; overload;
+      ARunInMainThread: Boolean = false; AData: Pointer = nil;
+      AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
     function Wait(AProc: TQJobProcG; const ASignalName: QStringW;
-      ARunInMainThread: Boolean = false;AData:Pointer=nil;AFreeType:TQJobDataFreeType=jdfFreeByUser): IntPtr; overload;
+      ARunInMainThread: Boolean = false; AData: Pointer = nil;
+      AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
 {$IFDEF UNICODE}
     /// <summary>投寄一个等待信号才开始的作业</summary>
     /// <param name="AProc">要执行的作业过程</param>
@@ -1248,9 +1269,11 @@ type
     /// <param name="ARunInMainThread">作业要求在主线程中执行</param>
     /// <returns>成功投寄返回句柄，否则返回0</returns>
     function Wait(AProc: TQJobProcA; ASignalId: Integer;
-      ARunInMainThread: Boolean = false;AData:Pointer=nil;AFreeType:TQJobDataFreeType=jdfFreeByUser): IntPtr; overload;
+      ARunInMainThread: Boolean = false; AData: Pointer = nil;
+      AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
     function Wait(AProc: TQJobProcA; const ASignalName: QStringW;
-      ARunInMainThread: Boolean = false;AData:Pointer=nil;AFreeType:TQJobDataFreeType=jdfFreeByUser): IntPtr; overload;
+      ARunInMainThread: Boolean = false; AData: Pointer = nil;
+      AFreeType: TQJobDataFreeType = jdfFreeByUser): IntPtr; overload;
 {$ENDIF}
     /// <summary>投寄一个在指定时间才开始的重复作业</summary>
     /// <param name="AProc">要定时执行的作业过程</param>
@@ -1586,6 +1609,8 @@ type
     property BeforeCancel: TQJobNotifyEvent read FBeforeCancel
       write FBeforeCancel;
     property SignalQueue: TQSignalQueue read FSignalQueue;
+    property WorkerExtClass: TQWorkerExtClass read FWorkerExtClass
+      write FWorkerExtClass;
   end;
 {$IFDEF UNICODE}
 
@@ -3237,6 +3262,8 @@ end;
 destructor TQWorker.Destroy;
 begin
   FreeObject(FEvent);
+  if Assigned(FExtObject) then
+    FreeAndNil(FExtObject);
   inherited;
 end;
 
@@ -3474,6 +3501,13 @@ end;
 procedure TQWorker.FireInMainThread;
 begin
   DoJob(FActiveJob);
+end;
+
+function TQWorker.GetExtObject: TQWorkerExt;
+begin
+  if Assigned(FOwner.WorkerExtClass) and (not Assigned(FExtObject)) then
+    FExtObject := FOwner.WorkerExtClass.Create(Self);
+  Result := FExtObject;
 end;
 
 function TQWorker.GetFlags(AIndex: Integer): Boolean;
@@ -5349,7 +5383,8 @@ begin
 end;
 
 function TQWorkers.Wait(AProc: TQJobProc; ASignalId: Integer;
-  ARunInMainThread: Boolean;AData:Pointer;AFreeType:TQJobDataFreeType): IntPtr;
+  ARunInMainThread: Boolean; AData: Pointer;
+  AFreeType: TQJobDataFreeType): IntPtr;
 var
   AJob: PQJob;
   ASignal: PQSignal;
@@ -5387,16 +5422,18 @@ begin
 end;
 
 function TQWorkers.Wait(AProc: TQJobProc; const ASignalName: QStringW;
-  ARunInMainThread: Boolean;AData:Pointer;AFreeType:TQJobDataFreeType): IntPtr;
+  ARunInMainThread: Boolean; AData: Pointer;
+  AFreeType: TQJobDataFreeType): IntPtr;
 begin
-  Result := Wait(AProc, RegisterSignal(ASignalName), ARunInMainThread,AData,AFreeType);
+  Result := Wait(AProc, RegisterSignal(ASignalName), ARunInMainThread, AData,
+    AFreeType);
 end;
-
 
 {$IFDEF UNICODE}
 
 function TQWorkers.Wait(AProc: TQJobProcA; ASignalId: Integer;
-  ARunInMainThread: Boolean;AData:Pointer;AFreeType:TQJobDataFreeType): IntPtr;
+  ARunInMainThread: Boolean; AData: Pointer;
+  AFreeType: TQJobDataFreeType): IntPtr;
 var
   AJob: PQJob;
   ASignal: PQSignal;
@@ -5430,9 +5467,11 @@ begin
 end;
 
 function TQWorkers.Wait(AProc: TQJobProcA; const ASignalName: QStringW;
-  ARunInMainThread: Boolean;AData:Pointer;AFreeType:TQJobDataFreeType): IntPtr;
+  ARunInMainThread: Boolean; AData: Pointer;
+  AFreeType: TQJobDataFreeType): IntPtr;
 begin
-  Result := Wait(AProc, RegisterSignal(ASignalName), ARunInMainThread,AData,AFreeType);
+  Result := Wait(AProc, RegisterSignal(ASignalName), ARunInMainThread, AData,
+    AFreeType);
 end;
 
 {$ENDIF}
@@ -5568,15 +5607,19 @@ begin
 end;
 
 function TQWorkers.Wait(AProc: TQJobProcG; ASignalId: Integer;
-  ARunInMainThread: Boolean;AData:Pointer;AFreeType:TQJobDataFreeType): IntPtr;
+  ARunInMainThread: Boolean; AData: Pointer;
+  AFreeType: TQJobDataFreeType): IntPtr;
 begin
-  Result := Wait(MakeJobProc(AProc), ASignalId, ARunInMainThread,AData,AFreeType);
+  Result := Wait(MakeJobProc(AProc), ASignalId, ARunInMainThread, AData,
+    AFreeType);
 end;
 
 function TQWorkers.Wait(AProc: TQJobProcG; const ASignalName: QStringW;
-  ARunInMainThread: Boolean;AData:Pointer;AFreeType:TQJobDataFreeType): IntPtr;
+  ARunInMainThread: Boolean; AData: Pointer;
+  AFreeType: TQJobDataFreeType): IntPtr;
 begin
-  Result := Wait(AProc, RegisterSignal(ASignalName), ARunInMainThread,AData,AFreeType);
+  Result := Wait(AProc, RegisterSignal(ASignalName), ARunInMainThread, AData,
+    AFreeType);
 end;
 
 procedure TQWorkers.WaitRunningDone(const AParam: TWorkerWaitParam;
@@ -5819,7 +5862,7 @@ begin
       AParam.WaitType := $FF;
       WaitRunningDone(AParam);
     end;
-    FPlanCheckJob:=0;
+    FPlanCheckJob := 0;
   finally
     EnableWorkers;
   end;
@@ -7576,31 +7619,41 @@ end;
 
 { TQRunonceTask }
 {$IFDEF UNICODE}
+
 procedure TQRunonceTask.Runonce(ACallback: TProc);
 begin
-  while CanRun=1 do
+  while CanRun = 1 do
   begin
-  if AtomicCmpExchange(CanRun,0,1)=1 then
-    ACallback;
+    if AtomicCmpExchange(CanRun, 0, 1) = 1 then
+      ACallback;
   end;
 end;
 {$ENDIF}
+
 procedure TQRunonceTask.Runonce(ACallback: TProcedure);
 begin
-  while CanRun=1 do
+  while CanRun = 1 do
   begin
-  if AtomicCmpExchange(CanRun,0,1)=1 then
-    ACallback;
+    if AtomicCmpExchange(CanRun, 0, 1) = 1 then
+      ACallback;
   end;
 end;
 
 procedure TQRunonceTask.Runonce(ACallback: TThreadMethod);
 begin
-  while CanRun=1 do
+  while CanRun = 1 do
   begin
-  if AtomicCmpExchange(CanRun,0,1)=1 then
-    ACallback;
+    if AtomicCmpExchange(CanRun, 0, 1) = 1 then
+      ACallback;
   end;
+end;
+
+{ TQWorkerExt }
+
+constructor TQWorkerExt.Create(AOwner: TQWorker);
+begin
+  inherited Create;
+  FOwner := AOwner;
 end;
 
 initialization

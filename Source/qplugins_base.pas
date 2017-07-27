@@ -48,6 +48,25 @@ type
     function CopyFrom(AStream: IQStream; ACount: Int64): Int64; stdcall;
   end;
 
+  IQBytes = interface
+    ['{8C570D86-517F-4729-8C5F-427F3F6A414B}']
+    procedure SetLength(const len: DWORD); stdcall;
+    function GetLength: DWORD; stdcall;
+    function GetByte(const idx: DWORD; var value: BYTE): Boolean; stdcall;
+    function SetByte(const idx: DWORD; const value: BYTE): Boolean; stdcall;
+    function GetData: Pointer; stdcall;
+    procedure SetCapacity(const len: DWORD); stdcall;
+    function GetCapcacity: DWORD; stdcall;
+    procedure Append(const src: Pointer; const len: DWORD); stdcall;
+    procedure Insert(const idx: DWORD; const src: Pointer;
+      const len: DWORD); stdcall;
+    procedure Delete(const idx: DWORD; const count: DWORD); stdcall;
+    function CopyTo(dest: Pointer; const idx, count: DWORD): DWORD; stdcall;
+    procedure LoadFromFile(const fileName: PWideChar); stdcall;
+    procedure SaveToFile(const fileName: PWideChar); stdcall;
+    procedure AppendToFile(const fileName: PWideChar); stdcall;
+  end;
+
   // 参数规格化，用于使用不同语言之间交互
   TQParamType = (ptUnknown,
     // Integer Types
@@ -92,8 +111,8 @@ type
     procedure SetAsString(const AValue: IQString); stdcall;
     function GetAsGuid: TGuid; stdcall;
     procedure SetAsGuid(const Value: TGuid); stdcall;
-    function GetAsBytes(ABuf: PByte; ABufLen: Cardinal): Cardinal; stdcall;
-    procedure SetAsBytes(ABuf: PByte; ABufLen: Cardinal); stdcall;
+    function GetAsBytes(ABuf: PByte; ABufLen: Cardinal): Cardinal; overload;stdcall;
+    procedure SetAsBytes(ABuf: PByte; ABufLen: Cardinal); overload;stdcall;
     function GetIsNull: Boolean; stdcall;
     procedure SetNull; stdcall;
     function GetAsArray: IQParams; stdcall;
@@ -105,12 +124,14 @@ type
     function GetAsInterface: IInterface; overload; stdcall;
     procedure SetAsInterface(const AIntf: IInterface); stdcall;
     function GetIndex: Integer; stdcall;
+    function GetAsBytes:IQBytes;overload;stdcall;
+    procedure SetAsBytes(const ABytes:IQBytes);overload;stdcall;
     // 下面的代码为了兼容其它语言加入
     function _GetAsArray: StandInterfaceResult; stdcall;
     function _GetAsStream: StandInterfaceResult; stdcall;
     function _GetParent: StandInterfaceResult; overload; stdcall;
     function _GetAsInterface: StandInterfaceResult; overload; stdcall;
-
+    function _GetAsBytes:StandInterfaceResult;overload;stdcall;
     property AsInteger: Integer read GetAsInteger write SetAsInteger;
     property AsInt64: Int64 read GetAsInt64 write SetAsInt64;
     property AsBoolean: Boolean read GetAsBoolean write SetAsBoolean;
@@ -367,7 +388,7 @@ type
 
   IQForJobCallback = interface
     ['{9A29AC85-2A57-4C01-8313-E7D3A7C29904}']
-    procedure DoJob(AMgr: IQForJobManager; AIndex: NativeInt;
+    procedure DoJob(AMgr: IQForJobManager; AIndex: Int64;
       AParams: IQParams); stdcall;
   end;
 
@@ -409,8 +430,8 @@ type
     function Plan(AJob: IQJobCallback; AParams: IQParams; APlan: PWideChar;
       ARunInMainThread: Boolean): Int64; stdcall;
     procedure &For(AJob: IQForJobCallback; AParams: IQParams;
-      AStart, AStop: Integer; AMsgWait: Boolean); stdcall;
-    procedure Clear(AHandle: THandle; AWaitRunningDone: Boolean); stdcall;
+      AStart, AStop: Int64; AMsgWait: Boolean); stdcall;
+    procedure Clear(AHandle: Int64; AWaitRunningDone: Boolean); stdcall;
     function CreateJobGroup(AByOrder: Boolean): IQJobGroup; stdcall;
     procedure SetWorkers(const AMinWorkers, AMaxWorkers: Integer); stdcall;
     procedure PeekCurrentWorkers(var ATotal, AIdle, ABusy: Integer); stdcall;

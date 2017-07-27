@@ -434,7 +434,7 @@ type
     function Add(AExp: TQFilterExp): Integer; overload; // 添加一个子表达式
     function Add: TQFilterExp; overload; // 添加一个子表达式
     procedure Clear; // 清除子表达式
-    procedure Parse(const S: QStringW);
+    procedure Parse(const S: QStringW; AIgnoreCase, ANaturalCompare: Boolean);
     property Count: Integer read GetCount; // 子表达式数据
     property Items[AIndex: Integer]: TQFilterExp read GetItems; // 子表达式列表
     property Value: TQValue read FValue; // 比较的目标值
@@ -606,6 +606,7 @@ type
     procedure SetIsArray(const Value: Boolean);
   protected
     procedure LookupValueType;
+    function LookupCompareProc(AIgnoreCase: Boolean): TQValueCompare;
   public
     constructor Create(Owner: TFieldDefs; const Name:
 {$IFDEF UNICODE}string{$ELSE}WideString{$ENDIF}; DataType: TFieldType;
@@ -2661,10 +2662,16 @@ begin
   Result := not(faHiddenCol in Attributes);
 end;
 
+function TQFieldDef.LookupCompareProc(AIgnoreCase: Boolean): TQValueCompare;
+begin
+  FOnCompare := qvalue.LookupCompareProc(FValueType, FValueType,
+    AIgnoreCase, False);
+end;
+
 procedure TQFieldDef.LookupValueType;
 begin
   FValueType := QValueTypeMap[DataType];
-  FOnCompare := LookupCompareProc(FValueType, FValueType, False, False);
+  LookupCompareProc(False);
 end;
 
 procedure TQFieldDef.SetDBType(const Value: Integer);
@@ -4107,7 +4114,7 @@ begin
   Result := False;
   AExp := TQFilterExp.Create(Self);
   try
-    AExp.Parse(AFilterExp);
+    AExp.Parse(AFilterExp,foCaseInsensitive in AFilterOptions,false);
     for I := 0 to FOriginRecords.Count - 1 do
     begin
       if AExp.Accept(FOriginRecords[I], AFilterOptions) then
@@ -4246,10 +4253,10 @@ var
       if not Assigned(FFilterExp) then
       begin
         FFilterExp := TQFilterExp.Create(Self);
-        FFilterExp.Parse(Filter);
+        FFilterExp.Parse(Filter,foCaseInsensitive in FilterOptions,false);
       end
       else if AParseNeeded then
-        FFilterExp.Parse(Filter);
+        FFilterExp.Parse(Filter,foCaseInsensitive in FilterOptions,false);
       if MultiThreadNeeded(C) then
       begin
         Workers.&For(C, AFilterSource.Count - 1, DoThreadFilterJob, False, nil);
@@ -4288,7 +4295,7 @@ begin
     if not Assigned(FFilterExp) then
       FFilterExp := TQFilterExp.Create(Self);
     if (FFilterExp.Count = 0) then
-      FFilterExp.Parse(Filter);
+      FFilterExp.Parse(Filter,false,false);
   end;
   if Restart then
   begin
@@ -6653,7 +6660,7 @@ begin
     SetLength(AFilter, Length(AFilter) - 5);
   if not Assigned(FFilterExp) then
     FFilterExp := TQFilterExp.Create(Self);
-  FFilterExp.Parse(AFilter);
+  FFilterExp.Parse(AFilter,false,false);
   if not Filtered then
     Filtered := True
   else
@@ -8112,7 +8119,8 @@ begin
   Result := FItems[AIndex];
 end;
 
-procedure TQFilterExp.Parse(const S: QStringW);
+procedure TQFilterExp.Parse(const S: QStringW;
+  AIgnoreCase, ANaturalCompare: Boolean);
 var
   p: PQCharW;
   AExp: TQFilterExp;
@@ -8197,7 +8205,8 @@ var
           AExp.FField := FDataSet.FieldDefs.Find(AToken) as TQFieldDef;
           if not Assigned(AExp.FField) then
             DatabaseError(Format(SFieldCantFilter, [AToken]));
-          AExp.FOnCompare := AExp.FField.FOnCompare;
+          AExp.FOnCompare := qvalue.LookupCompareProc(AExp.Field.ValueType,
+            AExp.Field.ValueType, AIgnoreCase, ANaturalCompare);
           while p > S do
           begin
             Dec(p);

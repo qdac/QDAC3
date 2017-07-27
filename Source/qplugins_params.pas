@@ -2,7 +2,7 @@ unit qplugins_params;
 
 interface
 
-uses classes, sysutils, qstring, qvalue, qplugins_base,
+uses classes, sysutils, types, qstring, qvalue, qplugins_base,
   variants{$IFDEF UNICODE},
   Generics.collections, Rtti{$ENDIF};
 {$HPPEMIT '#pragma link "qplugins_params"'}
@@ -89,6 +89,28 @@ type
     function GetValue: PWideChar; stdcall;
   end;
 
+  TQBytes = class(TQInterfacedObject, IQBytes)
+  protected
+    FCatHelper: TQBytesCatHelper;
+    procedure SetLength(const len: DWORD); stdcall;
+    function GetLength: DWORD; stdcall;
+    function GetByte(const idx: DWORD; var value: BYTE): Boolean; stdcall;
+    function SetByte(const idx: DWORD; const value: BYTE): Boolean; stdcall;
+    function GetData: Pointer; stdcall;
+    procedure SetCapacity(const len: DWORD); stdcall;
+    function GetCapcacity: DWORD; stdcall;
+    procedure Append(const src: Pointer; const len: DWORD); stdcall;
+    procedure Insert(const idx: DWORD; const src: Pointer;
+      const len: DWORD); stdcall;
+    procedure Delete(const idx: DWORD; const count: DWORD); stdcall;
+    function CopyTo(dest: Pointer; const idx, count: DWORD): DWORD; stdcall;
+    procedure LoadFromFile(const fileName: PWideChar); stdcall;
+    procedure SaveToFile(const fileName: PWideChar); stdcall;
+    procedure AppendToFile(const fileName: PWideChar); stdcall;
+  public
+    constructor Create; overload;
+    destructor Destroy; override;
+  end;
   // Delphi 的流接口与 IQStream 之间的相互转换
 
   TQStream = class(TStream)
@@ -104,8 +126,8 @@ type
     procedure SaveToStream(AStream: TStream); overload;
     procedure SaveToStream(AStream: IQStream); overload;
     procedure SaveToFile(const AFileName: QStringW);
-    function Read(var Buffer; Count: Longint): Longint; override;
-    function Write(const Buffer; Count: Longint): Longint; override;
+    function Read(var Buffer; count: Longint): Longint; override;
+    function Write(const Buffer; count: Longint): Longint; override;
     function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
   end;
 
@@ -147,9 +169,10 @@ type
     function GetAsString: IQString; stdcall;
     procedure SetAsString(const AValue: IQString); stdcall;
     function GetAsGuid: TGuid; stdcall;
-    procedure SetAsGuid(const Value: TGuid); stdcall;
-    function GetAsBytes(ABuf: PByte; ABufLen: Cardinal): Cardinal; stdcall;
-    procedure SetAsBytes(ABuf: PByte; ABufLen: Cardinal); stdcall;
+    procedure SetAsGuid(const value: TGuid); stdcall;
+    function GetAsBytes(ABuf: PByte; ABufLen: Cardinal): Cardinal;
+      overload; stdcall;
+    procedure SetAsBytes(ABuf: PByte; ABufLen: Cardinal); overload; stdcall;
     function GetIsNull: Boolean; stdcall;
     procedure SetNull; stdcall;
     function GetAsArray: IQParams; stdcall;
@@ -158,9 +181,9 @@ type
     function GetType: TQParamType; stdcall;
     procedure SetType(const AType: TQParamType); stdcall;
     function GetAsUString: QStringW;
-    procedure SetAsUString(const Value: QStringW);
+    procedure SetAsUString(const value: QStringW);
     function GetAsDBytes: TBytes;
-    procedure SetAsDBytes(const Value: TBytes);
+    procedure SetAsDBytes(const value: TBytes);
     procedure SetAsStream(AStream: IQStream); stdcall;
     function GetAsDVariant: Variant;
     procedure SetAsDVariant(const V: Variant);
@@ -171,6 +194,10 @@ type
     function _GetAsStream: StandInterfaceResult; stdcall;
     function _GetParent: StandInterfaceResult; overload; stdcall;
     function _GetAsInterface: StandInterfaceResult; overload; stdcall;
+    function GetAsBytes: IQBytes; overload; stdcall;
+    procedure SetAsBytes(const ABytes: IQBytes); overload; stdcall;
+    // 下面的代码为了兼容其它语言加入
+    function _GetAsBytes: StandInterfaceResult; overload; stdcall;
   public
     constructor Create(AOwner: TQParams); overload;
     destructor Destroy; override;
@@ -214,7 +241,7 @@ type
   TQParams = class(TQInterfacedObject, IQParams, IQParamsHelper)
   private
     function GetDItems(AIndex: Integer): TQParam;
-    procedure SetDItems(AIndex: Integer; const Value: TQParam);
+    procedure SetDItems(AIndex: Integer; const value: TQParam);
   protected
     FItems: TQParamList;
     function GetItems(AIndex: Integer): IQParam; stdcall;
@@ -273,7 +300,7 @@ type
 
     property Items[AIndex: Integer]: TQParam read GetDItems
       write SetDItems; default;
-    property Count: Integer read GetCount;
+    property count: Integer read GetCount;
   end;
 
   // 参数类型名称
@@ -311,6 +338,7 @@ function ParamsHelper(AParams: IQParams): IQParamsHelper;
 function InstanceOf(AIntf: IInterface): TObject; overload;
 function InstanceOf(AIntf: IInterface; var AObj: TObject): Boolean; overload;
 function PointerOf(AIntf: IInterface): Pointer; inline;
+
 var
   StringService: IQStringService = nil;
 
@@ -349,7 +377,7 @@ type
     function GetAsString: IQString; stdcall;
     procedure SetAsString(const AValue: IQString); stdcall;
     function GetAsGuid: TGuid; stdcall;
-    procedure SetAsGuid(const Value: TGuid); stdcall;
+    procedure SetAsGuid(const value: TGuid); stdcall;
     function GetAsBytes(ABuf: PByte; ABufLen: Cardinal): Cardinal; stdcall;
     procedure SetAsBytes(ABuf: PByte; ABufLen: Cardinal); stdcall;
     function GetIsNull: Boolean; stdcall;
@@ -573,9 +601,9 @@ begin
   CopyFrom(AStream, AStream.size - AStream.Position);
 end;
 
-function TQStream.Read(var Buffer; Count: Longint): Longint;
+function TQStream.Read(var Buffer; count: Longint): Longint;
 begin
-  Result := FStream.Read(@Buffer, Count);
+  Result := FStream.Read(@Buffer, count);
 end;
 
 procedure TQStream.SaveToFile(const AFileName: QStringW);
@@ -610,9 +638,9 @@ begin
   FStream.SetSize(NewSize);
 end;
 
-function TQStream.Write(const Buffer; Count: Longint): Longint;
+function TQStream.Write(const Buffer; count: Longint): Longint;
 begin
-  Result := FStream.Write(@Buffer, Count);
+  Result := FStream.Write(@Buffer, count);
 end;
 
 { TQStreamHelper }
@@ -724,13 +752,13 @@ procedure TQParam.Assign(ASource: IQParam);
     ATargetParams: TQParams;
   begin
     FValue.TypeNeeded(vdtInt64);
-    IQParams(FValue.Value.AsPointer) := nil;
+    IQParams(FValue.value.AsPointer) := nil;
     ASourceParams := ASource.AsArray;
     if Assigned(ASourceParams) then
     begin
       ATargetParams := TQParams.Create;
-      ATargetParams.AddRange(ASourceParams, 0, ASourceParams.Count);
-      IQParams(FValue.Value.AsPointer) := ATargetParams;
+      ATargetParams.AddRange(ASourceParams, 0, ASourceParams.count);
+      IQParams(FValue.value.AsPointer) := ATargetParams;
     end;
   end;
 
@@ -809,7 +837,7 @@ end;
 function TQParam.GetAsArray: IQParams;
 begin
   if FType = ptArray then
-    Result := IQParams(FValue.Value.AsPointer)
+    Result := IQParams(FValue.value.AsPointer)
   else
     raise QException.CreateFmt(SCantConvert, [ParamTypeNames[FType],
       ParamTypeNames[ptArray]]);
@@ -818,6 +846,11 @@ end;
 function TQParam.GetAsBoolean: Boolean;
 begin
   Result := FValue.AsBoolean;
+end;
+
+function TQParam.GetAsBytes: IQBytes;
+begin
+  // Result:=TQBytes.
 end;
 
 function TQParam.GetAsBytes(ABuf: PByte; ABufLen: Cardinal): Cardinal;
@@ -903,10 +936,10 @@ function TQParam.GetAsDVariant: Variant;
     AItems: IQParams;
   begin
     AItems := AsArray;
-    if AItems.Count > 0 then
+    if AItems.count > 0 then
     begin
-      Result := VarArrayCreate([0, AItems.Count - 1], varVariant);
-      for I := 0 to AItems.Count - 1 do
+      Result := VarArrayCreate([0, AItems.count - 1], varVariant);
+      for I := 0 to AItems.count - 1 do
         Result[I] := ParamHelper(AItems[I]).AsVariant;
     end
     else
@@ -945,7 +978,7 @@ end;
 function TQParam.GetAsInterface: IInterface;
 begin
   if FType in [ptInterface, ptStream, ptBytes] then
-    Result := IInterface(FValue.Value.AsPointer)
+    Result := IInterface(FValue.value.AsPointer)
   else
     raise QException.CreateFmt(SCantConvert, [ParamTypeNames[FType],
       ParamTypeNames[ptInt64]]);
@@ -959,7 +992,7 @@ end;
 function TQParam.GetAsStream: IQStream;
 begin
   if FType = ptStream then
-    Result := IQStream(FValue.Value.AsPointer)
+    Result := IQStream(FValue.value.AsPointer)
   else
     raise QException.CreateFmt(SCantConvert, [ParamTypeNames[FType],
       ParamTypeNames[ptInt64]]);
@@ -979,7 +1012,7 @@ begin
     ptBytes, ptStream:
       Result := BinToHex(AsBytes);
     ptArray:
-      Result := AsArray.AsString.Value
+      Result := AsArray.AsString.value
       // 格式化为JSON字符串
   else
     Result := FValue.AsString;
@@ -1024,6 +1057,11 @@ begin
   FValue.AsBoolean := AValue;
 end;
 
+procedure TQParam.SetAsBytes(const ABytes: IQBytes);
+begin
+
+end;
+
 procedure TQParam.SetAsBytes(ABuf: PByte; ABufLen: Cardinal);
 var
   ATemp: TBytes;
@@ -1034,9 +1072,9 @@ begin
   FValue.AsBytes := ATemp;
 end;
 
-procedure TQParam.SetAsDBytes(const Value: TBytes);
+procedure TQParam.SetAsDBytes(const value: TBytes);
 begin
-  FValue.AsBytes := Value;
+  FValue.AsBytes := value;
 end;
 
 procedure TQParam.SetAsDVariant(const V: Variant);
@@ -1121,9 +1159,9 @@ begin
   FValue.AsFloat := AValue;
 end;
 
-procedure TQParam.SetAsGuid(const Value: TGuid);
+procedure TQParam.SetAsGuid(const value: TGuid);
 begin
-  FValue.AsGuid := Value;
+  FValue.AsGuid := value;
 end;
 
 procedure TQParam.SetAsInt64(const AValue: Int64);
@@ -1139,7 +1177,7 @@ end;
 procedure TQParam.SetAsInterface(const AIntf: IInterface);
 begin
   FValue.TypeNeeded(vdtInt64);
-  IInterface(FValue.Value.AsPointer) := AIntf;
+  IInterface(FValue.value.AsPointer) := AIntf;
 end;
 
 procedure TQParam.SetAsSingle(const AValue: Single);
@@ -1150,7 +1188,7 @@ end;
 procedure TQParam.SetAsStream(AStream: IQStream);
 begin
   FValue.TypeNeeded(vdtInt64);
-  IQStream(FValue.Value.AsPointer) := AStream;
+  IQStream(FValue.value.AsPointer) := AStream;
 end;
 
 procedure TQParam.SetAsString(const AValue: IQString);
@@ -1158,24 +1196,24 @@ var
   S: QStringW;
 begin
   SetLength(S, AValue.Length);
-  Move(AValue.Value^, PWideChar(S)^, AValue.Length shl 1);
+  Move(AValue.value^, PWideChar(S)^, AValue.Length shl 1);
   FValue.AsString := S;
 end;
 
-procedure TQParam.SetAsUString(const Value: QStringW);
+procedure TQParam.SetAsUString(const value: QStringW);
 begin
-  FValue.AsString := Value;
+  FValue.AsString := value;
 end;
 
 procedure TQParam.SetNull;
 begin
   case FType of
     ptInterface:
-      IInterface(FValue.Value.AsPointer) := nil;
+      IInterface(FValue.value.AsPointer) := nil;
     ptBytes, ptStream:
-      IQStream(FValue.Value.AsPointer) := nil;
+      IQStream(FValue.value.AsPointer) := nil;
     ptArray:
-      IQParams(FValue.Value.AsPointer) := nil
+      IQParams(FValue.value.AsPointer) := nil
   else
     FValue.Reset;
   end;
@@ -1186,7 +1224,7 @@ begin
   if AType <> FType then
   begin
     if FType = ptArray then
-      IQParams(FValue.Value.AsPointer) := nil;
+      IQParams(FValue.value.AsPointer) := nil;
     FType := AType;
     case AType of
       ptUnknown:
@@ -1210,12 +1248,12 @@ begin
       ptGuid:
         FValue.TypeNeeded(vdtGuid);
       ptBytes, ptStream:
-        IQStream(FValue.Value.AsPointer) :=
+        IQStream(FValue.value.AsPointer) :=
           NewStream(TMemoryStream.Create, True);
       ptArray:
         begin
           FValue.Reset;
-          IQParams(FValue.Value.AsPointer) := TQParams.Create;
+          IQParams(FValue.value.AsPointer) := TQParams.Create;
         end;
     end;
   end;
@@ -1224,6 +1262,11 @@ end;
 function TQParam._GetAsArray: StandInterfaceResult;
 begin
   Result := PointerOf(GetAsArray);
+end;
+
+function TQParam._GetAsBytes: StandInterfaceResult;
+begin
+
 end;
 
 function TQParam._GetAsInterface: StandInterfaceResult;
@@ -1404,7 +1447,7 @@ var
 begin
   Result := Add(AName, ptArray);
   ATemp := Result.AsArray;
-  for I := 0 to AChildren.Count - 1 do
+  for I := 0 to AChildren.count - 1 do
   begin
     AParam := AChildren[I];
     case AParam.ParamType of
@@ -1485,7 +1528,7 @@ var
   I: Integer;
 begin
   Result := nil;
-  for I := 0 to FItems.Count - 1 do
+  for I := 0 to FItems.count - 1 do
   begin
     if Items[I].Name = AName then
     begin
@@ -1528,7 +1571,7 @@ procedure TQParams.Clear;
 var
   I: Integer;
 begin
-  for I := 0 to FItems.Count - 1 do
+  for I := 0 to FItems.count - 1 do
     TQParam(FItems.Items[I])._Release;
   FItems.Clear;
 end;
@@ -1570,7 +1613,7 @@ begin
   AHelper := TQStringCatHelperW.Create;
   try
     AHasName := False;
-    for I := 0 to Count - 1 do
+    for I := 0 to count - 1 do
     begin
       AParam := Items[I];
       if (AParam.Name <> nil) and (AParam.Name^ <> #0) then
@@ -1583,26 +1626,26 @@ begin
       AHelper.Cat(SObjectStart, -1)
     else
       AHelper.Cat(SArrayStart, -1);
-    for I := 0 to Count - 1 do
+    for I := 0 to count - 1 do
     begin
       AParam := Items[I];
       if AHasName then
         AHelper.Cat(QuotedStrW(AParam.Name, SQuoter)).Cat(SNameValue);
       if AParam.ParamType in [ptDateTime, ptInterval, ptAnsiString,
         ptUtf8String, ptUnicodeString, ptGuid, ptBytes, ptStream] then
-        AHelper.Cat(QuotedStrW(JavaEscape(AParam.AsString.Value,
+        AHelper.Cat(QuotedStrW(JavaEscape(AParam.AsString.value,
           False), SQuoter))
       else
-        AHelper.Cat(AParam.AsString.Value);
+        AHelper.Cat(AParam.AsString.value);
       AHelper.Cat(SDelimiter);
     end;
-    if Count > 0 then
+    if count > 0 then
       AHelper.Back(1);
     if AHasName then
       AHelper.Cat(SObjectEnd, -1)
     else
       AHelper.Cat(SArrayEnd, -1);
-    Result := NewString(AHelper.Value);
+    Result := NewString(AHelper.value);
   finally
     FreeObject(AHelper);
   end;
@@ -1610,7 +1653,7 @@ end;
 
 function TQParams.GetCount: Integer;
 begin
-  Result := FItems.Count;
+  Result := FItems.count;
 end;
 
 function TQParams.GetDItems(AIndex: Integer): TQParam;
@@ -1628,7 +1671,7 @@ var
   I: Integer;
 begin
   Result := -1;
-  for I := 0 to FItems.Count - 1 do
+  for I := 0 to FItems.count - 1 do
   begin
     if GetItems(I) = AParam then
     begin
@@ -1674,7 +1717,7 @@ begin
     begin
       AParam := TQParam.Create(Self);
       AName.LoadFromStream(AStream);
-      AParam.FName := AName.Value.AsString^;
+      AParam.FName := AName.value.AsString^;
       AStream.ReadBuffer(AParam.FType, SizeOf(TQParamType));
       AParam.FValue.LoadFromStream(AStream);
       Add(AParam);
@@ -1718,8 +1761,8 @@ var
   I: Integer;
   AParam: TQParam;
 begin
-  TQValue.WriteInt(AStream, Count);
-  for I := 0 to FItems.Count - 1 do
+  TQValue.WriteInt(AStream, count);
+  for I := 0 to FItems.count - 1 do
   begin
     AParam := Items[I];
     TQValue.WriteString(AStream, AParam.Name);
@@ -1745,15 +1788,15 @@ begin
   end;
 end;
 
-procedure TQParams.SetDItems(AIndex: Integer; const Value: TQParam);
+procedure TQParams.SetDItems(AIndex: Integer; const value: TQParam);
 begin
-  if Value <> Items[AIndex] then
+  if value <> Items[AIndex] then
   begin
 {$IFDEF UNICODE}
-    FItems[AIndex] := Value;
+    FItems[AIndex] := value;
 {$ELSE}
     IQParam(FItems[AIndex])._Release;
-    FItems[AIndex] := Value;
+    FItems[AIndex] := value;
 {$ENDIF}
   end;
 end;
@@ -1934,7 +1977,7 @@ end;
 procedure TQParamString.SetLength(ALen: Integer);
 begin
   if FValue.ValueType = vdtString then
-    system.SetLength(FValue.Value.AsString^, ALen);
+    system.SetLength(FValue.value.AsString^, ALen);
 end;
 
 procedure TQParamString.SetValue(const S: PWideChar);
@@ -1950,7 +1993,7 @@ begin
   begin
     S := AParam.AsString;
     SetLength(Result, S.Length);
-    Move(S.Value^, PQCharW(Result)^, S.Length shl 1);
+    Move(S.value^, PQCharW(Result)^, S.Length shl 1);
   end
   else
     SetLength(Result, 0);
@@ -2042,10 +2085,10 @@ var
     AItems: IQParams;
   begin
     AItems := FInterface.AsArray;
-    if AItems.Count > 0 then
+    if AItems.count > 0 then
     begin
-      Result := VarArrayCreate([0, AItems.Count - 1], varVariant);
-      for I := 0 to AItems.Count - 1 do
+      Result := VarArrayCreate([0, AItems.count - 1], varVariant);
+      for I := 0 to AItems.count - 1 do
         Result[I] := ParamHelper(AItems[I]).AsVariant;
     end
     else
@@ -2149,7 +2192,7 @@ end;
 
 function TQParamHelper.GetAsUString: QStringW;
 begin
-  Result := FInterface.AsString.Value;
+  Result := FInterface.AsString.value;
 end;
 
 function TQParamHelper.GetIndex: Integer;
@@ -2259,9 +2302,9 @@ begin
   FInterface.AsFloat := AValue;
 end;
 
-procedure TQParamHelper.SetAsGuid(const Value: TGuid);
+procedure TQParamHelper.SetAsGuid(const value: TGuid);
 begin
-  FInterface.AsGuid := Value;
+  FInterface.AsGuid := value;
 end;
 
 procedure TQParamHelper.SetAsInt64(const AValue: Int64);
@@ -2333,46 +2376,46 @@ end;
 
 function TQParamsHelper.Add(const AName, AValue: QStringW): Integer;
 begin
-  Result := FInterface.Count;
+  Result := FInterface.count;
   ParamHelper(FInterface.Add(PQCharW(AName), ptUnicodeString)).AsString
     := AValue;
 end;
 
 function TQParamsHelper.Add(const AName: QStringW; AValue: Variant): Integer;
 begin
-  Result := FInterface.Count;
+  Result := FInterface.count;
   ParamHelper(FInterface.Add(PQCharW(AName), ptUnknown)).AsVariant := AValue;
 end;
 
 function TQParamsHelper.Add(const AName: QStringW; AValue: Boolean): Integer;
 begin
-  Result := FInterface.Count;
+  Result := FInterface.count;
   FInterface.Add(PQCharW(AName), ptBoolean).AsBoolean := AValue;
 end;
 
 function TQParamsHelper.Add(const AName: QStringW; AValue: Int64): Integer;
 begin
-  Result := FInterface.Count;
+  Result := FInterface.count;
   FInterface.Add(PQCharW(AName), ptInt64).AsInt64 := AValue;
 end;
 
 function TQParamsHelper.Add(const AName: QStringW; AValue: Double): Integer;
 begin
-  Result := FInterface.Count;
+  Result := FInterface.count;
   FInterface.Add(PQCharW(AName), ptFloat8).AsFloat := AValue;
 end;
 
 function TQParamsHelper.Add(const AName: QStringW; const AValue: PByte;
   ALen: Integer): Integer;
 begin
-  Result := FInterface.Count;
+  Result := FInterface.count;
   FInterface.Add(PQCharW(AName), ptBytes).SetAsBytes(AValue, ALen);
 end;
 
 function TQParamsHelper.Add(const AName: QStringW; const AValue: TGuid)
   : Integer;
 begin
-  Result := FInterface.Count;
+  Result := FInterface.count;
   FInterface.Add(PQCharW(AName), ptGuid).AsGuid := AValue;
 end;
 
@@ -2384,14 +2427,14 @@ end;
 
 function TQParamsHelper.Add(const AName: QStringW; AValue: TStream): Integer;
 begin
-  Result := FInterface.Count;
+  Result := FInterface.count;
   FInterface.Add(PQCharW(AName), ptStream).AsStream := NewStream(AValue, True);
 end;
 
 function TQParamsHelper.Add(const AName: QStringW;
   const AValue: TBytes): Integer;
 begin
-  Result := FInterface.Count;
+  Result := FInterface.count;
   if Length(AValue) > 0 then
     FInterface.Add(PQCharW(AName), ptBytes).SetAsBytes(@AValue[0],
       Length(AValue))
@@ -2442,7 +2485,7 @@ end;
 
 function TQParamsHelper.GetCount: Integer;
 begin
-  Result := FInterface.Count;
+  Result := FInterface.count;
 end;
 
 function TQParamsHelper.GetItems(AIndex: Integer): IQParam;
@@ -2531,6 +2574,116 @@ function TQParamsHelper.Add(const AName: PWideChar;
   AChildren: IQParams): IQParam;
 begin
   Result := FInterface.Add(AName, AChildren);
+end;
+
+{ TQBytes }
+
+procedure TQBytes.Append(const src: Pointer; const len: DWORD);
+begin
+  FCatHelper.Cat(src, len);
+end;
+
+procedure TQBytes.AppendToFile(const fileName: PWideChar);
+var
+  AStream: TFileStream;
+  AFileName: QStringW;
+begin
+  AFileName := fileName;
+  if FileExists(AFileName) then
+    AStream := TFileStream.Create(AFileName, fmOpenWrite or fmShareDenyWrite)
+  else
+    AStream := TFileStream.Create(AFileName, fmCreate);
+  try
+    AStream.Seek(0, soFromEnd);
+    AStream.WriteBuffer(FCatHelper.Start^, FCatHelper.Position);
+  finally
+    FreeAndNil(AStream);
+  end;
+end;
+
+function TQBytes.CopyTo(dest: Pointer; const idx, count: DWORD): DWORD;
+var
+  AMax: DWORD;
+begin
+  if idx > FCatHelper.Position then
+    Result := 0
+  else
+  begin
+    AMax := FCatHelper.Position - idx;
+    if count > AMax then
+      Result = AMax
+    else
+      Result := count;
+    Move((FCatHelper.Start + idx)^, dest^, Result);
+  end;
+end;
+
+constructor TQBytes.Create;
+begin
+  inherited Create;
+  FCatHelper := TQBytesCatHelper.Create;
+end;
+
+procedure TQBytes.Delete(const idx, count: DWORD);
+begin
+  FCatHelper.Delete(idx, count);
+end;
+
+destructor TQBytes.Destroy;
+begin
+  FreeAndNil(FCatHelper);
+  inherited;
+end;
+
+function TQBytes.GetByte(const idx: DWORD; var value: BYTE): Boolean;
+begin
+
+end;
+
+function TQBytes.GetCapcacity: DWORD;
+begin
+
+end;
+
+function TQBytes.GetData: Pointer;
+begin
+
+end;
+
+function TQBytes.GetLength: DWORD;
+begin
+
+end;
+
+procedure TQBytes.Insert(const idx: DWORD; const src: Pointer;
+  const len: DWORD);
+begin
+
+end;
+
+procedure TQBytes.LoadFromFile(const fileName: PWideChar);
+begin
+
+end;
+
+procedure TQBytes.SaveToFile(const fileName: PWideChar);
+begin
+
+end;
+
+function TQBytes.SetByte(const idx: DWORD; const value: BYTE): Boolean;
+begin
+
+end;
+
+procedure TQBytes.SetCapacity(const len: DWORD);
+begin
+
+end;
+
+procedure TQBytes.SetLength(const len: DWORD);
+begin
+
 end;
 
 end.

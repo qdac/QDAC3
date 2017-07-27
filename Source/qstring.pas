@@ -497,6 +497,49 @@ type
     function Cat(const V: Variant): TQBytesCatHelper; overload;
     function Replicate(const ABytes: TBytes; ACount: Integer): TQBytesCatHelper;
     function Back(ALen: Integer): TQBytesCatHelper;
+    function Insert(AIndex: Cardinal; const AData: Pointer; const ALen: Integer)
+      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Byte): TQBytesCatHelper;
+      overload;
+    function Insert(AIndex: Cardinal; const V: Shortint)
+      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Word): TQBytesCatHelper;
+      overload;
+    function Insert(AIndex: Cardinal; const V: Smallint)
+      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Cardinal)
+      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Integer)
+      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Int64)
+      : TQBytesCatHelper; overload;
+{$IFNDEF NEXTGEN}
+    function Insert(AIndex: Cardinal; const V: AnsiChar)
+      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: AnsiString)
+      : TQBytesCatHelper; overload;
+{$ENDIF}
+    function Insert(AIndex: Cardinal; const V: QStringA;
+      ACStyle: Boolean = false): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const c: QCharW)
+      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const S: QStringW)
+      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const ABytes: TBytes)
+      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Single)
+      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Double)
+      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Boolean)
+      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Currency)
+      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: TGuid)
+      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Variant)
+      : TQBytesCatHelper; overload;
+    function Delete(AStart, ACount: Cardinal): TQBytesCatHelper;
     procedure Reset;
     property Value: TBytes read GetValue;
     property Bytes[AIndex: Integer]: Byte read GetBytes;
@@ -8784,6 +8827,7 @@ end;
 
 function TQBytesCatHelper.Cat(const V: Variant): TQBytesCatHelper;
 begin
+  //??这是一个有问题的实现，临时先这样，回头抽空改
   Result := Cat(@V, SizeOf(Variant));
 end;
 
@@ -8868,6 +8912,21 @@ begin
   NeedSize(FBlockSize);
 end;
 
+function TQBytesCatHelper.Delete(AStart, ACount: Cardinal): TQBytesCatHelper;
+begin
+  Result := Self;
+  if AStart < Position then
+  begin
+    if Position - AStart < ACount then
+      FDest := FStart + AStart
+    else
+    begin
+      Move(PByte(IntPtr(FStart) + AStart + ACount)^, PByte(IntPtr(FStart) + AStart)^, ACount);
+      Dec(FDest, ACount);
+    end;
+  end;
+end;
+
 constructor TQBytesCatHelper.Create;
 begin
   inherited Create;
@@ -8893,6 +8952,140 @@ begin
   SetLength(Result, ALen);
   if ALen > 0 then
     Move(FValue[0], Result[0], ALen);
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Int64)
+  : TQBytesCatHelper;
+begin
+  Result := Insert(AIndex, @V, SizeOf(Int64));
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Integer)
+  : TQBytesCatHelper;
+begin
+  Result := Insert(AIndex, @V, SizeOf(Integer));
+end;
+{$IFNDEF NEXTGEN}
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: AnsiString)
+  : TQBytesCatHelper;
+begin
+  Result := Insert(AIndex, PAnsiChar(V), Length(V));
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: AnsiChar)
+  : TQBytesCatHelper;
+begin
+  Result := Insert(AIndex, @V, 1);
+end;
+{$ENDIF}
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Cardinal)
+  : TQBytesCatHelper;
+begin
+  Result := Insert(AIndex, @V, SizeOf(Cardinal));
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Shortint)
+  : TQBytesCatHelper;
+begin
+  Result := Insert(AIndex, @V, SizeOf(Shortint));
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Byte)
+  : TQBytesCatHelper;
+begin
+  Result := Insert(AIndex, @V, 1);
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Smallint)
+  : TQBytesCatHelper;
+begin
+  Result := Insert(AIndex, @V, SizeOf(Smallint));
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Word)
+  : TQBytesCatHelper;
+begin
+  Result := Insert(AIndex, @V, SizeOf(Word));
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: QStringA;
+  ACStyle: Boolean): TQBytesCatHelper;
+begin
+  if ACStyle then
+    Result := Insert(AIndex, PQCharA(V), V.Length + 1)
+  else
+    Result := Insert(AIndex, PQCharA(V), V.Length);
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Currency)
+  : TQBytesCatHelper;
+begin
+  Result:=Insert(AIndex,@V,SizeOf(Currency));
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Boolean)
+  : TQBytesCatHelper;
+begin
+  Result:=Insert(AIndex,@V,SizeOf(Boolean));
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Variant)
+  : TQBytesCatHelper;
+begin
+  //??这是一个有问题的实现，临时先这样，回头抽空改
+  Result:=Insert(AIndex,@V,sizeof(Variant));
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: TGuid)
+  : TQBytesCatHelper;
+begin
+
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Double)
+  : TQBytesCatHelper;
+begin
+
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const S: QStringW)
+  : TQBytesCatHelper;
+begin
+
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const c: QCharW)
+  : TQBytesCatHelper;
+begin
+
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Single)
+  : TQBytesCatHelper;
+begin
+
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const ABytes: TBytes)
+  : TQBytesCatHelper;
+begin
+
+end;
+
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const AData: Pointer;
+  const ALen: Integer): TQBytesCatHelper;
+begin
+  if AIndex >= Position then
+    Result := Cat(AData, ALen)
+  else
+  begin
+    NeedSize(-ALen);
+    Move(PByte(IntPtr(FStart) + AIndex)^, PByte(IntPtr(FStart) + ALen + AIndex)^, ALen);
+    Move(AData^, PByte(IntPtr(FStart) + AIndex)^, ALen);
+    Inc(FDest, ALen);
+  end;
 end;
 
 procedure TQBytesCatHelper.NeedSize(ASize: Integer);
@@ -9087,6 +9280,8 @@ var
         if (not Result) and AIgnoreCase then
         begin
           ACode := Ord(CharUpperW(S^));
+          AStart:=Ord(CharUpperW(QCharW(AStart)));
+          AEnd:=Ord(CharUpperW(QCharW(AEnd)));
           Result := (ACode >= AStart) and (ACode <= AEnd);
         end;
         // 如果是扩展区字符，需要两个连续的转义
