@@ -5147,6 +5147,7 @@ begin
         raise Exception.CreateFmt(SNodeNameExists, [Value]);
     end;
     FName := Value;
+    FNameHash := 0;
     DoJsonNameChanged(Self);
   end;
 end;

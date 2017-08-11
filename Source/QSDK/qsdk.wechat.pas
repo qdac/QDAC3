@@ -239,6 +239,11 @@ type
     function CreateObject(AObjId: TGuid): IWechatObject;
     function Pay(APrepayId, AnonceStr, ASign: String;
       ATimeStamp: Integer): Boolean;
+    function ShareText(ATarget: TWechatSession; const S: String): Boolean;
+    function ShareWebPage(ATarget: TWechatSession;
+      const ATitle, AContent, AUrl: String; APicture: TBitmap): Boolean;
+    // function ShareVideo(const S:String):Boolean;
+
     property AppId: String read getAppId write setAppId;
     property Installed: Boolean read IsInstalled;
     property APISupported: Boolean read IsAPISupported;

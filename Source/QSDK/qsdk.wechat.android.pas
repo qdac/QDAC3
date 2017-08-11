@@ -3777,8 +3777,7 @@ procedure RegisterWechatService;
 implementation
 
 uses system.classes, system.sysutils, system.Generics.Collections, fmx.platform,
-  system.Diagnostics, system.Rtti, TypInfo,
-  Dateutils,
+  fmx.graphics, system.Diagnostics, system.Rtti, TypInfo, Dateutils,
   AndroidAPI.Helpers, system.Net.HttpClient, qstring, qxml, qjson, qdigest,
   qsdk.wechat;
 
@@ -3822,17 +3821,22 @@ type
     FPayKey: String;
     FLastErrorMsg: String;
     FLastError: Integer;
+    FLastTransaction: Integer;
     FRegistered: Boolean;
     FOnRequest: TWechatRequestEvent;
     FOnResponse: TWechatResponseEvent;
     FPayActivity: JActivity;
-    function Registered: Boolean;
+    function NextTransaction: String;
   public
     constructor Create; overload;
     procedure Unregister;
     function IsInstalled: Boolean;
+    function Registered: Boolean;
     function getAppId: String;
     function OpenWechat: Boolean;
+    function ShareText(ATarget: TWechatSession; const S: String): Boolean;
+    function ShareWebPage(ATarget: TWechatSession;
+      const atitle, AContent, aurl: String; ABitmap: TBitmap): Boolean;
     function IsAPISupported: Boolean;
     function SendRequest(ARequest: IWechatRequest): Boolean;
     function SendResponse(AResp: IWechatResponse): Boolean;
@@ -3854,6 +3858,7 @@ type
     procedure setPayKey(const AKey: String);
     procedure onReq(P1: JBaseReq); cdecl;
     procedure onResp(P1: JBaseResp); cdecl;
+    property Instance: JIWXAPI read FInstance;
   end;
 
   TAndroidWechatBaseRequest = class(TWechatObject, IWechatRequest)
@@ -4134,6 +4139,12 @@ begin
   result := Registered and FInstance.isWXAppInstalled;
 end;
 
+function TAndroidWechatService.NextTransaction: String;
+begin
+  Inc(FLastTransaction);
+  result := IntToStr(FLastTransaction);
+end;
+
 procedure TAndroidWechatService.onReq(P1: JBaseReq);
 var
   AReq: IWechatRequest;
@@ -4292,6 +4303,94 @@ end;
 procedure TAndroidWechatService.setPayKey(const AKey: String);
 begin
   FPayKey := AKey;
+end;
+
+function TAndroidWechatService.ShareText(ATarget: TWechatSession;
+  const S: String): Boolean;
+var
+  textObj:JWXTextObject;
+  msg:JWXMediaMessage;
+  req:JSendMessageToWX_Req;
+begin
+  textObj:=TJWXTextObject.JavaClass.init;
+  textObj.text:=StringToJString(S);
+  msg:=TJWXMediaMessage.JavaClass.init(TJWXMediaMessage_IMediaObject.Wrap((textObj as ILocalObject).GetObjectID));
+  msg.description:=StringToJString(S);
+  req := TJSendMessageToWX_Req.JavaClass.init;
+  req.transaction := StringToJString(NextTransaction);
+  req.message := msg;
+  case ATarget of
+    TWechatSession.Session: // 当前会话
+      req.scene := TJSendMessageToWX_Req.JavaClass.WXSceneSession;
+    TWechatSession.Timeline:
+      req.scene := TJSendMessageToWX_Req.JavaClass.WXSceneTimeline;
+    TWechatSession.Favorite:
+      req.scene := TJSendMessageToWX_Req.JavaClass.WXSceneFavorite;
+  end;
+  result := Registered and Instance.sendReq(req);
+end;
+
+function TAndroidWechatService.ShareWebPage(ATarget: TWechatSession;
+  const atitle, AContent, aurl: String; ABitmap: TBitmap): Boolean;
+var
+  webPage: JWXWebpageObject;
+  msg: JWXMediaMessage;
+  req: JSendMessageToWX_Req;
+  function BitmapToArray:TJavaArray<Byte>;
+  var
+    AStream:TMemoryStream;
+  begin
+    AStream:=TMemoryStream.Create;
+    try
+      ABitmap.SaveToStream(AStream);
+      Result:=TJavaArray<Byte>.Create(AStream.Size);
+      Move(AStream.Memory^,Result.Data^,AStream.Size);
+    finally
+      FreeAndNil(ABitmap);
+    end;
+  end;
+begin
+  webPage := TJWXWebpageObject.JavaClass.init;
+  webPage.webpageUrl := StringToJString(aurl);
+  msg := TJWXMediaMessage.JavaClass.init(TJWXMediaMessage_IMediaObject.Wrap
+    ((webPage as ILocalObject).GetObjectID));
+  msg.title := StringToJString(atitle);
+  msg.description := StringToJString(AContent);
+  if Assigned(ABitmap) then
+    msg.thumbData:=BitmapToArray
+  else
+    msg.thumbData := nil;
+  req := TJSendMessageToWX_Req.JavaClass.init;
+  req.transaction := StringToJString(NextTransaction);
+  req.message := msg;
+  case ATarget of
+    TWechatSession.Session: // 当前会话
+      req.scene := TJSendMessageToWX_Req.JavaClass.WXSceneSession;
+    TWechatSession.Timeline:
+      req.scene := TJSendMessageToWX_Req.JavaClass.WXSceneTimeline;
+    TWechatSession.Favorite:
+      req.scene := TJSendMessageToWX_Req.JavaClass.WXSceneFavorite;
+  end;
+  result := Registered and Instance.sendReq(req);
+  //
+  // WXWebpageObject webpage = new WXWebpageObject();
+  // webpage.webpageUrl = shareContent.getURL();
+  // WXMediaMessage msg = new WXMediaMessage(webpage);
+  // msg.title = shareContent.getTitle();
+  // msg.description = shareContent.getContent();
+  //
+  // Bitmap thumb = BitmapFactory.decodeResource(mContext.getResources(), shareContent.getPictureResource());
+  // if(thumb == null) {
+  // Toast.makeText(mContext, "图片不能为空", Toast.LENGTH_SHORT).show();
+  // } else {
+  // msg.thumbData = Util.bmpToByteArray(thumb, true);
+  // }
+  //
+  // SendMessageToWX.req req = new SendMessageToWX.req();
+  // req.transaction = buildTransaction(" webPage ");
+  // req.message = msg;
+  // req.scene = shareType;
+  // mWXApi.sendReq(req);
 end;
 
 procedure TAndroidWechatService.Unregister;
