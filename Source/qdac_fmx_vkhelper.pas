@@ -156,12 +156,14 @@ type
     FAdjustStack: TQAdjustStack; // 最后一次调整的ScrollBox
 {$IFDEF ANDROID}
     FVKState: PByte;
-    class var FContentRect: TRect;
-    {$IF RTLVersion>=32}
+
+  class var
+    FContentRect: TRect;
+{$IF RTLVersion>=32}
     FLastContentRectChanged: TOnContentRectChanged;
     procedure DoContentRectChanged(const App: TAndroidApplicationGlue;
       const ARect: TRect);
-    {$ENDIF}
+{$ENDIF}
 {$ENDIF}
     procedure DoVKVisibleChanged(const Sender: TObject;
       const Msg: System.Messaging.TMessage);
@@ -185,7 +187,9 @@ type
     constructor Create(AOwner: TComponent); overload; override;
     destructor Destroy; override;
   end;
-  TAndroidContentChangeMessage=TMessage<TRect>;
+
+  TAndroidContentChangeMessage = TMessage<TRect>;
+
 var
   VKHandler: TVKStateHandler;
 {$IFDEF ANDROID}
@@ -198,36 +202,32 @@ begin
   Result.Bottom := R.Bottom;
 end;
 
-function GetVKPixelBounds:TRect;
+function GetVKPixelBounds: TRect;
 var
-  ContentRect, TotalRect: JRect;
+  TotalRect: JRect;
   Content, Total: TRectF;
+  ContentRect: JRect;
 begin
   TotalRect := TJRect.Create;
-  {$IF RTLVersion<32}
   ContentRect := TJRect.Create;
   MainActivity.getWindow.getDecorView.getWindowVisibleDisplayFrame(ContentRect);
-  Content:=JRectToRectF(ContentRect);
-  TVKStateHandler.FContentRect:=Content.Truncate;
-  {$ELSE}
-  Content := TVKStateHandler.FContentRect;
-  {$ENDIF}
+  Content := JRectToRectF(ContentRect);
+  TVKStateHandler.FContentRect := Content.Truncate;
   MainActivity.getWindow.getDecorView.getDrawingRect(TotalRect);
   Total := JRectToRectF(TotalRect);
-  Result.Left:=Trunc(Total.Left);
-  Result.Top:=Trunc(Total.Top+Content.Height);
-  Result.Right:=Trunc(Total.Right);
-  Result.Bottom:=Trunc(Total.Bottom);
+  Result.Left := Trunc(Total.Left);
+  Result.Top := Trunc(Total.Top + Content.Height);
+  Result.Right := Trunc(Total.Right);
+  Result.Bottom := Trunc(Total.Bottom);
 end;
 
 function GetVKBounds: TRectF; overload;
 var
-  b:TRect;
+  b: TRect;
 begin
-  b:=GetVKPixelBounds;
+  b := GetVKPixelBounds;
   Result := TRectF.Create(ConvertPixelToPoint(b.TopLeft),
     ConvertPixelToPoint(b.BottomRight));
-
 end;
 
 function GetVKBounds(var ARect: TRect): Boolean; overload;
@@ -241,7 +241,7 @@ end;
 
 function GetVKBounds(var ARect: TRectF): Boolean; overload;
 begin
-  ARect := GetVKPixelBounds;
+  ARect := TRectF.Create(GetVKPixelBounds);
   Result := ARect.Bottom <> TVKStateHandler.FContentRect.Bottom;
   ARect := TRectF.Create(ConvertPixelToPoint(ARect.TopLeft),
     ConvertPixelToPoint(ARect.BottomRight)).Truncate;
@@ -573,6 +573,7 @@ begin
   begin
     FAdjustStack.Restore;
     FLastControl := nil;
+    FLastFocused := nil;
   end;
 end;
 
@@ -694,6 +695,11 @@ procedure TVKStateHandler.DoAppIdle(const Sender: TObject;
 begin
   if FLastFocused <> Screen.FocusControl then
   begin
+{$IFDEF VER320}   // Tokyo Only
+    if Assigned(FLastFocused) then
+      with (FLastFocused as TControl) do
+        InvalidateRect(LocalRect);
+{$ENDIF}
     TMessageManager.DefaultManager.SendMessage(Sender, TFocusChanged.Create);
     FLastFocused := Screen.FocusControl;
   end;
@@ -706,15 +712,15 @@ procedure TVKStateHandler.DoContentRectChanged
 var
   svc: IFMXScreenService;
   AScale: Single;
-  ACtrl:TControl;
-  AVKRect:TRectF;
+  ACtrl: TControl;
+  AVKRect: TRectF;
 begin
-  if ARect<>FContentRect then
+  if ARect <> FContentRect then
   begin
     if TPlatformServices.Current.SupportsPlatformService(IFMXScreenService, svc)
     then
     begin
-      AScale := svc.GetScreenScale;
+      // AScale := svc.GetScreenScale;
       FContentRect := ARect;
       // TRectF.Create(ARect.Left/AScale,ARect.Top/AScale,ARect.Right/AScale,ARect.Bottom/AScale).Truncate;
     end;
@@ -852,6 +858,7 @@ begin
     begin
       FLastControl.RemoveFreeNotification(Self);
       FLastControl := nil;
+      FLastFocused := nil;
     end
     else
       FAdjustStack.Remove(AComponent);
@@ -1032,7 +1039,7 @@ initialization
 
 // 仅支持Android+IOS
 {$IF DEFINED(ANDROID) OR DEFINED(IOS)}
-  VKHandler := TVKStateHandler.Create(nil);
+VKHandler := TVKStateHandler.Create(nil);
 {$ENDIF}
 EnableReturnKeyHook := True;
 

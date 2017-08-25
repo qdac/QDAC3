@@ -19,11 +19,6 @@ uses classes, sysutils, types, qstring, qvalue, qplugins_base,
 
 type
 
-  IQStringService = interface
-    ['{9B9384C6-8E8C-4E32-B07B-3F60A7D0A595}']
-    function NewString(const S: PWideChar): IQString; stdcall;
-  end;
-
   // 下面的封装是仅面向Delphi的，以便简化编码
   IQParamHelper = interface(IQParam)
     ['{7E6EF90D-5D88-4734-92C6-CB055F2C0222}']
@@ -108,7 +103,7 @@ type
     procedure SaveToFile(const fileName: PWideChar); stdcall;
     procedure AppendToFile(const fileName: PWideChar); stdcall;
   public
-    constructor Create; overload;
+    constructor Create; override;
     destructor Destroy; override;
   end;
   // Delphi 的流接口与 IQStream 之间的相互转换
@@ -378,8 +373,9 @@ type
     procedure SetAsString(const AValue: IQString); stdcall;
     function GetAsGuid: TGuid; stdcall;
     procedure SetAsGuid(const value: TGuid); stdcall;
-    function GetAsBytes(ABuf: PByte; ABufLen: Cardinal): Cardinal; stdcall;
-    procedure SetAsBytes(ABuf: PByte; ABufLen: Cardinal); stdcall;
+    function GetAsBytes(ABuf: PByte; ABufLen: Cardinal): Cardinal;
+      overload; stdcall;
+    procedure SetAsBytes(ABuf: PByte; ABufLen: Cardinal); overload; stdcall;
     function GetIsNull: Boolean; stdcall;
     procedure SetNull; stdcall;
     function GetAsArray: IQParams; stdcall;
@@ -399,6 +395,9 @@ type
     function _GetAsStream: StandInterfaceResult; stdcall;
     function _GetParent: StandInterfaceResult; overload; stdcall;
     function _GetAsInterface: StandInterfaceResult; overload; stdcall;
+    function GetAsBytes: IQBytes; overload; stdcall;
+    procedure SetAsBytes(const ABytes: IQBytes); overload; stdcall;
+    function _GetAsBytes: StandInterfaceResult; overload; stdcall;
   public
     constructor Create(AIntf: IQParam);
   end;
@@ -1266,7 +1265,7 @@ end;
 
 function TQParam._GetAsBytes: StandInterfaceResult;
 begin
-
+  Result := PointerOf(GetAsBytes);
 end;
 
 function TQParam._GetAsInterface: StandInterfaceResult;
@@ -2032,6 +2031,11 @@ begin
   Result := FInterface.AsBoolean;
 end;
 
+function TQParamHelper.GetAsBytes: IQBytes;
+begin
+
+end;
+
 function TQParamHelper.GetAsBytes(ABuf: PByte; ABufLen: Cardinal): Cardinal;
 begin
   Result := FInterface.GetAsBytes(ABuf, ABufLen);
@@ -2230,6 +2234,11 @@ begin
   FInterface.AsBoolean := AValue;
 end;
 
+procedure TQParamHelper.SetAsBytes(const ABytes: IQBytes);
+begin
+
+end;
+
 procedure TQParamHelper.SetAsBytes(ABuf: PByte; ABufLen: Cardinal);
 begin
   FInterface.SetAsBytes(ABuf, ABufLen);
@@ -2355,6 +2364,11 @@ end;
 function TQParamHelper._GetAsArray: StandInterfaceResult;
 begin
   Result := PointerOf(GetAsArray);
+end;
+
+function TQParamHelper._GetAsBytes: StandInterfaceResult;
+begin
+  Result := PointerOf(GetAsBytes);
 end;
 
 function TQParamHelper._GetAsInterface: StandInterfaceResult;
@@ -2594,7 +2608,7 @@ begin
   else
     AStream := TFileStream.Create(AFileName, fmCreate);
   try
-    AStream.Seek(0, soFromEnd);
+    AStream.Seek(0, soEnd);
     AStream.WriteBuffer(FCatHelper.Start^, FCatHelper.Position);
   finally
     FreeAndNil(AStream);
@@ -2611,7 +2625,7 @@ begin
   begin
     AMax := FCatHelper.Position - idx;
     if count > AMax then
-      Result = AMax
+      Result := AMax
     else
       Result := count;
     Move((FCatHelper.Start + idx)^, dest^, Result);

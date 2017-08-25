@@ -2,7 +2,7 @@ unit qplugins_base;
 
 interface
 
-uses classes, types, syncobjs, sysutils;
+uses classes, sysutils, types;
 
 const
   SQPluginsVersion = '3.1'; // 3.1版
@@ -37,17 +37,6 @@ type
   TQAsynProcG = procedure(AParams: IInterface); stdcall;
   TQAsynProc = procedure(AParasm: IInterface) of object; // Delphi only
 
-  // 基础类型定义
-  // 流
-  IQStream = interface
-    ['{BCFD2F69-CCB8-4E0B-9FE9-A7D58797D1B8}']
-    function Read(pv: Pointer; cb: Cardinal): Cardinal; stdcall;
-    function Write(pv: Pointer; cb: Cardinal): Cardinal; stdcall;
-    function Seek(AOffset: Int64; AFrom: BYTE): Int64; stdcall;
-    procedure SetSize(ANewSize: UInt64); stdcall;
-    function CopyFrom(AStream: IQStream; ACount: Int64): Int64; stdcall;
-  end;
-
   IQBytes = interface
     ['{8C570D86-517F-4729-8C5F-427F3F6A414B}']
     procedure SetLength(const len: DWORD); stdcall;
@@ -60,11 +49,22 @@ type
     procedure Append(const src: Pointer; const len: DWORD); stdcall;
     procedure Insert(const idx: DWORD; const src: Pointer;
       const len: DWORD); stdcall;
-    procedure Delete(const idx: DWORD; const count: DWORD); stdcall;
-    function CopyTo(dest: Pointer; const idx, count: DWORD): DWORD; stdcall;
+    procedure Delete(const idx: DWORD; const Count: DWORD); stdcall;
+    function CopyTo(dest: Pointer; const idx, Count: DWORD): DWORD; stdcall;
     procedure LoadFromFile(const fileName: PWideChar); stdcall;
     procedure SaveToFile(const fileName: PWideChar); stdcall;
     procedure AppendToFile(const fileName: PWideChar); stdcall;
+  end;
+
+  // 基础类型定义
+  // 流
+  IQStream = interface
+    ['{BCFD2F69-CCB8-4E0B-9FE9-A7D58797D1B8}']
+    function Read(pv: Pointer; cb: Cardinal): Cardinal; stdcall;
+    function Write(pv: Pointer; cb: Cardinal): Cardinal; stdcall;
+    function Seek(AOffset: Int64; AFrom: BYTE): Int64; stdcall;
+    procedure SetSize(ANewSize: UInt64); stdcall;
+    function CopyFrom(AStream: IQStream; ACount: Int64): Int64; stdcall;
   end;
 
   // 参数规格化，用于使用不同语言之间交互
@@ -88,9 +88,20 @@ type
     function GetValue: PWideChar; stdcall;
     function GetLength: Integer; stdcall;
     procedure SetLength(ALen: Integer); stdcall;
-    // Tools function from qstring will bellow
-    property Value: PWideChar read GetValue write SetValue;
+    property value: PWideChar read GetValue write SetValue;
     property Length: Integer read GetLength write SetLength;
+  end;
+
+  IQStringEx = interface(IQString)
+    ['{54BF45E6-0D9F-4E66-9AA3-87974FB50893}']
+    function Left(const AMaxCount: Cardinal; const ACheckExt: Boolean)
+      : IQString; stdcall;
+    function Right(const AMaxCount: Cardinal; const ACheckExt: Boolean)
+      : IQString; stdcall;
+    function SubString(const AStart, ACount: Cardinal; const ACheckExt: Boolean)
+      : IQString; stdcall;
+    function Replace(const old, new: PWideChar; AFlags: Integer): Cardinal;
+    // Todo:Add more function
   end;
 
   // 单个参数
@@ -110,9 +121,10 @@ type
     function GetAsString: IQString; stdcall;
     procedure SetAsString(const AValue: IQString); stdcall;
     function GetAsGuid: TGuid; stdcall;
-    procedure SetAsGuid(const Value: TGuid); stdcall;
-    function GetAsBytes(ABuf: PByte; ABufLen: Cardinal): Cardinal; overload;stdcall;
-    procedure SetAsBytes(ABuf: PByte; ABufLen: Cardinal); overload;stdcall;
+    procedure SetAsGuid(const value: TGuid); stdcall;
+    function GetAsBytes(ABuf: PByte; ABufLen: Cardinal): Cardinal;
+      overload; stdcall;
+    procedure SetAsBytes(ABuf: PByte; ABufLen: Cardinal); overload; stdcall;
     function GetIsNull: Boolean; stdcall;
     procedure SetNull; stdcall;
     function GetAsArray: IQParams; stdcall;
@@ -124,14 +136,14 @@ type
     function GetAsInterface: IInterface; overload; stdcall;
     procedure SetAsInterface(const AIntf: IInterface); stdcall;
     function GetIndex: Integer; stdcall;
-    function GetAsBytes:IQBytes;overload;stdcall;
-    procedure SetAsBytes(const ABytes:IQBytes);overload;stdcall;
+    function GetAsBytes: IQBytes; overload; stdcall;
+    procedure SetAsBytes(const ABytes: IQBytes); overload; stdcall;
     // 下面的代码为了兼容其它语言加入
     function _GetAsArray: StandInterfaceResult; stdcall;
     function _GetAsStream: StandInterfaceResult; stdcall;
     function _GetParent: StandInterfaceResult; overload; stdcall;
     function _GetAsInterface: StandInterfaceResult; overload; stdcall;
-    function _GetAsBytes:StandInterfaceResult;overload;stdcall;
+    function _GetAsBytes: StandInterfaceResult; overload; stdcall;
     property AsInteger: Integer read GetAsInteger write SetAsInteger;
     property AsInt64: Int64 read GetAsInt64 write SetAsInt64;
     property AsBoolean: Boolean read GetAsBoolean write SetAsBoolean;
@@ -216,7 +228,7 @@ type
 
   IQMultiInstanceExtension = interface
     ['{A13CADF7-96EE-4B95-B3CA-1476EBC19A41}']
-    function GetInstance(var AResult: IInterface): Boolean;stdcall;
+    function GetInstance(var AResult: IInterface): Boolean; stdcall;
   end;
 
   // 单个服务
@@ -315,7 +327,7 @@ type
   end;
 
   // 基于文本的路由规则项目，此接口仅为显示和修改使用
-  IQTextRouter = interface(IQService)
+  IQTextRouter = interface
     ['{F3834278-4D2F-46D5-AA72-6EF016CE7F3A}']
     function GetSource: PWideChar; stdcall; // 规则源
     function GetTarget: PWideChar; stdcall; // 规则目标
@@ -323,7 +335,7 @@ type
   end;
 
   // 基于 ID 映射的规则项目
-  IQIdRouter = interface(IQService)
+  IQIdRouter = interface
     ['{C2390553-ABE3-489A-8713-CB28A938C000}']
     function GetSource: TGuid; stdcall;
     function GetTarget: TGuid; stdcall;
@@ -371,8 +383,8 @@ type
   IQJobCallback = interface
     ['{886BE1F7-3365-4F81-9CEA-742EBD833584}']
     procedure DoJob(AParams: IQParams); stdcall;
-    procedure AfterDone;stdcall;
-    procedure BeforeCancel;stdcall;
+    procedure AfterDone; stdcall;
+    procedure BeforeCancel; stdcall;
   end;
 
   IQForJobManager = interface
@@ -408,10 +420,8 @@ type
     function GetAfterDone: IQNotifyCallback; stdcall;
     function GetByOrder: Boolean; stdcall;
     function GetRuns: Integer; stdcall;
-
-    function _GetAfterDone: StandInterfaceResult; stdcall;
-
     property Count: Integer read GetCount;
+    function _GetAfterDone: StandInterfaceResult; stdcall;
     property AfterDone: IQNotifyCallback read GetAfterDone write SetAfterDone;
     property ByOrder: Boolean read GetByOrder;
     property Runs: Integer read GetRuns;
@@ -435,9 +445,10 @@ type
     function CreateJobGroup(AByOrder: Boolean): IQJobGroup; stdcall;
     procedure SetWorkers(const AMinWorkers, AMaxWorkers: Integer); stdcall;
     procedure PeekCurrentWorkers(var ATotal, AIdle, ABusy: Integer); stdcall;
-    function RegisterSignal(const ASignal:PWideChar):Integer;stdcall;
-    function WaitSignal(const ASignal:PWideChar;AJob:IQJobCallback;ARunInMainThread:Boolean):Int64;stdcall;
-    procedure Signal(const ASignal:PWideChar;AParams:IQParams);
+    function RegisterSignal(const ASignal: PWideChar): Integer; stdcall;
+    function WaitSignal(const ASignal: PWideChar; AJob: IQJobCallback;
+      ARunInMainThread: Boolean): Int64; stdcall;
+    procedure Signal(const ASignal: PWideChar; AParams: IQParams);
     //
     function _CreateJobGroup(AByOrder: Boolean): StandInterfaceResult; stdcall;
   end;
@@ -495,6 +506,11 @@ type
     ['{5008B5D4-EE67-419D-80CB-E5C62FA95243}']
     procedure Lock; stdcall;
     procedure Unlock; stdcall;
+  end;
+
+  IQStringService = interface
+    ['{9B9384C6-8E8C-4E32-B07B-3F60A7D0A595}']
+    function NewString(const S: PWideChar): IQString; stdcall;
   end;
 
 implementation

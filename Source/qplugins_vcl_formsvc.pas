@@ -1,9 +1,9 @@
 {$REGION History}
-{修订历史
+{ 修订历史
 
-2017.2.9
-=========
-* 修正了插件中在特定场景下 TabList 顺序切换的问题（墨宝轩报告）
+  2017.2.9
+  =========
+  * 修正了插件中在特定场景下 TabList 顺序切换的问题（墨宝轩报告）
 }
 {$ENDREGION}
 /// <summary>
@@ -14,7 +14,7 @@ unit qplugins_vcl_formsvc;
 interface
 
 uses classes, sysutils, types, windows, messages, controls, comctrls, forms,
-  qstring, qplugins,qplugins_base, qplugins_params, qplugins_vcl_messages,
+  qstring, qplugins, qplugins_base, qplugins_params, qplugins_vcl_messages,
   qplugins_formsvc{$IF RTLVERSION>=23}, uitypes{$IFEND};
 {$HPPEMIT '#pragma link "qplugins_vcl_formsvc"'}
 
@@ -86,6 +86,7 @@ type
     procedure ShowModal(AOnModalResult: TQFormModalResultHandler;
       ATag: IQParams); override;
     procedure Show; override;
+    procedure Close; override;
     procedure BringToFront; override;
     function GetInstance: IQService; override; stdcall;
     procedure SendToBack; override;
@@ -389,6 +390,13 @@ begin
   inherited Create(AId, AName);
   FCreator := ACreator;
   Form := AForm;
+end;
+
+procedure TQVCLFormService.Close;
+begin
+  inherited;
+  if Assigned(FForm) then
+    FForm.Close;
 end;
 
 constructor TQVCLFormService.Create(const AId: TGuid; AName: QStringW;
@@ -1199,7 +1207,7 @@ var
   end;
 
 begin
-   DebugWindow(AHandle);
+  DebugWindow(AHandle);
   Result := False;
   if not Assigned(VCLCtrlTestServices) then
     VCLCtrlTestServices := PluginsManager.ByPath(PQCharW(VCLControlTestRoot))

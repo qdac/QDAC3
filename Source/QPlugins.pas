@@ -6,8 +6,7 @@ interface
 {$HPPEMIT '#pragma link "qplugins"'}
 
 uses classes, sysutils, types, qstring, qvalue, qtimetypes, qdac_postqueue,
-  qplugins_base,
-  qplugins_params, syncobjs, math{$IFDEF MSWINDOWS}, windows{$ENDIF} {$IFDEF POSIX},
+  qplugins_base,qplugins_params, syncobjs, math{$IFDEF MSWINDOWS}, windows{$ENDIF} {$IFDEF POSIX},
   Posix.Unistd{$ENDIF}{$IFDEF UNICODE},
   Generics.collections{$ENDIF};
 
@@ -614,7 +613,7 @@ var
   P: Pointer;
 begin
   _PluginsManager := TQPluginsManager.Create as IQPluginsManager;
-  OwnerInstance := _PluginsManager.GetOwnerInstance;
+  OwnerInstance := (_PluginsManager as IQService).GetOwnerInstance;
   _PluginsManager._Release; // 释放构造函数中人为增加的计数
   MapHandle := CreateFileMappingW(INVALID_HANDLE_VALUE, nil, PAGE_READWRITE, 0,
     SizeOf(Pointer), PWideChar(PluginsManagerNameSpace));
@@ -625,6 +624,7 @@ begin
   UnmapViewOfFile(P);
   StringService := TQStringService.Create(IQStringService, 'NewString');
   _PluginsManager.Services.Add(StringService as IQService);
+  DebugOut('QPluginsManager registered at %x with Name %s', [IntPtr(_PluginsManager),PluginsManagerNameSpace]);
 end;
 
 procedure UnregisterManager;
@@ -640,7 +640,7 @@ begin
     if HInstance <> OwnerInstance then
       _PluginsManager.ModuleUnloading(HInstance)
     else
-      _PluginsManager.Clear;
+      (_PluginsManager as IQServices).Clear;
     _PluginsManager := nil;
     StringService := nil;
     if MapHandle <> 0 then
@@ -705,7 +705,7 @@ function PluginsManager: IQPluginsManager;
       UnmapViewOfFile(P);
       { Close the file mapping }
       CloseHandle(AHandle);
-      OwnerInstance := _PluginsManager.GetOwnerInstance;
+      OwnerInstance := (_PluginsManager as IQService).GetOwnerInstance;
     end;
   end;
 {$ELSE}
@@ -1079,11 +1079,11 @@ begin
     AMgr := PluginsManager;
     if CharInW(APath, PathDelimiter) then
     begin
-      AParent := AMgr;
+      AParent := AMgr as IQServices;
       Inc(APath);
     end
     else if AParent = nil then
-      AParent := AMgr;
+      AParent := AMgr as IQServices;
     if not Supports(AParent, IQService, Result) then
       Result := nil;
     AFound := true;
@@ -1120,7 +1120,7 @@ end;
 
 function FindService(APath: PWideChar): IQService;
 begin
-  Result := FindService(PluginsManager, APath);
+  Result := FindService(PluginsManager as IQServices, APath);
 end;
 
 function FindService(APath: PWideChar; const AId: TGuid; out AService): Boolean;
@@ -1130,7 +1130,7 @@ end;
 
 function GetService(APath: PWideChar): IQService;
 begin
-  Result := PluginsManager.ByPath(APath);
+  Result := (PluginsManager as IQServices).ByPath(APath);
 end;
 
 function GetService(AParent: IQServices; APath: PWideChar): IQService;
@@ -1238,7 +1238,7 @@ begin
     if APath^ = PathDelimiter^ then
     begin
       Inc(APath);
-      Result := FindService(PluginsManager, APath);
+      Result := FindService(PluginsManager as IQServices, APath);
     end
     else
       Result := FindService(Self, APath);
@@ -1520,6 +1520,7 @@ begin
   FLoaders := TQServices.Create
     (StringToGuid('{0BBAEE7C-ECD0-4CFA-A968-34BF071623DE}'), 'Loaders');
   Add(FLoaders as IQService);
+  DebugOut('TQPluginsManager Creaeed,Address:%x',[IntPtr(Self)]);
 end;
 
 destructor TQPluginsManager.Destroy;
@@ -1566,15 +1567,15 @@ begin
           AProgress[1].AsInteger := I;
           AProgress[2].AsInteger := ALoaders.Count;
           FNotifyMgr.Send(NID_LOADERS_PROGRESS, AProgress);
-          if not FActiveLoader.Execute(AParams, AResult) then
+          if not (FActiveLoader as IQService).Execute(AParams, AResult) then
           begin
             AError := TQParams.Create;
             AError.Add('Sender', ptUnicodeString).AsString := NewString(APath);
             AError.Add('Action', ptUInt8).AsInteger := AStartAction;
             AError.Add('ErrorCode', ptUInt32).AsInt64 :=
-              FActiveLoader.LastError;
+              (FActiveLoader as IQService) .LastError;
             AError.Add('ErrorMsg', ptUnicodeString).AsString :=
-              NewString(FActiveLoader.LastErrorMsg);
+              NewString((FActiveLoader as IQService).LastErrorMsg);
             FNotifyMgr.Send(NID_LOADER_ERROR, AError);
             Result := false;
           end;
@@ -1607,6 +1608,7 @@ function PathRoot(var P: PWideChar): IQServices;
 var
   AName: QStringW;
   I: Integer;
+  AServices:IQServices;
 begin
   if CharInW(P, PathDelimiter) then
     Inc(P);
@@ -1614,11 +1616,12 @@ begin
   AName := DecodeTokenW(P, PathDelimiter, NullChar, true);
   Lock;
   try
-    for I := 0 to _PluginsManager.Count - 1 do
+    AServices:=_PluginsManager as IQServices;
+    for I := 0 to AServices.Count - 1 do
     begin
-      if StrCmpW(_PluginsManager[I].Name, PWideChar(AName), true) = 0 then
+      if StrCmpW(AServices[I].Name, PWideChar(AName), true) = 0 then
       begin
-        if Supports(_PluginsManager[I], IQServices, Result) then
+        if Supports(AServices[I], IQServices, Result) then
           break;
       end;
     end;

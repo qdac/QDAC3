@@ -797,6 +797,7 @@ type
     FDelegate: TiOSWXApiDelegate;
     function Registered: Boolean;
     procedure DoAppEvent(const Sender: TObject; const M: TMessage);
+    function BitmapToNSData(ABitmap: TBitmap): NSData;
   public
     constructor Create; overload;
     procedure Unregister;
@@ -816,6 +817,7 @@ type
     function ShareText(ATarget: TWechatSession; const S: String): Boolean;
     function ShareWebPage(ATarget: TWechatSession;
       const ATitle, AContent, AUrl: String; APicture: TBitmap): Boolean;
+    function ShareBitmap(ATarget: TWechatSession; ABitmap: TBitmap): Boolean;
     function CreateObject(AObjId: TGuid): IWechatObject;
     function getMchId: String;
     procedure setMchId(const AId: String);
@@ -906,6 +908,20 @@ function CoreTelephonyFakeLoader: NSString; cdecl;
 {$O+}
 {$ENDIF}
 { TiOSWechatService }
+
+function TiOSWechatService.BitmapToNSData(ABitmap: TBitmap): NSData;
+var
+  AStream: TMemoryStream;
+begin
+  AStream := TMemoryStream.Create;
+  try
+    ABitmap.SaveToStream(AStream);
+    Result := TNSData.Wrap(TNSData.alloc.initWithBytes(AStream.Memory,
+      AStream.Size));
+  finally
+    FreeAndNil(AStream);
+  end;
+end;
 
 constructor TiOSWechatService.Create;
 var
@@ -1077,6 +1093,35 @@ begin
   FPayKey := AKey;
 end;
 
+function TiOSWechatService.ShareBitmap(ATarget: TWechatSession;
+  ABitmap: TBitmap): Boolean;
+var
+  msg: WXMediaMessage;
+  imgObj: WXImageObject;
+  req: SendMessageToWXReq;
+begin
+  imgObj := TWXImageObject.OCClass._object;
+  imgObj.setImageData(BitmapToNSData(ABitmap));
+  msg := TWXMediaMessage.OCClass.message;
+  msg.setMediaObject((imgObj as ILocalObject).GetObjectID);
+  if Assigned(ABitmap) then
+    msg.setThumbData(BitmapToNSData(ABitmap))
+  else
+    msg.setThumbData(nil);
+  req := TSendMessageToWXReq.Create;
+  req.setBText(false);
+  req.setMessage(msg);
+  case ATarget of
+    Session:
+      req.setScene(WXSceneSession);
+    Timeline:
+      req.setScene(WXSceneTimeline);
+    Favorite:
+      req.setScene(WXSceneFavorite);
+  end;
+  Result := Registered and TWXApi.OCClass.sendReq(req);
+end;
+
 function TiOSWechatService.ShareText(ATarget: TWechatSession;
   const S: String): Boolean;
 var
@@ -1102,19 +1147,6 @@ var
   msg: WXMediaMessage;
   webpage: WXWebpageObject;
   req: SendMessageToWXReq;
-  function BitmapToNSData: NSData;
-  var
-    AStream: TMemoryStream;
-  begin
-    AStream := TMemoryStream.Create;
-    try
-      APicture.SaveToStream(AStream);
-      Result := TNSData.Wrap(TNSData.alloc.initWithBytes(AStream.Memory, AStream.Size));
-    finally
-      FreeAndNil(AStream);
-    end;
-  end;
-
 begin
   webpage := TWXWebpageObject.OCClass._object;
   webpage.setWebpageUrl(StrToNSStr(AUrl));
@@ -1123,7 +1155,7 @@ begin
   msg.setDescription(StrToNSStr(AContent));
   msg.setMediaObject((webpage as ILocalObject).GetObjectID);
   if Assigned(APicture) then
-    msg.setThumbData(BitmapToNSData)
+    msg.setThumbData(BitmapToNSData(APicture))
   else
     msg.setThumbData(nil);
   req := TSendMessageToWXReq.Create;

@@ -356,6 +356,10 @@ type
     /// 获取 DockTo 时的父句柄
     /// </summary>
     function GetDockParent: THandle;
+    ///<summary>
+    ///  关闭窗口
+    ///</summary>
+    procedure Close;
     property ModalResult: TModalResult read GetModalResult write SetModalResult;
     property Width: Integer read GetWidth write SetWidth;
     property Height: Integer read GetHeight write SetHeight;
@@ -399,6 +403,7 @@ type
     procedure SendInput(var AInput: TQInputEvent); virtual; abstract;
     procedure HookEvents(const AEvents: TQFormEvents); virtual; abstract;
     procedure UnhookEvents; virtual; abstract;
+    procedure Close; virtual;abstract;
     function IsMultiInstance: Boolean; virtual; abstract;
     function GetModalResult: TModalResult; virtual; abstract;
     procedure SetModalResult(const AValue: TModalResult); virtual; abstract;
@@ -411,6 +416,7 @@ var
 
 {$ENDIF}
 { TQFormService }
+
 
 function TQFormService.Execute(AParams, AResult: IQParams): Boolean;
 var

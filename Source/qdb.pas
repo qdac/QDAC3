@@ -8816,7 +8816,7 @@ begin
   FreeObject(FParams);
   for I := FDataSets.Count - 1 downto 0 do
   begin
-    if FDataSets[I].Owner = nil then
+    if TQDataSet(FDataSets[I]).Owner = nil then
       FreeObject(FDataSets[I]);
   end;
   FreeObject(FDataSets);

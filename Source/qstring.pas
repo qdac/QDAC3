@@ -8918,7 +8918,7 @@ begin
   if AStart < Position then
   begin
     if Position - AStart < ACount then
-      FDest := FStart + AStart
+      FDest := PByte(IntPtr(FStart) + AStart)
     else
     begin
       Move(PByte(IntPtr(FStart) + AStart + ACount)^, PByte(IntPtr(FStart) + AStart)^, ACount);
@@ -11692,7 +11692,7 @@ begin
   // 这个构造函数变成保护的，以避免外部访问
 end;
 
-function TQReadOnlyMemoryStream.Write(const Buffer; count: Integer): Longint;
+function TQReadOnlyMemoryStream.Write(const Buffer; count: Longint): Longint;
 begin
   raise EStreamError.Create(SStreamReadOnly);
 end;

@@ -242,6 +242,7 @@ type
     function ShareText(ATarget: TWechatSession; const S: String): Boolean;
     function ShareWebPage(ATarget: TWechatSession;
       const ATitle, AContent, AUrl: String; APicture: TBitmap): Boolean;
+    function ShareBitmap(ATarget: TWechatSession;ABitmap:TBitmap):Boolean;
     // function ShareVideo(const S:String):Boolean;
 
     property AppId: String read getAppId write setAppId;

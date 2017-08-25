@@ -3827,6 +3827,7 @@ type
     FOnResponse: TWechatResponseEvent;
     FPayActivity: JActivity;
     function NextTransaction: String;
+    function BitmapToArray(ABitmap: TBitmap): TJavaArray<Byte>;
   public
     constructor Create; overload;
     procedure Unregister;
@@ -3837,6 +3838,7 @@ type
     function ShareText(ATarget: TWechatSession; const S: String): Boolean;
     function ShareWebPage(ATarget: TWechatSession;
       const atitle, AContent, aurl: String; ABitmap: TBitmap): Boolean;
+    function ShareBitmap(ATarget: TWechatSession;ABitmap: TBitmap): Boolean;
     function IsAPISupported: Boolean;
     function SendRequest(ARequest: IWechatRequest): Boolean;
     function SendResponse(AResp: IWechatResponse): Boolean;
@@ -4087,6 +4089,21 @@ end;
 
 { TAndroidWechatService }
 
+function TAndroidWechatService.BitmapToArray(ABitmap: TBitmap)
+  : TJavaArray<Byte>;
+var
+  AStream: TMemoryStream;
+begin
+  AStream := TMemoryStream.Create;
+  try
+    ABitmap.SaveToStream(AStream);
+    result := TJavaArray<Byte>.Create(AStream.Size);
+    Move(AStream.Memory^, result.Data^, AStream.Size);
+  finally
+    FreeAndNil(ABitmap);
+  end;
+end;
+
 constructor TAndroidWechatService.Create;
 begin
   inherited;
@@ -4305,17 +4322,42 @@ begin
   FPayKey := AKey;
 end;
 
+function TAndroidWechatService.ShareBitmap(ATarget: TWechatSession;ABitmap: TBitmap): Boolean;
+var
+  imgObj: JWXImageObject;
+  msg: JWXMediaMessage;
+  req: JSendMessageToWX_Req;
+begin
+  imgObj := TJWXImageObject.JavaClass.init;
+  imgObj.imageData := BitmapToArray(ABitmap);
+  msg := TJWXMediaMessage.JavaClass.init
+    (TJWXMediaMessage_IMediaObject.Wrap((imgObj as ILocalObject).GetObjectID));
+  req := TJSendMessageToWX_Req.JavaClass.init;
+  req.transaction := StringToJString(NextTransaction);
+  req.message := msg;
+  case ATarget of
+    TWechatSession.Session: // 当前会话
+      req.scene := TJSendMessageToWX_Req.JavaClass.WXSceneSession;
+    TWechatSession.Timeline:
+      req.scene := TJSendMessageToWX_Req.JavaClass.WXSceneTimeline;
+    TWechatSession.Favorite:
+      req.scene := TJSendMessageToWX_Req.JavaClass.WXSceneFavorite;
+  end;
+  result := Registered and Instance.sendReq(req);
+end;
+
 function TAndroidWechatService.ShareText(ATarget: TWechatSession;
   const S: String): Boolean;
 var
-  textObj:JWXTextObject;
-  msg:JWXMediaMessage;
-  req:JSendMessageToWX_Req;
+  textObj: JWXTextObject;
+  msg: JWXMediaMessage;
+  req: JSendMessageToWX_Req;
 begin
-  textObj:=TJWXTextObject.JavaClass.init;
-  textObj.text:=StringToJString(S);
-  msg:=TJWXMediaMessage.JavaClass.init(TJWXMediaMessage_IMediaObject.Wrap((textObj as ILocalObject).GetObjectID));
-  msg.description:=StringToJString(S);
+  textObj := TJWXTextObject.JavaClass.init;
+  textObj.text := StringToJString(S);
+  msg := TJWXMediaMessage.JavaClass.init
+    (TJWXMediaMessage_IMediaObject.Wrap((textObj as ILocalObject).GetObjectID));
+  msg.description := StringToJString(S);
   req := TJSendMessageToWX_Req.JavaClass.init;
   req.transaction := StringToJString(NextTransaction);
   req.message := msg;
@@ -4336,28 +4378,15 @@ var
   webPage: JWXWebpageObject;
   msg: JWXMediaMessage;
   req: JSendMessageToWX_Req;
-  function BitmapToArray:TJavaArray<Byte>;
-  var
-    AStream:TMemoryStream;
-  begin
-    AStream:=TMemoryStream.Create;
-    try
-      ABitmap.SaveToStream(AStream);
-      Result:=TJavaArray<Byte>.Create(AStream.Size);
-      Move(AStream.Memory^,Result.Data^,AStream.Size);
-    finally
-      FreeAndNil(ABitmap);
-    end;
-  end;
 begin
   webPage := TJWXWebpageObject.JavaClass.init;
   webPage.webpageUrl := StringToJString(aurl);
-  msg := TJWXMediaMessage.JavaClass.init(TJWXMediaMessage_IMediaObject.Wrap
-    ((webPage as ILocalObject).GetObjectID));
+  msg := TJWXMediaMessage.JavaClass.init
+    (TJWXMediaMessage_IMediaObject.Wrap((webPage as ILocalObject).GetObjectID));
   msg.title := StringToJString(atitle);
   msg.description := StringToJString(AContent);
   if Assigned(ABitmap) then
-    msg.thumbData:=BitmapToArray
+    msg.thumbData := BitmapToArray(ABitmap)
   else
     msg.thumbData := nil;
   req := TJSendMessageToWX_Req.JavaClass.init;
