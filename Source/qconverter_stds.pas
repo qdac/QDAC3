@@ -48,10 +48,12 @@ type
 {$IFEND}
 
   TQJsonConverter = class(TQConverter)
+  private
   protected
     FJson, FDSRoot, FActiveDS, FActiveRecs: TQJson;
     FRecordIndex: Integer;
     FLoadingDefs: TQFieldDefs;
+    FJsonText: PQStringW;
     procedure BeforeExport; override;
     procedure SaveFieldDefs(ADefs: TQFieldDefs); override;
     function WriteRecord(ARec: TQRecord): Boolean; override;
@@ -60,6 +62,9 @@ type
     procedure LoadFieldDefs(AFieldDefs: TQFieldDefs); override;
     function ReadRecord(ARec: TQRecord): Boolean; override;
     procedure AfterImport; override;
+    function GetAsJson: QStringW;
+  public
+    property AsJson:QStringW read GetAsJson;
   end;
 
   TQBinaryStreamHeader = packed record
@@ -441,7 +446,10 @@ end;
 
 procedure TQJsonConverter.AfterExport;
 begin
-  FJson.SaveToStream(FStream, teUtf8, True, False);
+  if Assigned(FStream) then
+    FJson.SaveToStream(FStream, teUtf8, True, False)
+  else if Assigned(FJsonText) then
+    FJsonText^:=FJson.Encode(false,true);
   FreeObject(FJson);
   inherited;
 end;
@@ -471,6 +479,17 @@ begin
   if FDSRoot.DataType <> jdtArray then
     raise EConvertError.Create(SBadFileFormat);
   DataSetCount := FDSRoot.Count;
+end;
+
+function TQJsonConverter.GetAsJson: QStringW;
+begin
+  if Assigned(FDataSet) then
+  begin
+    Result := '';
+    FJsonText := @Result;
+    FDataSet.SaveToStream(nil, Self);
+    FJsonText := nil;
+  end;
 end;
 
 procedure TQJsonConverter.LoadFieldDefs(AFieldDefs: TQFieldDefs);
@@ -885,7 +904,7 @@ begin
       end;
     end;
     Result := True;
-    DoProgress(csLoadData,FStream.Position,FDSHeader.NextDS);
+    DoProgress(csLoadData, FStream.Position, FDSHeader.NextDS);
   end
   else
     Result := False;
