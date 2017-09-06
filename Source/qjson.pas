@@ -2819,16 +2819,16 @@ var
   ALineText: array [0 .. 102] of QCharW;
   procedure ErrorLine;
   var
-    pl, pls,pe: PQCharW;
+    pl, pls, pe: PQCharW;
   begin
     pl := PQCharW(ALine);
     pls := pl;
     Inc(pl, ACol);
-    pe:=pl;
-    while (pl>=pls) and (IntPtr(pe) - IntPtr(pl)<100) do
+    pe := pl;
+    while (pl >= pls) and (IntPtr(pe) - IntPtr(pl) < 100) do
       Dec(pl);
     ALine := StrDupX(pl, 50) + SLineBreak + StringReplicateW('0',
-      (IntPtr(pl) - IntPtr(pls)) shr 1)+'^';
+      (IntPtr(pl) - IntPtr(pls)) shr 1) + '^';
   end;
 
 begin
@@ -3041,7 +3041,9 @@ var
               AValue := AFields[J].GetValue(ASource);
               AObj := AValue.AsObject;
               if (AObj is TStrings) then
+              begin
                 Add(AFields[J].Name).AsString := TStrings(AObj).Text
+              end
               else if AObj is TCollection then
                 AddCollection(AddArray(AFields[J].Name), AObj as TCollection)
               else // 其它类型的对象不保存
@@ -3483,7 +3485,7 @@ begin
       Result := APathDelimiter + AItem.Name + Result;
     AItem := APItem;
   end;
-  if Length(Result) > 0 then
+  if (Length(Result) > 0) and (PQCharW(Result)^ = APathDelimiter) then
     Result := StrDupX(PQCharW(Result) + 1, Length(Result) - 1);
 end;
 
@@ -5380,19 +5382,22 @@ procedure TQJson.Sort(AByName, ANest: Boolean; AByType: TQJsonDataType;
   end;
 
 begin
-  if not Assigned(AOnCompare) then
+  if Count > 0 then
   begin
-    if AByName then
-      QuickSort(0, Count - 1, DoCompareName)
-    else if AByType = jdtUnknown then
-      DoSort(DetectCompareType)
+    if not Assigned(AOnCompare) then
+    begin
+      if AByName then
+        QuickSort(0, Count - 1, DoCompareName)
+      else if AByType = jdtUnknown then
+        DoSort(DetectCompareType)
+      else
+        DoSort(AByType);
+    end
     else
-      DoSort(AByType);
-  end
-  else
-    QuickSort(0, Count - 1, AOnCompare);
-  if ANest then
-    SortChildrens;
+      QuickSort(0, Count - 1, AOnCompare);
+    if ANest then
+      SortChildrens;
+  end;
 end;
 
 procedure TQJson.StreamFromValue(AStream: TStream);
@@ -5414,7 +5419,28 @@ var
   AContext: TRttiContext;
   AParamValues: array of TValue;
   I, c: Integer;
-  AParamItem: TQJson;
+  AParamItem, AItemType, AItemValue: TQJson;
+  function CharOfValue: Byte;
+  var
+    S: QStringA;
+  begin
+    S := AItemValue.AsString;
+    if S.Length > 0 then
+      Result := S.Chars[0]
+    else
+      Result := 0;
+  end;
+  function WCharOfValue: WideChar;
+  var
+    S: QStringW;
+  begin
+    S := AItemValue.AsString;
+    if Length(S) > 0 then
+      Result := PQCharW(S)[0]
+    else
+      Result := #0;
+  end;
+
 begin
   AContext := TRttiContext.Create;
   Result := TValue.Empty;
@@ -5438,7 +5464,54 @@ begin
       begin
         AParamItem := ItemByName(AParams[I].Name);
         if AParamItem <> nil then
-          AParamValues[I] := AParamItem.ToRttiValue
+        begin
+          if AParamItem.IsObject then // 参数有类型修饰信息
+          begin
+            if AParamItem.HasChild('Type', AItemType) and
+              AParamItem.HasChild('Value', AItemValue) then
+            begin
+              case TTypeKind(AItemType.AsInteger) of
+                tkInteger:
+                  AParamValues[I] := AItemValue.AsInteger;
+                tkChar:
+                  AParamValues[I] :=
+                  {$IFNDEF NEXTGEN}AnsiChar(CharOfValue){$ELSE}CharOfValue{$ENDIF};
+                tkEnumeration:
+                  AParamValues[I] := AItemValue.AsInteger;
+                tkFloat:
+                  AParamValues[I] := AItemValue.AsFloat;
+                tkString:
+                  AParamValues[I] := AItemValue.AsString;
+                tkWChar:
+                  AParamValues[I] := WCharOfValue;
+{$IFNDEF NEXTGEN}
+                tkLString:
+                  AParamValues[I] := AnsiString(AItemValue.AsString);
+{$ENDIF}
+                tkWString:
+                  AParamValues[I] := WideString(AItemValue.AsString);
+{$IFDEF UNICODE}
+                tkUString:
+                  AParamValues[I] := AItemValue.AsString;
+{$ENDIF}
+                tkPointer:
+                  AParamValues[I] := Pointer(AItemValue.AsInt64);
+                tkClassRef:
+                  AParamValues[I] := TClass(AItemValue.AsInt64);
+                tkClass:
+                  AParamValues[I] := TObject(AItemValue.AsInt64)
+              else
+                raise Exception.CreateFmt(SParamMissed, [AParams[I].Name]);
+              end;
+            end
+            else if AParamItem.HasChild('Value', AItemValue) then
+              AParamValues[I] := AItemValue.ToRttiValue
+            else
+              raise Exception.CreateFmt(SParamMissed, [AParams[I].Name]);
+          end
+          else
+            AParamValues[I] := AParamItem.ToRttiValue
+        end
         else
           raise Exception.CreateFmt(SParamMissed, [AParams[I].Name]);
       end;

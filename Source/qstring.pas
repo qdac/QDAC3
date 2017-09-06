@@ -1087,7 +1087,9 @@ function SplitByStrW(AList: TStrings; ASource: QStringW;
 function LeftStrW(const S: QStringW; AMaxCount: Integer; ACheckExt: Boolean)
   : QStringW;
 function RightStrW(const S: QStringW; AMaxCount: Integer; ACheckExt: Boolean)
-  : QStringW;
+  : QStringW;overload;
+function RightStrW(var S: QStringW; ADelimiters: QStringW; ARemove: Boolean)
+  : QStringW;overload;
 function StrBetween(var S: PQCharW; AStartTag, AEndTag: QStringW;
   AIgnoreCase: Boolean): QStringW;
 function TokenWithIndex(var S: PQCharW; AIndex: Integer; ADelimiters: PQCharW;
@@ -3689,6 +3691,32 @@ begin
   end
   else
     SetLength(Result, 0);
+end;
+
+function RightStrW(var S: QStringW; ADelimiters: QStringW; ARemove: Boolean)
+  : QStringW;
+var
+  ps, pe, pd: PQCharW;
+begin
+  ps := PQCharW(S);
+  pe := PQCharW(IntPtr(ps) + (Length(S) shl 1));
+  pd := PQCharW(ADelimiters);
+  while pe > ps do
+  begin
+    Dec(pe);
+    if CharInW(pe, pd) then
+    begin
+      Inc(pe);
+      Result := StrDupX(pe, (IntPtr(ps) + (Length(S) shl 1) -
+        IntPtr(pe)) shr 1);
+      if ARemove then
+        S := StrDupX(ps, (IntPtr(pe) - IntPtr(ps)) shr 1);
+      Exit;
+    end;
+  end;
+  Result := S;
+  if ARemove then
+    SetLength(S, 0);
 end;
 
 function StrBetween(var S: PQCharW; AStartTag, AEndTag: QStringW;
@@ -7013,10 +7041,7 @@ begin
                   pd^ := WideChar(ASize);
               end
               else
-              begin
                 pd^ := p^;
-                Inc(pd);
-              end;
             end;
           end;
           Inc(pd);
@@ -8827,7 +8852,7 @@ end;
 
 function TQBytesCatHelper.Cat(const V: Variant): TQBytesCatHelper;
 begin
-  //??这是一个有问题的实现，临时先这样，回头抽空改
+  // ??这是一个有问题的实现，临时先这样，回头抽空改
   Result := Cat(@V, SizeOf(Variant));
 end;
 
@@ -8921,7 +8946,8 @@ begin
       FDest := PByte(IntPtr(FStart) + AStart)
     else
     begin
-      Move(PByte(IntPtr(FStart) + AStart + ACount)^, PByte(IntPtr(FStart) + AStart)^, ACount);
+      Move(PByte(IntPtr(FStart) + AStart + ACount)^,
+        PByte(IntPtr(FStart) + AStart)^, ACount);
       Dec(FDest, ACount);
     end;
   end;
@@ -9022,20 +9048,20 @@ end;
 function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Currency)
   : TQBytesCatHelper;
 begin
-  Result:=Insert(AIndex,@V,SizeOf(Currency));
+  Result := Insert(AIndex, @V, SizeOf(Currency));
 end;
 
 function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Boolean)
   : TQBytesCatHelper;
 begin
-  Result:=Insert(AIndex,@V,SizeOf(Boolean));
+  Result := Insert(AIndex, @V, SizeOf(Boolean));
 end;
 
 function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Variant)
   : TQBytesCatHelper;
 begin
-  //??这是一个有问题的实现，临时先这样，回头抽空改
-  Result:=Insert(AIndex,@V,sizeof(Variant));
+  // ??这是一个有问题的实现，临时先这样，回头抽空改
+  Result := Insert(AIndex, @V, sizeof(Variant));
 end;
 
 function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: TGuid)
@@ -9082,7 +9108,8 @@ begin
   else
   begin
     NeedSize(-ALen);
-    Move(PByte(IntPtr(FStart) + AIndex)^, PByte(IntPtr(FStart) + ALen + AIndex)^, ALen);
+    Move(PByte(IntPtr(FStart) + AIndex)^,
+      PByte(IntPtr(FStart) + ALen + AIndex)^, ALen);
     Move(AData^, PByte(IntPtr(FStart) + AIndex)^, ALen);
     Inc(FDest, ALen);
   end;
@@ -9280,8 +9307,8 @@ var
         if (not Result) and AIgnoreCase then
         begin
           ACode := Ord(CharUpperW(S^));
-          AStart:=Ord(CharUpperW(QCharW(AStart)));
-          AEnd:=Ord(CharUpperW(QCharW(AEnd)));
+          AStart := Ord(CharUpperW(QCharW(AStart)));
+          AEnd := Ord(CharUpperW(QCharW(AEnd)));
           Result := (ACode >= AStart) and (ACode <= AEnd);
         end;
         // 如果是扩展区字符，需要两个连续的转义
