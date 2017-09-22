@@ -11692,7 +11692,7 @@ begin
   // 这个构造函数变成保护的，以避免外部访问
 end;
 
-function TQReadOnlyMemoryStream.Write(const Buffer; count: Longint): Longint;
+function TQReadOnlyMemoryStream.Write(const Buffer; count: Longint): Longint; // Integer -> Longint
 begin
   raise EStreamError.Create(SStreamReadOnly);
 end;
