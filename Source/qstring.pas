@@ -5,242 +5,242 @@ interface
 
 {$REGION 'History'}
 {
-  ±¾Ô´ÂëÀ´×ÔQDACÏîÄ¿£¬°æÈ¨¹éswish(QQ:109867294)ËùÓĞ¡£
-  (1)¡¢Ê¹ÓÃĞí¿É¼°ÏŞÖÆ
-  Äú¿ÉÒÔ×ÔÓÉ¸´ÖÆ¡¢·Ö·¢¡¢ĞŞ¸Ä±¾Ô´Âë£¬µ«ÄúµÄĞŞ¸ÄÓ¦¸Ã·´À¡¸ø×÷Õß£¬²¢ÔÊĞí×÷ÕßÔÚ±ØÒªÊ±£¬
-  ºÏ²¢µ½±¾ÏîÄ¿ÖĞÒÔ¹©Ê¹ÓÃ£¬ºÏ²¢ºóµÄÔ´ÂëÍ¬Ñù×ñÑ­QDAC°æÈ¨ÉùÃ÷ÏŞÖÆ¡£
-  ÄúµÄ²úÆ·µÄ¹ØÓÚÖĞ£¬Ó¦°üº¬ÒÔÏÂµÄ°æ±¾ÉùÃ÷:
-  ±¾²úÆ·Ê¹ÓÃµÄJSON½âÎöÆ÷À´×ÔQDACÏîÄ¿ÖĞµÄQJSON£¬°æÈ¨¹é×÷ÕßËùÓĞ¡£
-  (2)¡¢¼¼ÊõÖ§³Ö
-  ÓĞ¼¼ÊõÎÊÌâ£¬Äú¿ÉÒÔ¼ÓÈëQDAC¹Ù·½QQÈº250530692¹²Í¬Ì½ÌÖ¡£
-  (3)¡¢ÔŞÖú
-  Äú¿ÉÒÔ×ÔÓÉÊ¹ÓÃ±¾Ô´Âë¶ø²»ĞèÒªÖ§¸¶ÈÎºÎ·ÑÓÃ¡£Èç¹ûÄú¾õµÃ±¾Ô´Âë¶ÔÄúÓĞ°ïÖú£¬Äú¿ÉÒÔÔŞ
-  Öú±¾ÏîÄ¿£¨·ÇÇ¿ÖÆ£©£¬ÒÔÊ¹×÷Õß²»ÎªÉú»îËùÆÈ£¬ÓĞ¸ü¶àµÄ¾«Á¦ÎªÄú³ÊÏÖ¸üºÃµÄ×÷Æ·£º
-  ÔŞÖú·½Ê½£º
-  Ö§¸¶±¦£º guansonghuan@sina.com ĞÕÃû£º¹ÜËÊå¾
-  ½¨ÉèÒøĞĞ£º
-  »§Ãû£º¹ÜËÊå¾
-  ÕËºÅ£º4367 4209 4324 0179 731
-  ¿ª»§ĞĞ£º½¨ÉèÒøĞĞ³¤´ºÍÅ·ç´¢ĞîËù
+  æœ¬æºç æ¥è‡ªQDACé¡¹ç›®ï¼Œç‰ˆæƒå½’swish(QQ:109867294)æ‰€æœ‰ã€‚
+  (1)ã€ä½¿ç”¨è®¸å¯åŠé™åˆ¶
+  æ‚¨å¯ä»¥è‡ªç”±å¤åˆ¶ã€åˆ†å‘ã€ä¿®æ”¹æœ¬æºç ï¼Œä½†æ‚¨çš„ä¿®æ”¹åº”è¯¥åé¦ˆç»™ä½œè€…ï¼Œå¹¶å…è®¸ä½œè€…åœ¨å¿…è¦æ—¶ï¼Œ
+  åˆå¹¶åˆ°æœ¬é¡¹ç›®ä¸­ä»¥ä¾›ä½¿ç”¨ï¼Œåˆå¹¶åçš„æºç åŒæ ·éµå¾ªQDACç‰ˆæƒå£°æ˜é™åˆ¶ã€‚
+  æ‚¨çš„äº§å“çš„å…³äºä¸­ï¼Œåº”åŒ…å«ä»¥ä¸‹çš„ç‰ˆæœ¬å£°æ˜:
+  æœ¬äº§å“ä½¿ç”¨çš„JSONè§£æå™¨æ¥è‡ªQDACé¡¹ç›®ä¸­çš„QJSONï¼Œç‰ˆæƒå½’ä½œè€…æ‰€æœ‰ã€‚
+  (2)ã€æŠ€æœ¯æ”¯æŒ
+  æœ‰æŠ€æœ¯é—®é¢˜ï¼Œæ‚¨å¯ä»¥åŠ å…¥QDACå®˜æ–¹QQç¾¤250530692å…±åŒæ¢è®¨ã€‚
+  (3)ã€èµåŠ©
+  æ‚¨å¯ä»¥è‡ªç”±ä½¿ç”¨æœ¬æºç è€Œä¸éœ€è¦æ”¯ä»˜ä»»ä½•è´¹ç”¨ã€‚å¦‚æœæ‚¨è§‰å¾—æœ¬æºç å¯¹æ‚¨æœ‰å¸®åŠ©ï¼Œæ‚¨å¯ä»¥èµ
+  åŠ©æœ¬é¡¹ç›®ï¼ˆéå¼ºåˆ¶ï¼‰ï¼Œä»¥ä½¿ä½œè€…ä¸ä¸ºç”Ÿæ´»æ‰€è¿«ï¼Œæœ‰æ›´å¤šçš„ç²¾åŠ›ä¸ºæ‚¨å‘ˆç°æ›´å¥½çš„ä½œå“ï¼š
+  èµåŠ©æ–¹å¼ï¼š
+  æ”¯ä»˜å®ï¼š guansonghuan@sina.com å§“åï¼šç®¡è€¸å¯°
+  å»ºè®¾é“¶è¡Œï¼š
+  æˆ·åï¼šç®¡è€¸å¯°
+  è´¦å·ï¼š4367 4209 4324 0179 731
+  å¼€æˆ·è¡Œï¼šå»ºè®¾é“¶è¡Œé•¿æ˜¥å›¢é£å‚¨è“„æ‰€
 }
 
-{ ĞŞ¶©ÈÕÖ¾
+{ ä¿®è®¢æ—¥å¿—
   2017.1.23
   ==========
-  * ĞŞÕıÁË UrlEncode±àÂëÊ±Ã»ÓĞ¶ÔÌØÊâ×ªÒå×Ö·û¼ÆËã¿Õ¼äµÄÎÊÌâ
-  + Ôö¼Ó UrlDecode º¯ÊıÀ´½âÎöUrlµÄ¸÷¸ö×é³É²¿·Ö
+  * ä¿®æ­£äº† UrlEncodeç¼–ç æ—¶æ²¡æœ‰å¯¹ç‰¹æ®Šè½¬ä¹‰å­—ç¬¦è®¡ç®—ç©ºé—´çš„é—®é¢˜
+  + å¢åŠ  UrlDecode å‡½æ•°æ¥è§£æUrlçš„å„ä¸ªç»„æˆéƒ¨åˆ†
 
   2016.11.24
   ==========
-  * ÓÅ»¯ÁËº¯Êı HTMLUnescape µÄĞ§ÂÊ
+  * ä¼˜åŒ–äº†å‡½æ•° HTMLUnescape çš„æ•ˆç‡
 
   2016.11.12
   ==========
-  + DeleteSideCharsW ÓÃÓÚÉ¾³ıÁ½±ßµÄÌØ¶¨×Ö·û
+  + DeleteSideCharsW ç”¨äºåˆ é™¤ä¸¤è¾¹çš„ç‰¹å®šå­—ç¬¦
 
   2016.9.29
   ==========
-  - É¾³ı RightStrCountW º¯Êı
-  + Ôö¼Ó RightPosW º¯Êı£¬À´¼ÆËã×Ö·û´®³öÏÖÔÚÓÒ²àµÄÆğÊ¼Î»ÖÃ£¨°¢Ä¾½¨Òé£©
+  - åˆ é™¤ RightStrCountW å‡½æ•°
+  + å¢åŠ  RightPosW å‡½æ•°ï¼Œæ¥è®¡ç®—å­—ç¬¦ä¸²å‡ºç°åœ¨å³ä¾§çš„èµ·å§‹ä½ç½®ï¼ˆé˜¿æœ¨å»ºè®®ï¼‰
 
   2016.9.21
   ==========
-  * ĞŞÕıÁË HashOf ÔÚ¼ÆËã³¤¶ÈÎª0µÄÊı¾İÊ±³öÏÖAV´íÎóµÄÎÊÌâ£¨QQ±¨¸æ£©
+  * ä¿®æ­£äº† HashOf åœ¨è®¡ç®—é•¿åº¦ä¸º0çš„æ•°æ®æ—¶å‡ºç°AVé”™è¯¯çš„é—®é¢˜ï¼ˆQQæŠ¥å‘Šï¼‰
 
   2016.8.23
   ==========
-  * ĞŞÕıÁËDecodeChineseIdÉí·İÖ¤ºÅÖĞ°üº¬Ğ¡Ğ´ x Ê±¼ì²é³ö´íµÄÎÊÌâ
-  + Ôö¼Ó JavaEscape ºÍ JavaUnescape À´×ªÒå/·´×ª Java ×Ö·û´®
-  + Ôö¼Ó IsOctChar À´¼ì²éÖ¸¶¨µÄ×Ö·ûÊÇ·ñÊÇ8½øÖÆÔÊĞíµÄ×Ö·û
+  * ä¿®æ­£äº†DecodeChineseIdèº«ä»½è¯å·ä¸­åŒ…å«å°å†™ x æ—¶æ£€æŸ¥å‡ºé”™çš„é—®é¢˜
+  + å¢åŠ  JavaEscape å’Œ JavaUnescape æ¥è½¬ä¹‰/åè½¬ Java å­—ç¬¦ä¸²
+  + å¢åŠ  IsOctChar æ¥æ£€æŸ¥æŒ‡å®šçš„å­—ç¬¦æ˜¯å¦æ˜¯8è¿›åˆ¶å…è®¸çš„å­—ç¬¦
 
   2016.7.16
   ==========
-  + Ôö¼Ó FreeAndNilObject º¯ÊıÀ´Ìæ´ú FreeAndNil
+  + å¢åŠ  FreeAndNilObject å‡½æ•°æ¥æ›¿ä»£ FreeAndNil
 
   2016.6.13
   ==========
-  + Ôö¼Ó MemComp º¯ÊıÓÃÓÚ±È½ÏÁ½¿éÄÚ´æ¿éµÄÖµ£¬²»Í¬ÓÚ BinaryCmp£¬Ëü²»ÒªÇóÁ½¸öÄÚ´æ¿éµÈ³¤
+  + å¢åŠ  MemComp å‡½æ•°ç”¨äºæ¯”è¾ƒä¸¤å—å†…å­˜å—çš„å€¼ï¼Œä¸åŒäº BinaryCmpï¼Œå®ƒä¸è¦æ±‚ä¸¤ä¸ªå†…å­˜å—ç­‰é•¿
 
   2016.6.3
   ==========
-  + Ôö¼Ó IsHumanName/IsChineseName/IsNoChineseName/IsChineseAddr/IsNoChineseAddr º¯Êı
+  + å¢åŠ  IsHumanName/IsChineseName/IsNoChineseName/IsChineseAddr/IsNoChineseAddr å‡½æ•°
 
   2016.5.27
   ==========
-  * ĞŞÕıÁËÉí·İÖ¤ºÅ¼ì²éÔÚÒÆ¶¯Æ½Ì¨ÖĞÓÉÓÚ×Ö·û´®Ë÷Òıµ÷Õû¶øÒıÆğµÄÎÊÌâ
+  * ä¿®æ­£äº†èº«ä»½è¯å·æ£€æŸ¥åœ¨ç§»åŠ¨å¹³å°ä¸­ç”±äºå­—ç¬¦ä¸²ç´¢å¼•è°ƒæ•´è€Œå¼•èµ·çš„é—®é¢˜
 
   2016.5.24
   ==========
-  * ĞŞÕıÁËTQStringCatHelperW.SetDest ÉèÖÃµØÖ·Ê±Î´´¦Àí½áÊø±ß½çµÄÎÊÌâ
+  * ä¿®æ­£äº†TQStringCatHelperW.SetDest è®¾ç½®åœ°å€æ—¶æœªå¤„ç†ç»“æŸè¾¹ç•Œçš„é—®é¢˜
 
   2016.3.21
   ==========
-  * ĞŞÕıÁË StrIStrA Ëã·¨´íÎó£¨°¢Ä¾±¨¸æ£©
-  + ¼ÓÈëÁË PosA º¯Êı£¨°¢Ä¾½¨Òé£©
-  + QStringA ¼ÓÈë UpperCase/LowerCaseº¯Êı
+  * ä¿®æ­£äº† StrIStrA ç®—æ³•é”™è¯¯ï¼ˆé˜¿æœ¨æŠ¥å‘Šï¼‰
+  + åŠ å…¥äº† PosA å‡½æ•°ï¼ˆé˜¿æœ¨å»ºè®®ï¼‰
+  + QStringA åŠ å…¥ UpperCase/LowerCaseå‡½æ•°
   2016.2.26
   ==========
-  + Ôö¼Ó IsEmailAddr À´¼ì²éµç×ÓÓÊÏä¸ñÊ½
-  + Ôö¼ÓIsChineseMobile À´¼ì²éÊÖ»úºÅÂë¸ñÊ½
+  + å¢åŠ  IsEmailAddr æ¥æ£€æŸ¥ç”µå­é‚®ç®±æ ¼å¼
+  + å¢åŠ IsChineseMobile æ¥æ£€æŸ¥æ‰‹æœºå·ç æ ¼å¼
 
   2016.2.25
   ==========
-  + Ôö¼Ó IsChineseIdNo º¯ÊıÀ´ÅĞ¶ÏÉí·İÖ¤ºÅµÄÓĞĞ§ĞÔ£¨¹æÔòÑéÖ¤£¬·ÇÁªÍøÑéÖ¤£©
-  + Ôö¼Ó DecodeChineseId À´½âÎöÉí·İÖ¤ºÅµÄ¸÷¸ö×é³É²¿·ÖÄÚÈİ
+  + å¢åŠ  IsChineseIdNo å‡½æ•°æ¥åˆ¤æ–­èº«ä»½è¯å·çš„æœ‰æ•ˆæ€§ï¼ˆè§„åˆ™éªŒè¯ï¼Œéè”ç½‘éªŒè¯ï¼‰
+  + å¢åŠ  DecodeChineseId æ¥è§£æèº«ä»½è¯å·çš„å„ä¸ªç»„æˆéƒ¨åˆ†å†…å®¹
 
   2015.11.22
   ==========
-  * ĞŞÕıÁËPosW º¯Êı AStartPos ·µ»ØÊ±Ã»ÓĞ¿¼ÂÇºÍÒ»¸öÖØÔØ¶ªÊ§AStartPos²ÎÊıµÄÎÊÌâ£¨°¢Ä¾±¨¸æ£©
+  * ä¿®æ­£äº†PosW å‡½æ•° AStartPos è¿”å›æ—¶æ²¡æœ‰è€ƒè™‘å’Œä¸€ä¸ªé‡è½½ä¸¢å¤±AStartPoså‚æ•°çš„é—®é¢˜ï¼ˆé˜¿æœ¨æŠ¥å‘Šï¼‰
 
   2015.11.18
   ==========
-  * ĞŞÕıÁËMemScanÍü¼Ç¼õĞ¡len_s¼ÆÊıµÄÎÊÌâ£¨TTT±¨¸æ£©
+  * ä¿®æ­£äº†MemScanå¿˜è®°å‡å°len_sè®¡æ•°çš„é—®é¢˜ï¼ˆTTTæŠ¥å‘Šï¼‰
   2015.11.10
   ==========
-  + ĞÂÔö»õ±Ò½ğ¶îººÓï´óĞ´º¯Êı CapMoney
-  + ĞÂÔö¼ò·±×ª»»º¯Êı SimpleChineseToTraditional ºÍ TraditionalChineseToSimple
+  + æ–°å¢è´§å¸é‡‘é¢æ±‰è¯­å¤§å†™å‡½æ•° CapMoney
+  + æ–°å¢ç®€ç¹è½¬æ¢å‡½æ•° SimpleChineseToTraditional å’Œ TraditionalChineseToSimple
 
   2015.9.26
   =========
-  * ĞŞÕıÁËParseDateTimeÔÚ½âÎö "n-nxxx" ÕâÑùµÄÄÚÈİÊ±´íÎó·µ»ØtrueµÄÎÊÌâ£¨ÂíÁåÊí±¨¸æ£©
+  * ä¿®æ­£äº†ParseDateTimeåœ¨è§£æ "n-nxxx" è¿™æ ·çš„å†…å®¹æ—¶é”™è¯¯è¿”å›trueçš„é—®é¢˜ï¼ˆé©¬é“ƒè–¯æŠ¥å‘Šï¼‰
   2015.9.2
   =========
-  * ĞŞÕıÁË AnsiEncode ÔÚ 2007 ÉÏÓÉÓÚ±àÒëÆ÷µÄBug¶ø³ö´íµÄÎÊÌâ£¨ĞÇ¿Õ±¨¸æ£©
+  * ä¿®æ­£äº† AnsiEncode åœ¨ 2007 ä¸Šç”±äºç¼–è¯‘å™¨çš„Bugè€Œå‡ºé”™çš„é—®é¢˜ï¼ˆæ˜Ÿç©ºæŠ¥å‘Šï¼‰
 
   2015.8.28
   =========
-  * ºÏ²¢ InternalInsert µÄ´úÂëµ½ Insert
-  * ĞŞÕıÁË Clear ºóÃ»ÓĞÊÕËõÊ±£¬ÖØĞÂ²åÈëÔªËØÊ±Ò³ÃæÒì³£Ôö³¤µÄÎÊÌâ£¨±ùÎú¿ÕÆø±¨¸æ£©
-  * ĞŞÕıÁË Pack º¯ÊıÔÚ Clear ºóÊÕËõÊ±³ö´íµÄÎÊÌâ£¨òåòå±¨¸æ£©
-  + ¼ÓÈëÁËÅúÁ¿²åÈëÄ£Ê½µÄ Insert º¯ÊıÖØÔØ
-  + ¼ÓÈëÅúÁ¿Ìí¼ÓÄ£Ê½µÄ Add º¯ÊıÖØÔØ
+  * åˆå¹¶ InternalInsert çš„ä»£ç åˆ° Insert
+  * ä¿®æ­£äº† Clear åæ²¡æœ‰æ”¶ç¼©æ—¶ï¼Œé‡æ–°æ’å…¥å…ƒç´ æ—¶é¡µé¢å¼‚å¸¸å¢é•¿çš„é—®é¢˜ï¼ˆå†°æ™°ç©ºæ°”æŠ¥å‘Šï¼‰
+  * ä¿®æ­£äº† Pack å‡½æ•°åœ¨ Clear åæ”¶ç¼©æ—¶å‡ºé”™çš„é—®é¢˜ï¼ˆèˆèˆæŠ¥å‘Šï¼‰
+  + åŠ å…¥äº†æ‰¹é‡æ’å…¥æ¨¡å¼çš„ Insert å‡½æ•°é‡è½½
+  + åŠ å…¥æ‰¹é‡æ·»åŠ æ¨¡å¼çš„ Add å‡½æ•°é‡è½½
   2015.8.27
   =========
-  * ĞŞÕıÁË TQPagedList.Pack ·½·¨ÊÕËõ½á¹û²»ÕıÈ·µÄÎÊÌâ£¨±ùÎú¿ÕÆø±¨¸æ£©
+  * ä¿®æ­£äº† TQPagedList.Pack æ–¹æ³•æ”¶ç¼©ç»“æœä¸æ­£ç¡®çš„é—®é¢˜ï¼ˆå†°æ™°ç©ºæ°”æŠ¥å‘Šï¼‰
 
   2015.8.26
   =========
-  * ĞŞÕıÁË TQPagedList.Insert ²åÈëÎ»ÖÃĞ¡ÓÚ0Ê±³ö´íµÄÎÊÌâ(±ùÎú¿ÕÆø±¨¸æ£©
-  * ÓÅ»¯ÁË TQPagedList.Add µÄ´úÂë£¬¸Ä³ÉÖ±½Óµ÷ÓÃInternalInsert(±ùÎú¿ÕÆø½¨Òé£©
+  * ä¿®æ­£äº† TQPagedList.Insert æ’å…¥ä½ç½®å°äº0æ—¶å‡ºé”™çš„é—®é¢˜(å†°æ™°ç©ºæ°”æŠ¥å‘Šï¼‰
+  * ä¼˜åŒ–äº† TQPagedList.Add çš„ä»£ç ï¼Œæ”¹æˆç›´æ¥è°ƒç”¨InternalInsert(å†°æ™°ç©ºæ°”å»ºè®®ï¼‰
 
   2015.8.11
   =========
-  * ĞŞÕıÁË HTMLUnescape ·´×ªÒåÌØÊâ×Ö·ûÊ±³ö´íµÄÎÊÌâ£¨²»µÃÏĞ±¨¸æ£©
+  * ä¿®æ­£äº† HTMLUnescape åè½¬ä¹‰ç‰¹æ®Šå­—ç¬¦æ—¶å‡ºé”™çš„é—®é¢˜ï¼ˆä¸å¾—é—²æŠ¥å‘Šï¼‰
   2015.7.15
   =========
-  * ¸ù¾İ qsl µÄ¹şÏ£²âÊÔ½á¹û£¬½« HashOf º¯ÊıËã·¨¸ÄÎª BKDR ²¢ÔÚWindowsÆ½Ì¨ÏÂÊ¹ÓÃ»ã±à
-  ÒÔÌáÉıĞ§ÂÊ£¨¸ĞĞ»qsl£©
+  * æ ¹æ® qsl çš„å“ˆå¸Œæµ‹è¯•ç»“æœï¼Œå°† HashOf å‡½æ•°ç®—æ³•æ”¹ä¸º BKDR å¹¶åœ¨Windowså¹³å°ä¸‹ä½¿ç”¨æ±‡ç¼–
+  ä»¥æå‡æ•ˆç‡ï¼ˆæ„Ÿè°¢qslï¼‰
   2015.6.6
   =========
-  * ĞŞÕıÁË Utf8Decode Ê±¶Ô0x10000+·¶Î§µÄ×Ö·û½âÂëÊ±ÒÆÎ»´íÎó£¨¸ĞĞ»qsl£©
+  * ä¿®æ­£äº† Utf8Decode æ—¶å¯¹0x10000+èŒƒå›´çš„å­—ç¬¦è§£ç æ—¶ç§»ä½é”™è¯¯ï¼ˆæ„Ÿè°¢qslï¼‰
   2015.5.29
   =========
-  * ĞŞÕıÁË TQPagedStream ÔÚµÍ°æ±¾µÄIDEÖĞÎŞ·¨±àÒëµÄÎÊÌâ
+  * ä¿®æ­£äº† TQPagedStream åœ¨ä½ç‰ˆæœ¬çš„IDEä¸­æ— æ³•ç¼–è¯‘çš„é—®é¢˜
 
   2015.5.25
   =========
-  + TQPagedStream ¼ÓÈë£¬ÒÔÔÚĞ´Èë´óÄÚ´æÁ÷Êı¾İÊ±Ìæ´úTMemoryStream
+  + TQPagedStream åŠ å…¥ï¼Œä»¥åœ¨å†™å…¥å¤§å†…å­˜æµæ•°æ®æ—¶æ›¿ä»£TMemoryStream
 
   2015.5.22
   =========
-  * ĞŞÕıÁË ParseNumeric ºÍ ParseInt Ê±£¬¶ÔÒç³ö±íÊ¾·¶Î§µÄÊıÖµ´¦Àí·½Ê½
+  * ä¿®æ­£äº† ParseNumeric å’Œ ParseInt æ—¶ï¼Œå¯¹æº¢å‡ºè¡¨ç¤ºèŒƒå›´çš„æ•°å€¼å¤„ç†æ–¹å¼
   2015.5.21
   =========
-  * ĞŞÕıÁË StringReplaceWithW ÔÚ AWithTag Îª True Ê±½á¹û²»ÕıÈ·µÄÎÊÌâ£¨Âó×ÓÖÙ·Ê±¨¸æ£©
-  * ĞŞÕıÁË StringReplaceWithW ÔÚÌæ»»µÄ½á¹û×Ö·û´®Îª¿ÕÊ±£¬·ÃÎÊÎŞĞ§µØÖ·µÄÎÊÌâ£¨Âó×ÓÖÙ·Ê±¨¸æ£©
+  * ä¿®æ­£äº† StringReplaceWithW åœ¨ AWithTag ä¸º True æ—¶ç»“æœä¸æ­£ç¡®çš„é—®é¢˜ï¼ˆéº¦å­ä»²è‚¥æŠ¥å‘Šï¼‰
+  * ä¿®æ­£äº† StringReplaceWithW åœ¨æ›¿æ¢çš„ç»“æœå­—ç¬¦ä¸²ä¸ºç©ºæ—¶ï¼Œè®¿é—®æ— æ•ˆåœ°å€çš„é—®é¢˜ï¼ˆéº¦å­ä»²è‚¥æŠ¥å‘Šï¼‰
   2015.5.20
   =========
-  + StringReplaceW º¯ÊıµÄÒ»¸öÖØÔØ£¬ÓÃÓÚÌæ»»×Ö·û´®ÖĞµÄÄ³Ò»²¿·ÖÎªÌØ¶¨×Ö·û£¬Ò»°ãÓÃÓÚ²¿·ÖÃô¸ĞÄÚÈİµÄÒş²Ø
-  * ÒÆ³ıÒ»¸öHint
+  + StringReplaceW å‡½æ•°çš„ä¸€ä¸ªé‡è½½ï¼Œç”¨äºæ›¿æ¢å­—ç¬¦ä¸²ä¸­çš„æŸä¸€éƒ¨åˆ†ä¸ºç‰¹å®šå­—ç¬¦ï¼Œä¸€èˆ¬ç”¨äºéƒ¨åˆ†æ•æ„Ÿå†…å®¹çš„éšè—
+  * ç§»é™¤ä¸€ä¸ªHint
   2015.5.8
   =========
-  * ĞŞ¸Ä TQPtr µÄÊµÏÖ£¬½«ÄäÃûÊÍ·ÅÊÂ¼şºÍÆÕÍ¨µÄÊÂ¼şÊ¹ÓÃÍ¬Ò»¸ö±äÁ¿
-  + DecodeText º¯Êı´ÓÄÚ´æÖĞÖ±½Ó¼ì²â±àÂë²¢·µ»ØUnicode±àÂëµÄ×Ö·û´®
+  * ä¿®æ”¹ TQPtr çš„å®ç°ï¼Œå°†åŒ¿åé‡Šæ”¾äº‹ä»¶å’Œæ™®é€šçš„äº‹ä»¶ä½¿ç”¨åŒä¸€ä¸ªå˜é‡
+  + DecodeText å‡½æ•°ä»å†…å­˜ä¸­ç›´æ¥æ£€æµ‹ç¼–ç å¹¶è¿”å›Unicodeç¼–ç çš„å­—ç¬¦ä¸²
 
   2015.4.17
   =========
-  * ÓÅ»¯ÁËUTFEncodeÊÇÕ¼ÓÃÄÚ´æ¹ı¶àµÄÎÊÌâ
+  * ä¼˜åŒ–äº†UTFEncodeæ˜¯å ç”¨å†…å­˜è¿‡å¤šçš„é—®é¢˜
   2015.4.8
   =========
-  * ĞŞÕıÁËParseNumeric ÔÚ½âÎö -0.xx ÕâÑùµÄÊı×Ö·ûºÅ³ö´íµÄÎÊÌâ£¨¸ĞĞ»YZ±¨¸æ£©
+  * ä¿®æ­£äº†ParseNumeric åœ¨è§£æ -0.xx è¿™æ ·çš„æ•°å­—ç¬¦å·å‡ºé”™çš„é—®é¢˜ï¼ˆæ„Ÿè°¢YZæŠ¥å‘Šï¼‰
   2015.4.1
   =========
-  * ĞŞÕıÁËTQStringCatHelper¼ÇËãĞèÒªµÄ»º³åÇø³¤¶ÈÊ±ÅĞ¶Ï´íÎóµÄÎÊÌâ£¨¸ĞĞ»etarelecca±¨¸æ£©
+  * ä¿®æ­£äº†TQStringCatHelperè®°ç®—éœ€è¦çš„ç¼“å†²åŒºé•¿åº¦æ—¶åˆ¤æ–­é”™è¯¯çš„é—®é¢˜ï¼ˆæ„Ÿè°¢etareleccaæŠ¥å‘Šï¼‰
   2015.3.9
   =========
-  * ĞŞ¸Ä NaturalCompareW º¯Êı£¬Ôö¼ÓÊÇ·ñºöÂÔµô¿Õ°××Ö·ûÑ¡Ïî£¬ÔÚºöÂÔÊ±A 10 ºÍ A10 ½«±»ÊÓÎªÒ»ÖÂµÄ½á¹û
+  * ä¿®æ”¹ NaturalCompareW å‡½æ•°ï¼Œå¢åŠ æ˜¯å¦å¿½ç•¥æ‰ç©ºç™½å­—ç¬¦é€‰é¡¹ï¼Œåœ¨å¿½ç•¥æ—¶A 10 å’Œ A10 å°†è¢«è§†ä¸ºä¸€è‡´çš„ç»“æœ
   2015.3.5
   =========
-  + ĞÂÔö PosW£¨µÈ¼ÛÓÚÏµÍ³µÄPos£© ºÍ°´×ÔÈ»¹æÔòÅÅĞòº¯Êı NaturalCompareW
+  + æ–°å¢ PosWï¼ˆç­‰ä»·äºç³»ç»Ÿçš„Posï¼‰ å’ŒæŒ‰è‡ªç„¶è§„åˆ™æ’åºå‡½æ•° NaturalCompareW
   2015.2.9
   =========
-  + ĞÂÔö FilterCharW ºÍ FilterNoNumberW Á½¸öº¯Êı
+  + æ–°å¢ FilterCharW å’Œ FilterNoNumberW ä¸¤ä¸ªå‡½æ•°
 
   2015.1.27
   =========
-  * ĞŞÕıÁËTQPtr.Bind ¼¸¸öº¯ÊıÓÉÓÚ´úÂëÃ»ÓĞ±£´æµÄÎÊÌâ
+  * ä¿®æ­£äº†TQPtr.Bind å‡ ä¸ªå‡½æ•°ç”±äºä»£ç æ²¡æœ‰ä¿å­˜çš„é—®é¢˜
 
   2015.1.26
   ==========
-  + TQPtr ĞÂÔö¼¸¸ö Bind º¯ÊıµÄÖØÔØ
-  + ¼ÓÈëÈ«¾Ö±äÁ¿ IsFMXApp À´¼ì²âµ±Ç°ÊÇ·ñÊÇ FMX ÀàÓ¦ÓÃ³ÌĞò
+  + TQPtr æ–°å¢å‡ ä¸ª Bind å‡½æ•°çš„é‡è½½
+  + åŠ å…¥å…¨å±€å˜é‡ IsFMXApp æ¥æ£€æµ‹å½“å‰æ˜¯å¦æ˜¯ FMX ç±»åº”ç”¨ç¨‹åº
 
   2014.11.10
   =========
-  * ĞŞÕıÁËXE3±àÒëÊ±TSystemTimes¶¨ÒåÎŞĞ§µÄÎÊÌâ
+  * ä¿®æ­£äº†XE3ç¼–è¯‘æ—¶TSystemTimeså®šä¹‰æ— æ•ˆçš„é—®é¢˜
 
   2014.11.5
   =========
-  * QStringAµÄFromº¯ÊıĞŞ¸Ä·µ»ØÖµÀàĞÍ²¢¼ÓÈëÒ»¸öÖØÔØ
-  + QStringA¼ÓÈëCatº¯Êı
-  + CharCodeA/CharCodeU/CharCodeWÀ´»ñµÃÖ¸¶¨Î»ÖÃµÄ×Ö·û±àÂëÖµ
+  * QStringAçš„Fromå‡½æ•°ä¿®æ”¹è¿”å›å€¼ç±»å‹å¹¶åŠ å…¥ä¸€ä¸ªé‡è½½
+  + QStringAåŠ å…¥Catå‡½æ•°
+  + CharCodeA/CharCodeU/CharCodeWæ¥è·å¾—æŒ‡å®šä½ç½®çš„å­—ç¬¦ç¼–ç å€¼
 
   2014.9.26
   =========
-  * ½«TThreadIdÀàĞÍ¶¨ÒåÓÉQWorkerÒÆÈë±¾µ¥Ôª
+  * å°†TThreadIdç±»å‹å®šä¹‰ç”±QWorkerç§»å…¥æœ¬å•å…ƒ
   2014.9.11
   =========
-  * ĞŞÕıÁËLoadTextA/LoadTextW¼ÓÔØ´øÓĞBOMÍ·µÄ¿ÕµÄUtf8Á÷Ê±³ö´íµÄÎÊÌâ
+  * ä¿®æ­£äº†LoadTextA/LoadTextWåŠ è½½å¸¦æœ‰BOMå¤´çš„ç©ºçš„Utf8æµæ—¶å‡ºé”™çš„é—®é¢˜
   2014.8.20
   =========
-  + StringReplaceWithWº¯Êı£¬ÓÃÓÚÌæ»»Ò»¿é±êÇ©ÖĞµÄÄÚÈİ£¨ÌìµØÏÒ£©
+  + StringReplaceWithWå‡½æ•°ï¼Œç”¨äºæ›¿æ¢ä¸€å—æ ‡ç­¾ä¸­çš„å†…å®¹ï¼ˆå¤©åœ°å¼¦ï¼‰
   2014.8.15
   =========
-  * ÇåÀí²¢ÑéÖ¤ÁËTQBytesCatHelperÒıÆğµÄ2007±àÒëÎŞ·¨Í¨¹ıµÄÎÊÌâ(Çï·çÆğÒİÒÔÁ¹±¨¸æ²¢ÑéÖ¤)
-  + PQStringAÀàĞÍ¶¨Òå
+  * æ¸…ç†å¹¶éªŒè¯äº†TQBytesCatHelperå¼•èµ·çš„2007ç¼–è¯‘æ— æ³•é€šè¿‡çš„é—®é¢˜(ç§‹é£èµ·é€¸ä»¥å‡‰æŠ¥å‘Šå¹¶éªŒè¯)
+  + PQStringAç±»å‹å®šä¹‰
 
   2014.8.14
   =========
-  * ĞŞÕıÁËTQBytesCatHelper.NeedSizeº¯ÊıÔÚDelphi2007ÏÂÎŞ·¨±àÒëµÄÎÊÌâ(Òô¶ùĞ¡°×±¨¸æ²¢Ìá¹©ĞŞ¸Ä)
+  * ä¿®æ­£äº†TQBytesCatHelper.NeedSizeå‡½æ•°åœ¨Delphi2007ä¸‹æ— æ³•ç¼–è¯‘çš„é—®é¢˜(éŸ³å„¿å°ç™½æŠ¥å‘Šå¹¶æä¾›ä¿®æ”¹)
   2014.8.5
   ========
-  * BinToHex¼ÓÈëALowerCase²ÎÊı£¬ÒÔÖ§³ÖÊ¹ÓÃĞ¡Ğ´µÄÊ®Áù½øÖÆ±íÊ¾·½Ê½
+  * BinToHexåŠ å…¥ALowerCaseå‚æ•°ï¼Œä»¥æ”¯æŒä½¿ç”¨å°å†™çš„åå…­è¿›åˆ¶è¡¨ç¤ºæ–¹å¼
   2014.8.1
   =========
-  + ĞÂÔöº¯ÊıSameCharsA/U/W¼ÆËãÏàÍ¬µÄ×Ö·ûÊı£¬EndWithA/U/WÅĞ¶ÏÊÇ·ûÒÔÖ¸¶¨µÄ×Ö·û´®½áÎ²
+  + æ–°å¢å‡½æ•°SameCharsA/U/Wè®¡ç®—ç›¸åŒçš„å­—ç¬¦æ•°ï¼ŒEndWithA/U/Wåˆ¤æ–­æ˜¯ç¬¦ä»¥æŒ‡å®šçš„å­—ç¬¦ä¸²ç»“å°¾
   2014.7.17
   =========
-  + ĞÂÔöBinaryCmpº¯Êı£¬ÓÃÓÚµÈ¼ÛÓÚCÖĞµÄmemcmpº¯Êı
+  + æ–°å¢BinaryCmpå‡½æ•°ï¼Œç”¨äºç­‰ä»·äºCä¸­çš„memcmpå‡½æ•°
   2014.7.16
   =========
-  + ĞÂÔöMemScanº¯ÊıÓÃÓÚÔÚÖ¸¶¨µÄÄÚ´æÇøÓòÖĞ²éÕÒÖ¸¶¨µÄ×Ö½ÚĞòÁĞ
+  + æ–°å¢MemScanå‡½æ•°ç”¨äºåœ¨æŒ‡å®šçš„å†…å­˜åŒºåŸŸä¸­æŸ¥æ‰¾æŒ‡å®šçš„å­—èŠ‚åºåˆ—
   2014.7.12
   =========
-  * ĞŞÕıÁËDecodeLineUÖĞµİ¹éµ÷ÓÃ×Ô¼ºµÄ´íÎó(Òô¶ùĞ¡°×±¨¸æ)
-  * ĞŞÕıÁËCharCountU¼ì²é×Ö·û¿í¶ÈÊ±¶ÔË«×Ö½ÚUtf8±àÂëµÄ¼ì²â´íÎó
+  * ä¿®æ­£äº†DecodeLineUä¸­é€’å½’è°ƒç”¨è‡ªå·±çš„é”™è¯¯(éŸ³å„¿å°ç™½æŠ¥å‘Š)
+  * ä¿®æ­£äº†CharCountUæ£€æŸ¥å­—ç¬¦å®½åº¦æ—¶å¯¹åŒå­—èŠ‚Utf8ç¼–ç çš„æ£€æµ‹é”™è¯¯
   2014.7.10
   =========
-  + ĞÂÔöÒÔÏÂº¯Êı£ºStringReplicateW,NameOfW,ValueOfW,IndexOfNameW,IndexOfValueW
+  + æ–°å¢ä»¥ä¸‹å‡½æ•°ï¼šStringReplicateW,NameOfW,ValueOfW,IndexOfNameW,IndexOfValueW
 
   2014.6.26
   =========
-  * ¼ÓÈëHPPEMITÄ¬ÈÏÁ´½Ó±¾µ¥Ôª(Âó×ÓÖÙ·Ê ½¨Òé)
+  * åŠ å…¥HPPEMITé»˜è®¤é“¾æ¥æœ¬å•å…ƒ(éº¦å­ä»²è‚¥ å»ºè®®)
   2014.6.21
   ==========
-  * ĞŞÕıÁËC++ BuilderÖĞ±àÒëµÄÎÊÌâ
+  * ä¿®æ­£äº†C++ Builderä¸­ç¼–è¯‘çš„é—®é¢˜
   2014.6.19
   ==========
-  * ĞŞÕıÁËQuotedStr¶ÔÓÚ³¤¶ÈÎª0µÄ×Ö·û´®±àÂë³ö´íµÄÎÊÌâ
+  * ä¿®æ­£äº†QuotedStrå¯¹äºé•¿åº¦ä¸º0çš„å­—ç¬¦ä¸²ç¼–ç å‡ºé”™çš„é—®é¢˜
 }
 {$ENDREGION 'History'}
 
@@ -300,14 +300,14 @@ uses classes, sysutils, types{$IF RTLVersion>=21},
 (*$HPPEMIT '}'*)
 
 const
-  MC_NUM = $01; // ÏÔÊ¾Êı×Ö
-  MC_UNIT = $02; // ÏÔÊ¾µ¥Î»
-  MC_HIDE_ZERO = $04; // Òş²Ø×ó²àÁãÖµ
-  MC_MERGE_ZERO = $08; // ºÏ²¢ÖĞ¼äµÄÁãÖµ
-  MC_END_PATCH = $10; // ½öÔÚ²»ÒÔ·Ö½áÊøÊ±¼ÓÈëAEndTextÖ¸¶¨µÄÖµ
+  MC_NUM = $01; // æ˜¾ç¤ºæ•°å­—
+  MC_UNIT = $02; // æ˜¾ç¤ºå•ä½
+  MC_HIDE_ZERO = $04; // éšè—å·¦ä¾§é›¶å€¼
+  MC_MERGE_ZERO = $08; // åˆå¹¶ä¸­é—´çš„é›¶å€¼
+  MC_END_PATCH = $10; // ä»…åœ¨ä¸ä»¥åˆ†ç»“æŸæ—¶åŠ å…¥AEndTextæŒ‡å®šçš„å€¼
   MC_READ = MC_NUM or MC_UNIT or MC_HIDE_ZERO or MC_MERGE_ZERO or MC_END_PATCH;
-  // Õı³£¶ÁÈ¡ĞÎÊ½
-  MC_PRINT = MC_NUM or MC_HIDE_ZERO; // Õı³£Ì×´òĞÎÊ½
+  // æ­£å¸¸è¯»å–å½¢å¼
+  MC_PRINT = MC_NUM or MC_HIDE_ZERO; // æ­£å¸¸å¥—æ‰“å½¢å¼
 
 type
 {$IFDEF UNICODE}
@@ -341,12 +341,12 @@ type
   PQCharW = PWideChar;
   PPQCharW = ^PQCharW;
   PQStringW = ^QStringW;
-  TTextEncoding = (teUnknown, { Î´ÖªµÄ±àÂë }
-    teAuto, { ×Ô¶¯¼ì²â }
-    teAnsi, { Ansi±àÂë }
-    teUnicode16LE, { Unicode LE ±àÂë }
-    teUnicode16BE, { Unicode BE ±àÂë }
-    teUTF8 { UTF8±àÂë }
+  TTextEncoding = (teUnknown, { æœªçŸ¥çš„ç¼–ç  }
+    teAuto, { è‡ªåŠ¨æ£€æµ‹ }
+    teAnsi, { Ansiç¼–ç  }
+    teUnicode16LE, { Unicode LE ç¼–ç  }
+    teUnicode16BE, { Unicode BE ç¼–ç  }
+    teUTF8 { UTF8ç¼–ç  }
     );
 {$HPPEMIT '#define DELPHI_ANON(AType,Code,AVar) \'}
 {$HPPEMIT '  class AType##AVar:public TCppInterfacedObject<AType>\'}
@@ -355,7 +355,7 @@ type
 {$HPPEMIT '    void __fastcall Invoke##Code\'}
 (*$HPPEMIT '  } *AVar=new AType##AVar'*)
 
-  // ´ÓA½áÎ²µÄÎªAnsi±àÂëÖ§³ÖµÄº¯Êı£¬ÒÔU½áÎ²µÄÊÇUtf8±àÂëÖ§³ÖµÄº¯Êı£¬ÒÔW½áÎ²µÄÎªUCS2
+  // ä»Aç»“å°¾çš„ä¸ºAnsiç¼–ç æ”¯æŒçš„å‡½æ•°ï¼Œä»¥Uç»“å°¾çš„æ˜¯Utf8ç¼–ç æ”¯æŒçš„å‡½æ•°ï¼Œä»¥Wç»“å°¾çš„ä¸ºUCS2
   QStringA = record
   private
     FValue: TBytes;
@@ -381,7 +381,7 @@ type
     class function LowerCase(S: PQCharA): QStringA; overload; static;
     function UpperCase: QStringA; overload;
     function LowerCase: QStringA; overload;
-    // ×Ö·û´®±È½Ï
+    // å­—ç¬¦ä¸²æ¯”è¾ƒ
     function From(p: PQCharA; AOffset, ALen: Integer): PQStringA; overload;
     function From(const S: QStringA; AOffset: Integer = 0): PQStringA; overload;
     function Cat(p: PQCharA; ALen: Integer): PQStringA; overload;
@@ -410,7 +410,7 @@ type
 
   end;
 
-  // ×Ö·û´®Æ´½ÓÀà
+  // å­—ç¬¦ä¸²æ‹¼æ¥ç±»
   TQStringCatHelperW = class
   private
     FValue: array of QCharW;
@@ -600,11 +600,11 @@ type
   // TDirection = System.Types.TDirection;
 {$IFEND}
 
-  // TQPagedList - ·ÖÒ³Ê½ÁĞ±í£¬½«À´ÓÃÓÚ¼ÇÂ¼ÁĞ±í
+  // TQPagedList - åˆ†é¡µå¼åˆ—è¡¨ï¼Œå°†æ¥ç”¨äºè®°å½•åˆ—è¡¨
   TQListPage = class
   protected
-    FStartIndex: Integer; // ÆğÊ¼Ë÷Òı
-    FUsedCount: Integer; // Ê¹ÓÃµÄÒ³Ãæ¼ÆÊı
+    FStartIndex: Integer; // èµ·å§‹ç´¢å¼•
+    FUsedCount: Integer; // ä½¿ç”¨çš„é¡µé¢è®¡æ•°
     FItems: array of Pointer;
   public
     constructor Create(APageSize: Integer);
@@ -634,196 +634,196 @@ type
 
   TQPagedList = class
   protected
-    FPages: array of TQListPage; // Ò³ÃæÁĞ±í
-    FPageSize: Integer; // Ã¿Ò³´óĞ¡
-    FCount: Integer; // ÊıÁ¿
-    FLastUsedPage: Integer; // ×îºóÒ»¸öÕıÔÚÊ¹ÓÃµÄÒ³ÃæË÷Òı(»ùÓÚ0)
-    FFirstDirtyPage: Integer; // Ê×¸öË÷ÒıÔàµÄÒ³Ãæ
-    FOnCompare: TQPagedListSortCompare; // ÄÚÈİ±È½Ïº¯Êı
-    /// <summary> ±È½ÏÁ½¸öÖ¸Õë¶ÔÓ¦µÄÄÚÈİ´óĞ¡ </summary>
-    /// <param name="p1">µÚÒ»¸öÖ¸Õë</param>
-    /// <param name="p2">µÚ¶ş¸öÖ¸Õë</param>
-    /// <returns>·µ»ØÄÚÈİµÄ±È½Ï½á¹û,&lt;0´ú±íp1µÄÄÚÈİĞ¡ÓÚp2,ÏàµÈÔòÎª0£¬·´Ö®Ôò&gt;0</returns>
-    /// <remarks>½öÔÚÅÅĞòºÍ²éÕÒÊ±Ê¹ÓÃ</remarks>
+    FPages: array of TQListPage; // é¡µé¢åˆ—è¡¨
+    FPageSize: Integer; // æ¯é¡µå¤§å°
+    FCount: Integer; // æ•°é‡
+    FLastUsedPage: Integer; // æœ€åä¸€ä¸ªæ­£åœ¨ä½¿ç”¨çš„é¡µé¢ç´¢å¼•(åŸºäº0)
+    FFirstDirtyPage: Integer; // é¦–ä¸ªç´¢å¼•è„çš„é¡µé¢
+    FOnCompare: TQPagedListSortCompare; // å†…å®¹æ¯”è¾ƒå‡½æ•°
+    /// <summary> æ¯”è¾ƒä¸¤ä¸ªæŒ‡é’ˆå¯¹åº”çš„å†…å®¹å¤§å° </summary>
+    /// <param name="p1">ç¬¬ä¸€ä¸ªæŒ‡é’ˆ</param>
+    /// <param name="p2">ç¬¬äºŒä¸ªæŒ‡é’ˆ</param>
+    /// <returns>è¿”å›å†…å®¹çš„æ¯”è¾ƒç»“æœ,&lt;0ä»£è¡¨p1çš„å†…å®¹å°äºp2,ç›¸ç­‰åˆ™ä¸º0ï¼Œåä¹‹åˆ™&gt;0</returns>
+    /// <remarks>ä»…åœ¨æ’åºå’ŒæŸ¥æ‰¾æ—¶ä½¿ç”¨</remarks>
     function DoCompare(p1, p2: Pointer): Integer; inline;
-    /// <summary>»ñÈ¡Ö¸¶¨Ë÷ÒıµÄÖµ</summary>
-    /// <param name="AIndex">Òª»ñÈ¡µÄÔªËØË÷Òı</param>
-    /// <returns>·µ»ØÖ¸µ½µÄÖ¸Õë£¬Èç¹ûË÷ÒıÔ½½ç£¬ÔòÅ×³öÒì³£</returns>
-    /// <remarks>ÊôĞÔItemsµÄ¶Áº¯Êı</remarks>
+    /// <summary>è·å–æŒ‡å®šç´¢å¼•çš„å€¼</summary>
+    /// <param name="AIndex">è¦è·å–çš„å…ƒç´ ç´¢å¼•</param>
+    /// <returns>è¿”å›æŒ‡åˆ°çš„æŒ‡é’ˆï¼Œå¦‚æœç´¢å¼•è¶Šç•Œï¼Œåˆ™æŠ›å‡ºå¼‚å¸¸</returns>
+    /// <remarks>å±æ€§Itemsçš„è¯»å‡½æ•°</remarks>
     function GetItems(AIndex: Integer): Pointer; inline;
-    /// <summary>ÉèÖÃÖ¸¶¨Ë÷ÒıµÄÖµ</summary>
-    /// <param name="AIndex">Ä¿±êË÷ÒıÎ»ÖÃ£¬Èç¹ûÔ½½ç£¬ÔòÅ×³öÒì³£</param>
-    /// <remarks>ÊôĞÔItemsµÄĞ´º¯Êı</remarks>
+    /// <summary>è®¾ç½®æŒ‡å®šç´¢å¼•çš„å€¼</summary>
+    /// <param name="AIndex">ç›®æ ‡ç´¢å¼•ä½ç½®ï¼Œå¦‚æœè¶Šç•Œï¼Œåˆ™æŠ›å‡ºå¼‚å¸¸</param>
+    /// <remarks>å±æ€§Itemsçš„å†™å‡½æ•°</remarks>
     procedure SetItems(AIndex: Integer; const Value: Pointer); inline;
-    /// <summary>É¾³ıÍ¨Öª´¥·¢º¯Êı</summary>
-    /// <param name="p">ÒªÉ¾³ıµÄÖ¸Õë</param>
-    /// <remarks>½öÔÚTQPagedList×ÓÀà²Å»á´¥·¢Notifyº¯Êı</remarks>
+    /// <summary>åˆ é™¤é€šçŸ¥è§¦å‘å‡½æ•°</summary>
+    /// <param name="p">è¦åˆ é™¤çš„æŒ‡é’ˆ</param>
+    /// <remarks>ä»…åœ¨TQPagedListå­ç±»æ‰ä¼šè§¦å‘Notifyå‡½æ•°</remarks>
     procedure DoDelete(const p: Pointer); inline;
-    /// <summary>²éÕÒÖ¸¶¨Ë÷ÒıËùÔÚµÄÒ³Ë÷Òı</summary>
-    /// <param name="p">Ä¿±êË÷ÒıÎ»ÖÃ</param>
-    /// <returns>·µ»ØÕÒµ½µÄÒ³ºÅ</returns>
+    /// <summary>æŸ¥æ‰¾æŒ‡å®šç´¢å¼•æ‰€åœ¨çš„é¡µç´¢å¼•</summary>
+    /// <param name="p">ç›®æ ‡ç´¢å¼•ä½ç½®</param>
+    /// <returns>è¿”å›æ‰¾åˆ°çš„é¡µå·</returns>
     function FindPage(AIndex: Integer): Integer;
-    /// <summary>²éÕÒÖ¸¶¨Ë÷ÒıËùÔÚµÄÒ³</summary>
-    /// <param name="p">Ä¿±êË÷ÒıÎ»ÖÃ</param>
-    /// <returns>·µ»ØÕÒµ½µÄÒ³¶ÔÏó</returns>
+    /// <summary>æŸ¥æ‰¾æŒ‡å®šç´¢å¼•æ‰€åœ¨çš„é¡µ</summary>
+    /// <param name="p">ç›®æ ‡ç´¢å¼•ä½ç½®</param>
+    /// <returns>è¿”å›æ‰¾åˆ°çš„é¡µå¯¹è±¡</returns>
     function GetPage(AIndex: Integer): TQListPage;
-    /// <summary>±ê¼Ç´ÓÖ¸¶¨µÄÒ³¿ªÊ¼£¬Ò³Í·µÄFStartIndexĞÅÏ¢Ê§Ğ§</summary>
-    /// <param name="APage">Ê§Ğ§µÄÒ³ÃæË÷Òı</param>
-    /// <remarks>Ê¹ÓÃÊ§Ğ§µÄÒ³£¨ÔàÒ³£©ÄÚÈİÊ±£¬ĞèÒªÏÈ¸üĞÂÔàÒ³Ë÷ÒıĞÅÏ¢</remarks>
+    /// <summary>æ ‡è®°ä»æŒ‡å®šçš„é¡µå¼€å§‹ï¼Œé¡µå¤´çš„FStartIndexä¿¡æ¯å¤±æ•ˆ</summary>
+    /// <param name="APage">å¤±æ•ˆçš„é¡µé¢ç´¢å¼•</param>
+    /// <remarks>ä½¿ç”¨å¤±æ•ˆçš„é¡µï¼ˆè„é¡µï¼‰å†…å®¹æ—¶ï¼Œéœ€è¦å…ˆæ›´æ–°è„é¡µç´¢å¼•ä¿¡æ¯</remarks>
     procedure Dirty(APage: Integer); inline;
-    /// <summary>Í¨ÖªÖ¸¶¨µÄÖ¸Õë·¢Éú±ä»¯</summary>
-    /// <param name="Ptr">·¢Éú±ä»¯µÄÖ¸ÕëÊı¾İ</param>
-    /// <param name="Action">·¢ÉúµÄ±ä»¯ÀàĞÍ</param>
+    /// <summary>é€šçŸ¥æŒ‡å®šçš„æŒ‡é’ˆå‘ç”Ÿå˜åŒ–</summary>
+    /// <param name="Ptr">å‘ç”Ÿå˜åŒ–çš„æŒ‡é’ˆæ•°æ®</param>
+    /// <param name="Action">å‘ç”Ÿçš„å˜åŒ–ç±»å‹</param>
     procedure Notify(Ptr: Pointer; Action: TListNotification); virtual;
-    /// <summary>»ñÈ¡µ±Ç°ÁĞ±íµÄÈİÁ¿</summary>
-    /// <returns>·µ»Ø PageSize*PageCount µÄ½á¹û</returns>
-    /// <remarks>ÊôĞÔCapacityµÄ¶Áº¯Êı</remarks>
+    /// <summary>è·å–å½“å‰åˆ—è¡¨çš„å®¹é‡</summary>
+    /// <returns>è¿”å› PageSize*PageCount çš„ç»“æœ</returns>
+    /// <remarks>å±æ€§Capacityçš„è¯»å‡½æ•°</remarks>
     function GetCapacity: Integer;
-    /// <summary>²»×öÈÎºÎÊÂ£¬½öÎª¼æÈİTListµÄĞÎÊ½¶øÌá¹©</summary>
-    /// <remarks>ÊôĞÔCapacityµÄĞ´º¯Êı</remarks>
+    /// <summary>ä¸åšä»»ä½•äº‹ï¼Œä»…ä¸ºå…¼å®¹TListçš„å½¢å¼è€Œæä¾›</summary>
+    /// <remarks>å±æ€§Capacityçš„å†™å‡½æ•°</remarks>
     procedure SetCapacity(const Value: Integer);
-    /// <summary>½«µ±Ç°ËùÓĞÄÚÈİ·Åµ½Ò»Î¬µÄÖ¸ÕëÊı×éÖĞ</summary>
-    /// <returns>·µ»ØÉú³ÉµÄÒ»Î¬¶¯Ì¬Êı×é</returns>
-    /// <remarks>ÊôĞÔListµÄ¶Áº¯Êı</remarks>
+    /// <summary>å°†å½“å‰æ‰€æœ‰å†…å®¹æ”¾åˆ°ä¸€ç»´çš„æŒ‡é’ˆæ•°ç»„ä¸­</summary>
+    /// <returns>è¿”å›ç”Ÿæˆçš„ä¸€ç»´åŠ¨æ€æ•°ç»„</returns>
+    /// <remarks>å±æ€§Listçš„è¯»å‡½æ•°</remarks>
     function GetList: TPointerList;
-    /// <summary>ÉèÖÃÄÚÈİ´óĞ¡±È½Ïº¯Êı</summary>
-    /// <param name="Value">ĞÂµÄ±È½Ïº¯Êı</summary>
-    /// <remarks>ÊôĞÔOnCompareµÄĞ´º¯Êı£¬ĞŞ¸ÄËü¿ÉÄÜ´¥·¢ÖØĞÂÅÅĞò</remarks>
+    /// <summary>è®¾ç½®å†…å®¹å¤§å°æ¯”è¾ƒå‡½æ•°</summary>
+    /// <param name="Value">æ–°çš„æ¯”è¾ƒå‡½æ•°</summary>
+    /// <remarks>å±æ€§OnCompareçš„å†™å‡½æ•°ï¼Œä¿®æ”¹å®ƒå¯èƒ½è§¦å‘é‡æ–°æ’åº</remarks>
     procedure SetOnCompare(const Value: TQPagedListSortCompare);
-    /// <summary>ÔÚÉ¾³ı»òÒÆ³ıÔªËØÊ±£¬¼ì²é×îºóÊ¹ÓÃµÄ·ÖÒ³Ë÷Òı</summary>
+    /// <summary>åœ¨åˆ é™¤æˆ–ç§»é™¤å…ƒç´ æ—¶ï¼Œæ£€æŸ¥æœ€åä½¿ç”¨çš„åˆ†é¡µç´¢å¼•</summary>
     procedure CheckLastPage;
-    /// <summary>»ñÈ¡µ±Ç°ÒÑ¾­·ÖÅäµÄ×ÜÒ³Êı</summary>
+    /// <summary>è·å–å½“å‰å·²ç»åˆ†é…çš„æ€»é¡µæ•°</summary>
     function GetPageCount: Integer;
   public
     /// <summary>
-    /// Ä¬ÈÏ¹¹Ôìº¯Êı£¬ÓÉÓÚÎ´Ö¸¶¨Ò³Ãæ´óĞ¡£¬Ê¹ÓÃÄ¬ÈÏ´óĞ¡512
+    /// é»˜è®¤æ„é€ å‡½æ•°ï¼Œç”±äºæœªæŒ‡å®šé¡µé¢å¤§å°ï¼Œä½¿ç”¨é»˜è®¤å¤§å°512
     /// </summary>
     constructor Create; overload;
-    /// <summary>¹¹Ôìº¯Êı</summary>
-    /// <param name="APageSize">Ã¿Ò³ÏîÊı£¬Èç¹ûĞ¡ÓÚµÈÓÚ0ÔòÊ¹ÓÃÄ¬ÈÏÖµ</param>
+    /// <summary>æ„é€ å‡½æ•°</summary>
+    /// <param name="APageSize">æ¯é¡µé¡¹æ•°ï¼Œå¦‚æœå°äºç­‰äº0åˆ™ä½¿ç”¨é»˜è®¤å€¼</param>
     constructor Create(APageSize: Integer); overload;
-    /// <summary>Îö¹¹º¯Êı</summary>
+    /// <summary>ææ„å‡½æ•°</summary>
     destructor Destroy; override;
 {$IF RTLVersion<26}
-    /// <summary>¿½±´º¯Êı£¬²Î¿¼TList.Assign</summary>
+    /// <summary>æ‹·è´å‡½æ•°ï¼Œå‚è€ƒTList.Assign</summary>
     procedure Assign(ListA: TList; AOperator: TListAssignOp = laCopy;
       ListB: TList = nil); overload;
 {$IFEND}
-    /// <summary>¿½±´º¯Êı£¬²Î¿¼TList.Assign</summary>
+    /// <summary>æ‹·è´å‡½æ•°ï¼Œå‚è€ƒTList.Assign</summary>
     procedure Assign(ListA: TQPagedList; AOperator: TListAssignOp = laCopy;
       ListB: TQPagedList = nil); overload;
-    /// <summary>Ìí¼ÓÒ»¸öÔªËØ</summary>
-    /// <param name="p">ÒªÌí¼ÓµÄÔªËØ</param>
-    /// <returns>·µ»ØĞÂÔªËØµÄË÷ÒıÖµ</returns>
+    /// <summary>æ·»åŠ ä¸€ä¸ªå…ƒç´ </summary>
+    /// <param name="p">è¦æ·»åŠ çš„å…ƒç´ </param>
+    /// <returns>è¿”å›æ–°å…ƒç´ çš„ç´¢å¼•å€¼</returns>
     function Add(const p: Pointer): Integer; overload;
-    /// <summary>Ò»´ÎĞÔÌí¼Ó¶à¸öÔªËØ</summary>
-    /// <param name="pp">ÒªÌí¼ÓµÄÔªËØÁĞ±íÖ¸Õë</param>
-    /// <param name="ACount">ÒªÌí¼ÓµÄÔªËØ¸öÊı</param>
-    /// <returns>·µ»ØĞÂÔªËØµÄË÷ÒıÖµ</returns>
+    /// <summary>ä¸€æ¬¡æ€§æ·»åŠ å¤šä¸ªå…ƒç´ </summary>
+    /// <param name="pp">è¦æ·»åŠ çš„å…ƒç´ åˆ—è¡¨æŒ‡é’ˆ</param>
+    /// <param name="ACount">è¦æ·»åŠ çš„å…ƒç´ ä¸ªæ•°</param>
+    /// <returns>è¿”å›æ–°å…ƒç´ çš„ç´¢å¼•å€¼</returns>
     procedure BatchAdd(pp: PPointer; ACount: Integer); overload;
-    /// <summary>Ò»´ÎĞÔÌí¼Ó¶à¸öÔªËØ</summary>
-    /// <param name="AList">ÒªÌí¼ÓµÄÔªËØ¶¯Ì¬Êı×é</param>
-    /// <returns>·µ»ØĞÂÔªËØµÄË÷ÒıÖµ</returns>
+    /// <summary>ä¸€æ¬¡æ€§æ·»åŠ å¤šä¸ªå…ƒç´ </summary>
+    /// <param name="AList">è¦æ·»åŠ çš„å…ƒç´ åŠ¨æ€æ•°ç»„</param>
+    /// <returns>è¿”å›æ–°å…ƒç´ çš„ç´¢å¼•å€¼</returns>
     procedure BatchAdd(AList: TPointerList); overload;
-    /// <summary>ÔÚÖ¸¶¨µÄÎ»ÖÃ²åÈëÒ»¸öĞÂÔªËØ</summary>
-    /// <param name="AIndex">Òª²åÈëµÄÎ»ÖÃ£¬Èç¹ûĞ¡ÓÚµÈÓÚ0£¬²åÈëÆğÊ¼Î»ÖÃ£¬Èç¹û´óÓÚµÈÓÚCount£¬Ôò²åÈëÄ©Î²</param>
-    /// <param name="p">Òª²åÈëµÄÔªËØ</param>
-    /// <remarks>Èç¹ûÖ¸¶¨µÄÅÅĞò¹æÔò£¬ÔòAIndex²ÎÊı±»ºöÂÔ</remarks>
+    /// <summary>åœ¨æŒ‡å®šçš„ä½ç½®æ’å…¥ä¸€ä¸ªæ–°å…ƒç´ </summary>
+    /// <param name="AIndex">è¦æ’å…¥çš„ä½ç½®ï¼Œå¦‚æœå°äºç­‰äº0ï¼Œæ’å…¥èµ·å§‹ä½ç½®ï¼Œå¦‚æœå¤§äºç­‰äºCountï¼Œåˆ™æ’å…¥æœ«å°¾</param>
+    /// <param name="p">è¦æ’å…¥çš„å…ƒç´ </param>
+    /// <remarks>å¦‚æœæŒ‡å®šçš„æ’åºè§„åˆ™ï¼Œåˆ™AIndexå‚æ•°è¢«å¿½ç•¥</remarks>
     procedure Insert(AIndex: Integer; const p: Pointer); overload;
-    /// <summary>ÔÚÖ¸¶¨µÄÎ»ÖÃÅúÁ¿²åÈë¶à¸öĞÂÔªËØ</summary>
-    /// <param name="AIndex">Òª²åÈëµÄÎ»ÖÃ£¬Èç¹ûĞ¡ÓÚµÈÓÚ0£¬²åÈëÆğÊ¼Î»ÖÃ£¬Èç¹û´óÓÚµÈÓÚCount£¬Ôò²åÈëÄ©Î²</param>
-    /// <param name="pp">Òª²åÈëµÄÔªËØ</param>
-    /// <param name="ACount">pp²ÎÊıÖ¸ÏòµÄÔªËØ¸öÊı</param>
-    /// <remarks>Èç¹ûÖ¸¶¨µÄÅÅĞò¹æÔò£¬ÔòAIndex²ÎÊı±»ºöÂÔ</remarks>
+    /// <summary>åœ¨æŒ‡å®šçš„ä½ç½®æ‰¹é‡æ’å…¥å¤šä¸ªæ–°å…ƒç´ </summary>
+    /// <param name="AIndex">è¦æ’å…¥çš„ä½ç½®ï¼Œå¦‚æœå°äºç­‰äº0ï¼Œæ’å…¥èµ·å§‹ä½ç½®ï¼Œå¦‚æœå¤§äºç­‰äºCountï¼Œåˆ™æ’å…¥æœ«å°¾</param>
+    /// <param name="pp">è¦æ’å…¥çš„å…ƒç´ </param>
+    /// <param name="ACount">ppå‚æ•°æŒ‡å‘çš„å…ƒç´ ä¸ªæ•°</param>
+    /// <remarks>å¦‚æœæŒ‡å®šçš„æ’åºè§„åˆ™ï¼Œåˆ™AIndexå‚æ•°è¢«å¿½ç•¥</remarks>
     procedure BatchInsert(AIndex: Integer; pp: PPointer;
       ACount: Integer); overload;
-    /// <summary>ÔÚÖ¸¶¨µÄÎ»ÖÃ²åÈëÒ»¸öĞÂÔªËØ</summary>
-    /// <param name="AIndex">Òª²åÈëµÄÎ»ÖÃ£¬Èç¹ûĞ¡ÓÚµÈÓÚ0£¬²åÈëÆğÊ¼Î»ÖÃ£¬Èç¹û´óÓÚµÈÓÚCount£¬Ôò²åÈëÄ©Î²</param>
-    /// <param name="p">Òª²åÈëµÄÔªËØ</param>
-    /// <remarks>Èç¹ûÖ¸¶¨µÄÅÅĞò¹æÔò£¬ÔòAIndex²ÎÊı±»ºöÂÔ</remarks>
+    /// <summary>åœ¨æŒ‡å®šçš„ä½ç½®æ’å…¥ä¸€ä¸ªæ–°å…ƒç´ </summary>
+    /// <param name="AIndex">è¦æ’å…¥çš„ä½ç½®ï¼Œå¦‚æœå°äºç­‰äº0ï¼Œæ’å…¥èµ·å§‹ä½ç½®ï¼Œå¦‚æœå¤§äºç­‰äºCountï¼Œåˆ™æ’å…¥æœ«å°¾</param>
+    /// <param name="p">è¦æ’å…¥çš„å…ƒç´ </param>
+    /// <remarks>å¦‚æœæŒ‡å®šçš„æ’åºè§„åˆ™ï¼Œåˆ™AIndexå‚æ•°è¢«å¿½ç•¥</remarks>
     procedure BatchInsert(AIndex: Integer; const AList: TPointerList); overload;
-    /// <summary>½»»»Á½¸öÔªËØµÄÎ»ÖÃ</summary>
-    /// <param name="AIndex1">µÚÒ»¸öÔªËØµÄÎ»ÖÃË÷Òı</param>
-    /// <param name="AIndex2">µÚ¶ş¸öÔªËØµÄÎ»ÖÃË÷Òı</param>
+    /// <summary>äº¤æ¢ä¸¤ä¸ªå…ƒç´ çš„ä½ç½®</summary>
+    /// <param name="AIndex1">ç¬¬ä¸€ä¸ªå…ƒç´ çš„ä½ç½®ç´¢å¼•</param>
+    /// <param name="AIndex2">ç¬¬äºŒä¸ªå…ƒç´ çš„ä½ç½®ç´¢å¼•</param>
     procedure Exchange(AIndex1, AIndex2: Integer);
-    /// <summary>½«Ö¸¶¨Î»ÖÃµÄÔªËØÒÆ¶¯µ½ĞÂÎ»ÖÃ</summary>
-    /// <param name="AFrom">ÆğÊ¼Î»ÖÃË÷Òı</param>
-    /// <param name="ATo">Ä¿±êÎ»ÖÃË÷Òı</param>
+    /// <summary>å°†æŒ‡å®šä½ç½®çš„å…ƒç´ ç§»åŠ¨åˆ°æ–°ä½ç½®</summary>
+    /// <param name="AFrom">èµ·å§‹ä½ç½®ç´¢å¼•</param>
+    /// <param name="ATo">ç›®æ ‡ä½ç½®ç´¢å¼•</param>
     procedure MoveTo(AFrom, ATo: Integer);
-    /// <summary>Êµ¼ÊÖ±½Óµ÷ÓÃMoveTo</summary>
+    /// <summary>å®é™…ç›´æ¥è°ƒç”¨MoveTo</summary>
     procedure Move(AFrom, ATo: Integer); inline;
-    /// <summary>É¾³ıÖ¸¶¨µÄÔªËØ</summary>
+    /// <summary>åˆ é™¤æŒ‡å®šçš„å…ƒç´ </summary>
     procedure Delete(AIndex: Integer);
-    /// <summary>ÒÆ³ıÖ¸¶¨µÄÔªËØ</summary>
+    /// <summary>ç§»é™¤æŒ‡å®šçš„å…ƒç´ </summary>
     procedure Remove(AIndex: Integer); overload;
-    /// <summary>ÒÆ³ıÖ¸¶¨µÄÔªËØ</summary>
+    /// <summary>ç§»é™¤æŒ‡å®šçš„å…ƒç´ </summary>
     function Remove(Item: Pointer): Integer; overload; inline;
-    /// <summary>´ÓÖ¸¶¨µÄ·½Ïò¿ªÊ¼²éÕÒ²¢ÒÆ³ıÔªËØ</summary>
+    /// <summary>ä»æŒ‡å®šçš„æ–¹å‘å¼€å§‹æŸ¥æ‰¾å¹¶ç§»é™¤å…ƒç´ </summary>
     function RemoveItem(Item: Pointer; Direction: TDirection): Integer;
-    /// <summary>²éÕÒÖ¸¶¨ÔªËØµÄË÷Òı</summary>
-    /// <param name="p">Òª²éÕÒµÄÔªËØ</param>
-    /// <param name="AIdx">ÕÒµ½µÄÔªËØË÷Òı</param>
-    /// <returns>Èç¹ûÕÒµ½£¬·µ»ØTrue,·ñÔò·µ»ØFalse£¬AIdxÎªÄ¿±êÓ¦³öÏÖµÄÎ»ÖÃ</returns>
+    /// <summary>æŸ¥æ‰¾æŒ‡å®šå…ƒç´ çš„ç´¢å¼•</summary>
+    /// <param name="p">è¦æŸ¥æ‰¾çš„å…ƒç´ </param>
+    /// <param name="AIdx">æ‰¾åˆ°çš„å…ƒç´ ç´¢å¼•</param>
+    /// <returns>å¦‚æœæ‰¾åˆ°ï¼Œè¿”å›True,å¦åˆ™è¿”å›Falseï¼ŒAIdxä¸ºç›®æ ‡åº”å‡ºç°çš„ä½ç½®</returns>
     function Find(const p: Pointer; var AIdx: Integer): Boolean;
-    /// <summary>Çå³ıËùÓĞÔªËØ</summary>
-    /// <remarks>Clear²¢²»ÊÕËõÒ³ÒÔ±ãºóÃæÖØÓÃ£¬ÒªÊÕËõÒ³£¬Çëµ÷ÓÃPackº¯Êı</remarks>
+    /// <summary>æ¸…é™¤æ‰€æœ‰å…ƒç´ </summary>
+    /// <remarks>Clearå¹¶ä¸æ”¶ç¼©é¡µä»¥ä¾¿åé¢é‡ç”¨ï¼Œè¦æ”¶ç¼©é¡µï¼Œè¯·è°ƒç”¨Packå‡½æ•°</remarks>
     procedure Clear;
-    /// <summary>ÊÕËõÁĞ±íÎª×îÉÙµÄÒ³Êı</summary>
+    /// <summary>æ”¶ç¼©åˆ—è¡¨ä¸ºæœ€å°‘çš„é¡µæ•°</summary>
     procedure Pack;
-    /// <summary>°´ÕÕOnCompare¹æ¶¨µÄ¹æÔòÅÅĞò</summary>
-    /// <remarks>Ò»µ©Ö¸¶¨OnCompare¹æÔò£¬ÔòÌí¼ÓÔªËØÊ±»á×Ô¶¯ÅÅĞò£¬InsertÊ±Ö¸¶¨µÄË÷ÒıÎ»ÖÃ½«»á±»ºöÂÔ</remarks>
+    /// <summary>æŒ‰ç…§OnCompareè§„å®šçš„è§„åˆ™æ’åº</summary>
+    /// <remarks>ä¸€æ—¦æŒ‡å®šOnCompareè§„åˆ™ï¼Œåˆ™æ·»åŠ å…ƒç´ æ—¶ä¼šè‡ªåŠ¨æ’åºï¼ŒInsertæ—¶æŒ‡å®šçš„ç´¢å¼•ä½ç½®å°†ä¼šè¢«å¿½ç•¥</remarks>
     procedure Sort; overload;
 {$IFDEF UNICODE}
-    /// <summary>°´ÕÕAOnCompare²ÎÊı¹æ¶¨µÄ¹æÔòÅÅĞò</summary>
-    /// <remarks>Ò»µ©Ö¸¶¨OnCompare¹æÔò£¬ÔòÌí¼ÓÔªËØÊ±»á×Ô¶¯ÅÅĞò£¬InsertÊ±Ö¸¶¨µÄË÷ÒıÎ»ÖÃ½«»á±»ºöÂÔ</remarks>
+    /// <summary>æŒ‰ç…§AOnCompareå‚æ•°è§„å®šçš„è§„åˆ™æ’åº</summary>
+    /// <remarks>ä¸€æ—¦æŒ‡å®šOnCompareè§„åˆ™ï¼Œåˆ™æ·»åŠ å…ƒç´ æ—¶ä¼šè‡ªåŠ¨æ’åºï¼ŒInsertæ—¶æŒ‡å®šçš„ç´¢å¼•ä½ç½®å°†ä¼šè¢«å¿½ç•¥</remarks>
     procedure Sort(AOnCompare: TQPagedListSortCompareA); overload;
 {$ENDIF}
-    /// <summary>°´ÕÕAOnCompare²ÎÊı¹æ¶¨µÄ¹æÔòÅÅĞò</summary>
-    /// <remarks>Ò»µ©Ö¸¶¨OnCompare¹æÔò£¬ÔòÌí¼ÓÔªËØÊ±»á×Ô¶¯ÅÅĞò£¬InsertÊ±Ö¸¶¨µÄË÷ÒıÎ»ÖÃ½«»á±»ºöÂÔ</remarks>
+    /// <summary>æŒ‰ç…§AOnCompareå‚æ•°è§„å®šçš„è§„åˆ™æ’åº</summary>
+    /// <remarks>ä¸€æ—¦æŒ‡å®šOnCompareè§„åˆ™ï¼Œåˆ™æ·»åŠ å…ƒç´ æ—¶ä¼šè‡ªåŠ¨æ’åºï¼ŒInsertæ—¶æŒ‡å®šçš„ç´¢å¼•ä½ç½®å°†ä¼šè¢«å¿½ç•¥</remarks>
     procedure Sort(AOnCompare: TQPagedListSortCompareG); overload;
-    /// <summary> for .. in Ö§³Ö</summary>
+    /// <summary> for .. in æ”¯æŒ</summary>
     function GetEnumerator: TQPagedListEnumerator;
-    /// <summary>½öÎª¼æÈİ TList Ìí¼Ó£¬¶Ô TQPagedList ÎŞÒâÒå</summary>
+    /// <summary>ä»…ä¸ºå…¼å®¹ TList æ·»åŠ ï¼Œå¯¹ TQPagedList æ— æ„ä¹‰</summary>
     function Expand: TQPagedList;
-    /// <summary>ÒÆ³ıÖ¸¶¨µÄÏîÄ¿</summary>
-    /// <param name="Item">ÒªÒÆ³ıµÄÖµ</param>
+    /// <summary>ç§»é™¤æŒ‡å®šçš„é¡¹ç›®</summary>
+    /// <param name="Item">è¦ç§»é™¤çš„å€¼</param>
     function Extract(Item: Pointer): Pointer; inline;
-    /// <summary>ÒÆ³ıÖ¸¶¨µÄÏîÄ¿</summary>
-    /// <param name="Item">ÒªÒÆ³ıµÄÖµ</param>
-    /// <param name="Direction">²éÕÒ·½Ïò</param>
+    /// <summary>ç§»é™¤æŒ‡å®šçš„é¡¹ç›®</summary>
+    /// <param name="Item">è¦ç§»é™¤çš„å€¼</param>
+    /// <param name="Direction">æŸ¥æ‰¾æ–¹å‘</param>
     function ExtractItem(Item: Pointer; Direction: TDirection): Pointer;
-    /// <summary>Ê×¸öÔªËØ</summary>
+    /// <summary>é¦–ä¸ªå…ƒç´ </summary>
     function First: Pointer; inline;
-    /// <summary>×îºóÒ»¸öÔªËØ</summary>
+    /// <summary>æœ€åä¸€ä¸ªå…ƒç´ </summary>
     function Last: Pointer; inline;
-    /// <summary>»ñÈ¡Ö¸¶¨ÔªËØµÄÊ×´Î³öÏÖÎ»ÖÃ</summary>
-    /// <param name="Item">Òª²éÕÒµÄÔªËØ</param>
+    /// <summary>è·å–æŒ‡å®šå…ƒç´ çš„é¦–æ¬¡å‡ºç°ä½ç½®</summary>
+    /// <param name="Item">è¦æŸ¥æ‰¾çš„å…ƒç´ </param>
     function IndexOf(Item: Pointer): Integer;
-    /// <summary>°´Ö¸¶¨µÄ·½Ïò²éÕÒÔªËØÊ×´Î³öÏÖµÄÎ»ÖÃ</summary>
-    /// <param name="Item">Òª²éÕÒµÄÔªËØ</param>
-    /// <param name="Direction">²éÕÒ·½Ïò</param>
+    /// <summary>æŒ‰æŒ‡å®šçš„æ–¹å‘æŸ¥æ‰¾å…ƒç´ é¦–æ¬¡å‡ºç°çš„ä½ç½®</summary>
+    /// <param name="Item">è¦æŸ¥æ‰¾çš„å…ƒç´ </param>
+    /// <param name="Direction">æŸ¥æ‰¾æ–¹å‘</param>
     function IndexOfItem(Item: Pointer; Direction: TDirection): Integer;
-    /// <summary>ÔªËØ¸öÊı</summary>
+    /// <summary>å…ƒç´ ä¸ªæ•°</summary>
     property count: Integer read FCount;
-    /// <summary>ÔªËØÁĞ±í</summary>
+    /// <summary>å…ƒç´ åˆ—è¡¨</summary>
     property Items[AIndex: Integer]: Pointer read GetItems
       write SetItems; default;
-    /// <summary>ÔªËØ±È½Ï¹æÔò£¬Èç¹ûÖ¸¶¨£¬ÔòÔªËØ×Ô¶¯ÅÅĞò</summary>
+    /// <summary>å…ƒç´ æ¯”è¾ƒè§„åˆ™ï¼Œå¦‚æœæŒ‡å®šï¼Œåˆ™å…ƒç´ è‡ªåŠ¨æ’åº</summary>
     property OnCompare: TQPagedListSortCompare read FOnCompare
       write SetOnCompare;
-    /// <summary>¼æÈİTListÉèÖÃ£¬¶Ô TQPagedList ÎŞÒâÒå</summary>
+    /// <summary>å…¼å®¹TListè®¾ç½®ï¼Œå¯¹ TQPagedList æ— æ„ä¹‰</summary>
     property Capacity: Integer read GetCapacity write SetCapacity;
-    /// <summary>»ñÈ¡ËùÓĞµÄÔªËØÖµÊı×é</summary>
+    /// <summary>è·å–æ‰€æœ‰çš„å…ƒç´ å€¼æ•°ç»„</summary>
     property List: TPointerList read GetList;
-    /// <summary>ÒÑ¾­·ÖÅäµÄÒ³Êı</summary>
+    /// <summary>å·²ç»åˆ†é…çš„é¡µæ•°</summary>
     property PageCount: Integer read GetPageCount;
-    /// <summary>µ±Ç°Ò³´óĞ¡</summary>
+    /// <summary>å½“å‰é¡µå¤§å°</summary>
     property PageSize: Integer read FPageSize;
   end;
 
   /// <summary>
-  /// ·ÖÒ³ÄÚ´æÁ÷¶ÔÏó£¬ÓÃÓÚ°´Ò³À´´æÈ¡Êı¾İ£¬ÒÔÓÅ»¯ÄÚ´æµÄ·ÖÅäºÍÊÍ·Å´ÎÊı£¬Ìá¸ßÔËĞĞĞ§ÂÊ£¬Ê¹ÓÃ·½Ê½Í¬ÆÕÍ¨µÄÄÚ´æÁ÷Ò»Ñù£¬µ«²»Ìá¹©Memory
-  /// Ö¸Õë£¨ÒòÎªËü¾Í²»ÊÇÁ¬ĞøµÄÄÚ´æ¿é£©¡£²»¹ıÌá¹©ÁËAsBytes»òBytes[AIndex]µÄ·½Ê½À´·ÃÎÊÖ¸¶¨µÄÄÚÈİ¡£
+  /// åˆ†é¡µå†…å­˜æµå¯¹è±¡ï¼Œç”¨äºæŒ‰é¡µæ¥å­˜å–æ•°æ®ï¼Œä»¥ä¼˜åŒ–å†…å­˜çš„åˆ†é…å’Œé‡Šæ”¾æ¬¡æ•°ï¼Œæé«˜è¿è¡Œæ•ˆç‡ï¼Œä½¿ç”¨æ–¹å¼åŒæ™®é€šçš„å†…å­˜æµä¸€æ ·ï¼Œä½†ä¸æä¾›Memory
+  /// æŒ‡é’ˆï¼ˆå› ä¸ºå®ƒå°±ä¸æ˜¯è¿ç»­çš„å†…å­˜å—ï¼‰ã€‚ä¸è¿‡æä¾›äº†AsBytesæˆ–Bytes[AIndex]çš„æ–¹å¼æ¥è®¿é—®æŒ‡å®šçš„å†…å®¹ã€‚
   /// </summary>
   TQPagedStream = class(TStream)
   private
@@ -868,7 +868,7 @@ type
   end;
 
   /// <summary>
-  /// TQBitsÓÃÀ´¼ò»¯¶Ô±êÖ¾Î»µÄ·ÃÎÊ£¬¿ÉÒÔÉèÖÃ»ò»ñÈ¡Ä³Ò»Î»µÄ×´Ì¬
+  /// TQBitsç”¨æ¥ç®€åŒ–å¯¹æ ‡å¿—ä½çš„è®¿é—®ï¼Œå¯ä»¥è®¾ç½®æˆ–è·å–æŸä¸€ä½çš„çŠ¶æ€
   /// </summary>
   TQBits = record
   private
@@ -909,101 +909,101 @@ type
     prIncUnicode, prRepeat, prSimpleOrder);
   TPasswordRules = set of TPasswordRule;
 
-  // ÉáÈë·½·¨£ºmrmNone - ²»ÉáÈë£¬mrmSimple - ËÄÉáÎåÈë,mrmBank - ÒøĞĞ¼ÒÉáÈë·¨£¨ËÄÉáÁùÈëÎå³ÉË«£©
+  // èˆå…¥æ–¹æ³•ï¼šmrmNone - ä¸èˆå…¥ï¼ŒmrmSimple - å››èˆäº”å…¥,mrmBank - é“¶è¡Œå®¶èˆå…¥æ³•ï¼ˆå››èˆå…­å…¥äº”æˆåŒï¼‰
   TMoneyRoundMethod = (mrmNone, mrmSimple, mrmBank);
 
   /// <summary>
-  /// Ãû³Æ×Ö·ûÀàĞÍ
+  /// åç§°å­—ç¬¦ç±»å‹
   /// </summary>
   TNameCharType = (
     /// <summary>
-    /// ºº×Ö
+    /// æ±‰å­—
     /// </summary>
     nctChinese,
     /// <summary>
-    /// ×ÖÄ¸
+    /// å­—æ¯
     /// </summary>
     nctAlpha,
     /// <summary>
-    /// Êı×Ö
+    /// æ•°å­—
     /// </summary>
     nctNum,
     /// <summary>
-    /// ·ûºÅ
+    /// ç¬¦å·
     /// </summary>
     nctSymbol,
     /// <summary>
-    /// ¿Õ¸ñ£¬×¢Òâ²»°üº¬»»ĞĞ»òTab
+    /// ç©ºæ ¼ï¼Œæ³¨æ„ä¸åŒ…å«æ¢è¡Œæˆ–Tab
     /// </summary>
     nctSpace,
     /// <summary>
-    /// ĞÕÃû·Ö¸ô·û
+    /// å§“ååˆ†éš”ç¬¦
     /// </summary>
     nctDot,
     /// <summary>
-    /// Ë½ÓĞ×Ö·û
+    /// ç§æœ‰å­—ç¬¦
     /// </summary>
     nctCustom,
     /// <summary>
-    /// ÆäËü
+    /// å…¶å®ƒ
     /// </summary>
     nctOther);
   TNameCharSet = set of TNameCharType;
 
   /// <summary>
-  /// ÓÃÓÚ IsHumanName ÅĞ¶ÏÃû³ÆÊÇ·ñÓĞĞ§Ê±£¬ÓÃ»§¿ÉÒÔ×Ô¶¨ÒåÅĞ¶¨ÌØ¶¨×Ö·ûÊÇ·ñÔÊĞíµÄÈ«¾Ö»Øµ÷º¯Êı£¬AChar ÎªÒª¼ì²éµÄ×Ö·û£¬Accept
-  /// Îª¼ì²é½á¹û£¬AHandled ÓÃÓÚ¼ÇÂ¼ÓÃ»§ÊÇ·ñÒÑ¾­ÅĞ¶¨£¬Èç¹ûÒÑ¾­ÅĞ¶¨£¬ÉèÖÃÎªtrue£¬Ä¬ÈÏÎªfalse£¬×ßÄ¬ÈÏÅĞ¶¨¡£
+  /// ç”¨äº IsHumanName åˆ¤æ–­åç§°æ˜¯å¦æœ‰æ•ˆæ—¶ï¼Œç”¨æˆ·å¯ä»¥è‡ªå®šä¹‰åˆ¤å®šç‰¹å®šå­—ç¬¦æ˜¯å¦å…è®¸çš„å…¨å±€å›è°ƒå‡½æ•°ï¼ŒAChar ä¸ºè¦æ£€æŸ¥çš„å­—ç¬¦ï¼ŒAccept
+  /// ä¸ºæ£€æŸ¥ç»“æœï¼ŒAHandled ç”¨äºè®°å½•ç”¨æˆ·æ˜¯å¦å·²ç»åˆ¤å®šï¼Œå¦‚æœå·²ç»åˆ¤å®šï¼Œè®¾ç½®ä¸ºtrueï¼Œé»˜è®¤ä¸ºfalseï¼Œèµ°é»˜è®¤åˆ¤å®šã€‚
   /// </summary>
   TQCustomNameCharTest = procedure(AChar: Cardinal;
     var Accept, AHandled: Boolean);
 
   /// <summary>
-  /// ÈËÀàĞÔ±ğ
+  /// äººç±»æ€§åˆ«
   /// </summary>
   TQHumanSex = (
     /// <summary>
-    /// Î´Öª
+    /// æœªçŸ¥
     /// </summary>
     hsUnknown,
     /// <summary>
-    /// Å®ĞÔ
+    /// å¥³æ€§
     /// </summary>
     hsFemale,
     /// <summary>
-    /// ÄĞĞÔ
+    /// ç”·æ€§
     /// </summary>
     hsMale);
   TMemCompFunction = function(p1, p2: Pointer; L1, L2: Integer): Integer;
   TCNSpellCallback = function(const p: PQCharW): QCharW;
-  // UTF8±àÂëÓëUnicode±àÂë×ª»»º¯Êı£¬Ê¹ÓÃ×Ô¼ºµÄÊµÏÖ
+  // UTF8ç¼–ç ä¸Unicodeç¼–ç è½¬æ¢å‡½æ•°ï¼Œä½¿ç”¨è‡ªå·±çš„å®ç°
 function Utf8Decode(p: PQCharA; l: Integer): QStringW; overload;
 function Utf8Decode(const p: QStringA): QStringW; overload;
 function Utf8Encode(p: PQCharW; l: Integer): QStringA; overload;
 function Utf8Encode(const p: QStringW): QStringA; overload;
 function Utf8Encode(ps: PQCharW; sl: Integer; pd: PQCharA; dl: Integer)
   : Integer; overload;
-// Ansi±àÂëÓëUnicode±àÂë×ª»»º¯Êı£¬Ê¹ÓÃÏµÍ³µÄTEncodingÊµÏÖ
+// Ansiç¼–ç ä¸Unicodeç¼–ç è½¬æ¢å‡½æ•°ï¼Œä½¿ç”¨ç³»ç»Ÿçš„TEncodingå®ç°
 function AnsiEncode(p: PQCharW; l: Integer): QStringA; overload;
 function AnsiEncode(const p: QStringW): QStringA; overload;
 function AnsiDecode(p: PQCharA; l: Integer): QStringW; overload;
 function AnsiDecode(const p: QStringA): QStringW; overload;
-// È¡Ö¸¶¨µÄ×Ö·û´®µÄÖĞÎÄÆ´ÒôÊ××ÖÄ¸
+// å–æŒ‡å®šçš„å­—ç¬¦ä¸²çš„ä¸­æ–‡æ‹¼éŸ³é¦–å­—æ¯
 function CNSpellChars(S: QStringA; AIgnoreEnChars: Boolean): QStringW; overload;
 function CNSpellChars(S: QStringW; AIgnoreEnChars: Boolean): QStringW; overload;
 
-// ¼ÆËãµ±Ç°×Ö·ûµÄ³¤¶È
+// è®¡ç®—å½“å‰å­—ç¬¦çš„é•¿åº¦
 function CharSizeA(c: PQCharA): Integer;
 function CharSizeU(c: PQCharA): Integer;
 function CharSizeW(c: PQCharW): Integer;
-// ¼ÆËã×Ö·ûÊıº¯Êı£¬CharCountWÖØĞ´ÒÔ°üÀ¨UCS2À©Õ¹Çø×Ö·û´¦Àí
+// è®¡ç®—å­—ç¬¦æ•°å‡½æ•°ï¼ŒCharCountWé‡å†™ä»¥åŒ…æ‹¬UCS2æ‰©å±•åŒºå­—ç¬¦å¤„ç†
 function CharCountA(const source: QStringA): Integer;
 function CharCountW(const S: QStringW): Integer;
 function CharCountU(const source: QStringA): Integer;
-// ¼ÆËãµ±Ç°×Ö·ûµÄUnicode±àÂë
+// è®¡ç®—å½“å‰å­—ç¬¦çš„Unicodeç¼–ç 
 function CharCodeA(c: PQCharA): Cardinal;
 function CharCodeU(c: PQCharA): Cardinal;
 function CharCodeW(c: PQCharW): Cardinal;
-// ¼ì²é×Ö·ûÊÇ·ñÔÚÖ¸¶¨µÄÁĞ±íÖĞ
+// æ£€æŸ¥å­—ç¬¦æ˜¯å¦åœ¨æŒ‡å®šçš„åˆ—è¡¨ä¸­
 function CharInA(const c: PQCharA; const List: array of QCharA;
   ACharLen: PInteger = nil): Boolean;
 function CharInW(const c: PQCharW; const List: array of QCharW;
@@ -1013,16 +1013,16 @@ function CharInW(const c, List: PQCharW; ACharLen: PInteger = nil)
 function CharInU(const c: PQCharA; const List: array of QCharA;
   ACharLen: PInteger = nil): Boolean;
 
-// ¼ì²éÊÇ·ñÊÇ¿Õ°××Ö·û
+// æ£€æŸ¥æ˜¯å¦æ˜¯ç©ºç™½å­—ç¬¦
 function IsSpaceA(const c: PQCharA; ASpaceSize: PInteger = nil): Boolean;
 function IsSpaceW(const c: PQCharW; ASpaceSize: PInteger = nil): Boolean;
 function IsSpaceU(const c: PQCharA; ASpaceSize: PInteger = nil): Boolean;
 
-// È«½Ç°ë½Ç×ª»»
+// å…¨è§’åŠè§’è½¬æ¢
 function CNFullToHalf(const S: QStringW): QStringW;
 function CNHalfToFull(const S: QStringW): QStringW;
 
-// ÒıºÅ´¦Àí
+// å¼•å·å¤„ç†
 function QuotedStrA(const S: QStringA; const AQuoter: QCharA = $27): QStringA;
 function QuotedStrW(const S: QStringW; const AQuoter: QCharW = #$27): QStringW;
 function SQLQuoted(const S: QStringW): QStringW;
@@ -1030,22 +1030,22 @@ function DequotedStrA(const S: QStringA; const AQuoter: QCharA = $27): QStringA;
 function DequotedStrW(const S: QStringW; const AQuoter: QCharW = #$27)
   : QStringW;
 
-// Ìø¹ıÁĞ±íÖĞµÄ×Ö·û
+// è·³è¿‡åˆ—è¡¨ä¸­çš„å­—ç¬¦
 function SkipCharA(var p: PQCharA; const List: array of QCharA): Integer;
 function SkipCharU(var p: PQCharA; const List: array of QCharA): Integer;
 function SkipCharW(var p: PQCharW; const List: array of QCharA)
   : Integer; overload;
 function SkipCharW(var p: PQCharW; const List: PQCharW): Integer; overload;
 
-// Ìø¹ı¿Õ°××Ö·û£¬¶ÔÓÚ Ansi±àÂë£¬Ìø¹ıµÄÊÇ#9#10#13#161#161£¬¶ÔÓÚUCS±àÂë£¬Ìø¹ıµÄÊÇ#9#10#13#$3000
+// è·³è¿‡ç©ºç™½å­—ç¬¦ï¼Œå¯¹äº Ansiç¼–ç ï¼Œè·³è¿‡çš„æ˜¯#9#10#13#161#161ï¼Œå¯¹äºUCSç¼–ç ï¼Œè·³è¿‡çš„æ˜¯#9#10#13#$3000
 function SkipSpaceA(var p: PQCharA): Integer;
 function SkipSpaceU(var p: PQCharA): Integer;
 function SkipSpaceW(var p: PQCharW): Integer;
-// Ìø¹ıÒ»ĞĞ,ÒÔ#10ÎªĞĞ½áÎ²
+// è·³è¿‡ä¸€è¡Œ,ä»¥#10ä¸ºè¡Œç»“å°¾
 function SkipLineA(var p: PQCharA): Integer;
 function SkipLineU(var p: PQCharA): Integer;
 function SkipLineW(var p: PQCharW): Integer;
-// Ìø¹ıÖ±½ÓÓöµ½Ö¸¶¨µÄ×Ö·û
+// è·³è¿‡ç›´æ¥é‡åˆ°æŒ‡å®šçš„å­—ç¬¦
 function SkipUntilA(var p: PQCharA; AExpects: array of QCharA;
   AQuoter: QCharA = 0): Integer;
 function SkipUntilU(var p: PQCharA; AExpects: array of QCharA;
@@ -1054,12 +1054,12 @@ function SkipUntilW(var p: PQCharW; AExpects: array of QCharW;
   AQuoter: QCharW = #0): Integer; overload;
 function SkipUntilW(var p: PQCharW; AExpects: PQCharW; AQuoter: QCharW = #0)
   : Integer; overload;
-// ²éÕÒ×Ö·ûËùÔÚĞĞÁĞºÅ£¬·µ»ØĞĞµÄÆğÊ¼µØÖ·
+// æŸ¥æ‰¾å­—ç¬¦æ‰€åœ¨è¡Œåˆ—å·ï¼Œè¿”å›è¡Œçš„èµ·å§‹åœ°å€
 function StrPosA(Start, Current: PQCharA; var ACol, ARow: Integer): PQCharA;
 function StrPosU(Start, Current: PQCharA; var ACol, ARow: Integer): PQCharA;
 function StrPosW(Start, Current: PQCharW; var ACol, ARow: Integer): PQCharW;
 
-// ×Ö·û´®·Ö½â
+// å­—ç¬¦ä¸²åˆ†è§£
 function DecodeTokenA(var p: PQCharA; ADelimiters: array of QCharA;
   AQuoter: QCharA; AIgnoreSpace: Boolean): QStringA;
 function DecodeTokenU(var p: PQCharA; ADelimiters: array of QCharA;
@@ -1093,32 +1093,32 @@ function StrBetween(var S: PQCharW; AStartTag, AEndTag: QStringW;
 function TokenWithIndex(var S: PQCharW; AIndex: Integer; ADelimiters: PQCharW;
   AQuoter: QCharW; AIgnoreSapce: Boolean): QStringW;
 
-// »ñÈ¡Ò»ĞĞ
+// è·å–ä¸€è¡Œ
 function DecodeLineA(var p: PQCharA; ASkipEmpty: Boolean = True;
   AMaxSize: Integer = MaxInt): QStringA;
 function DecodeLineU(var p: PQCharA; ASkipEmpty: Boolean = True;
   AMaxSize: Integer = MaxInt): QStringA;
 function DecodeLineW(var p: PQCharW; ASkipEmpty: Boolean = True;
   AMaxSize: Integer = MaxInt; AQuoterChar: QCharW = #0): QStringW;
-// ´óĞ¡Ğ´×ª»»
+// å¤§å°å†™è½¬æ¢
 function CharUpperA(c: QCharA): QCharA;
 function CharUpperW(c: QCharW): QCharW;
 function CharLowerA(c: QCharA): QCharA;
 function CharLowerW(c: QCharW): QCharW;
 function UpperFirstW(const S: QStringW): QStringW;
-// ÅĞ¶ÏÊÇ·ñÊÇÒÔÖ¸¶¨µÄ×Ö·û´®¿ªÊ¼
+// åˆ¤æ–­æ˜¯å¦æ˜¯ä»¥æŒ‡å®šçš„å­—ç¬¦ä¸²å¼€å§‹
 function StartWithA(S, startby: PQCharA; AIgnoreCase: Boolean): Boolean;
 function StartWithU(S, startby: PQCharA; AIgnoreCase: Boolean): Boolean;
 function StartWithW(S, startby: PQCharW; AIgnoreCase: Boolean): Boolean;
-// ÅĞ¶ÏÊÇ·ñÒÔÖ¸¶¨µÄ×Ö·û´®½áÎ²
+// åˆ¤æ–­æ˜¯å¦ä»¥æŒ‡å®šçš„å­—ç¬¦ä¸²ç»“å°¾
 function EndWithA(const S, endby: QStringA; AIgnoreCase: Boolean): Boolean;
 function EndWithU(const S, endby: QStringA; AIgnoreCase: Boolean): Boolean;
 function EndWithW(const S, endby: QStringW; AIgnoreCase: Boolean): Boolean;
-// ¼ì²éÁ½¸ö×Ö·û´®´Ó¿ªÊ¼ËãÏàÍ¬µÄ×Ö·ûÊı
+// æ£€æŸ¥ä¸¤ä¸ªå­—ç¬¦ä¸²ä»å¼€å§‹ç®—ç›¸åŒçš„å­—ç¬¦æ•°
 function SameCharsA(s1, s2: PQCharA; AIgnoreCase: Boolean): Integer;
 function SameCharsU(s1, s2: PQCharA; AIgnoreCase: Boolean): Integer;
 function SameCharsW(s1, s2: PQCharW; AIgnoreCase: Boolean): Integer;
-// ¼ÓÔØÎÄ±¾
+// åŠ è½½æ–‡æœ¬
 function LoadTextA(const AFileName: String;
   AEncoding: TTextEncoding = teUnknown): QStringA; overload;
 function LoadTextA(AStream: TStream; AEncoding: TTextEncoding = teUnknown)
@@ -1131,11 +1131,11 @@ function LoadTextW(const AFileName: String;
   AEncoding: TTextEncoding = teUnknown): QStringW; overload;
 function LoadTextW(AStream: TStream; AEncoding: TTextEncoding = teUnknown)
   : QStringW; overload;
-// ¼ì²âÎÄ±¾±àÂë²¢¼ÓÔØÎÄ±¾ÄÚÈİ£¬×¢Òâ¶ÔÓÚÃ»ÓĞBOMµÄÎÄ±¾µÄ¼ì²â²»ÊÇ100%£¬ÓÈÆäÔÚÃ»ÓĞBOM
-// Ê±ÄÑÒÔÇø·ÖUnicodeºÍAnsi±àÂëµÄ×Ö·û
+// æ£€æµ‹æ–‡æœ¬ç¼–ç å¹¶åŠ è½½æ–‡æœ¬å†…å®¹ï¼Œæ³¨æ„å¯¹äºæ²¡æœ‰BOMçš„æ–‡æœ¬çš„æ£€æµ‹ä¸æ˜¯100%ï¼Œå°¤å…¶åœ¨æ²¡æœ‰BOM
+// æ—¶éš¾ä»¥åŒºåˆ†Unicodeå’ŒAnsiç¼–ç çš„å­—ç¬¦
 function DecodeText(p: Pointer; ASize: Integer;
   AEncoding: TTextEncoding = teUnknown): QStringW;
-// ±£´æÎÄ±¾
+// ä¿å­˜æ–‡æœ¬
 procedure SaveTextA(const AFileName: String; const S: QStringA); overload;
 procedure SaveTextA(AStream: TStream; const S: QStringA); overload;
 procedure SaveTextU(const AFileName: String; const S: QStringA;
@@ -1152,7 +1152,7 @@ procedure SaveTextW(AStream: TStream; const S: QStringW;
   AWriteBom: Boolean = True); overload;
 procedure SaveTextWBE(AStream: TStream; const S: QStringW;
   AWriteBom: Boolean = True); overload;
-// ×Ó´®²éÕÒ
+// å­ä¸²æŸ¥æ‰¾
 function StrStrA(s1, s2: PQCharA): PQCharA;
 function StrIStrA(s1, s2: PQCharA): PQCharA;
 function StrStrU(s1, s2: PQCharA): PQCharA;
@@ -1160,175 +1160,175 @@ function StrIStrU(s1, s2: PQCharA): PQCharA;
 function StrStrW(s1, s2: PQCharW): PQCharW;
 function StrIStrW(s1, s2: PQCharW): PQCharW;
 
-// ×Ö·û´®µÄ Like Æ¥Åä
+// å­—ç¬¦ä¸²çš„ Like åŒ¹é…
 function StrLikeX(var S: PQCharW; pat: PQCharW; AIgnoreCase: Boolean): PQCharW;
 function StrLikeW(S, pat: PQCharW; AIgnoreCase: Boolean): Boolean; overload;
-// ¼ÆËã×Ó´®µÄÆğÊ¼Î»ÖÃ
+// è®¡ç®—å­ä¸²çš„èµ·å§‹ä½ç½®
 function PosA(sub, S: PQCharA; AIgnoreCase: Boolean; AStartPos: Integer = 1)
   : Integer; overload;
 function PosA(sub, S: QStringA; AIgnoreCase: Boolean; AStartPos: Integer = 1)
   : Integer; overload;
-/// <summary>Posº¯ÊıµÄÔöÇ¿°æ±¾ÊµÏÖ</summary>
-/// <param name="sub">Òª²éÕÒµÄ×Ó×Ö·û´®</param>
-/// <param name="S">ÓÃÀ´²éÕÒµÄÔ­×Ö·û´®</param>
-/// <param name="AIgnoreCase">ÊÇ·ñºöÂÔ´óĞ¡Ğ´</param>
-/// <param name="AStartPos">ÆğÊ¼Î»ÖÃ£¬µÚÒ»¸ö×Ö·ûÎ»ÖÃÎª1</param>
-/// <returns>ÕÒµ½£¬·µ»Ø×Ó´®µÄÆğÊ¼Î»ÖÃ£¬Ê§°Ü£¬·µ»Ø0<returns>
+/// <summary>Poså‡½æ•°çš„å¢å¼ºç‰ˆæœ¬å®ç°</summary>
+/// <param name="sub">è¦æŸ¥æ‰¾çš„å­å­—ç¬¦ä¸²</param>
+/// <param name="S">ç”¨æ¥æŸ¥æ‰¾çš„åŸå­—ç¬¦ä¸²</param>
+/// <param name="AIgnoreCase">æ˜¯å¦å¿½ç•¥å¤§å°å†™</param>
+/// <param name="AStartPos">èµ·å§‹ä½ç½®ï¼Œç¬¬ä¸€ä¸ªå­—ç¬¦ä½ç½®ä¸º1</param>
+/// <returns>æ‰¾åˆ°ï¼Œè¿”å›å­ä¸²çš„èµ·å§‹ä½ç½®ï¼Œå¤±è´¥ï¼Œè¿”å›0<returns>
 function PosW(sub, S: PQCharW; AIgnoreCase: Boolean; AStartPos: Integer = 1)
   : Integer; overload;
-/// <param name="sub">Òª²éÕÒµÄ×Ó×Ö·û´®</param>
-/// <param name="S">ÓÃÀ´²éÕÒµÄÔ­×Ö·û´®</param>
-/// <param name="AIgnoreCase">ÊÇ·ñºöÂÔ´óĞ¡Ğ´</param>
-/// <param name="AStartPos">ÆğÊ¼Î»ÖÃ£¬µÚÒ»¸ö×Ö·ûÎ»ÖÃÎª1</param>
-/// <returns>ÕÒµ½£¬·µ»Ø×Ó´®µÄÆğÊ¼Î»ÖÃ£¬Ê§°Ü£¬·µ»Ø0<returns>
+/// <param name="sub">è¦æŸ¥æ‰¾çš„å­å­—ç¬¦ä¸²</param>
+/// <param name="S">ç”¨æ¥æŸ¥æ‰¾çš„åŸå­—ç¬¦ä¸²</param>
+/// <param name="AIgnoreCase">æ˜¯å¦å¿½ç•¥å¤§å°å†™</param>
+/// <param name="AStartPos">èµ·å§‹ä½ç½®ï¼Œç¬¬ä¸€ä¸ªå­—ç¬¦ä½ç½®ä¸º1</param>
+/// <returns>æ‰¾åˆ°ï¼Œè¿”å›å­ä¸²çš„èµ·å§‹ä½ç½®ï¼Œå¤±è´¥ï¼Œè¿”å›0<returns>
 function PosW(sub, S: QStringW; AIgnoreCase: Boolean; AStartPos: Integer = 1)
   : Integer; overload;
-// ×Ö·û´®¸´ÖÆ
+// å­—ç¬¦ä¸²å¤åˆ¶
 function StrDupX(const S: PQCharW; ACount: Integer): QStringW;
 function StrDupW(const S: PQCharW; AOffset: Integer = 0;
   const ACount: Integer = MaxInt): QStringW;
 procedure StrCpyW(d: PQCharW; S: PQCharW; ACount: Integer = -1);
-// ×Ö·û´®±È½Ï
+// å­—ç¬¦ä¸²æ¯”è¾ƒ
 function StrCmpA(const s1, s2: PQCharA; AIgnoreCase: Boolean): Integer;
 function StrCmpW(const s1, s2: PQCharW; AIgnoreCase: Boolean): Integer;
 function StrNCmpW(const s1, s2: PQCharW; AIgnoreCase: Boolean;
   ALength: Integer): Integer;
 function NaturalCompareW(s1, s2: PQCharW; AIgnoreCase: Boolean;
   AIgnoreSpace: Boolean = True): Integer;
-// Ê®Áù½øÖÆÏà¹Øº¯Êı
+// åå…­è¿›åˆ¶ç›¸å…³å‡½æ•°
 function IsHexChar(c: QCharW): Boolean; inline;
 function IsOctChar(c: QCharW): Boolean; inline;
 function HexValue(c: QCharW): Integer; inline;
 function HexChar(V: Byte): QCharW; inline;
-// ÀàĞÍ×ª»»º¯Êı
+// ç±»å‹è½¬æ¢å‡½æ•°
 function TryStrToGuid(const S: QStringW; var AGuid: TGuid): Boolean;
 function TryStrToIPV4(const S: QStringW; var AIPV4:
 {$IFDEF MSWINDOWS}Integer{$ELSE}Cardinal{$ENDIF}): Boolean;
-/// StringReplace ÔöÇ¿
+/// StringReplace å¢å¼º
 function StringReplaceW(const S, Old, New: QStringW; AFlags: TReplaceFlags)
   : QStringW; overload;
-/// <summary>Ìæ»»Ö¸¶¨·¶Î§ÄÚµÄ×Ö·ûÎªÖ¸¶¨µÄ×Ö·û</summary>
-/// <param name="AChar">Õ¼Î»×Ö·û</param>
-/// <param name="AFrom">¿ªÊ¼Î»ÖÃ£¬´Ó0¿ªÊ¼</param>
-/// <param name="ACount">Ìæ»»ÊıÁ¿</param>
-/// <returns>·µ»ØÌæ»»ºóµÄ×Ö·û´®</returns>
+/// <summary>æ›¿æ¢æŒ‡å®šèŒƒå›´å†…çš„å­—ç¬¦ä¸ºæŒ‡å®šçš„å­—ç¬¦</summary>
+/// <param name="AChar">å ä½å­—ç¬¦</param>
+/// <param name="AFrom">å¼€å§‹ä½ç½®ï¼Œä»0å¼€å§‹</param>
+/// <param name="ACount">æ›¿æ¢æ•°é‡</param>
+/// <returns>è¿”å›æ›¿æ¢åçš„å­—ç¬¦ä¸²</returns>
 function StringReplaceW(const S: QStringW; const AChar: QCharW;
   AFrom, ACount: Integer): QStringW; overload;
-/// <summary>Ê¹ÓÃÖ¸¶¨µÄÄÚÈİÌæ»»AStartTagºÍEndTagÖ®¼äµÄÄÚÈİ</summary>
+/// <summary>ä½¿ç”¨æŒ‡å®šçš„å†…å®¹æ›¿æ¢AStartTagå’ŒEndTagä¹‹é—´çš„å†…å®¹</summary>
 /// <params>
-/// <param name="S">Òª²éÕÒÌæ»»µÄ×Ö·û´®</param>
-/// <param name="AStartTag">¿ªÊ¼µÄ±êÇ©Ãû³Æ</param>
-/// <param name="AEndTag">½áÊøµÄ±êÇ©Ãû³Æ</param>
-/// <param name="AReplaced">Ìæ»»µÄ½á¹û</param>
-/// <param name="AWithTag">ÊÇ·ñÁ¬Í¬AStartTagºÍAEndTag±êÇ©Ò»ÆğÌæ»»µô</param>
-/// <param name="AIgnoreCase">±È½Ï±êÇ©Ãû³ÆÊ±ÊÇ·ñºöÂÔ´óĞ¡</param>
-/// <param name="AMaxTimes">×î´óÌæ»»´ÎÊı£¬Ä¬ÈÏÎª1</param>
+/// <param name="S">è¦æŸ¥æ‰¾æ›¿æ¢çš„å­—ç¬¦ä¸²</param>
+/// <param name="AStartTag">å¼€å§‹çš„æ ‡ç­¾åç§°</param>
+/// <param name="AEndTag">ç»“æŸçš„æ ‡ç­¾åç§°</param>
+/// <param name="AReplaced">æ›¿æ¢çš„ç»“æœ</param>
+/// <param name="AWithTag">æ˜¯å¦è¿åŒAStartTagå’ŒAEndTagæ ‡ç­¾ä¸€èµ·æ›¿æ¢æ‰</param>
+/// <param name="AIgnoreCase">æ¯”è¾ƒæ ‡ç­¾åç§°æ—¶æ˜¯å¦å¿½ç•¥å¤§å°</param>
+/// <param name="AMaxTimes">æœ€å¤§æ›¿æ¢æ¬¡æ•°ï¼Œé»˜è®¤ä¸º1</param>
 /// </params>
-/// <returns>·µ»ØÌæ»»ºóµÄÄÚÈİ</returns>
+/// <returns>è¿”å›æ›¿æ¢åçš„å†…å®¹</returns>
 function StringReplaceWithW(const S, AStartTag, AEndTag, AReplaced: QStringW;
   AWithTag, AIgnoreCase: Boolean; AMaxTimes: Cardinal = 1): QStringW;
-/// ÖØ¸´Ö¸¶¨µÄ×Ö·ûN´Î
+/// é‡å¤æŒ‡å®šçš„å­—ç¬¦Næ¬¡
 function StringReplicateW(const S: QStringW; ACount: Integer)
   : QStringW; overload;
 function StringReplicateW(const S, AChar: QStringW; AExpectLength: Integer)
   : QStringW; overload;
-/// <summary>¹ıÂËµô×Ö·û´®ÄÚÈİÖĞ²»ĞèÒªµÄ×Ö·û</summary>
-/// <param name="S">Òª¹ıÂËµÄ×Ö·û´®</param>
-/// <param name="AcceptChars">ÔÊĞíµÄ×Ö·ûÁĞ±í</param>
-/// <returns>·µ»Ø¹ıÂËºóµÄ½á¹û</returns>
+/// <summary>è¿‡æ»¤æ‰å­—ç¬¦ä¸²å†…å®¹ä¸­ä¸éœ€è¦çš„å­—ç¬¦</summary>
+/// <param name="S">è¦è¿‡æ»¤çš„å­—ç¬¦ä¸²</param>
+/// <param name="AcceptChars">å…è®¸çš„å­—ç¬¦åˆ—è¡¨</param>
+/// <returns>è¿”å›è¿‡æ»¤åçš„ç»“æœ</returns>
 function FilterCharW(const S: QStringW; AcceptChars: QStringW)
   : QStringW; overload;
-/// <summary>¹ıÂËµô×Ö·û´®ÄÚÈİÖĞ²»ĞèÒªµÄ×Ö·û</summary>
-/// <param name="S">Òª¹ıÂËµÄ×Ö·û´®</param>
-/// <param name="AOnValidate">ÓÃÓÚ¹ıÂËµÄ»Øµ÷º¯Êı</param>
-/// <param name="ATag">ÓÃ»§×Ô¶¨ÒåµÄ¸½¼Ó²ÎÊı£¬»á´«µİ¸øAOnValidateÊÂ¼ş</param>
-/// <returns>·µ»Ø¹ıÂËºóµÄ½á¹û</returns>
+/// <summary>è¿‡æ»¤æ‰å­—ç¬¦ä¸²å†…å®¹ä¸­ä¸éœ€è¦çš„å­—ç¬¦</summary>
+/// <param name="S">è¦è¿‡æ»¤çš„å­—ç¬¦ä¸²</param>
+/// <param name="AOnValidate">ç”¨äºè¿‡æ»¤çš„å›è°ƒå‡½æ•°</param>
+/// <param name="ATag">ç”¨æˆ·è‡ªå®šä¹‰çš„é™„åŠ å‚æ•°ï¼Œä¼šä¼ é€’ç»™AOnValidateäº‹ä»¶</param>
+/// <returns>è¿”å›è¿‡æ»¤åçš„ç»“æœ</returns>
 function FilterCharW(const S: QStringW; AOnValidate: TQFilterCharEvent;
   ATag: Pointer = nil): QStringW; overload;
 {$IFDEF UNICODE}
-/// <summary>¹ıÂËµô×Ö·û´®ÄÚÈİÖĞ²»ĞèÒªµÄ×Ö·û</summary>
-/// <param name="S">Òª¹ıÂËµÄ×Ö·û´®</param>
-/// <param name="AOnValidate">ÓÃÓÚ¹ıÂËµÄ»Øµ÷º¯Êı</param>
-/// <param name="ATag">ÓÃ»§×Ô¶¨ÒåµÄ¸½¼Ó²ÎÊı£¬»á´«µİ¸øAOnValidateÊÂ¼ş</param>
-/// <returns>·µ»Ø¹ıÂËºóµÄ½á¹û</returns>
+/// <summary>è¿‡æ»¤æ‰å­—ç¬¦ä¸²å†…å®¹ä¸­ä¸éœ€è¦çš„å­—ç¬¦</summary>
+/// <param name="S">è¦è¿‡æ»¤çš„å­—ç¬¦ä¸²</param>
+/// <param name="AOnValidate">ç”¨äºè¿‡æ»¤çš„å›è°ƒå‡½æ•°</param>
+/// <param name="ATag">ç”¨æˆ·è‡ªå®šä¹‰çš„é™„åŠ å‚æ•°ï¼Œä¼šä¼ é€’ç»™AOnValidateäº‹ä»¶</param>
+/// <returns>è¿”å›è¿‡æ»¤åçš„ç»“æœ</returns>
 function FilterCharW(const S: QStringW; AOnValidate: TQFilterCharEventA;
   ATag: Pointer = nil): QStringW; overload;
 {$ENDIF}
-/// <summary>¹ıÂËµôËùÓĞ·ÇÊıÖµÀàĞÍµÄ×Ö·û£¬´Ó¶ø½«Æä¸ñÊ½»¯Ò»¸öÏà¶Ô±ê×¼µÄ¸¡µãÊı</summary>
-/// <param name="S">Òª¹ıÂËµÄ×Ö·û´®</param>
-/// <param name="Accepts">¹ıÂËÌõ¼ş×é¼ş</param>
-/// <returns>·µ»Ø¹ıÂËºóµÄ½á¹û</returns>
+/// <summary>è¿‡æ»¤æ‰æ‰€æœ‰éæ•°å€¼ç±»å‹çš„å­—ç¬¦ï¼Œä»è€Œå°†å…¶æ ¼å¼åŒ–ä¸€ä¸ªç›¸å¯¹æ ‡å‡†çš„æµ®ç‚¹æ•°</summary>
+/// <param name="S">è¦è¿‡æ»¤çš„å­—ç¬¦ä¸²</param>
+/// <param name="Accepts">è¿‡æ»¤æ¡ä»¶ç»„ä»¶</param>
+/// <returns>è¿”å›è¿‡æ»¤åçš„ç»“æœ</returns>
 /// <remarks>
-/// FilterNoNumberW ¹ıÂËºóµÄ½á¹û¿ÉÒÔÊ¹ÓÃ ParseNumeric ½âÎöÎªÊı×é£¬´ó²¿·ÖÇé¿öÏÂÒ²
-/// ¿ÉÒÔ±»StrToFloat½âÎö£¨µ«StrToFloat²»Ö§³ÖÓĞĞ©ÌØÊâ¸ñÊ½£©
+/// FilterNoNumberW è¿‡æ»¤åçš„ç»“æœå¯ä»¥ä½¿ç”¨ ParseNumeric è§£æä¸ºæ•°ç»„ï¼Œå¤§éƒ¨åˆ†æƒ…å†µä¸‹ä¹Ÿ
+/// å¯ä»¥è¢«StrToFloatè§£æï¼ˆä½†StrToFloatä¸æ”¯æŒæœ‰äº›ç‰¹æ®Šæ ¼å¼ï¼‰
 
 function FilterNoNumberW(const S: QStringW; Accepts: TQNumberTypes): QStringW;
-/// <summary>¼òÌåÖĞÎÄ×ª»»Îª·±ÌåÖĞÎÄ</summary>
-/// <param name="S">Òª×ª»»µÄ×Ö·û´®</param>
-/// <returns>·µ»Ø×ª»»ºóµÄ½á¹û</returns>
+/// <summary>ç®€ä½“ä¸­æ–‡è½¬æ¢ä¸ºç¹ä½“ä¸­æ–‡</summary>
+/// <param name="S">è¦è½¬æ¢çš„å­—ç¬¦ä¸²</param>
+/// <returns>è¿”å›è½¬æ¢åçš„ç»“æœ</returns>
 function SimpleChineseToTraditional(S: QStringW): QStringW;
-/// <summary>·±ÌåÖĞÎÄ×ª»»Îª¼òÌåÖĞÎÄ</summary>
-/// <param name="S">Òª×ª»»µÄ×Ö·û´®</param>
-/// <returns>·µ»Ø×ª»»ºóµÄ½á¹û</returns>
+/// <summary>ç¹ä½“ä¸­æ–‡è½¬æ¢ä¸ºç®€ä½“ä¸­æ–‡</summary>
+/// <param name="S">è¦è½¬æ¢çš„å­—ç¬¦ä¸²</param>
+/// <returns>è¿”å›è½¬æ¢åçš„ç»“æœ</returns>
 function TraditionalChineseToSimple(S: QStringW): QStringW;
-/// <summary> ½«»õ±ÒÖµ×ª»»Îªºº×Ö´óĞ´</summary>
-/// <param name="AVal">»õ±ÒÖµ</param>
-/// <param name="AFlags">±êÖ¾Î»×éºÏ£¬ÒÔ¾ö¶¨Êä³ö½á¹ûµÄ¸ñÊ½</param>
-/// <param name="ANegText">µ±»õ±ÒÖµÎª¸ºÊıÊ±£¬ÏÔÊ¾µÄÇ°×º</param>
-/// <param name="AStartText">Ç°µ¼×Ö·û´®£¬Èç¡°ÈËÃñ±Ò£º¡±</param>
-/// <param name="AEndText">ºóÖÃ×Ö·û´®£¬Èç¡°Õû¡±</param>
-/// <param name="AGroupNum">×éÊı£¬Ã¿¸öÊı×ÖÓëÆäµ¥Î»¹¹³ÉÒ»¸öÊı×é£¬AGroupNumÖ¸³öÒªÇóµÄ×éÊıÁ¿£¬²»Îª0Ê±£¬»áºöÂÔ±êÖ¾Î»ÖĞµÄMC_HIDE_ZEROºÍMC_MERGE_ZERO</param>
-/// <param name="ARoundMethod">½ğ¶îÉáÈëµ½·ÖÊ±µÄËã·¨</param>
-/// <param name="AEndDigts">Ğ¡ÊıµãºóµÄÎ»Êı£¬-16~4 Ö®¼ä</param>
-/// <returns>·µ»Ø¸ñÊ½»¯ºóµÄ×Ö·û´®</returns>
+/// <summary> å°†è´§å¸å€¼è½¬æ¢ä¸ºæ±‰å­—å¤§å†™</summary>
+/// <param name="AVal">è´§å¸å€¼</param>
+/// <param name="AFlags">æ ‡å¿—ä½ç»„åˆï¼Œä»¥å†³å®šè¾“å‡ºç»“æœçš„æ ¼å¼</param>
+/// <param name="ANegText">å½“è´§å¸å€¼ä¸ºè´Ÿæ•°æ—¶ï¼Œæ˜¾ç¤ºçš„å‰ç¼€</param>
+/// <param name="AStartText">å‰å¯¼å­—ç¬¦ä¸²ï¼Œå¦‚â€œäººæ°‘å¸ï¼šâ€</param>
+/// <param name="AEndText">åç½®å­—ç¬¦ä¸²ï¼Œå¦‚â€œæ•´â€</param>
+/// <param name="AGroupNum">ç»„æ•°ï¼Œæ¯ä¸ªæ•°å­—ä¸å…¶å•ä½æ„æˆä¸€ä¸ªæ•°ç»„ï¼ŒAGroupNumæŒ‡å‡ºè¦æ±‚çš„ç»„æ•°é‡ï¼Œä¸ä¸º0æ—¶ï¼Œä¼šå¿½ç•¥æ ‡å¿—ä½ä¸­çš„MC_HIDE_ZEROå’ŒMC_MERGE_ZERO</param>
+/// <param name="ARoundMethod">é‡‘é¢èˆå…¥åˆ°åˆ†æ—¶çš„ç®—æ³•</param>
+/// <param name="AEndDigts">å°æ•°ç‚¹åçš„ä½æ•°ï¼Œ-16~4 ä¹‹é—´</param>
+/// <returns>è¿”å›æ ¼å¼åŒ–åçš„å­—ç¬¦ä¸²</returns>
 function CapMoney(AVal: Currency; AFlags: Integer;
   ANegText, AStartText, AEndText: QStringW; AGroupNum: Integer;
   ARoundMethod: TMoneyRoundMethod; AEndDigits: Integer = 2): QStringW;
 
 /// <summary>
-/// ÅĞ¶ÏÖ¸¶¨µÄ×Ö·û´®ÊÇ·ñÊÇÒ»¸öÓĞĞ§µÄÃû³Æ
+/// åˆ¤æ–­æŒ‡å®šçš„å­—ç¬¦ä¸²æ˜¯å¦æ˜¯ä¸€ä¸ªæœ‰æ•ˆçš„åç§°
 /// </summary>
 /// <param name="S">
-/// ÒªÅĞ¶ÏµÄ×Ö·û´®
+/// è¦åˆ¤æ–­çš„å­—ç¬¦ä¸²
 /// </param>
 /// <param name="AllowChars">
-/// ÔÊĞíµÄ×Ö·ûÀàĞÍ
+/// å…è®¸çš„å­—ç¬¦ç±»å‹
 /// </param>
 /// <param name="AMinLen">
-/// ×îĞ¡ÔÊĞíµÄ×Ö·ûÊı
+/// æœ€å°å…è®¸çš„å­—ç¬¦æ•°
 /// </param>
 /// <param name="AMaxLen">
-/// ×î´óÔÊĞíµÄ×Ö·ûÊı
+/// æœ€å¤§å…è®¸çš„å­—ç¬¦æ•°
 /// </param>
 /// <param name="AOnTest">
-/// ÓÃ»§×Ô¶¨Òå²âÊÔ¹æÔò»Øµ÷
+/// ç”¨æˆ·è‡ªå®šä¹‰æµ‹è¯•è§„åˆ™å›è°ƒ
 /// </param>
 function IsHumanName(S: QStringW; AllowChars: TNameCharSet;
   AMinLen: Integer = 2; AMaxLen: Integer = 15;
   AOnTest: TQCustomNameCharTest = nil): Boolean;
 /// <summary>
-/// ÅĞ¶ÏÖ¸¶¨µÄ×Ö·û´®ÊÇ·ñÊÇÒ»¸öÖĞ¹úÈËĞÕÃû
+/// åˆ¤æ–­æŒ‡å®šçš„å­—ç¬¦ä¸²æ˜¯å¦æ˜¯ä¸€ä¸ªä¸­å›½äººå§“å
 /// </summary>
 function IsChineseName(S: QStringW): Boolean;
 /// <summary>
-/// ÅĞ¶ÏÖ¸¶¨µÄ×Ö·û´®ÊÇ·ñÊÇÒ»¸öÓĞĞ§µÄÍâ¹úÈËÃû
+/// åˆ¤æ–­æŒ‡å®šçš„å­—ç¬¦ä¸²æ˜¯å¦æ˜¯ä¸€ä¸ªæœ‰æ•ˆçš„å¤–å›½äººå
 /// </summary>
 function IsNoChineseName(S: QStringW): Boolean;
 /// <summary>
-/// ÅĞ¶ÏÖ¸¶¨µÄ×Ö·û´®ÊÇ·ñÊÇÓĞĞ§µÄÖĞ¹úµØÖ·
+/// åˆ¤æ–­æŒ‡å®šçš„å­—ç¬¦ä¸²æ˜¯å¦æ˜¯æœ‰æ•ˆçš„ä¸­å›½åœ°å€
 /// </summary>
 function IsChineseAddr(S: QStringW; AMinLength: Integer = 3): Boolean;
 /// <summary>
-/// ÅĞ¶ÏÖ¸¶¨µÄ×Ö·û´®ÊÇ·ñÊÇÓĞĞ§µÄÍâ¹úµØÖ·
+/// åˆ¤æ–­æŒ‡å®šçš„å­—ç¬¦ä¸²æ˜¯å¦æ˜¯æœ‰æ•ˆçš„å¤–å›½åœ°å€
 /// </summary>
 function IsNoChineseAddr(S: QStringW; AMinLength: Integer = 3): Boolean;
-/// ²éÕÒÖ¸¶¨µÄ¶ş½øÖÆÄÚÈİ³öÏÖµÄÆğÊ¼Î»ÖÃ
+/// æŸ¥æ‰¾æŒ‡å®šçš„äºŒè¿›åˆ¶å†…å®¹å‡ºç°çš„èµ·å§‹ä½ç½®
 function MemScan(S: Pointer; len_s: Integer; sub: Pointer;
   len_sub: Integer): Pointer;
 function BinaryCmp(const p1, p2: Pointer; len: Integer): Integer;
 {$IFNDEF WIN64}inline; {$ENDIF}
-// ÏÂÃæµÄº¯ÊıÖ»ÄÜUnicode°æ±¾£¬Ã»ÓĞAnsiºÍUTF-8°æ±¾£¬Èç¹ûĞèÒª£¬ÔÙ¼ÓÈë
-// ·Ö½âÃû³Æ-Öµ¶Ô
+// ä¸‹é¢çš„å‡½æ•°åªèƒ½Unicodeç‰ˆæœ¬ï¼Œæ²¡æœ‰Ansiå’ŒUTF-8ç‰ˆæœ¬ï¼Œå¦‚æœéœ€è¦ï¼Œå†åŠ å…¥
+// åˆ†è§£åç§°-å€¼å¯¹
 function NameOfW(const S: QStringW; ASpliter: QCharW): QStringW;
 function ValueOfW(const S: QStringW; ASpliter: QCharW): QStringW;
 function IndexOfNameW(AList: TStrings; const AName: QStringW;
@@ -1363,7 +1363,7 @@ function LeftStrCount(const S: QStringW; const sub: QStringW;
   AIgnoreCase: Boolean): Integer;
 function RightPosW(const S: QStringW; const sub: QStringW;
   AIgnoreCase: Boolean): Integer;
-// ÏÂÃæÊÇÒ»Ğ©¸¨Öúº¯Êı
+// ä¸‹é¢æ˜¯ä¸€äº›è¾…åŠ©å‡½æ•°
 function ParseInt(var S: PQCharW; var ANum: Int64): Integer;
 function ParseHex(var p: PQCharW; var Value: Int64): Integer;
 function ParseNumeric(var S: PQCharW; var ANum: Extended): Boolean;
@@ -1385,16 +1385,16 @@ function ExchangeByteOrder(V: Double): Double; overload; // inline;
 
 procedure FreeObject(AObject: TObject); inline;
 procedure FreeAndNilObject(var AObject); inline;
-// Ô­×Ó²Ù×÷º¯Êı
+// åŸå­æ“ä½œå‡½æ•°
 function AtomicAnd(var Dest: Integer; const AMask: Integer): Integer;
 function AtomicOr(var Dest: Integer; const AMask: Integer): Integer;
 {$IF RTLVersion<24}
-// ÎªÓëXE6¼æÈİ£¬InterlockedCompareExchangeµÈ¼Û
+// ä¸ºä¸XE6å…¼å®¹ï¼ŒInterlockedCompareExchangeç­‰ä»·
 function AtomicCmpExchange(var Target: Integer; Value: Integer;
   Comparand: Integer): Integer; inline; overload;
 function AtomicCmpExchange(var Target: Pointer; Value: Pointer;
   Comparand: Pointer): Pointer; inline; overload;
-// µÈ¼ÛÓÚInterlockedExchanged
+// ç­‰ä»·äºInterlockedExchanged
 function AtomicExchange(var Target: Integer; Value: Integer): Integer;
   inline; overload;
 function AtomicExchange(var Target: Pointer; Value: Pointer): Pointer;
@@ -1411,63 +1411,63 @@ function BinToHex(const ABytes: TBytes; ALowerCase: Boolean = false)
   : QStringW; overload;
 function HexToBin(const S: QStringW): TBytes; overload;
 procedure HexToBin(const S: QStringW; var AResult: TBytes); overload;
-// ¼ÆËãÖ¸¶¨ÄÚÈİµÄ¹şÏ£Öµ
+// è®¡ç®—æŒ‡å®šå†…å®¹çš„å“ˆå¸Œå€¼
 function HashOf(p: Pointer; l: Integer): Cardinal;
 function NewId: TGuid;
 function SameId(const V1, V2: TGuid): Boolean;
 
-/// <summary>¼ÆËãÖ¸¶¨ÄÚÈİµÄÃÜÂëÇ¿¶È</summary>
-/// <param name="S">ÃÜÂë</param>
-/// <returns>·µ»ØÒ»¸ö>=0µÄÃÜÂëÇ¿¶ÈÖµ</returns>
+/// <summary>è®¡ç®—æŒ‡å®šå†…å®¹çš„å¯†ç å¼ºåº¦</summary>
+/// <param name="S">å¯†ç </param>
+/// <returns>è¿”å›ä¸€ä¸ª>=0çš„å¯†ç å¼ºåº¦å€¼</returns>
 function PasswordScale(const S: QStringW): Integer;
-/// <summary>½«Ö¸¶¨µÄÃÜÂëÇ¿¶ÈÏµÊı×ª»»ÎªÇ¿¶ÈµÈ¼¶</summary>
-/// <param name="AScale">Í¨¹ıPasswordScaleµÃµ½µÄÇ¿¶ÈµÈ¼¶</param>
-/// <returns>·µ»Ø×ª»»ºóµÄÇ¿¶ÈµÈ¼¶</returns>
+/// <summary>å°†æŒ‡å®šçš„å¯†ç å¼ºåº¦ç³»æ•°è½¬æ¢ä¸ºå¼ºåº¦ç­‰çº§</summary>
+/// <param name="AScale">é€šè¿‡PasswordScaleå¾—åˆ°çš„å¼ºåº¦ç­‰çº§</param>
+/// <returns>è¿”å›è½¬æ¢åçš„å¼ºåº¦ç­‰çº§</returns>
 function CheckPassword(const AScale: Integer): TPasswordStrongLevel; overload;
-/// <summary>¼ÆËãÖ¸¶¨ÄÚÈİµÄÃÜÂëµÄÇ¿¶ÈµÈ¼¶</summary>
-/// <param name="S">ÃÜÂë</param>
-/// <returns>·µ»Ø¼ÆËãµÃµ½µÄÇ¿¶ÈµÈ¼¶</returns>
+/// <summary>è®¡ç®—æŒ‡å®šå†…å®¹çš„å¯†ç çš„å¼ºåº¦ç­‰çº§</summary>
+/// <param name="S">å¯†ç </param>
+/// <returns>è¿”å›è®¡ç®—å¾—åˆ°çš„å¼ºåº¦ç­‰çº§</returns>
 function CheckPassword(const S: QStringW): TPasswordStrongLevel; overload;
-/// <summary>¼ì²éÖ¸¶¨µÄÖĞ¹úÉí·İÖ¤ºÅµÄÓĞĞ§ĞÔ</summary>
-/// <param name="CardNo">Éí·İÖ¤ºÅ</param>
-/// <returns>ºÅÂë·ûºÏ¹æÔò£¬·µ»Øtrue£¬·ñÔò£¬·µ»Øfalse</returns>
+/// <summary>æ£€æŸ¥æŒ‡å®šçš„ä¸­å›½èº«ä»½è¯å·çš„æœ‰æ•ˆæ€§</summary>
+/// <param name="CardNo">èº«ä»½è¯å·</param>
+/// <returns>å·ç ç¬¦åˆè§„åˆ™ï¼Œè¿”å›trueï¼Œå¦åˆ™ï¼Œè¿”å›false</returns>
 function IsChineseIdNo(CardNo: QStringW): Boolean;
-/// <summary>½âÎöÖ¸¶¨µÄÖĞ¹ú´óÂ½Éí·İÖ¤ºÅµÄ×é³É²¿·Ö</summary>
-/// <param name="CardNo">Éí·İÖ¤ºÅ</param>
-/// <param name="AreaCode">ĞĞÕşÇø»®´úÂë</param>
-/// <param name="Birthday">³öÉúÈÕÆÚ</param>
-/// <param name="IsFemale">ĞÔ±ğ£¬ÄĞÎªtrue£¬Å®Îªfalse</param>
-/// <returns>Éí·İÖ¤ºÅÓĞĞ§£¬·µ»Øtrue£¬²¢Í¨¹ı²ÎÊı·µ»Ø¸÷¸ö²¿·Ö£¬·ñÔò£¬·µ»Øfalse</returns>
+/// <summary>è§£ææŒ‡å®šçš„ä¸­å›½å¤§é™†èº«ä»½è¯å·çš„ç»„æˆéƒ¨åˆ†</summary>
+/// <param name="CardNo">èº«ä»½è¯å·</param>
+/// <param name="AreaCode">è¡Œæ”¿åŒºåˆ’ä»£ç </param>
+/// <param name="Birthday">å‡ºç”Ÿæ—¥æœŸ</param>
+/// <param name="IsFemale">æ€§åˆ«ï¼Œç”·ä¸ºtrueï¼Œå¥³ä¸ºfalse</param>
+/// <returns>èº«ä»½è¯å·æœ‰æ•ˆï¼Œè¿”å›trueï¼Œå¹¶é€šè¿‡å‚æ•°è¿”å›å„ä¸ªéƒ¨åˆ†ï¼Œå¦åˆ™ï¼Œè¿”å›false</returns>
 function DecodeChineseId(CardNo: QStringW; var AreaCode: QStringW;
   var Birthday: TDateTime; var IsFemale: Boolean): Boolean;
 function AreaCodeOfChineseId(CardNo: QStringW): QStringW;
 function AgeOfChineseId(CardNo: QStringW; ACalcDate: TDateTime = 0): Integer;
 function BirthdayOfChineseId(CardNo: QStringW): TDateTime;
 function SexOfChineseId(CardNo: QStringW): TQHumanSex;
-/// <summary>¼ì²éÖ¸¶¨µÄ×Ö·û´®ÊÇ·ñ·ûºÏµç×ÓÓÊÏä¸ñÊ½</summary>
-/// <param name="S">Òª¼ì²éµÄµç×ÓÓÊÏäµØÖ·</param>
-/// <returns>Èç¹ûÊÇx@y.z¸ñÊ½£¬Ôò·µ»Øtrue£¬·ñÔò£¬·µ»Øfalse</returns>
+/// <summary>æ£€æŸ¥æŒ‡å®šçš„å­—ç¬¦ä¸²æ˜¯å¦ç¬¦åˆç”µå­é‚®ç®±æ ¼å¼</summary>
+/// <param name="S">è¦æ£€æŸ¥çš„ç”µå­é‚®ç®±åœ°å€</param>
+/// <returns>å¦‚æœæ˜¯x@y.zæ ¼å¼ï¼Œåˆ™è¿”å›trueï¼Œå¦åˆ™ï¼Œè¿”å›false</returns>
 function IsEmailAddr(S: QStringW): Boolean;
-/// <summary>¼ì²éÊÇ·ñÊÇÖĞ¹úÊÖ»úºÅÂë¸ñÊ½</summary>
-/// <param name="S">Òª¼ì²éµÄÊÖ»úºÅÂë</param>
-/// <returns>Èç¹ûÊÇ11Î»Êı×Ö£¬ÇÒÊÇÒÔ1´òÍ·£¬Ôò·µ»Øtrue£¬·ñÔò·µ»Øfalse</returns>
+/// <summary>æ£€æŸ¥æ˜¯å¦æ˜¯ä¸­å›½æ‰‹æœºå·ç æ ¼å¼</summary>
+/// <param name="S">è¦æ£€æŸ¥çš„æ‰‹æœºå·ç </param>
+/// <returns>å¦‚æœæ˜¯11ä½æ•°å­—ï¼Œä¸”æ˜¯ä»¥1æ‰“å¤´ï¼Œåˆ™è¿”å›trueï¼Œå¦åˆ™è¿”å›false</returns>
 function IsChineseMobile(S: QStringW): Boolean;
-/// <summary>»ñÈ¡Ö¸¶¨µÄÎÄ¼şµÄ´óĞ¡</summary>
-/// <param name="S">Òª²éÑ¯µÄÎÄ¼şÃû</param>
-/// <returns>³É¹¦£¬·µ»ØÊµ¼ÊµÄÎÄ¼ş´óĞ¡£¬Ê§°Ü£¬·µ»Ø-1</returns>
+/// <summary>è·å–æŒ‡å®šçš„æ–‡ä»¶çš„å¤§å°</summary>
+/// <param name="S">è¦æŸ¥è¯¢çš„æ–‡ä»¶å</param>
+/// <returns>æˆåŠŸï¼Œè¿”å›å®é™…çš„æ–‡ä»¶å¤§å°ï¼Œå¤±è´¥ï¼Œè¿”å›-1</returns>
 function SizeOfFile(const S: QStringW): Int64;
-/// <summary>ÅĞ¶ÏÁ½¸öÊÂ¼şÏìÓ¦º¯ÊıÊÇ·ñÏàµÈ</summary>
-/// <param name="Left">µÚÒ»¸öÊÂ¼şÏìÓ¦º¯Êı</param>
-/// <param name="Right">µÚ¶ş¸öÊÂ¼şÏìÓ¦º¯Êı</param>
-/// <returns>ÏàµÈ£¬·µ»Øtrue£¬²»ÏàµÈ£¬·µ»ØFalse</param>
+/// <summary>åˆ¤æ–­ä¸¤ä¸ªäº‹ä»¶å“åº”å‡½æ•°æ˜¯å¦ç›¸ç­‰</summary>
+/// <param name="Left">ç¬¬ä¸€ä¸ªäº‹ä»¶å“åº”å‡½æ•°</param>
+/// <param name="Right">ç¬¬äºŒä¸ªäº‹ä»¶å“åº”å‡½æ•°</param>
+/// <returns>ç›¸ç­‰ï¼Œè¿”å›trueï¼Œä¸ç›¸ç­‰ï¼Œè¿”å›False</param>
 function MethodEqual(const Left, Right: TMethod): Boolean; inline;
-/// <summary>ºÏ²¢Á½¸öURL,Ïàµ±ÓÚTURIÀïµÄÏà¶ÔÂ·¾¶×ª»»Îª¾ø¶ÔÂ·¾¶µÄº¯Êı</summary>
-/// <param name="ABase">»ù×¼Â·¾¶</param>
-/// <param name="ARel">Ïà¶ÔÂ·¾¶</param>
+/// <summary>åˆå¹¶ä¸¤ä¸ªURL,ç›¸å½“äºTURIé‡Œçš„ç›¸å¯¹è·¯å¾„è½¬æ¢ä¸ºç»å¯¹è·¯å¾„çš„å‡½æ•°</summary>
+/// <param name="ABase">åŸºå‡†è·¯å¾„</param>
+/// <param name="ARel">ç›¸å¯¹è·¯å¾„</param>
 /// <returns>
-/// 1.Èç¹ûARelÊÇÒ»¸ö¾ø¶ÔÂ·¾¶£¬ÔòÖ±½Ó·µ»Ø¸ÃÂ·¾¶.
-/// 2.Èç¹ûARelÊÇÒ»¸öÒÔ//¿ªÊ¼µÄ¾ø¶ÔÂ·¾¶£¬Ôò¿½±´ABaseµÄĞ­ÒéÀàĞÍ£¬¼ÓÉÏARelĞÎ³ÉĞÂÂ·¾¶
-/// 3.Èç¹ûARelÊÇÒ»¸öÏà¶ÔÂ·¾¶£¬ÔòÒÔABaseµÄÂ·¾¶Îª»ù×¼£¬¼ÓÉÏARelĞÎ³ÉĞÂÂ·¾¶
+/// 1.å¦‚æœARelæ˜¯ä¸€ä¸ªç»å¯¹è·¯å¾„ï¼Œåˆ™ç›´æ¥è¿”å›è¯¥è·¯å¾„.
+/// 2.å¦‚æœARelæ˜¯ä¸€ä¸ªä»¥//å¼€å§‹çš„ç»å¯¹è·¯å¾„ï¼Œåˆ™æ‹·è´ABaseçš„åè®®ç±»å‹ï¼ŒåŠ ä¸ŠARelå½¢æˆæ–°è·¯å¾„
+/// 3.å¦‚æœARelæ˜¯ä¸€ä¸ªç›¸å¯¹è·¯å¾„ï¼Œåˆ™ä»¥ABaseçš„è·¯å¾„ä¸ºåŸºå‡†ï¼ŒåŠ ä¸ŠARelå½¢æˆæ–°è·¯å¾„
 /// </returns>
 function UrlMerge(const ABase, ARel: QStringW): QStringW;
 procedure Debugout(const AMsg: String); overload;
@@ -1497,20 +1497,20 @@ uses dateutils, math, sysconst, variants
     ;
 
 resourcestring
-  SBadUnicodeChar = 'ÎŞĞ§µÄUnicode×Ö·û:%d';
-  SBadUtf8Char = 'ÎŞĞ§µÄUTF8×Ö·û:%d';
-  SOutOfIndex = 'Ë÷ÒıÔ½½ç£¬Öµ %d ²»ÔÚ[%d..%d]µÄ·¶Î§ÄÚ¡£';
-  SDayName = 'Ìì';
-  SHourName = 'Ğ¡Ê±';
-  SMinuteName = '·ÖÖÓ';
-  SSecondName = 'Ãë';
-  SCharNeeded = 'µ±Ç°Î»ÖÃÓ¦¸ÃÊÇ "%s" £¬¶ø²»ÊÇ "%s"¡£';
-  SRangeEndNeeded = '×Ö·û·¶Î§±ß½ç½áÊø×Ö·ûÎ´Ö¸¶¨¡£';
-  STooSmallCapMoneyGroup = '¸ø¶¨µÄ·Ö×éÊı %d Ğ¡ÓÚÊµ¼ÊĞèÒªµÄ×îĞ¡»õ±Ò·Ö×éÊı %d¡£';
-  SUnsupportNow = 'Ö¸¶¨µÄº¯Êı %s Ä¿Ç°²»ÊÜÖ§³Ö';
-  SBadJavaEscape = 'ÎŞĞ§µÄ Java ×ªÒåĞòÁĞ£º%s';
-  SBadHexChar = 'ÎŞĞ§µÄÊ®Áù½øÖÆ×Ö·û %s';
-  SStreamReadOnly = '²»ÄÜÔÚÒ»¸öÖ»¶ÁµÄÊı¾İÁ÷ÉÏĞ´ÈëÊı¾İ';
+  SBadUnicodeChar = 'æ— æ•ˆçš„Unicodeå­—ç¬¦:%d';
+  SBadUtf8Char = 'æ— æ•ˆçš„UTF8å­—ç¬¦:%d';
+  SOutOfIndex = 'ç´¢å¼•è¶Šç•Œï¼Œå€¼ %d ä¸åœ¨[%d..%d]çš„èŒƒå›´å†…ã€‚';
+  SDayName = 'å¤©';
+  SHourName = 'å°æ—¶';
+  SMinuteName = 'åˆ†é’Ÿ';
+  SSecondName = 'ç§’';
+  SCharNeeded = 'å½“å‰ä½ç½®åº”è¯¥æ˜¯ "%s" ï¼Œè€Œä¸æ˜¯ "%s"ã€‚';
+  SRangeEndNeeded = 'å­—ç¬¦èŒƒå›´è¾¹ç•Œç»“æŸå­—ç¬¦æœªæŒ‡å®šã€‚';
+  STooSmallCapMoneyGroup = 'ç»™å®šçš„åˆ†ç»„æ•° %d å°äºå®é™…éœ€è¦çš„æœ€å°è´§å¸åˆ†ç»„æ•° %dã€‚';
+  SUnsupportNow = 'æŒ‡å®šçš„å‡½æ•° %s ç›®å‰ä¸å—æ”¯æŒ';
+  SBadJavaEscape = 'æ— æ•ˆçš„ Java è½¬ä¹‰åºåˆ—ï¼š%s';
+  SBadHexChar = 'æ— æ•ˆçš„åå…­è¿›åˆ¶å­—ç¬¦ %s';
+  SStreamReadOnly = 'ä¸èƒ½åœ¨ä¸€ä¸ªåªè¯»çš„æ•°æ®æµä¸Šå†™å…¥æ•°æ®';
 
 type
   TGBKCharSpell = record
@@ -1531,7 +1531,7 @@ type
 {$ENDIF}
 
 var
-  // GBKºº×ÖÆ´ÒôÊ××ÖÄ¸±í
+  // GBKæ±‰å­—æ‹¼éŸ³é¦–å­—æ¯è¡¨
   GBKSpells: array [0 .. 22] of TGBKCharSpell = (
     (
       SpellChar: 'A'; StartChar: $B0A1; EndChar: $B0C4;
@@ -1599,7 +1599,7 @@ const
     QCharW(249), '&ugrave;', QCharW(250), '&uacute;', QCharW(251), '&ucirc;',
     QCharW(252), '&uuml;', QCharW(253), '&yacute;', QCharW(254), '&thorn;',
     QCharW(255), '&yuml;');
-  // QStringº¯Êı
+  // QStringå‡½æ•°
 
 function Utf8Decode(const p: QStringA): QStringW;
 begin
@@ -1789,7 +1789,7 @@ begin
     l := 0;
     while p^ <> #0 do
     begin
-      if (p^ >= #$D800) and (p^ <= #$DFFF) then // Unicode À©Õ¹Çø×Ö·û
+      if (p^ >= #$D800) and (p^ <= #$DFFF) then // Unicode æ‰©å±•åŒºå­—ç¬¦
       begin
         c := (Word(p^) - $D800);
         Inc(p);
@@ -1811,7 +1811,7 @@ begin
     T := l;
     while T > 0 do
     begin
-      if (p^ >= #$D800) and (p^ <= #$DFFF) then // Unicode À©Õ¹Çø×Ö·û
+      if (p^ >= #$D800) and (p^ <= #$DFFF) then // Unicode æ‰©å±•åŒºå­—ç¬¦
       begin
         c := (Word(p^) - $D800);
         Inc(p);
@@ -1843,7 +1843,7 @@ begin
   else
   begin
 {$IFDEF MSWINDOWS}
-    // WindowsÏÂÖ±½Óµ÷ÓÃ²Ù×÷ÏµÍ³µÄAPI
+    // Windowsä¸‹ç›´æ¥è°ƒç”¨æ“ä½œç³»ç»Ÿçš„API
     Result := WideCharToMultiByte(CP_UTF8, 0, ps, sl, PAnsiChar(pd), dl,
       nil, nil);
 {$ELSE}
@@ -1852,7 +1852,7 @@ begin
     begin
       c := Cardinal(ps^);
       Inc(ps);
-      if (c >= $D800) and (c <= $DFFF) then // Unicode À©Õ¹Çø×Ö·û
+      if (c >= $D800) and (c <= $DFFF) then // Unicode æ‰©å±•åŒºå­—ç¬¦
       begin
         c := (c - $D800);
         if (ps^ >= #$DC00) and (ps^ <= #$DFFF) then
@@ -1867,7 +1867,7 @@ begin
       Dec(sl);
       if c = $0 then
       begin
-        if JavaFormatUtf8 then // °´ÕÕJava¸ñÊ½±àÂë£¬½«#$0×Ö·û±àÂëÎª#$C080
+        if JavaFormatUtf8 then // æŒ‰ç…§Javaæ ¼å¼ç¼–ç ï¼Œå°†#$0å­—ç¬¦ç¼–ç ä¸º#$C080
         begin
           pd^ := $C0;
           Inc(pd);
@@ -2121,7 +2121,7 @@ begin
         Inc(pd);
       end;
     end
-    else if (pw^ > #$4E00) and (pw^ <= #$9FA5) then // ºº×ÖÇø¼ä
+    else if (pw^ > #$4E00) and (pw^ <= #$9FA5) then // æ±‰å­—åŒºé—´
     begin
       if Assigned(OnFetchCNSpell) then
       begin
@@ -2146,10 +2146,10 @@ end;
 
 function CharSizeA(c: PQCharA): Integer;
 begin
-  { GB18030,¼æÈİGBKºÍGB2312
-    µ¥×Ö½Ú£¬ÆäÖµ´Ó0µ½0x7F¡£
-    Ë«×Ö½Ú£¬µÚÒ»¸ö×Ö½ÚµÄÖµ´Ó0x81µ½0xFE£¬µÚ¶ş¸ö×Ö½ÚµÄÖµ´Ó0x40µ½0xFE£¨²»°üÀ¨0x7F£©¡£
-    ËÄ×Ö½Ú£¬µÚÒ»¸ö×Ö½ÚµÄÖµ´Ó0x81µ½0xFE£¬µÚ¶ş¸ö×Ö½ÚµÄÖµ´Ó0x30µ½0x39£¬µÚÈı¸ö×Ö½Ú´Ó0x81µ½0xFE£¬µÚËÄ¸ö×Ö½Ú´Ó0x30µ½0x39¡£
+  { GB18030,å…¼å®¹GBKå’ŒGB2312
+    å•å­—èŠ‚ï¼Œå…¶å€¼ä»0åˆ°0x7Fã€‚
+    åŒå­—èŠ‚ï¼Œç¬¬ä¸€ä¸ªå­—èŠ‚çš„å€¼ä»0x81åˆ°0xFEï¼Œç¬¬äºŒä¸ªå­—èŠ‚çš„å€¼ä»0x40åˆ°0xFEï¼ˆä¸åŒ…æ‹¬0x7Fï¼‰ã€‚
+    å››å­—èŠ‚ï¼Œç¬¬ä¸€ä¸ªå­—èŠ‚çš„å€¼ä»0x81åˆ°0xFEï¼Œç¬¬äºŒä¸ªå­—èŠ‚çš„å€¼ä»0x30åˆ°0x39ï¼Œç¬¬ä¸‰ä¸ªå­—èŠ‚ä»0x81åˆ°0xFEï¼Œç¬¬å››ä¸ªå­—èŠ‚ä»0x30åˆ°0x39ã€‚
   }
 {$IFDEF MSWINDOWS}
   if GetACP = 936 then
@@ -2297,7 +2297,7 @@ end;
 
 function CharCodeW(c: PQCharW): Cardinal;
 begin
-  if (c^ >= #$D800) and (c^ <= #$DFFF) then // Unicode À©Õ¹Çø×Ö·û
+  if (c^ >= #$D800) and (c^ <= #$DFFF) then // Unicode æ‰©å±•åŒºå­—ç¬¦
   begin
     Result := (Ord(c^) - $D800);
     Inc(c);
@@ -2595,7 +2595,7 @@ end;
 
 function IsSpaceU(const c: PQCharA; ASpaceSize: PInteger): Boolean;
 begin
-  // È«½Ç¿Õ¸ñ$3000µÄUTF-8±àÂëÊÇ227,128,128
+  // å…¨è§’ç©ºæ ¼$3000çš„UTF-8ç¼–ç æ˜¯227,128,128
   if c^ in [9, 10, 13, 32] then
   begin
     Result := True;
@@ -2626,7 +2626,7 @@ begin
     pd := PWord(PQCharW(Result));
     while l > 0 do
     begin
-      if (p^ = $3000) then // È«½Ç¿Õ¸ñ'¡¡'
+      if (p^ = $3000) then // å…¨è§’ç©ºæ ¼'ã€€'
         pd^ := $20
       else if (p^ >= $FF01) and (p^ <= $FF5E) then
         pd^ := $21 + (p^ - $FF01)
@@ -2654,7 +2654,7 @@ begin
     pd := PWord(PQCharW(Result));
     while l > 0 do
     begin
-      if p^ = $20 then // È«½Ç¿Õ¸ñ'¡¡'
+      if p^ = $20 then // å…¨è§’ç©ºæ ¼'ã€€'
         pd^ := $3000
       else if (p^ >= $21) and (p^ <= $7E) then
         pd^ := $FF01 + (p^ - $21)
@@ -2761,7 +2761,7 @@ begin
         begin
           pd^ := AQuoter;
         end
-        else if IntPtr(p) < IntPtr(pe) then // ºóÃæ²»ÊÇµ¥ÒıºÅ,´íÎóµÄ×Ö·û´®£¬Ö±½Ó¿½±´ÄÚÈİ
+        else if IntPtr(p) < IntPtr(pe) then // åé¢ä¸æ˜¯å•å¼•å·,é”™è¯¯çš„å­—ç¬¦ä¸²ï¼Œç›´æ¥æ‹·è´å†…å®¹
         begin
           pd^ := AQuoter;
           Inc(pd);
@@ -2804,7 +2804,7 @@ begin
         begin
           pd^ := AQuoter;
         end
-        else if IntPtr(p) < IntPtr(pe) then // ºóÃæ²»ÊÇµ¥ÒıºÅ,´íÎóµÄ×Ö·û´®£¬Ö±½Ó¿½±´ÄÚÈİ
+        else if IntPtr(p) < IntPtr(pe) then // åé¢ä¸æ˜¯å•å¼•å·,é”™è¯¯çš„å­—ç¬¦ä¸²ï¼Œç›´æ¥æ‹·è´å†…å®¹
         begin
           pd^ := AQuoter;
           Inc(pd);
@@ -3006,7 +3006,7 @@ begin
   Result := IntPtr(p) - IntPtr(ps);
 end;
 
-// Ìø¹ıÒ»ĞĞ,ÒÔ#10ÎªĞĞ½áÎ²
+// è·³è¿‡ä¸€è¡Œ,ä»¥#10ä¸ºè¡Œç»“å°¾
 function SkipLineA(var p: PQCharA): Integer;
 var
   ps: PQCharA;
@@ -3125,7 +3125,7 @@ begin
   S := p;
   while p^ <> 0 do
   begin
-    if p^ = AQuoter then // ÒıÓÃµÄÄÚÈİ²»²ğ·Ö
+    if p^ = AQuoter then // å¼•ç”¨çš„å†…å®¹ä¸æ‹†åˆ†
     begin
       Inc(p);
       while p^ <> 0 do
@@ -3150,7 +3150,7 @@ begin
     end
     else if CharInA(p, ADelimiters, @l) then
       Break
-    else // \",\',"",''·Ö±ğ½âÎö×ªÒå
+    else // \",\',"",''åˆ†åˆ«è§£æè½¬ä¹‰
       Inc(p);
   end;
   l := IntPtr(p) - IntPtr(S);
@@ -3171,7 +3171,7 @@ begin
   S := p;
   while p^ <> 0 do
   begin
-    if p^ = AQuoter then // ÒıÓÃµÄÄÚÈİ²»²ğ·Ö
+    if p^ = AQuoter then // å¼•ç”¨çš„å†…å®¹ä¸æ‹†åˆ†
     begin
       Inc(p);
       while p^ <> 0 do
@@ -3196,7 +3196,7 @@ begin
     end
     else if CharInU(p, ADelimiters, @l) then
       Break
-    else // \",\',"",''·Ö±ğ½âÎö×ªÒå
+    else // \",\',"",''åˆ†åˆ«è§£æè½¬ä¹‰
       Inc(p);
   end;
   l := IntPtr(p) - IntPtr(S);
@@ -3217,7 +3217,7 @@ begin
   S := p;
   while p^ <> #0 do
   begin
-    if p^ = AQuoter then // ÒıÓÃµÄÄÚÈİ²»²ğ·Ö
+    if p^ = AQuoter then // å¼•ç”¨çš„å†…å®¹ä¸æ‹†åˆ†
     begin
       Inc(p);
       while p^ <> #0 do
@@ -3242,7 +3242,7 @@ begin
     end
     else if CharInW(p, ADelimiters, @l) then
       Break
-    else // \",\',"",''·Ö±ğ½âÎö×ªÒå
+    else // \",\',"",''åˆ†åˆ«è§£æè½¬ä¹‰
       Inc(p);
   end;
   l := p - S;
@@ -3268,7 +3268,7 @@ begin
   S := p;
   while p^ <> #0 do
   begin
-    if p^ = AQuoter then // ÒıÓÃµÄÄÚÈİ²»²ğ·Ö
+    if p^ = AQuoter then // å¼•ç”¨çš„å†…å®¹ä¸æ‹†åˆ†
     begin
       Inc(p);
       while p^ <> #0 do
@@ -3293,7 +3293,7 @@ begin
     end
     else if CharInW(p, ADelimiters, @l) then
       Break
-    else // \",\',"",''·Ö±ğ½âÎö×ªÒå
+    else // \",\',"",''åˆ†åˆ«è§£æè½¬ä¹‰
       Inc(p);
   end;
   l := p - S;
@@ -3627,7 +3627,7 @@ begin
           Inc(p);
           if (p^ >= #$DC00) and (p^ <= #$DFFF) then
             Inc(p);
-          // else ÎŞĞ§µÄÀ©Õ¹Çø×Ö·û£¬ÈÔÈ»Ñ­»·±£Áô
+          // else æ— æ•ˆçš„æ‰©å±•åŒºå­—ç¬¦ï¼Œä»ç„¶å¾ªç¯ä¿ç•™
         end
         else
           Inc(p);
@@ -3669,7 +3669,7 @@ begin
           Dec(p);
           if (p^ >= #$D800) and (p^ <= #$DBFF) then
             Dec(p)
-            // else ÎŞĞ§µÄÀ©Õ¹Çø×Ö·û£¬ÈÔÈ»Ñ­»·±£Áô
+            // else æ— æ•ˆçš„æ‰©å±•åŒºå­—ç¬¦ï¼Œä»ç„¶å¾ªç¯ä¿ç•™
         end
         else
           Dec(p);
@@ -4169,7 +4169,7 @@ var
   pWide: PWideChar;
   I, AUtf8CharSize: Integer;
 const
-  NoUtf8Char: array [0 .. 3] of Byte = ($C1, $AA, $CD, $A8); // ANSI±àÂëµÄÁªÍ¨
+  NoUtf8Char: array [0 .. 3] of Byte = ($C1, $AA, $CD, $A8); // ANSIç¼–ç çš„è”é€š
   function IsUtf8Order(var ACharSize: Integer): Boolean;
   var
     I: Integer;
@@ -4215,22 +4215,22 @@ begin
     else if l >= 3 then
     begin
       if (pAnsi^ = $EF) and (PByte(IntPtr(pAnsi) + 1)^ = $BB) and
-        (PByte(IntPtr(pAnsi) + 2)^ = $BF) then // UTF-8±àÂë
+        (PByte(IntPtr(pAnsi) + 2)^ = $BF) then // UTF-8ç¼–ç 
         Result := teUTF8
-      else // ¼ì²â×Ö·ûÖĞÊÇ·ñÓĞ·ûºÏUFT-8±àÂë¹æÔòµÄ×Ö·û£¬11...
+      else // æ£€æµ‹å­—ç¬¦ä¸­æ˜¯å¦æœ‰ç¬¦åˆUFT-8ç¼–ç è§„åˆ™çš„å­—ç¬¦ï¼Œ11...
       begin
         b := false;
-        Result := teUnknown; // ¼ÙÉèÎªUTF8±àÂë£¬È»ºó¼ì²âÊÇ·ñÓĞ²»·ûºÏUTF-8±àÂëµÄĞòÁĞ
+        Result := teUnknown; // å‡è®¾ä¸ºUTF8ç¼–ç ï¼Œç„¶åæ£€æµ‹æ˜¯å¦æœ‰ä¸ç¬¦åˆUTF-8ç¼–ç çš„åºåˆ—
         I := 0;
         Dec(l, 2);
         while I <= l do
         begin
-          if (pAnsi^ and $80) <> 0 then // ¸ßÎ»Îª1
+          if (pAnsi^ and $80) <> 0 then // é«˜ä½ä¸º1
           begin
             if (l - I >= 4) then
             begin
               if CompareMem(pAnsi, @NoUtf8Char[0], 4) then
-              // ÁªÍ¨£¿ÊÇÔòºöÂÔµô£¬²»×öUTF-8±àÂëµÄÅĞ¶ÏÒÀ¾İ
+              // è”é€šï¼Ÿæ˜¯åˆ™å¿½ç•¥æ‰ï¼Œä¸åšUTF-8ç¼–ç çš„åˆ¤æ–­ä¾æ®
               begin
                 Inc(pAnsi, 4);
                 Inc(I, 4);
@@ -4252,7 +4252,7 @@ begin
           end
           else
           begin
-            if pAnsi^ = 0 then // 00 xx (xx<128) ¸ßÎ»ÔÚÇ°£¬ÊÇBE±àÂë
+            if pAnsi^ = 0 then // 00 xx (xx<128) é«˜ä½åœ¨å‰ï¼Œæ˜¯BEç¼–ç 
             begin
               if PByte(IntPtr(pAnsi) + 1)^ < 128 then
               begin
@@ -4260,7 +4260,7 @@ begin
                 Break;
               end;
             end
-            else if PByte(IntPtr(pAnsi) + 1)^ = 0 then // xx 00 µÍÎ»ÔÚÇ°£¬ÊÇLE±àÂë
+            else if PByte(IntPtr(pAnsi) + 1)^ = 0 then // xx 00 ä½ä½åœ¨å‰ï¼Œæ˜¯LEç¼–ç 
             begin
               Result := teUnicode16LE;
               Break;
@@ -4547,7 +4547,7 @@ begin
   pb := p;
   if ASize >= 2 then
   begin
-    // ²»¹ÜÊÇ·ñÖ¸¶¨±àÂë£¬Ç¿ÖÆ¼ì²âBOMÍ·£¬±ÜÃâÓÉÓÚ±àÂëÖ¸¶¨²»·ûÔì³ÉÎÊÌâ
+    // ä¸ç®¡æ˜¯å¦æŒ‡å®šç¼–ç ï¼Œå¼ºåˆ¶æ£€æµ‹BOMå¤´ï¼Œé¿å…ç”±äºç¼–ç æŒ‡å®šä¸ç¬¦é€ æˆé—®é¢˜
     if (ByteOf(0) = $FF) and (ByteOf(1) = $FE) then
     begin
       AEncoding := teUnicode16LE;
@@ -5138,12 +5138,12 @@ begin
     Result := Ord(p1^) - Ord(p2^);
 end;
 
-/// <summary>Ê¹ÓÃ×ÔÈ»ÓïÑÔ¹æÔò±È½Ï×Ö·û´®</summary>
-/// <param name="s1">µÚÒ»¸öÒª±È½ÏµÄ×Ö·û´®</param>
-/// <param name="s2">µÚ¶ş¸öÒª±È½ÏµÄ×Ö·û´®</param>
-/// <param name="AIgnoreCase">±È½ÏÊ±ÊÇ·ñºöÂÔ´óĞ¡Ğ´</param>
-/// <param name="AIgnoreSpace">±È½ÏÊ±ÊÇ·ñºöÂÔ¿Õ°××Ö·û</param>
-/// <remarks>±¾±È½Ï¿¼ÂÇÖĞÎÄÈ«½ÇµÄÇé¿ö£¬ÈÏÎªÖĞÎÄÈ«½Ç·ûºÅºÍ¶ÔÓ¦µÄ°ë½Ç·ûºÅÊÇÏàµÈµÄÖµ</remarks>
+/// <summary>ä½¿ç”¨è‡ªç„¶è¯­è¨€è§„åˆ™æ¯”è¾ƒå­—ç¬¦ä¸²</summary>
+/// <param name="s1">ç¬¬ä¸€ä¸ªè¦æ¯”è¾ƒçš„å­—ç¬¦ä¸²</param>
+/// <param name="s2">ç¬¬äºŒä¸ªè¦æ¯”è¾ƒçš„å­—ç¬¦ä¸²</param>
+/// <param name="AIgnoreCase">æ¯”è¾ƒæ—¶æ˜¯å¦å¿½ç•¥å¤§å°å†™</param>
+/// <param name="AIgnoreSpace">æ¯”è¾ƒæ—¶æ˜¯å¦å¿½ç•¥ç©ºç™½å­—ç¬¦</param>
+/// <remarks>æœ¬æ¯”è¾ƒè€ƒè™‘ä¸­æ–‡å…¨è§’çš„æƒ…å†µï¼Œè®¤ä¸ºä¸­æ–‡å…¨è§’ç¬¦å·å’Œå¯¹åº”çš„åŠè§’ç¬¦å·æ˜¯ç›¸ç­‰çš„å€¼</remarks>
 function NaturalCompareW(s1, s2: PQCharW;
   AIgnoreCase, AIgnoreSpace: Boolean): Integer;
 var
@@ -5155,8 +5155,8 @@ var
   var
     ps: PQCharW;
   const
-    Full0: WideChar = #65296; // È«½Ç0
-    Full9: WideChar = #65305; // È«½Ç9
+    Full0: WideChar = #65296; // å…¨è§’0
+    Full9: WideChar = #65305; // å…¨è§’9
   begin
     AResult := 0;
     ps := p;
@@ -5164,9 +5164,9 @@ var
     begin
       while IsSpaceW(p) do
         Inc(p);
-      if (p^ >= '0') and (p^ <= '9') then // °ë½ÇÊı×Ö
+      if (p^ >= '0') and (p^ <= '9') then // åŠè§’æ•°å­—
         AResult := AResult * 10 + Ord(p^) - Ord('0')
-      else if (p^ >= Full0) and (p^ <= Full9) then // È«½ÇÊı×Ö
+      else if (p^ >= Full0) and (p^ <= Full9) then // å…¨è§’æ•°å­—
         AResult := AResult * 10 + Ord(p^) - Ord(Full0)
       else
         Break;
@@ -5177,7 +5177,7 @@ var
   end;
   function FullToHalfChar(c: Word): QCharW;
   begin
-    if (c = $3000) then // È«½Ç¿Õ¸ñ'¡¡'
+    if (c = $3000) then // å…¨è§’ç©ºæ ¼'ã€€'
       Result := QCharW($20)
     else if (c >= $FF01) and (c <= $FF5E) then
       Result := QCharW($21 + (c - $FF01))
@@ -5215,7 +5215,7 @@ begin
           Inc(s1);
         while IsSpaceW(s1) do
           Inc(s2);
-        // ¼ì²éÊÇ·ñÊÇÊı×Ö
+        // æ£€æŸ¥æ˜¯å¦æ˜¯æ•°å­—
         L1 := 0;
         L2 := 0;
         if FetchNumeric(s1, N1, L1) and FetchNumeric(s2, N2, L2) then
@@ -5241,7 +5241,7 @@ begin
             Exit;
         end;
       end
-      else // Èç¹ûÏëµÈ£¬¼´Ê¹ÊÇÊı×Ö£¬¿Ï¶¨Ò²ÊÇÏàµÈµÄ
+      else // å¦‚æœæƒ³ç­‰ï¼Œå³ä½¿æ˜¯æ•°å­—ï¼Œè‚¯å®šä¹Ÿæ˜¯ç›¸ç­‰çš„
       begin
         Inc(s1);
         Inc(s2);
@@ -5318,7 +5318,7 @@ begin
     AGuid.D3 := l;
     Inc(p);
     // 0102-030405060708
-    // Ê£ÏÂµÄ16¸ö×Ö·û
+    // å‰©ä¸‹çš„16ä¸ªå­—ç¬¦
     l := 0;
     while IsHexChar(p[0]) do
     begin
@@ -5457,7 +5457,7 @@ begin
   if rfIgnoreCase in AFlags then
   begin
     SOld := UpperCase(Old);
-    if SOld = Old then // ´óĞ¡Ğ´Ò»ÖÂ£¬²»ĞèÒª¶îÍâ½øĞĞ´óĞ´×ª»»
+    if SOld = Old then // å¤§å°å†™ä¸€è‡´ï¼Œä¸éœ€è¦é¢å¤–è¿›è¡Œå¤§å†™è½¬æ¢
       SS := S
     else
     begin
@@ -5491,11 +5491,11 @@ begin
     else
       Break;
   until AReplaceOnce or (pn^ = #0);
-  if ACount = 0 then // Ã»ÓĞÕÒµ½ĞèÒªÌæ»»µÄÄÚÈİ£¬Ö±½Ó·µ»ØÔ­Ê¼×Ö·û´®
+  if ACount = 0 then // æ²¡æœ‰æ‰¾åˆ°éœ€è¦æ›¿æ¢çš„å†…å®¹ï¼Œç›´æ¥è¿”å›åŸå§‹å­—ç¬¦ä¸²
     Result := S
   else
   begin
-    // ¼ÆËãĞèÒª·ÖÅäµÄÄ¿±êÄÚ´æ
+    // è®¡ç®—éœ€è¦åˆ†é…çš„ç›®æ ‡å†…å­˜
     SetLength(Result, LS + (LN - LO) * ACount);
     pd := Pointer(Result);
     pn := Pointer(New);
@@ -5517,7 +5517,7 @@ end;
 
 function StringReplaceW(const S, Old, New: QStringW; AFlags: TReplaceFlags)
   : QStringW;
-{$IF RTLVersion>30}// Berlin ¿ªÊ¼Ö±½ÓÊ¹ÓÃÏµÍ³×Ô´øµÄÌæ»»º¯Êı
+{$IF RTLVersion>30}// Berlin å¼€å§‹ç›´æ¥ä½¿ç”¨ç³»ç»Ÿè‡ªå¸¦çš„æ›¿æ¢å‡½æ•°
 begin
   Result := StringReplace(S, Old, New, AFlags);
 end;
@@ -5542,9 +5542,9 @@ begin
   if (LO > 0) and (LS >= LO) then
   begin
     AReplaceOnce := not(rfReplaceAll in AFlags);
-    // LO=LN£¬Ôò²»±äLR=LS£¬¼ÙÉèÈ«Ìæ»»£¬Ò²²»¹ıÊÇÔ­³¤¶È
-    // LO<LN£¬ÔòLR=LS+(LS*LN)/LO£¬¼ÙÉèÈ«Ìæ»»µÄ³¤¶È
-    // LO>LN£¬ÔòLR=LS£¬¼ÙÉèÒ»´Î¶¼²»Ìæ»»£¬Ò²²»¹ıÊÇÔ­³¤¶È
+    // LO=LNï¼Œåˆ™ä¸å˜LR=LSï¼Œå‡è®¾å…¨æ›¿æ¢ï¼Œä¹Ÿä¸è¿‡æ˜¯åŸé•¿åº¦
+    // LO<LNï¼Œåˆ™LR=LS+(LS*LN)/LOï¼Œå‡è®¾å…¨æ›¿æ¢çš„é•¿åº¦
+    // LO>LNï¼Œåˆ™LR=LSï¼Œå‡è®¾ä¸€æ¬¡éƒ½ä¸æ›¿æ¢ï¼Œä¹Ÿä¸è¿‡æ˜¯åŸé•¿åº¦
     if LO >= LN then
       LR := LS
     else if AReplaceOnce then
@@ -5574,7 +5574,7 @@ begin
         ps := pr;
       end;
     until (pr = nil) or AReplaceOnce;
-    // ½«Ê£Óà²¿·ÖºÏ²¢µ½Ä¿±ê
+    // å°†å‰©ä½™éƒ¨åˆ†åˆå¹¶åˆ°ç›®æ ‡
     l := IntPtr(pse) - IntPtr(ps);
     Move(ps^, pd^, l);
     Inc(pd, l shr 1);
@@ -5647,7 +5647,7 @@ begin
     pEnd := PQCharW(AEndTag);
     pReplaced := PQCharW(AReplaced);
     if LR > l then
-      SetLength(Result, l * LR) // ×îÔã¸âµÄÇé¿ö£¬Ã¿¸ö¶¼±»Ìæ»»ÎªÄ¿±ê,µ±È»Õâ²»¿ÉÄÜ
+      SetLength(Result, l * LR) // æœ€ç³Ÿç³•çš„æƒ…å†µï¼Œæ¯ä¸ªéƒ½è¢«æ›¿æ¢ä¸ºç›®æ ‡,å½“ç„¶è¿™ä¸å¯èƒ½
     else
       SetLength(Result, l);
     pd := PQCharW(Result);
@@ -5668,7 +5668,7 @@ begin
       begin
         pwe := StrStrFunc(pws + LS, pEnd);
         if pwe = nil then
-        // Ã»ÕÒµ½½áÎ²
+        // æ²¡æ‰¾åˆ°ç»“å°¾
         begin
           dl := pe - po;
           Move(po^, pd^, dl shl 1);
@@ -6082,7 +6082,7 @@ begin
     mov ecx,eax
     jmp AdjustEnd
 
-    // µ÷ÕûedxµÄÖµÎªĞèÒª±È½ÏµÄ½áÊøÎ»ÖÃ
+    // è°ƒæ•´edxçš„å€¼ä¸ºéœ€è¦æ¯”è¾ƒçš„ç»“æŸä½ç½®
     AdjustEnd:
     mov edx,esi
     add edx,ecx
@@ -6100,41 +6100,41 @@ begin
     add edi,4
     jmp DoComp
 
-    C4: // Ê£ÏÂ>=4¸ö×Ö½ÚÊ±£¬Ö±½Ó¼õ×î½üµÄ4¸ö×Ö½Ú
+    C4: // å‰©ä¸‹>=4ä¸ªå­—èŠ‚æ—¶ï¼Œç›´æ¥å‡æœ€è¿‘çš„4ä¸ªå­—èŠ‚
     bswap eax
     bswap ebx
     sub eax,ebx
     jmp PopReg
 
     ByBytes:
-    cmp ecx,0// Ã»ÓĞ¿É±ÈµÄÄÚÈİÁË£¬Ë­³¤¾ÍÊÇË­´ó
+    cmp ecx,0// æ²¡æœ‰å¯æ¯”çš„å†…å®¹äº†ï¼Œè°é•¿å°±æ˜¯è°å¤§
     je ByLen
-    cmp ecx,1// Ê£ÏÂ1¸ö×Ö½Ú
+    cmp ecx,1// å‰©ä¸‹1ä¸ªå­—èŠ‚
     je C1
-    cmp ecx,2// Ê£ÏÂ2¸ö×Ö½Ú
+    cmp ecx,2// å‰©ä¸‹2ä¸ªå­—èŠ‚
     je C2
-    // Ê£ÏÂ3¸ö×Ö½Ú
+    // å‰©ä¸‹3ä¸ªå­—èŠ‚
     C3:
-    xor eax,eax// eaxÇåÁã
-    xor ebx,ebx// ebxÇåÁã
+    xor eax,eax// eaxæ¸…é›¶
+    xor ebx,ebx// ebxæ¸…é›¶
     mov ax,WORD PTR [esi]
     mov bx,WORD PTR [edi]
     add esi,2
     add edi,2
     cmp eax,ebx
-    je C1// Ê£ÏÂÒ»¸öĞèÒª±È½ÏµÄ×Ö½Ú£¬Ìøµ½C1
+    je C1// å‰©ä¸‹ä¸€ä¸ªéœ€è¦æ¯”è¾ƒçš„å­—èŠ‚ï¼Œè·³åˆ°C1
     bswap eax
     bswap ebx
     sub eax,ebx
     jmp PopReg
-    // Ê£ÏÂÁ½¸ö×Ö½Ú
+    // å‰©ä¸‹ä¸¤ä¸ªå­—èŠ‚
     C2:
-    xor eax,eax// eaxÇåÁã
-    xor ebx,ebx// ebxÇåÁã
+    xor eax,eax// eaxæ¸…é›¶
+    xor ebx,ebx// ebxæ¸…é›¶
     mov ax,WORD PTR [esi]
     mov bx,WORD PTR [edi]
     cmp eax,ebx
-    je ByLen// ÄÜ±È½ÏµÄ¶¼ÏàµÈ£¬¿´³¤¶ÈÁË
+    je ByLen// èƒ½æ¯”è¾ƒçš„éƒ½ç›¸ç­‰ï¼Œçœ‹é•¿åº¦äº†
     bswap eax
     bswap ebx
     shr eax,16
@@ -6142,23 +6142,23 @@ begin
     sub eax,ebx
     jmp PopReg
 
-    // Ê£ÏÂÒ»¸ö×Ö½Ú
+    // å‰©ä¸‹ä¸€ä¸ªå­—èŠ‚
     C1:
-    xor eax,eax// eaxÇåÁã
-    xor ebx,ebx// ebxÇåÁã
+    xor eax,eax// eaxæ¸…é›¶
+    xor ebx,ebx// ebxæ¸…é›¶
     mov al, BYTE PTR [esi]
     mov bl, BYTE PTR [edi]
     cmp eax,ebx
-    je ByLen// ÄÜ±È½ÏµÄ¶¼ÏàµÈ£¬¿´³¤¶ÈÁË
+    je ByLen// èƒ½æ¯”è¾ƒçš„éƒ½ç›¸ç­‰ï¼Œçœ‹é•¿åº¦äº†
     sub eax,ebx
     jmp PopReg;
 
-    // °´³¤¶È±È½Ï
+    // æŒ‰é•¿åº¦æ¯”è¾ƒ
     ByLen:
     mov eax,L1
     sub eax,L2
 
-    // »Ö¸´±£´æµÄediºÍesiÖµ
+    // æ¢å¤ä¿å­˜çš„ediå’Œesiå€¼
     PopReg:
     pop ebx
     pop edi
@@ -6320,7 +6320,7 @@ var
   ANeg: Boolean;
 begin
   ps := S;
-  // Ìø¹ı16½øÖÆ¿ªÊ¼×Ö·û
+  // è·³è¿‡16è¿›åˆ¶å¼€å§‹å­—ç¬¦
   if S[0] = '$' then
   begin
     Inc(S);
@@ -6348,7 +6348,7 @@ begin
     while (S^ >= '0') and (S^ <= '9') do
     begin
       ANum := ANum * 10 + Ord(S^) - Ord('0');
-      if ANum < 0 then // Òç³ö£¿
+      if ANum < 0 then // æº¢å‡ºï¼Ÿ
       begin
         Result := 0;
         S := ps;
@@ -6397,7 +6397,7 @@ var
         ANum := -iVal
       else
         ANum := iVal;
-      if S^ = '.' then // Ğ¡Êı²¿·Ö
+      if S^ = '.' then // å°æ•°éƒ¨åˆ†
       begin
         Inc(S);
         ACount := ParseInt(S, iVal);
@@ -6725,12 +6725,12 @@ begin
     ps := p;
     while p^ <> #0 do
     begin
-      if p^ < ' ' then // ¿ØÖÆ×Ö·û
+      if p^ < ' ' then // æ§åˆ¶å­—ç¬¦
       begin
         if (p^ >= #7) and (p^ <= #13) then
           Inc(ASize);
       end
-      else if p^ >= '~' then // ·Ç¿É´òÓ¡×Ö·û£¬×ªÒåµÄ»°Ê¹ÓÃ \uxxxx
+      else if p^ >= '~' then // éå¯æ‰“å°å­—ç¬¦ï¼Œè½¬ä¹‰çš„è¯ä½¿ç”¨ \uxxxx
       begin
         if ADoEscape then
           Inc(ASize, 5);
@@ -6751,7 +6751,7 @@ begin
       p := ps;
       while p^ <> #0 do
       begin
-        if p^ < ' ' then // ¿ØÖÆ×Ö·û
+        if p^ < ' ' then // æ§åˆ¶å­—ç¬¦
         begin
           case p^ of
             #7:
@@ -6796,7 +6796,7 @@ begin
             end;
           end;
         end
-        else if p^ >= '~' then // ·Ç¿É´òÓ¡×Ö·û£¬×ªÒåµÄ»°Ê¹ÓÃ \uxxxx
+        else if p^ >= '~' then // éå¯æ‰“å°å­—ç¬¦ï¼Œè½¬ä¹‰çš„è¯ä½¿ç”¨ \uxxxx
         begin
           if ADoEscape then // \uxxxx
           begin
@@ -6932,7 +6932,7 @@ begin
       else
         Inc(p);
     end;
-    if Length(S) = ASize then // ³ß´çÏàµÈ£¬Ã»ÓĞĞèÒª´¦ÀíµÄ×ªÒå
+    if Length(S) = ASize then // å°ºå¯¸ç›¸ç­‰ï¼Œæ²¡æœ‰éœ€è¦å¤„ç†çš„è½¬ä¹‰
       Result := S
     else
     begin
@@ -7042,7 +7042,7 @@ var
 begin
   if Length(S) > 0 then
   begin
-    System.SetLength(Result, Length(S) shl 3); // ×ªÒå´®×î³¤²»³¬¹ı8¸ö×Ö·û£¬³¤¶È*8¿Ï¶¨¹»ÁË
+    System.SetLength(Result, Length(S) shl 3); // è½¬ä¹‰ä¸²æœ€é•¿ä¸è¶…è¿‡8ä¸ªå­—ç¬¦ï¼Œé•¿åº¦*8è‚¯å®šå¤Ÿäº†
     p := PWideChar(S);
     pd := PWideChar(Result);
     while p^ <> #0 do
@@ -7338,7 +7338,7 @@ var
   ps, pe: PByte;
   pd: PQCharW;
 begin
-  // ¼ÆËãÊµ¼ÊµÄ³¤¶È
+  // è®¡ç®—å®é™…çš„é•¿åº¦
   c := 0;
   ps := PByte(ABytes);
   pe := PByte(IntPtr(ps) + l);
@@ -7348,7 +7348,7 @@ begin
       (PByte(IntPtr(ps) + 1)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
       Ord('0') .. Ord('9')]) and
       (PByte(IntPtr(ps) + 2)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
-      Ord('0') .. Ord('9')]) then // Ô­À´¾ÍÊÇ%xx?     %09%32
+      Ord('0') .. Ord('9')]) then // åŸæ¥å°±æ˜¯%xx?     %09%32
       Inc(ps, 3)
     else
     begin
@@ -7366,7 +7366,7 @@ begin
       (PByte(IntPtr(ps) + 1)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
       Ord('0') .. Ord('9')]) and
       (PByte(IntPtr(ps) + 2)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
-      Ord('0') .. Ord('9')]) then // Ô­À´¾ÍÊÇ%xx?
+      Ord('0') .. Ord('9')]) then // åŸæ¥å°±æ˜¯%xx?
     begin
       pd^ := '%';
       Inc(pd);
@@ -7535,7 +7535,7 @@ begin
     else
       APort := 0;
   end
-  else // Î´Ö¸¶¨¶Ë¿Ú
+  else // æœªæŒ‡å®šç«¯å£
   begin
     APort := 0;
     if p^ = '/' then
@@ -7575,7 +7575,7 @@ begin
   end;
 end;
 
-// ÏÂÃæÊÇÒ»Ğ©¸¨Öúº¯Êı
+// ä¸‹é¢æ˜¯ä¸€äº›è¾…åŠ©å‡½æ•°
 function ParseDateTime(S: PWideChar; var AResult: TDateTime): Boolean;
 var
   Y, M, d, H, N, Sec, MS: Cardinal;
@@ -7658,7 +7658,7 @@ begin
     SkipSpaceW(S);
     if S^ <> #0 then
     begin
-      if not ParseNum(H) then // Ã»¸úÊ±¼äÖµ
+      if not ParseNum(H) then // æ²¡è·Ÿæ—¶é—´å€¼
       begin
         AResult := ADate;
         Exit;
@@ -7752,7 +7752,7 @@ begin
           AResult := ADate + EncodeTime(H, N, Sec, 0);
         Exit;
       end
-      else if MS >= 1000 then // ³¬¹ı1000ÊÇÒÔÎ¢ÃëÎªµ¥Î»¼ÆÊ±µÄ£¬×ª»»ÎªºÁÃë
+      else if MS >= 1000 then // è¶…è¿‡1000æ˜¯ä»¥å¾®ç§’ä¸ºå•ä½è®¡æ—¶çš„ï¼Œè½¬æ¢ä¸ºæ¯«ç§’
       begin
         while MS >= 1000 do
           MS := MS div 10;
@@ -7805,7 +7805,7 @@ const
   Comma: PWideChar = ',';
   Digits: PWideChar = '0123456789';
 begin
-  // Ìø¹ıĞÇÆÚ£¬Õâ¸ö¿ÉÒÔÖ±½ÓÍ¨¹ıÈÕÆÚ¼ÆËã³öÀ´£¬²»ĞèÒª
+  // è·³è¿‡æ˜ŸæœŸï¼Œè¿™ä¸ªå¯ä»¥ç›´æ¥é€šè¿‡æ—¥æœŸè®¡ç®—å‡ºæ¥ï¼Œä¸éœ€è¦
   if StrStrW(p, Comma) <> nil then
   begin
     SkipUntilW(p, Comma, WideChar(0));
@@ -7819,7 +7819,7 @@ begin
   end;
   SkipUntilW(p, Digits, WideChar(0));
   d := 0;
-  // ÈÕÆÚ
+  // æ—¥æœŸ
   while (p^ >= '0') and (p^ <= '9') do
   begin
     d := d * 10 + Ord(p^) - Ord('0');
@@ -8014,7 +8014,7 @@ end;
 
 function QStringA.GetLength: Integer;
 begin
-  // QStringA.FValue[0]´æÖü±àÂëÀàĞÍ£¬0-ANSI,1-UTF8£¬Ä©Î²´æÖü×Ö·û´®µÄ\0½áÊø·û
+  // QStringA.FValue[0]å­˜è´®ç¼–ç ç±»å‹ï¼Œ0-ANSI,1-UTF8ï¼Œæœ«å°¾å­˜è´®å­—ç¬¦ä¸²çš„\0ç»“æŸç¬¦
   Result := System.Length(FValue);
   if Result >= 2 then
     Dec(Result, 2)
@@ -8685,7 +8685,7 @@ begin
   Result := FObject;
 end;
 
-// ¼æÈİ2007°æµÄÔ­×Ó²Ù×÷½Ó¿Ú
+// å…¼å®¹2007ç‰ˆçš„åŸå­æ“ä½œæ¥å£
 {$IF RTLVersion<24}
 
 function AtomicCmpExchange(var Target: Integer; Value: Integer;
@@ -8758,7 +8758,7 @@ begin
 end;
 {$IFEND <XE5}
 
-// Î»Óë£¬·µ»ØÔ­Öµ
+// ä½ä¸ï¼Œè¿”å›åŸå€¼
 function AtomicAnd(var Dest: Integer; const AMask: Integer): Integer; inline;
 var
   I: Integer;
@@ -8769,7 +8769,7 @@ begin
   until AtomicCmpExchange(Dest, I, Result) = Result;
 end;
 
-// Î»»ò£¬·µ»ØÔ­Öµ
+// ä½æˆ–ï¼Œè¿”å›åŸå€¼
 function AtomicOr(var Dest: Integer; const AMask: Integer): Integer; inline;
 var
   I: Integer;
@@ -8827,7 +8827,7 @@ end;
 
 function TQBytesCatHelper.Cat(const V: Variant): TQBytesCatHelper;
 begin
-  //??ÕâÊÇÒ»¸öÓĞÎÊÌâµÄÊµÏÖ£¬ÁÙÊ±ÏÈÕâÑù£¬»ØÍ·³é¿Õ¸Ä
+  //??è¿™æ˜¯ä¸€ä¸ªæœ‰é—®é¢˜çš„å®ç°ï¼Œä¸´æ—¶å…ˆè¿™æ ·ï¼Œå›å¤´æŠ½ç©ºæ”¹
   Result := Cat(@V, SizeOf(Variant));
 end;
 
@@ -9034,7 +9034,7 @@ end;
 function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Variant)
   : TQBytesCatHelper;
 begin
-  //??ÕâÊÇÒ»¸öÓĞÎÊÌâµÄÊµÏÖ£¬ÁÙÊ±ÏÈÕâÑù£¬»ØÍ·³é¿Õ¸Ä
+  //??è¿™æ˜¯ä¸€ä¸ªæœ‰é—®é¢˜çš„å®ç°ï¼Œä¸´æ—¶å…ˆè¿™æ ·ï¼Œå›å¤´æŠ½ç©ºæ”¹
   Result:=Insert(AIndex,@V,sizeof(Variant));
 end;
 
@@ -9171,8 +9171,8 @@ var
   ACharCode, AEndCode: Integer;
   AToken: QStringW;
   ps, pt, os: PQCharW;
-  // >0 Õı³£µÄ×Ö·û±àÂë
-  // <0 ÌØÊâ·¶Î§
+  // >0 æ­£å¸¸çš„å­—ç¬¦ç¼–ç 
+  // <0 ç‰¹æ®ŠèŒƒå›´
   function Unescape(var T: PQCharW): Integer;
   begin
     if T^ = '\' then
@@ -9219,17 +9219,17 @@ var
             Inc(T);
             Result := 11;
           end;
-        's': // ¿Õ°××Ö·û
+        's': // ç©ºç™½å­—ç¬¦
           begin
             Inc(T);
             Result := CHAR_SPACES;
           end;
-        'S': // ·Ç¿Õ°×
+        'S': // éç©ºç™½
           begin
             Inc(T);
             Result := CHAR_NOSPACES;
           end;
-        'u': // Unicode×Ö·û
+        'u': // Unicodeå­—ç¬¦
           begin
             if IsHexChar(T[1]) and IsHexChar(T[2]) and IsHexChar(T[3]) and
               IsHexChar(T[4]) then
@@ -9284,7 +9284,7 @@ var
           AEnd:=Ord(CharUpperW(QCharW(AEnd)));
           Result := (ACode >= AStart) and (ACode <= AEnd);
         end;
-        // Èç¹ûÊÇÀ©Õ¹Çø×Ö·û£¬ĞèÒªÁ½¸öÁ¬ĞøµÄ×ªÒå
+        // å¦‚æœæ˜¯æ‰©å±•åŒºå­—ç¬¦ï¼Œéœ€è¦ä¸¤ä¸ªè¿ç»­çš„è½¬ä¹‰
         if Result and ((ACode >= $D800) and (ACode <= $DFFF)) then
         begin
           Inc(S);
@@ -9308,7 +9308,7 @@ var
     while (pat^ <> #0) and (pat^ <> ']') do
     begin
       ACharCode := Unescape(pat);
-      if pat^ = '-' then // a-zÕâÖÖ·¶Î§
+      if pat^ = '-' then // a-zè¿™ç§èŒƒå›´
       begin
         Inc(pat);
         if pat^ <> ']' then
@@ -9321,7 +9321,7 @@ var
       else
         AEndCode := ACharCode;
       Result := IsMatch(ACharCode, AEndCode);
-      if Result then // ÔÚÆäÖĞµÄ»°£¬ºöÂÔµôºóÃæµÄÅĞ¶¨
+      if Result then // åœ¨å…¶ä¸­çš„è¯ï¼Œå¿½ç•¥æ‰åé¢çš„åˆ¤å®š
       begin
         Inc(S);
         SkipUntilW(pat, SetEndChar);
@@ -9334,17 +9334,17 @@ var
   end;
 
 begin
-  // SQL Like Óï·¨£º
-  // _ ´ú±íÒ»¸ö×Ö·û
-  // % * ´ú±íÈÎÒâ×Ö·û
-  // [×Ö·ûÁĞ±í] ÁĞ±íÖĞÈÎÒâ×Ö·û
-  // [^×Ö·ûÁĞ±í]/[!×Ö·ûÁĞ±í] ·ÇÁĞ±íÖĞÈÎÒâ×Ö·û
-  // ÒÔÏÂÎªQDACÀ©Õ¹
-  // \ ×ªÒå
-  // \d Êı×Ö£¨È«½ÇºÍ°ë½Ç£©
-  // \D ·ÇÊı×Ö£¨º¬È«½Ç£©
-  // \s ¿Õ°××Ö·û
-  // \S ·Ç¿Õ°××Ö·û
+  // SQL Like è¯­æ³•ï¼š
+  // _ ä»£è¡¨ä¸€ä¸ªå­—ç¬¦
+  // % * ä»£è¡¨ä»»æ„å­—ç¬¦
+  // [å­—ç¬¦åˆ—è¡¨] åˆ—è¡¨ä¸­ä»»æ„å­—ç¬¦
+  // [^å­—ç¬¦åˆ—è¡¨]/[!å­—ç¬¦åˆ—è¡¨] éåˆ—è¡¨ä¸­ä»»æ„å­—ç¬¦
+  // ä»¥ä¸‹ä¸ºQDACæ‰©å±•
+  // \ è½¬ä¹‰
+  // \d æ•°å­—ï¼ˆå…¨è§’å’ŒåŠè§’ï¼‰
+  // \D éæ•°å­—ï¼ˆå«å…¨è§’ï¼‰
+  // \s ç©ºç™½å­—ç¬¦
+  // \S éç©ºç™½å­—ç¬¦
   os := S;
   Result := nil;
   while (pat^ <> #0) and (S^ <> #0) do
@@ -9355,7 +9355,7 @@ begin
           Inc(S, CharSizeW(S));
           Inc(pat);
         end;
-      '[': // ×Ö·ûÁĞ±í
+      '[': // å­—ç¬¦åˆ—è¡¨
         begin
           Inc(pat);
           if (pat^ = '!') or (pat^ = '^') then
@@ -9383,7 +9383,7 @@ begin
       '*', '%':
         begin
           Inc(pat);
-          // Æ¥ÅäÈÎÒâ³¤¶ÈµÄÈÎÒâ×Ö·û
+          // åŒ¹é…ä»»æ„é•¿åº¦çš„ä»»æ„å­—ç¬¦
           if pat^ = #0 then
           begin
             Result := os;
@@ -9393,14 +9393,14 @@ begin
           end
           else
           begin
-            // ¶à¸öÁ¬ĞøµÄ*»ò%ºÅÊÓÎª
+            // å¤šä¸ªè¿ç»­çš„*æˆ–%å·è§†ä¸º
             while (pat^ = '%') or (pat^ = '*') do
               Inc(pat);
             ps := pat;
-            // ÕÒµ½ÏÂÒ»¸öÈÎÒâÆ¥Åä¹æÔò±ß½ç
+            // æ‰¾åˆ°ä¸‹ä¸€ä¸ªä»»æ„åŒ¹é…è§„åˆ™è¾¹ç•Œ
             while (pat^ <> #0) and (pat^ <> '*') do
               Inc(pat);
-            // Æ¥Åä×Ó´®¼°Ê£Óà²¿·Ö
+            // åŒ¹é…å­ä¸²åŠå‰©ä½™éƒ¨åˆ†
             AToken := StrDupX(ps, (IntPtr(pat) - IntPtr(ps)) shr 1);
             repeat
               pt := S;
@@ -9426,11 +9426,11 @@ begin
                 S := pt;
               end;
             until (S^ = #0);
-            // Èç¹ûÉÏÃæÃ»ÓĞÆ¥Åäµ½£¬ËµÃ÷Ê§°ÜÁË
+            // å¦‚æœä¸Šé¢æ²¡æœ‰åŒ¹é…åˆ°ï¼Œè¯´æ˜å¤±è´¥äº†
             Exit;
           end;
         end
-    else // ÆÕÍ¨×Ö·ûµÄ±È½Ï
+    else // æ™®é€šå­—ç¬¦çš„æ¯”è¾ƒ
       begin
         if not IsMatch(Ord(pat^), Ord(pat^)) then
           Exit;
@@ -9439,7 +9439,7 @@ begin
       end;
     end;
   end;
-  if (pat^ = '%') or (pat^ = '*') then // Ä£Ê½Æ¥Åä
+  if (pat^ = '%') or (pat^ = '*') then // æ¨¡å¼åŒ¹é…
     Inc(pat);
   if pat^ = #0 then
     Result := os;
@@ -9847,10 +9847,10 @@ end;
 function TQPagedList.DoCompare(p1, p2: Pointer): Integer;
 begin
   case IntPtr(TMethod(FOnCompare).Data) of
-    0: // È«¾Öº¯Êı
+    0: // å…¨å±€å‡½æ•°
       TQPagedListSortCompareG(TMethod(FOnCompare).Code)(p1, p2, Result);
 {$IFDEF UNICODE}
-    -1: // ÄäÃûº¯Êı
+    -1: // åŒ¿åå‡½æ•°
       TQPagedListSortCompareA(TMethod(FOnCompare).Code)(p1, p2, Result)
 {$ENDIF}
   else
@@ -9883,7 +9883,7 @@ end;
 
 function TQPagedList.Expand: TQPagedList;
 begin
-  // Õâ¸öº¯ÊıÖ»ÊÇÎª¼æÈİTList½Ó¿Ú±£Áô£¬TQPagedList²»ĞèÒª
+  // è¿™ä¸ªå‡½æ•°åªæ˜¯ä¸ºå…¼å®¹TListæ¥å£ä¿ç•™ï¼ŒTQPagedListä¸éœ€è¦
   Result := Self;
 end;
 
@@ -9968,7 +9968,7 @@ begin
   begin
     I := (l + H) shr 1;
     ATemp := FPages[I];
-    AMax := ATemp.FStartIndex + ATemp.FUsedCount - 1; // ×î´óµÄË÷ÒıºÅ
+    AMax := ATemp.FStartIndex + ATemp.FUsedCount - 1; // æœ€å¤§çš„ç´¢å¼•å·
     if AIndex > AMax then
       l := I + 1
     else
@@ -10010,7 +10010,7 @@ begin
     Result := APage.FItems[AIndex];
   end
   else
-    raise Exception.Create('Ë÷ÒıÔ½½ç:' + IntToStr(AIndex));
+    raise Exception.Create('ç´¢å¼•è¶Šç•Œ:' + IntToStr(AIndex));
 end;
 
 function TQPagedList.GetList: TPointerList;
@@ -10066,14 +10066,14 @@ begin
   end
   else
     H := FFirstDirtyPage - 1;
-  // ×î»µµÄÇé¿öÀ´Ëµ£¬¼ÙÉèÃ¿Ò³¶¼ÌîÂú£¬×îµÍË÷ÒıÎ»ÖÃÎªAIndex div Page
+  // æœ€åçš„æƒ…å†µæ¥è¯´ï¼Œå‡è®¾æ¯é¡µéƒ½å¡«æ»¡ï¼Œæœ€ä½ç´¢å¼•ä½ç½®ä¸ºAIndex div Page
   l := AIndex div FPageSize;
   while l <= H do
   begin
     I := (l + H) shr 1;
     ATemp := FPages[I];
     AMax := ATemp.FStartIndex + ATemp.FUsedCount - 1;
-    // ×î´óµÄË÷ÒıºÅ
+    // æœ€å¤§çš„ç´¢å¼•å·
     if AIndex > AMax then
       l := I + 1
     else
@@ -10167,7 +10167,7 @@ var
     AEmptyPages: Integer;
   begin
     APageCount := Length(FPages);
-    // ¼ÆËãĞèÒªµÄÒ³Êı
+    // è®¡ç®—éœ€è¦çš„é¡µæ•°
     ANeedPages := ACount div FPageSize;
     if (ACount mod FPageSize) <> 0 then
       Inc(ANeedPages);
@@ -10188,12 +10188,12 @@ var
       ASourcePage := FPages[APage];
       ASplitNeeded := AIndex > ASourcePage.FStartIndex;
       if ASplitNeeded then
-        // Èç¹û²åÈëµÄÎ»ÖÃÊÇÒ³ÖĞ¼ä£¬ĞèÒª¶îÍâÒ»Ò³À´´æÖüÇ°ÃæµÄÔªËØ
+        // å¦‚æœæ’å…¥çš„ä½ç½®æ˜¯é¡µä¸­é—´ï¼Œéœ€è¦é¢å¤–ä¸€é¡µæ¥å­˜è´®å‰é¢çš„å…ƒç´ 
         Inc(ANeedPages);
     end;
-    if AEmptyPages >= ANeedPages then // ¿ÕÏĞµÄÒ³×ã¹»µÄ»°
+    if AEmptyPages >= ANeedPages then // ç©ºé—²çš„é¡µè¶³å¤Ÿçš„è¯
     begin
-      if FCount = 0 then // Ã»ÓĞÈÎºÎ¼ÇÂ¼£¬´ËÊ±AIndex=0,Ö±½ÓÔ¤ÁôÒ³¾Í¿ÉÒÔÁË
+      if FCount = 0 then // æ²¡æœ‰ä»»ä½•è®°å½•ï¼Œæ­¤æ—¶AIndex=0,ç›´æ¥é¢„ç•™é¡µå°±å¯ä»¥äº†
       begin
         FLastUsedPage := ANeedPages - 1;
         FFirstDirtyPage := ANeedPages;
@@ -10211,7 +10211,7 @@ var
       end;
       Exit;
     end
-    else // ¿ÕÏĞÒ³²»×ã
+    else // ç©ºé—²é¡µä¸è¶³
     begin
       SetLength(FPages, APageCount + ANeedPages - AEmptyPages);
       if FLastUsedPage >= APage then
@@ -10280,7 +10280,7 @@ begin
     AIndex := 0;
   if TMethod(FOnCompare).Code <> nil then
     Find(p, AIndex);
-  if AIndex >= count then // ²åÈëÄ©Î²
+  if AIndex >= count then // æ’å…¥æœ«å°¾
   begin
     APage := FLastUsedPage;
     if (APage < 0) or (FPages[APage].FUsedCount = FPageSize) then
@@ -10304,7 +10304,7 @@ begin
     ADestPage.FItems[ADestPage.FUsedCount] := p;
     Inc(ADestPage.FUsedCount);
   end
-  else if AIndex <= 0 then // ²åÈë×îÇ°Ãæ
+  else if AIndex <= 0 then // æ’å…¥æœ€å‰é¢
   begin
     ADestPage := FPages[0];
     if ADestPage.FUsedCount < FPageSize then
@@ -10314,7 +10314,7 @@ begin
       ADestPage.FItems[0] := p;
       Inc(ADestPage.FUsedCount);
     end
-    else // µ±Ç°Ò³ÂúÁË£¬ĞèÒª·ÖÅäĞÂÒ³
+    else // å½“å‰é¡µæ»¡äº†ï¼Œéœ€è¦åˆ†é…æ–°é¡µ
     begin
       if FLastUsedPage < High(FPages) then
       begin
@@ -10339,16 +10339,16 @@ begin
     Dirty(1);
   end
   else
-  // ²åÈëÖĞ¼ä
+  // æ’å…¥ä¸­é—´
   begin
     APage := FindPage(AIndex);
     ADestPage := FPages[APage];
-    if (ADestPage.FUsedCount = FPageSize) then // Ä¿±êÒ³ÒÑÂú
+    if (ADestPage.FUsedCount = FPageSize) then // ç›®æ ‡é¡µå·²æ»¡
     begin
       ANewPage := APage + 1;
       if (FLastUsedPage = APage) or (FPages[ANewPage].FUsedCount = FPageSize)
       then
-      // ÏÂÒ»Ò³Ò²ÂúÁË
+      // ä¸‹ä¸€é¡µä¹Ÿæ»¡äº†
       begin
         Inc(FLastUsedPage);
         if FLastUsedPage = Length(FPages) then
@@ -10378,7 +10378,7 @@ begin
         ADestPage.FItems[AIndex] := p;
         Dirty(ANewPage + 1);
       end
-      else // ½«µ±Ç°Ò³µÄÄÚÈİÒÆÈëÏÂÒ»Ò³
+      else // å°†å½“å‰é¡µçš„å†…å®¹ç§»å…¥ä¸‹ä¸€é¡µ
       begin
         ATemp := FPages[ANewPage];
         System.Move(ATemp.FItems[0], ATemp.FItems[1],
@@ -10473,7 +10473,7 @@ end;
 
 procedure TQPagedList.SetCapacity(const Value: Integer);
 begin
-  // ½öÎª¼æÈİ±£Áô£¬Êµ¼Ê²»×öÈÎºÎÊÂÇé
+  // ä»…ä¸ºå…¼å®¹ä¿ç•™ï¼Œå®é™…ä¸åšä»»ä½•äº‹æƒ…
 end;
 
 procedure TQPagedList.SetItems(AIndex: Integer; const Value: Pointer);
@@ -10487,7 +10487,7 @@ begin
     APage.FItems[AIndex] := Value;
   end
   else
-    raise Exception.Create('Ë÷ÒıÔ½½ç:' + IntToStr(AIndex));
+    raise Exception.Create('ç´¢å¼•è¶Šç•Œ:' + IntToStr(AIndex));
 end;
 
 procedure TQPagedList.SetOnCompare(const Value: TQPagedListSortCompare);
@@ -10542,7 +10542,7 @@ procedure TQPagedList.Sort;
 
 begin
   if TMethod(FOnCompare).Code = nil then
-    raise Exception.Create('Î´Ö¸¶¨ÅÅĞò¹æÔò');
+    raise Exception.Create('æœªæŒ‡å®šæ’åºè§„åˆ™');
   if count > 0 then
     QuickSort(0, count - 1);
 end;
@@ -10871,12 +10871,12 @@ begin
 end;
 
 const
-  PR_ORDERED = 9; // Èç¹û´æÔÚË³ĞòÊıÁĞÊ±£¬Èç12345£¬´ËÊ±Ã¿¸öÖØ¸´×Ö·û¼õĞ¡µÄÈ¨Öµ
-  PR_REPEAT = 5; // Èç¹û´æÔÚÖØ¸´µÄÊıÁĞÊ±£¬Èçaaaa£¬´ËÊ±Ã¿´ÎÖØ¸´¼õÉÙµÄÈ¨Öµ
-  PR_CHARTYPE = 20; // Ã¿Ôö¼ÓÒ»¸ö²»Í¬ÀàĞÍµÄ×Ö·ûÊ±£¬Ôö¼ÓµÄÈ¨Öµ
-  PR_LENGTH = 10; // Ã¿Ôö¼ÓÒ»¸ö×Ö·ûÊ±£¬Ôö¼ÓµÄÈ¨Öµ
-  PR_CHART = 20; // °üº¬·ÇÊı×ÖºÍ×ÖÄ¸µÄ¿ØÖÆ×Ö·ûÊ±£¬¶îÍâÔö¼ÓµÄÈ¨Öµ
-  PR_UNICODE = 40; // °üº¬Unicode×Ö·ûÊ±£¬¶îÍâÔö¼ÓµÄÈ¨Öµ
+  PR_ORDERED = 9; // å¦‚æœå­˜åœ¨é¡ºåºæ•°åˆ—æ—¶ï¼Œå¦‚12345ï¼Œæ­¤æ—¶æ¯ä¸ªé‡å¤å­—ç¬¦å‡å°çš„æƒå€¼
+  PR_REPEAT = 5; // å¦‚æœå­˜åœ¨é‡å¤çš„æ•°åˆ—æ—¶ï¼Œå¦‚aaaaï¼Œæ­¤æ—¶æ¯æ¬¡é‡å¤å‡å°‘çš„æƒå€¼
+  PR_CHARTYPE = 20; // æ¯å¢åŠ ä¸€ä¸ªä¸åŒç±»å‹çš„å­—ç¬¦æ—¶ï¼Œå¢åŠ çš„æƒå€¼
+  PR_LENGTH = 10; // æ¯å¢åŠ ä¸€ä¸ªå­—ç¬¦æ—¶ï¼Œå¢åŠ çš„æƒå€¼
+  PR_CHART = 20; // åŒ…å«éæ•°å­—å’Œå­—æ¯çš„æ§åˆ¶å­—ç¬¦æ—¶ï¼Œé¢å¤–å¢åŠ çš„æƒå€¼
+  PR_UNICODE = 40; // åŒ…å«Unicodeå­—ç¬¦æ—¶ï¼Œé¢å¤–å¢åŠ çš„æƒå€¼
 
 function PasswordScale(const S: QStringW): Integer;
 var
@@ -10969,7 +10969,7 @@ begin
       Result := Result + PR_UNICODE;
     end;
     Result := Result + (ACharTypes - 1) * PR_CHARTYPE;
-    // ÃÜÂëÇ¿¶ÈµÄÈ¡Öµ·¶Î§£º<0
+    // å¯†ç å¼ºåº¦çš„å–å€¼èŒƒå›´ï¼š<0
     if Result < 0 then
       Result := 0;
   end;
@@ -11038,16 +11038,16 @@ begin
   else
   begin
     {
-      ËÄÉáÁùÈëÎå¿¼ÂÇ£¬
-      Îåºó·ÇÁã¾Í½øÒ»£¬
-      Îåºó½ÔÁã¿´ÆæÅ¼£¬
-      ÎåÇ°ÎªÅ¼Ó¦ÉáÈ¥£¬
-      ÎåÇ°ÎªÆæÒª½øÒ»¡£ }
-    if R > 50 then // ÁùÈë
+      å››èˆå…­å…¥äº”è€ƒè™‘ï¼Œ
+      äº”åéé›¶å°±è¿›ä¸€ï¼Œ
+      äº”åçš†é›¶çœ‹å¥‡å¶ï¼Œ
+      äº”å‰ä¸ºå¶åº”èˆå»ï¼Œ
+      äº”å‰ä¸ºå¥‡è¦è¿›ä¸€ã€‚ }
+    if R > 50 then // å…­å…¥
       PInt64(@Result)^ := ((V div 100) + 1) * 100
     else if R = 50 then //
     begin
-      if (((V div 100)) and $1) <> 0 then // ÆæÊı
+      if (((V div 100)) and $1) <> 0 then // å¥‡æ•°
         PInt64(@Result)^ := ((V div 100) + 1) * 100
       else
         PInt64(@Result)^ := (V div 100) * 100;
@@ -11057,39 +11057,39 @@ begin
   end;
 end;
 {
-  ½«»õ±ÒÖµ×ª»»Îªºº×Ö´óĞ´
+  å°†è´§å¸å€¼è½¬æ¢ä¸ºæ±‰å­—å¤§å†™
   Parameters
-  AVal : »õ±ÒÖµ
-  AFlags : ±êÖ¾Î»×éºÏ£¬ÒÔ¾ö¶¨Êä³ö½á¹ûµÄ¸ñÊ½
-  ANegText : µ±»õ±ÒÖµÎª¸ºÊıÊ±£¬ÏÔÊ¾µÄÇ°×º
-  AStartText : Ç°µ¼×Ö·û´®£¬Èç¡°ÈËÃñ±Ò£º¡±
-  AEndText : ºóÖÃ×Ö·û´®£¬Èç¡°Õû¡±
-  AGroupNum : ×éÊı£¬Ã¿¸öÊı×ÖÓëÆäµ¥Î»¹¹³ÉÒ»¸öÊı×é£¬AGroupNumÖ¸³öÒªÇóµÄ×éÊıÁ¿£¬
-  ²»Îª0Ê±£¬»áºöÂÔ±êÖ¾Î»ÖĞµÄMC_HIDE_ZEROºÍMC_MERGE_ZERO
-  ARoundMethod : ½ğ¶îÉáÈëµ½·ÖÊ±µÄËã·¨
-  AEndDigts : Ğ¡ÊıµãºóµÄÎ»Êı£¬-16~4 Ö®¼ä
+  AVal : è´§å¸å€¼
+  AFlags : æ ‡å¿—ä½ç»„åˆï¼Œä»¥å†³å®šè¾“å‡ºç»“æœçš„æ ¼å¼
+  ANegText : å½“è´§å¸å€¼ä¸ºè´Ÿæ•°æ—¶ï¼Œæ˜¾ç¤ºçš„å‰ç¼€
+  AStartText : å‰å¯¼å­—ç¬¦ä¸²ï¼Œå¦‚â€œäººæ°‘å¸ï¼šâ€
+  AEndText : åç½®å­—ç¬¦ä¸²ï¼Œå¦‚â€œæ•´â€
+  AGroupNum : ç»„æ•°ï¼Œæ¯ä¸ªæ•°å­—ä¸å…¶å•ä½æ„æˆä¸€ä¸ªæ•°ç»„ï¼ŒAGroupNumæŒ‡å‡ºè¦æ±‚çš„ç»„æ•°é‡ï¼Œ
+  ä¸ä¸º0æ—¶ï¼Œä¼šå¿½ç•¥æ ‡å¿—ä½ä¸­çš„MC_HIDE_ZEROå’ŒMC_MERGE_ZERO
+  ARoundMethod : é‡‘é¢èˆå…¥åˆ°åˆ†æ—¶çš„ç®—æ³•
+  AEndDigts : å°æ•°ç‚¹åçš„ä½æ•°ï¼Œ-16~4 ä¹‹é—´
   Returns
-  ·µ»Ø¸ñÊ½»¯ºóµÄ×Ö·û´®
+  è¿”å›æ ¼å¼åŒ–åçš„å­—ç¬¦ä¸²
   Examples
-  CapMoney(1.235,MC_READ,L"",L"",L"",0)=Ò¼Ôª·¡½ÇËÁ·Ö
-  CapMoney(1.235,MC_READ,L"",L"",L"",4)=ÁãÊ°Ò¼Ôª·¡½ÇËÁ·Ö
-  CapMoney(100.24,MC_READ,L"",L"",L"",4)=Ò¼°ÛÔªÁã·¡½ÇËÁ·Ö
-  CapMoney(-10012.235,MC_READ,L"¸º",L"£¤",L"",0)=£¤¸ºÒ¼ÍòÁãÒ¼Ê°·¡Ôª·¡½ÇËÁ·Ö
-  CapMoney(101005,MC_READ,L"¸º",L"",L"",0)=Ò¼Ê°ÍòÒ¼ÇªÁãÎéÔª
+  CapMoney(1.235,MC_READ,L"",L"",L"",0)=å£¹å…ƒè´°è§’è‚†åˆ†
+  CapMoney(1.235,MC_READ,L"",L"",L"",4)=é›¶æ‹¾å£¹å…ƒè´°è§’è‚†åˆ†
+  CapMoney(100.24,MC_READ,L"",L"",L"",4)=å£¹ä½°å…ƒé›¶è´°è§’è‚†åˆ†
+  CapMoney(-10012.235,MC_READ,L"è´Ÿ",L"ï¿¥",L"",0)=ï¿¥è´Ÿå£¹ä¸‡é›¶å£¹æ‹¾è´°å…ƒè´°è§’è‚†åˆ†
+  CapMoney(101005,MC_READ,L"è´Ÿ",L"",L"",0)=å£¹æ‹¾ä¸‡å£¹ä»Ÿé›¶ä¼å…ƒ
 }
 
 function CapMoney(AVal: Currency; AFlags: Integer;
   ANegText, AStartText, AEndText: QStringW; AGroupNum: Integer;
   ARoundMethod: TMoneyRoundMethod; AEndDigits: Integer = 2): QStringW;
 const
-  Nums: array [0 .. 9] of WideChar = (#$96F6 { Áã } , #$58F9 { Ò¼ } ,
-    #$8D30 { ·¡ } , #$53C1 { Èş } , #$8086 { ËÁ } , #$4F0D { Îé } , #$9646 { Â½ } ,
-    #$67D2 { Æâ } , #$634C { °Æ } , #$7396 { ¾Á } );
-  Units: array [0 .. 19] of WideChar = (#$94B1 { Ç® } , #$5398 { Àå } ,
-    #$5206 { ·Ö } , #$89D2 { ½Ç } , #$5706 { Ô² } , #$62FE { Ê° } , #$4F70 { °Û } ,
-    #$4EDF { Çª } , #$4E07 { Íò } , #$62FE { Ê° } , #$4F70 { °Û } , #$4EDF { Çª } ,
-    #$4EBF { ÒÚ } , #$62FE { Ê° } , #$4F70 { °Û } , #$4EDF { Çª } , #$4E07 { Íò } ,
-    #$5146 { Õ× } , #$62FE { Ê° } , #$4F70 { °Û } );
+  Nums: array [0 .. 9] of WideChar = (#$96F6 { é›¶ } , #$58F9 { å£¹ } ,
+    #$8D30 { è´° } , #$53C1 { å } , #$8086 { è‚† } , #$4F0D { ä¼ } , #$9646 { é™† } ,
+    #$67D2 { æŸ’ } , #$634C { æŒ } , #$7396 { ç– } );
+  Units: array [0 .. 19] of WideChar = (#$94B1 { é’± } , #$5398 { å˜ } ,
+    #$5206 { åˆ† } , #$89D2 { è§’ } , #$5706 { åœ† } , #$62FE { æ‹¾ } , #$4F70 { ä½° } ,
+    #$4EDF { ä»Ÿ } , #$4E07 { ä¸‡ } , #$62FE { æ‹¾ } , #$4F70 { ä½° } , #$4EDF { ä»Ÿ } ,
+    #$4EBF { äº¿ } , #$62FE { æ‹¾ } , #$4F70 { ä½° } , #$4EDF { ä»Ÿ } , #$4E07 { ä¸‡ } ,
+    #$5146 { å…† } , #$62FE { æ‹¾ } , #$4F70 { ä½° } );
 var
   R, V: Int64;
   I: Integer;
@@ -11099,14 +11099,14 @@ var
 begin
   AVal := MoneyRound(AVal, ARoundMethod);
   { -922,337,203,685,477.5808 ~ 922,337,203,685,477.5807 }
-  V := PInt64(@AVal)^; // ¾«È·µ½·Ö
+  V := PInt64(@AVal)^; // ç²¾ç¡®åˆ°åˆ†
   if V < 0 then
     V := -V
   else
     SetLength(ANegText, 0);
-  if (AFlags and MC_END_PATCH) <> 0 then // Èç¹ûÒª°üº¬AEndText£¬Ôò±ØĞè°üº¬µ¥Î»
+  if (AFlags and MC_END_PATCH) <> 0 then // å¦‚æœè¦åŒ…å«AEndTextï¼Œåˆ™å¿…éœ€åŒ…å«å•ä½
     AFlags := AFlags or MC_UNIT;
-  if AGroupNum > 0 then // Èç¹ûÒª·Ö×é
+  if AGroupNum > 0 then // å¦‚æœè¦åˆ†ç»„
   begin
     AFlags := AFlags and (not(MC_MERGE_ZERO or MC_HIDE_ZERO));
     if AGroupNum > 20 then
@@ -11116,9 +11116,9 @@ begin
     AEndDigits := -16
   else if AEndDigits > 4 then
     AEndDigits := 4;
-  SetLength(ATemp, 40); // ×î´ó³¤¶ÈÎª40
+  SetLength(ATemp, 40); // æœ€å¤§é•¿åº¦ä¸º40
   pd := PWideChar(ATemp) + 39;
-  // ¼ÆËãÊµ¼ÊµÄ·Ö×éÊıÁ¿£¬×¢Òâ´ËÊ±°üº¬Ç®ºÍÀå£¬×îºó»á¸ù¾İÊµ¼ÊµÄÏÔÊ¾ĞèÒª½Ø¶Ï
+  // è®¡ç®—å®é™…çš„åˆ†ç»„æ•°é‡ï¼Œæ³¨æ„æ­¤æ—¶åŒ…å«é’±å’Œå˜ï¼Œæœ€åä¼šæ ¹æ®å®é™…çš„æ˜¾ç¤ºéœ€è¦æˆªæ–­
   I := 0;
   while V > 0 do
   begin
@@ -11134,7 +11134,7 @@ begin
   begin
     if I > AGroupNum then
       raise Exception.CreateFmt(STooSmallCapMoneyGroup, [AGroupNum, I]);
-    while AGroupNum > I do // ÒªÇóµÄ·Ö×éÊı¶à
+    while AGroupNum > I do // è¦æ±‚çš„åˆ†ç»„æ•°å¤š
     begin
       pd^ := Units[I];
       Dec(pd);
@@ -11144,7 +11144,7 @@ begin
     end;
   end;
   Inc(pd);
-  if (AFlags and MC_HIDE_ZERO) <> 0 then // Èç¹ûÒş²Ø×ó²àµÄÁãÖµ£¬ÔòÌø¹ı
+  if (AFlags and MC_HIDE_ZERO) <> 0 then // å¦‚æœéšè—å·¦ä¾§çš„é›¶å€¼ï¼Œåˆ™è·³è¿‡
   begin
     while pd^ <> #0 do
     begin
@@ -11197,10 +11197,10 @@ begin
   if (AFlags and MC_UNIT) <> 0 then
   begin
     if Length(Result) = 0 then
-      Result := 'ÁãÔ²';
+      Result := 'é›¶åœ†';
     if (AFlags and MC_END_PATCH) <> 0 then
     begin
-      if PWideChar(Result)[Length(Result) - 1] = Units[2] then // ·Ö
+      if PWideChar(Result)[Length(Result) - 1] = Units[2] then // åˆ†
         Result := AStartText + ANegText + Result
       else
         Result := AStartText + ANegText + Result + AEndText;
@@ -11211,7 +11211,7 @@ begin
   else
   begin
     if Length(Result) = 0 then
-      Result := 'Áã';
+      Result := 'é›¶';
     Result := AStartText + ANegText + Result;
   end;
 end;
@@ -11223,10 +11223,10 @@ var
   c: Integer;
   AHandled: Boolean;
 begin
-  S := Trim(CNFullToHalf(S)); // ½«È«½Ç×ª»»Îª°ë½Ç
+  S := Trim(CNFullToHalf(S)); // å°†å…¨è§’è½¬æ¢ä¸ºåŠè§’
   c := CharCountW(S);
   Result := (c >= AMinLen) and (c <= AMaxLen);
-  // ĞÕÃûµÄ×Ö·ûÊı£¨×¢Òâ²»ÊÇ×Ö½ÚÊı£©Ó¦ÔÚ×îĞ¡ºÍ×î´ó³¤¶ÈÖ®¼ä
+  // å§“åçš„å­—ç¬¦æ•°ï¼ˆæ³¨æ„ä¸æ˜¯å­—èŠ‚æ•°ï¼‰åº”åœ¨æœ€å°å’Œæœ€å¤§é•¿åº¦ä¹‹é—´
   if not Result then
     Exit;
   p := PWideChar(S);
@@ -11246,34 +11246,34 @@ begin
       end;
     end;
     if (p^ >= '0') and (p^ <= '9') then
-      // È«½Ç»ò°ë½ÇÊı×Ö
+      // å…¨è§’æˆ–åŠè§’æ•°å­—
       Result := nctNum in AllowChars
     else if ((p^ >= 'a') and (p^ <= 'z')) or ((p^ >= 'A') and (p^ <= 'Z')) then
-      // È«½Ç»ò°ë½ÇÓ¢ÎÄ
+      // å…¨è§’æˆ–åŠè§’è‹±æ–‡
       Result := nctAlpha in AllowChars
-    else if p^ = ' ' then // ¿Õ¸ñ
+    else if p^ = ' ' then // ç©ºæ ¼
       Result := nctSpace in AllowChars
-    else if p^ = '¡¤' then // ÉÙÊıÃñ×å»òÍâ¹úÈËĞÕÃû·Ö¸ô·û
+    else if p^ = 'Â·' then // å°‘æ•°æ°‘æ—æˆ–å¤–å›½äººå§“ååˆ†éš”ç¬¦
       Result := nctDot in AllowChars
-    else if p^ < #$80 then // 0-127 Ö®¼ä
+    else if p^ < #$80 then // 0-127 ä¹‹é—´
       Result := nctSymbol in AllowChars
-    else // Ê£ÏÂµÄÊÇÕÒºº×ÖµÄÇø¼äÁË
+    else // å‰©ä¸‹çš„æ˜¯æ‰¾æ±‰å­—çš„åŒºé—´äº†
     begin
-      // 2400-4DBF CJKÍ³Ò»±íÒâ·ûºÅÀ©Õ¹
-      // 4DC0-4DFF Ò×¾­ÁùÊ®ËÄØÔ·ûºÅ
+      // 2400-4DBF CJKç»Ÿä¸€è¡¨æ„ç¬¦å·æ‰©å±•
+      // 4DC0-4DFF æ˜“ç»å…­åå››å¦ç¬¦å·
       if (p^ >= #$2400) and (p^ <= #$4DFF) then
         Result := nctSymbol in AllowChars
       else if (p^ >= #$4E00) and (p^ <= #$9FA5) then
-        // CJK Í³Ò»±íÒâ·ûºÅ
+        // CJK ç»Ÿä¸€è¡¨æ„ç¬¦å·
         Result := nctChinese in AllowChars
-      else if (p^ >= #$E000) and (p^ <= #$F8FF) then // ×Ô¶¨Òå×Ö·ûÇø
+      else if (p^ >= #$E000) and (p^ <= #$F8FF) then // è‡ªå®šä¹‰å­—ç¬¦åŒº
         Result := nctCustom in AllowChars
-      else if (p^ >= #$D800) and (p^ <= #$DBFF) then // CJK À©Õ¹×Ö·ûÇø
+      else if (p^ >= #$D800) and (p^ <= #$DBFF) then // CJK æ‰©å±•å­—ç¬¦åŒº
       begin
         Result := nctChinese in AllowChars;
         Inc(p);
       end
-      else if (p^ >= #$F900) and (p^ <= #$FAFF) then // CJK¼æÈİÏóĞÎÎÄ×Ö
+      else if (p^ >= #$F900) and (p^ <= #$FAFF) then // CJKå…¼å®¹è±¡å½¢æ–‡å­—
         Result := nctChinese in AllowChars
       else
         Result := nctOther in AllowChars;
@@ -11373,7 +11373,7 @@ end;
 function ChineseId15To18(CardNo: QStringW): QStringW;
 begin
   if (Length(CardNo) <> 15) then
-    raise Exception.Create('15Î»×ª18Î»¹ı³ÌÒªÇóÉí·İÖ¤ºÅ±ØĞèÎª15Î»¡£');
+    raise Exception.Create('15ä½è½¬18ä½è¿‡ç¨‹è¦æ±‚èº«ä»½è¯å·å¿…éœ€ä¸º15ä½ã€‚');
   CardNo := LeftStrW(CardNo, 6, false) + '19' + RightStrW(CardNo, 9, false);
   Result := CardNo + CheckChineseId18(CardNo);
 end;
@@ -11388,23 +11388,23 @@ begin
   len := Length(CardNo);
   Result := false;
   if (len in [15, 18]) then
-  // ³¤¶È¼ì²é
+  // é•¿åº¦æ£€æŸ¥
   begin
     if (Length(CardNo) = 15) then
       CardNo := ChineseId15To18(CardNo);
     if CheckChineseId18(CardNo) <>
-      CharUpperW(CardNo[{$IFDEF NEXTGEN}17{$ELSE}18{$ENDIF}]) then // Éí·İÖ¤ºÅĞ£ÑéÂë¼ì²é
+      CharUpperW(CardNo[{$IFDEF NEXTGEN}17{$ELSE}18{$ENDIF}]) then // èº«ä»½è¯å·æ ¡éªŒç æ£€æŸ¥
       Exit;
     p := PQCharW(CardNo);
     AreaCode := StrDupX(p, 6);
     Inc(p, 6);
-    if not TryStrToInt(StrDupX(p, 4), Y) then // Äê
+    if not TryStrToInt(StrDupX(p, 4), Y) then // å¹´
       Exit;
     Inc(p, 4);
-    if not TryStrToInt(StrDupX(p, 2), M) then // ÔÂ
+    if not TryStrToInt(StrDupX(p, 2), M) then // æœˆ
       Exit;
     Inc(p, 2);
-    if not TryStrToInt(StrDupX(p, 2), d) then // ÈÕ
+    if not TryStrToInt(StrDupX(p, 2), d) then // æ—¥
       Exit;
     Inc(p, 2);
     if not TryEncodeDate(Y, M, d, Birthday) then
@@ -11514,7 +11514,7 @@ begin
   if (Length(S) = 11) then
   begin
     p := PQCharW(S);
-    if p^ = '1' then // ÖĞ¹úÊÖ»úºÅÒÔ1´òÍ·£¬
+    if p^ = '1' then // ä¸­å›½æ‰‹æœºå·ä»¥1æ‰“å¤´ï¼Œ
     begin
       Result := True;
       while p^ <> #0 do
@@ -11609,20 +11609,20 @@ var
 begin
   pRel := PQCharW(ARel);
   pBase := PQCharW(ABase);
-  if StartWithW(pRel, 'http', True) then // ¾ø¶ÔÂ·¾¶£¿
+  if StartWithW(pRel, 'http', True) then // ç»å¯¹è·¯å¾„ï¼Ÿ
   begin
     p := pRel;
     Inc(pRel, 4);
     if (pRel^ = 's') or (pRel^ = 'S') then
       // https?
       Inc(pRel);
-    if StartWithW(pRel, '://', false) then // Ê¹ÓÃµÄ¾ø¶ÔÂ·¾¶£¬Ö±½Ó·µ»Ø
+    if StartWithW(pRel, '://', false) then // ä½¿ç”¨çš„ç»å¯¹è·¯å¾„ï¼Œç›´æ¥è¿”å›
     begin
       Result := ARel;
       Exit;
     end;
   end
-  else if StartWithW(pRel, '//', True) then // »ùÓÚABaseÏàÍ¬µÄĞ­ÒéµÄ¾ø¶ÔÂ·¾¶
+  else if StartWithW(pRel, '//', True) then // åŸºäºABaseç›¸åŒçš„åè®®çš„ç»å¯¹è·¯å¾„
   begin
     if StartWithW(pBase, 'https', True) then
       Result := 'https:' + ARel
@@ -11689,10 +11689,10 @@ end;
 constructor TQReadOnlyMemoryStream.Create;
 begin
   inherited;
-  // Õâ¸ö¹¹Ôìº¯Êı±ä³É±£»¤µÄ£¬ÒÔ±ÜÃâÍâ²¿·ÃÎÊ
+  // è¿™ä¸ªæ„é€ å‡½æ•°å˜æˆä¿æŠ¤çš„ï¼Œä»¥é¿å…å¤–éƒ¨è®¿é—®
 end;
 
-function TQReadOnlyMemoryStream.Write(const Buffer; count: Integer): Longint;
+function TQReadOnlyMemoryStream.Write(const Buffer; count: Longint): Longint;
 begin
   raise EStreamError.Create(SStreamReadOnly);
 end;
