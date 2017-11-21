@@ -422,6 +422,11 @@ var
 
 begin
   Result := True;
+  if not Assigned(FActiveDS) then
+    begin
+    FActiveDS := FDSRoot.Add;
+    FActiveRecs := FActiveDS.AddArray('Records');
+    end;
   ARoot := FActiveRecs.Add;
   ARoot.Add('Status').AsInteger := Integer(ARec.Status);;
   if ARec.Status <> usInserted then
@@ -757,6 +762,11 @@ var
   end;
 
 begin
+  if not Assigned(FActiveDS) then
+    begin
+    FActiveDS := FDSRoot.Add;
+    FActiveRecs := FActiveDS.AddArray('Records');
+    end;
   ARoot := FActiveRecs.Add('Row');
   ARoot.Add('Status').AsInteger := Integer(ARec.Status);
   if ARec.Status <> usInserted then

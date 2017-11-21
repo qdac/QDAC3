@@ -1,0 +1,36 @@
+object frmObjInspector: TfrmObjInspector
+  Left = 0
+  Top = 0
+  Caption = 'Object Inspector'
+  ClientHeight = 480
+  ClientWidth = 640
+  Position = ScreenCenter
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  DesignerMasterStyle = 0
+  object Layout2: TLayout
+    Align = Client
+    Size.Width = 340.000000000000000000
+    Size.Height = 480.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object SpeedButton1: TSpeedButton
+      Position.X = 80.000000000000000000
+      Position.Y = 112.000000000000000000
+      Size.Width = 201.000000000000000000
+      Size.Height = 145.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'stepperbuttonright'
+      Text = 'SpeedButton1'
+    end
+  end
+  object Layout1: TLayout
+    Align = Left
+    Size.Width = 300.000000000000000000
+    Size.Height = 480.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+  end
+end

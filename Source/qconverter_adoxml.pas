@@ -588,6 +588,8 @@ begin
     Result := True
   else
   begin
+    if not Assigned(FDataRoot) then
+      FDataRoot := FRootNode.Add('rs:data');
     Result := False;
     case ARec.Status of
       usUnmodified:

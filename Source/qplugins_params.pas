@@ -99,6 +99,8 @@ type
       const len: DWORD); stdcall;
     procedure Delete(const idx: DWORD; const count: DWORD); stdcall;
     function CopyTo(dest: Pointer; const idx, count: DWORD): DWORD; stdcall;
+    procedure Replace(const idx: DWORD; const src: Pointer;
+      const len: DWORD); stdcall;
     procedure LoadFromFile(const fileName: PWideChar); stdcall;
     procedure SaveToFile(const fileName: PWideChar); stdcall;
     procedure AppendToFile(const fileName: PWideChar); stdcall;
@@ -333,9 +335,6 @@ function ParamsHelper(AParams: IQParams): IQParamsHelper;
 function InstanceOf(AIntf: IInterface): TObject; overload;
 function InstanceOf(AIntf: IInterface; var AObj: TObject): Boolean; overload;
 function PointerOf(AIntf: IInterface): Pointer; inline;
-
-var
-  StringService: IQStringService = nil;
 
 implementation
 
@@ -736,10 +735,7 @@ end;
 
 function NewString(const S: QStringW): IQString;
 begin
-  if Assigned(StringService) then
-    Result := StringService.NewString(PWideChar(S))
-  else
-    Result := TQUnicodeString.Create(S);
+  Result:=TQUnicodeString.Create(S);
 end;
 
 { TQParam }
@@ -1480,6 +1476,9 @@ begin
         ATemp.Add(AParam.Name, AParam.ParamType).AsStream := AParam.AsStream;
       ptArray:
         ATemp.Add(AParam.Name, AParam.AsArray);
+      ptInterface:
+        ATemp.Add(AParam.Name, AParam.ParamType).AsInterface :=
+          AParam.AsInterface;
     end;
   end;
 end;
@@ -2619,7 +2618,7 @@ function TQBytes.CopyTo(dest: Pointer; const idx, count: DWORD): DWORD;
 var
   AMax: DWORD;
 begin
-  if idx > FCatHelper.Position then
+  if idx > Cardinal(FCatHelper.Position) then
     Result := 0
   else
   begin
@@ -2651,53 +2650,85 @@ end;
 
 function TQBytes.GetByte(const idx: DWORD; var value: BYTE): Boolean;
 begin
-
+  Result := idx < FCatHelper.Position;
+  if Result then
+    value := FCatHelper.Bytes[idx];
 end;
 
 function TQBytes.GetCapcacity: DWORD;
 begin
-
+  Result := FCatHelper.Capacity;
 end;
 
 function TQBytes.GetData: Pointer;
 begin
-
+  Result := FCatHelper.Start;
 end;
 
 function TQBytes.GetLength: DWORD;
 begin
-
+  Result := FCatHelper.Position;
 end;
 
 procedure TQBytes.Insert(const idx: DWORD; const src: Pointer;
   const len: DWORD);
 begin
-
+  FCatHelper.Insert(idx, src, len);
 end;
 
 procedure TQBytes.LoadFromFile(const fileName: PWideChar);
+var
+  AStream: TFileStream;
 begin
+  AStream := TFileStream.Create(fileName, fmOpenRead or fmShareDenyWrite);
+  try
+    FCatHelper.Capacity := AStream.Size;
+    AStream.ReadBuffer(FCatHelper.Start^, FCatHelper.Capacity);
+    FCatHelper.Position := AStream.Size;
+  finally
+    FreeAndNil(AStream);
+  end;
+end;
 
+procedure TQBytes.Replace(const idx: DWORD; const src: Pointer;
+  const len: DWORD);
+begin
+  if idx + len > FCatHelper.Position then
+  begin
+    FCatHelper.Position := idx;
+    FCatHelper.Cat(src, len);
+  end
+  else
+    Move(src^, PByte(IntPtr(FCatHelper.Start) + idx)^, len);
 end;
 
 procedure TQBytes.SaveToFile(const fileName: PWideChar);
+var
+  AStream: TFileStream;
 begin
-
+  AStream := TFileStream.Create(fileName, fmCreate);
+  try
+    AStream.WriteBuffer(FCatHelper.Start^, FCatHelper.Position);
+  finally
+    FreeAndNil(AStream);
+  end;
 end;
 
 function TQBytes.SetByte(const idx: DWORD; const value: BYTE): Boolean;
 begin
-
+  Result := idx < FCatHelper.Position;
+  if Result then
+    PByte(IntPtr(FCatHelper.Start) + idx)^ := value;
 end;
 
 procedure TQBytes.SetCapacity(const len: DWORD);
 begin
-
+  FCatHelper.Capacity := len;
 end;
 
 procedure TQBytes.SetLength(const len: DWORD);
 begin
-
+  FCatHelper.Position := len;
 end;
 
 end.

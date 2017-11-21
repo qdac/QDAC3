@@ -87,6 +87,7 @@ const
 type
   TQMacroManager = class;
   TQMacroItem = class;
+  TQMacroComplied = class;
   /// <summary>
   /// 查找动态宏的值时的通过回调函数获取相应的值，返回值直接赋给AMacro.Value.Value即可。
   /// </summary>
@@ -139,6 +140,20 @@ type
     /// 值是易变的，每次获取宏的值时，返回的值都可能是不同的
     );
 
+  IQMacroIterator = interface
+    ['{3DB5D84F-0539-4C10-9476-E6B71D3099DE}']
+    // 开始替换
+    procedure BeginReplace(AMacro: TQMacroItem);
+    // 判断是否还有要处理的数据
+    function HasNext: Boolean;
+    // 执行一次替换
+    function Replace: QStringW;
+    // 结束替换
+    procedure EndReplace;
+    // 获取当前活动的迭代器序号
+    function GetItemIndex: Integer;
+  end;
+
   // TQMacroValue类型的指针类型定义
   PQMacroValue = ^TQMacroValue;
 
@@ -150,6 +165,7 @@ type
     SavePoint: Integer; // 保存点
     ReplaceId: Integer; // 替换内部标记，用于在一次缓存中缓存mvStable类型的值
     Volatile: TQMacroVolatile; // 稳定性
+    Iterator: IQMacroIterator; // 值如果是一个列表，则此处指向迭代器
     /// 宏的下一个取值
     /// 宏的前一个取值
     Prior, Next: PQMacroValue; // 链表，用于实现栈式访问
@@ -203,6 +219,7 @@ type
     FDelayCount: Integer; // 延迟绑定的宏数量
     FPushId: Integer; // 用于检测入出栈变化，以决定是否在替换时进行编译检查的设置
     FText: QStringW; // 原始要替换的文本
+    FMacroStart, FMacroEnd: QStringW; //
     FReplacedText: QStringW; // 末次替换结果，缓存以减少替换次数
     FItems: TQCompliedArray; // 编译项目
     FFlags: Integer;
@@ -248,6 +265,32 @@ type
     property Flags: Integer read FFlags; // 编译时设置的标志位
   end;
 
+  TQMacroIterator = class(TInterfacedObject, IQMacroIterator)
+  protected
+    FItemIndex: Integer;
+    FHasNext: Boolean;
+    FMacro: TQMacroItem;
+    procedure BeginReplace(AMacro: TQMacroItem); virtual;
+    function HasNext: Boolean; virtual;
+    function Replace: QStringW; virtual;
+    procedure EndReplace; virtual;
+    function GetItemIndex: Integer; virtual;
+  public
+    constructor Create; overload;
+  end;
+
+  TQMacroStringsIterator = class(TQMacroIterator)
+  protected
+    FList: TStrings;
+    FComplied: TQMacroComplied;
+    procedure BeginReplace(AMacro: TQMacroItem); override;
+    function HasNext: Boolean; override;
+    function Replace: QStringW; override;
+  public
+    constructor Create(AList: TStrings); overload;
+    destructor Destroy; override;
+  end;
+
   /// <summary>
   /// TQMacroManager用于管理已知的宏定义，并提供各种基本的操作支持。
   /// </summary>
@@ -279,6 +322,7 @@ type
     procedure DoFetchFieldValue(AMacro: TQMacroItem; const AQuoter: QCharW);
     procedure DoFetchFieldQuotedValue(AMacro: TQMacroItem;
       const AQuoter: QCharW);
+    procedure DoFetchRecordNo(AMacro: TQMacroItem; const AQuoter: QCharW);
     function IncW(p: PQCharW; ALen: Integer): PQCharW; inline;
     procedure InternalPush(AMacro: TQMacroItem; const AValue: QStringW;
       AOnFetch: TQMacroValueFetchEvent; AStable: TQMacroVolatile; ATag: IntPtr);
@@ -289,6 +333,8 @@ type
     function CharUnescape(var p: PQCharW): QCharW;
     function Unescape(const S: QStringW): QStringW; overload;
     function Unescape(p: PQCharW; ALen: Integer): QStringW; overload;
+    procedure DoFetchIterator(AMacro: TQMacroItem; const AQuoter: QCharW);
+    procedure DoFetchIteratorIndex(AMacro: TQMacroItem; const AQuoter: QCharW);
   public
     /// <summary>构造函数</summary>
     constructor Create; overload;
@@ -297,38 +343,53 @@ type
     /// <summary>入栈指定名称和值的宏定义</summary>
     /// <param name="AName">宏名称</param>
     /// <param name="AValue">宏对应的具体字符串值</param>
-    procedure Push(const AName, AValue: QStringW); overload;
+    /// <returns>返回添加的宏定义对象</returns>
+    function Push(const AName, AValue: QStringW): TQMacroItem; overload;
     /// <summary>入栈指定名称和值的宏定义</summary>
     /// <param name="AName">宏名称</param>
     /// <param name="AOnFetchValue">获取宏对应的值时调用的回调函数</param>
     /// <param name="AVolatile">函数返回值的稳定性</param>
     /// <param name="ATag">用户附加的标签数据</param>
-    procedure Push(const AName: QStringW; AOnFetchValue: TQMacroValueFetchEvent;
-      AVolatile: TQMacroVolatile = mvVolatile; ATag: IntPtr = 0); overload;
+    /// <returns>返回添加的宏定义对象</returns>
+    function Push(const AName: QStringW; AOnFetchValue: TQMacroValueFetchEvent;
+      AVolatile: TQMacroVolatile = mvVolatile; ATag: IntPtr = 0)
+      : TQMacroItem; overload;
 
     /// <summary>入栈指定名称和值的宏定义</summary>
     /// <param name="AName">宏名称</param>
     /// <param name="AOnFetchValue">获取宏对应的值时调用的回调函数</param>
     /// <param name="AVolatile">函数返回值的稳定性</param>
     /// <param name="ATag">用户附加的标签数据</param>
-    procedure Push(const AName: QStringW;
-      AOnFetchValue: TQMacroValueFetchEventG;
-      AVolatile: TQMacroVolatile = mvVolatile; ATag: IntPtr = 0); overload;
+    /// <returns>返回添加的宏定义对象</returns>
+    function Push(const AName: QStringW; AOnFetchValue: TQMacroValueFetchEventG;
+      AVolatile: TQMacroVolatile = mvVolatile; ATag: IntPtr = 0)
+      : TQMacroItem; overload;
 {$IFDEF UNICODE}
     /// <summary>入栈指定名称和值的宏定义</summary>
     /// <param name="AName">宏名称</param>
     /// <param name="AOnFetchValue">获取宏对应的值时调用的回调函数</param>
     /// <param name="AVolatile">函数返回值的稳定性</param>
     /// <param name="ATag">用户附加的标签数据</param>
-    procedure Push(const AName: QStringW;
-      AOnFetchValue: TQMacroValueFetchEventA;
-      AVolatile: TQMacroVolatile = mvVolatile; ATag: IntPtr = 0); overload;
+    /// <returns>返回添加的宏定义对象</returns>
+    function Push(const AName: QStringW; AOnFetchValue: TQMacroValueFetchEventA;
+      AVolatile: TQMacroVolatile = mvVolatile; ATag: IntPtr = 0)
+      : TQMacroItem; overload;
 {$ENDIF}
     /// <summary>入栈指定数据集的所有字段为宏定义</summary>
     /// <param name="ADataSet">数据集对象</param>
     /// <param name="ANameSpace">命名前缀，如果不为空，则为前缀.字段名的宏定义名称</param>
-
-    procedure Push(ADataSet: TDataSet; const ANameSpace: QStringW); overload;
+    // <remarks>同时会添加[ANameSpace.]ADataSet.Name.Rows的宏定义，用于迭代输出
+    procedure Push(ADataSet: TDataSet;
+      const ANameSpace: QStringW = ''); overload;
+    /// <summary>入栈指定的迭代器</summary>
+    /// <param name="AName">宏名称</param>
+    /// <param name="AIterator">迭代器接口实例</param>
+    /// <param name="AVolatile"> 函数返回值的稳定性</param>
+    /// <param name="ATag">用户附加的标签数据</param>
+    /// <returns>返回添加的宏定义对象</returns>
+    function Push(const AName: QStringW; AIterator: IQMacroIterator;
+      AVolatile: TQMacroVolatile = mvVolatile; ATag: IntPtr = 0)
+      : TQMacroItem; overload;
     /// <summary>出栈指定名称的宏定义</summary>
     /// <param name="AName">要出栈的宏定义名称</param>
     procedure Pop(const AName: QStringW); overload;
@@ -437,11 +498,24 @@ type
     IsMacro: Boolean;
   end;
 
+  TQMacroDataSetIterator = class(TQMacroIterator)
+  protected
+    FDataSet: TDataSet;
+    FComplied: TQMacroComplied;
+    function HasNext: Boolean; override;
+    procedure BeginReplace(AMacro: TQMacroItem); override;
+    function Replace: QStringW; override;
+    procedure EndReplace; override;
+  public
+    constructor Create(ADataSet: TDataSet); overload;
+    destructor Destroy; override;
+  end;
+
 procedure FreeMacroValue(AValue: PQMacroValue); // inline;
 begin
 {$IFDEF UNICODE}
   if TMethod(AValue.OnFetchValue).Data = Pointer(-1) then
-    PQMacroValueFetchEventA(@TMethod(AValue.OnFetchValue).Code)^:=nil;
+    PQMacroValueFetchEventA(@TMethod(AValue.OnFetchValue).Code)^ := nil;
 {$ENDIF}
   Dispose(AValue);
 end;
@@ -656,6 +730,47 @@ begin
         AMacro.Value.Value := AField.AsString;
     end;
   end;
+end;
+
+procedure TQMacroManager.DoFetchIterator(AMacro: TQMacroItem;
+  const AQuoter: QCharW);
+var
+  ABuilder: TQStringCatHelperW;
+begin
+  if Assigned(AMacro.Value.Iterator) then
+  begin
+    with AMacro.Value.Iterator do
+    begin
+      ABuilder := TQStringCatHelperW.Create;
+      BeginReplace(AMacro);
+      try
+        while HasNext do
+          ABuilder.Cat(Replace);
+        AMacro.Value.Value := ABuilder.Value;
+      finally
+        FreeAndNil(ABuilder);
+        EndReplace;
+      end;
+    end;
+  end;
+end;
+
+procedure TQMacroManager.DoFetchIteratorIndex(AMacro: TQMacroItem;
+  const AQuoter: QCharW);
+var
+  AIterator: IQMacroIterator;
+begin
+  AIterator := IQMacroIterator(AMacro.Value.Tag);
+  AMacro.Value.Value := IntToStr(AIterator.GetItemIndex);
+end;
+
+procedure TQMacroManager.DoFetchRecordNo(AMacro: TQMacroItem;
+  const AQuoter: QCharW);
+var
+  ADataSet: TDataSet;
+begin
+  ADataSet := TDataSet(AMacro.Value.Tag);
+  AMacro.Value.Value := IntToStr(ADataSet.RecNo);
 end;
 
 procedure TQMacroManager.DoFetchValue(AMacro: TQMacroItem;
@@ -1130,6 +1245,8 @@ begin
   else
     AIsNewResult := False;
   AResult.FPushId := FLastPushId;
+  AResult.FMacroStart := AMacroStart;
+  AResult.FMacroEnd := AMacroEnd;
   if Length(AText) = 0 then
     SetLength(AResult.FItems, 0)
   else
@@ -1257,6 +1374,8 @@ begin
         mvVolatile:
           Dec(FVolatileCount);
       end;
+      if Assigned(AValue.Iterator) then
+        Pop(AName + '.@Index');
       AItem.FValue := AItem.Value.Prior;
       Dispose(AValue);
       if AItem.FValue = nil then
@@ -1266,39 +1385,43 @@ begin
   end;
 end;
 
-procedure TQMacroManager.Push(const AName: QStringW;
+function TQMacroManager.Push(const AName: QStringW;
   AOnFetchValue: TQMacroValueFetchEvent; AVolatile: TQMacroVolatile;
-  ATag: IntPtr);
+  ATag: IntPtr): TQMacroItem;
 var
   AIndex: Integer;
-  AItem: TQMacroItem;
 begin
   if not Find(AName, AIndex) then
   begin
-    AItem := TQMacroItem.Create(Self);
-    AItem.FName := AName;
-    InternalPush(AItem, '', AOnFetchValue, AVolatile, ATag);
-    FMacroes.Insert(AIndex, AItem);
+    Result := TQMacroItem.Create(Self);
+    Result.FName := AName;
+    InternalPush(Result, '', AOnFetchValue, AVolatile, ATag);
+    FMacroes.Insert(AIndex, Result);
   end
   else
-    InternalPush(Items[AIndex], '', AOnFetchValue, AVolatile, ATag);
+  begin
+    Result := Items[AIndex];
+    InternalPush(Result, '', AOnFetchValue, AVolatile, ATag);
+  end;
   Inc(FLastPushId);
 end;
 
-procedure TQMacroManager.Push(const AName, AValue: QStringW);
+function TQMacroManager.Push(const AName, AValue: QStringW): TQMacroItem;
 var
   AIndex: Integer;
-  AItem: TQMacroItem;
 begin
   if not Find(AName, AIndex) then
   begin
-    AItem := TQMacroItem.Create(Self);
-    AItem.FName := AName;
-    InternalPush(AItem, AValue, nil, mvImmutable, 0);
-    FMacroes.Insert(AIndex, AItem);
+    Result := TQMacroItem.Create(Self);
+    Result.FName := AName;
+    InternalPush(Result, AValue, nil, mvImmutable, 0);
+    FMacroes.Insert(AIndex, Result);
   end
   else
-    InternalPush(Items[AIndex], AValue, nil, mvImmutable, 0);
+  begin
+    Result := Items[AIndex];
+    InternalPush(Result, AValue, nil, mvImmutable, 0);
+  end;
 end;
 
 function TQMacroManager.Replace(const AText: QStringW;
@@ -1515,11 +1638,21 @@ begin
   begin
     for I := 0 to ADataSet.FieldCount - 1 do
       Pop(ADataSet.Fields[I].FieldName);
+    if Length(ADataSet.Name) > 0 then
+    begin
+      Pop(ADataSet.Name + '.@Rows');
+      Pop(ADataSet.Name + '.@RecNo');
+    end;
   end
   else
   begin
     for I := 0 to ADataSet.FieldCount - 1 do
       Pop(ANameSpace + '.' + ADataSet.Fields[I].FieldName);
+    if Length(ADataSet.Name) > 0 then
+    begin
+      Pop(ANameSpace + '.' + ADataSet.Name + '.Rows');
+      Pop(ANameSpace + '.' + ADataSet.Name + '.@RecNo');
+    end;
   end;
 end;
 
@@ -1537,6 +1670,13 @@ begin
       Push(AField.FieldName + '.Quoted', DoFetchFieldQuotedValue, mvVolatile,
         IntPtr(AField));
     end;
+    if Length(ADataSet.Name) > 0 then
+    begin
+      Push(ADataSet.Name + '.@Rows', TQMacroDataSetIterator.Create(ADataSet),
+        mvVolatile);
+      Push(ADataSet.Name + '.@RecNo', DoFetchRecordNo, mvVolatile,
+        IntPtr(ADataSet));
+    end;
   end
   else
   begin
@@ -1545,15 +1685,22 @@ begin
       AField := ADataSet.Fields[I];
       Push(ANameSpace + '.' + AField.FieldName, DoFetchFieldValue, mvVolatile,
         IntPtr(AField));
-      Push(ANameSpace + AField.FieldName + '.Quoted', DoFetchFieldQuotedValue,
-        mvVolatile, IntPtr(AField));
+      Push(ANameSpace + '.' + AField.FieldName + '.Quoted',
+        DoFetchFieldQuotedValue, mvVolatile, IntPtr(AField));
+    end;
+    if Length(ADataSet.Name) > 0 then
+    begin
+      Push(ANameSpace + '.' + ADataSet.Name + '.@Rows',
+        TQMacroDataSetIterator.Create(ADataSet), mvVolatile);
+      Push(ANameSpace + '.' + ADataSet.Name + '.@RecNo', DoFetchRecordNo,
+        mvVolatile, IntPtr(ADataSet));
     end;
   end;
 end;
 
-procedure TQMacroManager.Push(const AName: QStringW;
+function TQMacroManager.Push(const AName: QStringW;
   AOnFetchValue: TQMacroValueFetchEventG; AVolatile: TQMacroVolatile;
-  ATag: IntPtr);
+  ATag: IntPtr): TQMacroItem;
 var
   AHandler: TQMacroValueFetchEvent;
 begin
@@ -1561,16 +1708,16 @@ begin
   begin
     TMethod(AHandler).Code := @AOnFetchValue;
     TMethod(AHandler).Data := nil;
-    Push(AName, AHandler, AVolatile, ATag);
+    Result := Push(AName, AHandler, AVolatile, ATag);
   end
   else
-    Push(AName, TQMacroValueFetchEvent(nil), AVolatile, ATag);
+    Result := Push(AName, TQMacroValueFetchEvent(nil), AVolatile, ATag);
 end;
 {$IFDEF UNICODE}
 
-procedure TQMacroManager.Push(const AName: QStringW;
+function TQMacroManager.Push(const AName: QStringW;
   AOnFetchValue: TQMacroValueFetchEventA; AVolatile: TQMacroVolatile;
-  ATag: IntPtr);
+  ATag: IntPtr): TQMacroItem;
 var
   AHandler: TQMacroValueFetchEvent;
 begin
@@ -1579,10 +1726,10 @@ begin
     AHandler := nil;
     PQMacroValueFetchEventA(@TMethod(AHandler).Code)^ := AOnFetchValue;
     TMethod(AHandler).Data := Pointer(-1);
-    Push(AName, AHandler, AVolatile, ATag);
+    Result := Push(AName, AHandler, AVolatile, ATag);
   end
   else
-    Push(AName, TQMacroValueFetchEvent(nil), AVolatile, ATag);
+    Result := Push(AName, TQMacroValueFetchEvent(nil), AVolatile, ATag);
 end;
 
 procedure TQMacroManager.SetMacroMissed(AHandler: TQMacroMissEventA);
@@ -1671,6 +1818,15 @@ function TQMacroManager.Unescape(const S: QStringW): QStringW;
 begin
   Result := Unescape(PQCharW(S), Length(S));
 end;
+
+function TQMacroManager.Push(const AName: QStringW; AIterator: IQMacroIterator;
+  AVolatile: TQMacroVolatile; ATag: IntPtr): TQMacroItem;
+begin
+  Result := Push(AName, DoFetchIterator, AVolatile, ATag);
+  Result.FValue.Iterator := AIterator;
+  Push(AName + '.@Index', DoFetchIteratorIndex, mvVolatile, IntPtr(AIterator));
+end;
+
 { TQMacroItem }
 
 constructor TQMacroItem.Create(AOwner: TQMacroManager);
@@ -1884,6 +2040,138 @@ begin
     AItemHeader.IsMacro := FItems[I].IsMacro;
     AStream.WriteBuffer(AItemHeader, SizeOf(AItemHeader));
   end;
+end;
+
+{ TQMacroDataSetIterator }
+// XXX(Format,MacroStart,MacroEnd)
+procedure TQMacroDataSetIterator.BeginReplace(AMacro: TQMacroItem);
+begin
+  FDataSet.DisableControls;
+  FItemIndex := -1;
+  if AMacro <> FMacro then
+  begin
+    FMacro := AMacro;
+    if Assigned(FComplied) then
+      FreeAndNil(FComplied);
+    if Assigned(AMacro.Params) and (AMacro.Params.Count = 3) then
+      FComplied := AMacro.Owner.Complie(AMacro.Params[0].AsString,
+        AMacro.Params[1].AsString, AMacro.Params[2].AsString);
+  end;
+end;
+
+constructor TQMacroDataSetIterator.Create(ADataSet: TDataSet);
+begin
+  inherited Create;
+  FDataSet := ADataSet;
+end;
+
+destructor TQMacroDataSetIterator.Destroy;
+begin
+  if Assigned(FComplied) then
+    FreeAndNil(FComplied);
+  inherited;
+end;
+
+procedure TQMacroDataSetIterator.EndReplace;
+begin
+  FDataSet.EnableControls;
+end;
+
+function TQMacroDataSetIterator.HasNext: Boolean;
+begin
+  if FItemIndex = -1 then
+    FDataSet.First
+  else
+    FDataSet.Next;
+  Inc(FItemIndex);
+  Result := not FDataSet.Eof;
+end;
+
+function TQMacroDataSetIterator.Replace: QStringW;
+begin
+  if Assigned(FComplied) then
+    Result := FComplied.Replace
+  else
+    Result := '';
+end;
+
+{ TQMacroStringsIterator }
+
+procedure TQMacroStringsIterator.BeginReplace(AMacro: TQMacroItem);
+begin
+  FItemIndex := -1;
+  FHasNext := FList.Count > 0;
+  if AMacro <> FMacro then
+  begin
+    FMacro := AMacro;
+    if Assigned(FComplied) then
+      FreeAndNil(FComplied);
+    if Assigned(AMacro.Params) and (AMacro.Params.Count = 3) then
+      FComplied := AMacro.Owner.Complie(AMacro.Params[0].AsString,
+        AMacro.Params[1].AsString, AMacro.Params[2].AsString);
+  end;
+end;
+
+constructor TQMacroStringsIterator.Create(AList: TStrings);
+begin
+  inherited Create;
+  FList := AList;
+end;
+
+destructor TQMacroStringsIterator.Destroy;
+begin
+  if Assigned(FComplied) then
+    FreeAndNil(FComplied);
+  inherited;
+end;
+
+function TQMacroStringsIterator.HasNext: Boolean;
+begin
+  Result := FHasNext;
+  Inc(FItemIndex);
+  FHasNext := FItemIndex + 1 < FList.Count;
+end;
+
+function TQMacroStringsIterator.Replace: QStringW;
+begin
+  if Assigned(FComplied) then
+    Result := FComplied.Replace
+  else
+    Result := '';
+end;
+
+{ TQMacroIterator }
+
+procedure TQMacroIterator.BeginReplace(AMacro: TQMacroItem);
+begin
+  FMacro := AMacro;
+  FItemIndex := 0;
+end;
+
+constructor TQMacroIterator.Create;
+begin
+  inherited Create;
+  FItemIndex := -1;
+end;
+
+procedure TQMacroIterator.EndReplace;
+begin
+
+end;
+
+function TQMacroIterator.GetItemIndex: Integer;
+begin
+  Result := FItemIndex;
+end;
+
+function TQMacroIterator.HasNext: Boolean;
+begin
+  Result := false;
+end;
+
+function TQMacroIterator.Replace: QStringW;
+begin
+  Result := '';
 end;
 
 end.

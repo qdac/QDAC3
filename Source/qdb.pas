@@ -101,6 +101,9 @@ uses classes, sysutils, types, RTLConsts, qstring, qrbtree, qdigest, qworker,
   Posix.SysSelect,
   Posix.Systime
 {$ENDIF}
+{$IFDEF LINUX}
+  ,Linuxapi.KernelIoctl
+{$ENDIF}
 {$IFDEF UNICODE}
     , Generics.Collections
 {$ENDIF}
@@ -2486,12 +2489,12 @@ begin
   end
   else
     SetLength(FValues, FFields.Count);
-//  OutputDebugString(PChar(IntToHex(IntPtr(Self), 8) + ' Created.'));
+  // OutputDebugString(PChar(IntToHex(IntPtr(Self), 8) + ' Created.'));
 end;
 
 destructor TQRecord.Destroy;
 begin
-//  OutputDebugString(PChar(IntToHex(IntPtr(Self), 8) + ' free.'));
+  // OutputDebugString(PChar(IntToHex(IntPtr(Self), 8) + ' free.'));
   ClearValues;
   TQRecord(FBookmark) := nil;
   inherited;
@@ -3391,14 +3394,34 @@ begin
             [usUnmodified]);
       end;
     dcmInserted:
-      CopyRecords(ChangedRecords, 0, ChangedRecords.Count, [usInserted]);
+      if Assigned(ASource.FCloneSource) then
+        CopyRecords(ASource.FCloneSource.ChangedRecords, 0,
+          ASource.FCloneSource.ChangedRecords.Count, [usInserted])
+      else
+        CopyRecords(ASource.ChangedRecords, 0, ASource.ChangedRecords.Count,
+          [usInserted]);
     dcmDeleted:
-      CopyRecords(ChangedRecords, 0, ChangedRecords.Count, [usDeleted]);
+      if Assigned(ASource.FCloneSource) then
+        CopyRecords(ASource.FCloneSource.ChangedRecords, 0,
+          ASource.FCloneSource.ChangedRecords.Count, [usDeleted])
+      else
+        CopyRecords(ASource.ChangedRecords, 0, ASource.ChangedRecords.Count,
+          [usDeleted]);
     dcmModified:
-      CopyRecords(ChangedRecords, 0, ChangedRecords.Count, [usModified]);
+      if Assigned(ASource.FCloneSource) then
+        CopyRecords(ASource.FCloneSource.ChangedRecords, 0,
+          ASource.FCloneSource.ChangedRecords.Count, [usModified])
+      else
+        CopyRecords(ASource.ChangedRecords, 0, ASource.ChangedRecords.Count,
+          [usModified]);
     dcmChanged:
-      CopyRecords(ChangedRecords, 0, ChangedRecords.Count,
-        [usInserted, usDeleted, usModified]);
+      if Assigned(ASource.FCloneSource) then
+        CopyRecords(ASource.FCloneSource.ChangedRecords, 0,
+          ASource.FCloneSource.ChangedRecords.Count,
+          [usInserted, usDeleted, usModified])
+      else
+        CopyRecords(ASource.ChangedRecords, 0, ASource.ChangedRecords.Count,
+          [usInserted, usDeleted, usModified]);
     dcmSorted: // 以排序结果为依据复制数据
       CopyRecords(ASource.FSortedRecords, 0, ASource.FSortedRecords.Count,
         [usUnmodified, usInserted, usDeleted, usModified]);
@@ -4114,7 +4137,7 @@ begin
   Result := False;
   AExp := TQFilterExp.Create(Self);
   try
-    AExp.Parse(AFilterExp,foCaseInsensitive in AFilterOptions,false);
+    AExp.Parse(AFilterExp, foCaseInsensitive in AFilterOptions, false);
     for I := 0 to FOriginRecords.Count - 1 do
     begin
       if AExp.Accept(FOriginRecords[I], AFilterOptions) then
@@ -4190,7 +4213,6 @@ var
     ARec: TQRecord;
     Accept: Boolean;
   begin
-    ClearBuffers;
     while ACount > 0 do
     begin
       ARec := AFilterSource[AStart];
@@ -4253,10 +4275,10 @@ var
       if not Assigned(FFilterExp) then
       begin
         FFilterExp := TQFilterExp.Create(Self);
-        FFilterExp.Parse(Filter,foCaseInsensitive in FilterOptions,false);
+        FFilterExp.Parse(Filter, foCaseInsensitive in FilterOptions, false);
       end
       else if AParseNeeded then
-        FFilterExp.Parse(Filter,foCaseInsensitive in FilterOptions,false);
+        FFilterExp.Parse(Filter, foCaseInsensitive in FilterOptions, false);
       if MultiThreadNeeded(C) then
       begin
         Workers.&For(C, AFilterSource.Count - 1, DoThreadFilterJob, False, nil);
@@ -4295,7 +4317,7 @@ begin
     if not Assigned(FFilterExp) then
       FFilterExp := TQFilterExp.Create(Self);
     if (FFilterExp.Count = 0) then
-      FFilterExp.Parse(Filter,false,false);
+      FFilterExp.Parse(Filter, false, false);
   end;
   if Restart then
   begin
@@ -6660,7 +6682,7 @@ begin
     SetLength(AFilter, Length(AFilter) - 5);
   if not Assigned(FFilterExp) then
     FFilterExp := TQFilterExp.Create(Self);
-  FFilterExp.Parse(AFilter,false,false);
+  FFilterExp.Parse(AFilter, false, false);
   if not Filtered then
     Filtered := True
   else

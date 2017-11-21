@@ -8,6 +8,7 @@ uses classes, sysutils, syncobjs, qworker, qstring, qplugins, qplugins_params,
   qplugins_base;
 
 type
+{$HPPEMIT '#pragma link "qplugins_qworker"'}
   TJobCallback = class
   private
     FCallback: IQJobCallback;
@@ -61,8 +62,8 @@ type
     function Plan(AJob: IQJobCallback; AParams: IQParams; APlan: PWideChar;
       ARunInMainThread: Boolean): Int64; stdcall;
     procedure &For(AJob: IQForJobCallback; AParams: IQParams;
-      AStart, AStop: Integer; AMsgWait: Boolean); stdcall;
-    procedure Clear(AHandle: THandle; AWaitRunningDone: Boolean); stdcall;
+      AStart, AStop: Int64; AMsgWait: Boolean); stdcall;
+    procedure Clear(AHandle: Int64; AWaitRunningDone: Boolean); stdcall;
     function CreateJobGroup(AByOrder: Boolean): IQJobGroup; stdcall;
     procedure SetWorkers(const AMinWorkers, AMaxWorkers: Integer); stdcall;
     procedure PeekCurrentWorkers(var ATotal, AIdle, ABusy: Integer); stdcall;
@@ -94,7 +95,8 @@ type
     function GetAfterDone: IQNotifyCallback; stdcall;
     function GetByOrder: Boolean; stdcall;
     function GetRuns: Integer; stdcall;
-
+    function GetMaxWorkers: Integer; stdcall;
+    procedure SetMaxWorkers(const AValue: Integer); stdcall;
     function _GetAfterDone: StandInterfaceResult; stdcall;
   public
     constructor Create(AByOrder: Boolean); overload;
@@ -120,7 +122,7 @@ begin
     AParams), ARunInMainThread, jdfFreeAsObject);
 end;
 
-procedure TQWorkerService.Clear(AHandle: THandle; AWaitRunningDone: Boolean);
+procedure TQWorkerService.Clear(AHandle: Int64; AWaitRunningDone: Boolean);
 begin
   Workers.ClearSingleJob(AHandle, AWaitRunningDone);
 end;
@@ -156,7 +158,7 @@ begin
 end;
 
 procedure TQWorkerService.&For(AJob: IQForJobCallback; AParams: IQParams;
-  AStart, AStop: Integer; AMsgWait: Boolean);
+  AStart, AStop: Int64; AMsgWait: Boolean);
 var
   ALooper: TQForJobs;
   ACallback: TForJobCallback;
@@ -287,6 +289,11 @@ begin
   Result := FGroup.Count;
 end;
 
+function TQJobGroupService.GetMaxWorkers: Integer;
+begin
+  Result := FGroup.MaxWorkers;
+end;
+
 function TQJobGroupService.GetRuns: Integer;
 begin
   Result := FGroup.Runs;
@@ -312,6 +319,11 @@ end;
 procedure TQJobGroupService.SetAfterDone(AValue: IQNotifyCallback);
 begin
   FAfterDone := AValue;
+end;
+
+procedure TQJobGroupService.SetMaxWorkers(const AValue: Integer);
+begin
+  FGroup.MaxWorkers := AValue;
 end;
 
 function TQJobGroupService.Wait(ABlockMessage: Boolean; ATimeout: Cardinal)

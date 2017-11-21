@@ -125,6 +125,7 @@ implementation
 
 resourcestring
   SSQLImportUnsupport = 'SQL 转换器不支持导入操作。';
+  SSQLConverterMustExportMeta='SQL 转换器导出时必需包含 merMeta 选项以利用元数据生成脚本。';
   STooManyTables = '数据集内容来自多个不同的表，无法导出为脚本。';
   STableNameMissed = '数据集内容的来源表未定义，无法导出为脚本。';
   { TQSQLConverter }
@@ -201,6 +202,8 @@ begin
     FMacros := TQMacroManager.Create;
     FMacros.IgnoreCase := true;
   end;
+  if not (merMeta in ExportRanges) then
+    DatabaseError(SSQLConverterMustExportMeta,self);
 end;
 
 procedure TQSQLConverter.BeforeImport;

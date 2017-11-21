@@ -252,6 +252,7 @@ type
     FTables: array of TFDTableObject;
     FChanges: array of TFDChange;
     FFdFieldTypes: array of Word;
+    procedure PrepareFieldTypes(ADefs:TQFieldDefs);
     // µº»Î
     procedure BeforeImport; override;
     procedure BeginImport(AIndex: Integer); override;
@@ -855,6 +856,15 @@ begin
     raise Exception.Create(SBadStreamFormat);
 end;
 
+procedure TQFDConverter.PrepareFieldTypes(ADefs:TQFieldDefs);
+var
+  I:Integer;
+begin
+  SetLength(FFdFieldTypes, ADefs.Count);
+  for I := 0 to ADefs.Count - 1 do
+    FFdFieldTypes[I] := DBType2FDType((ADefs[I] as TQFieldDef).DBType);
+end;
+
 function TQFDConverter.ReadRecord(ARec: TQRecord): Boolean;
 
   procedure LoadRow(const ARowName: QStringW; ATypeIdx: Integer);
@@ -948,8 +958,8 @@ var
   I: Integer;
 begin
   inherited;
+  PrepareFieldTypes(ADefs);
   FHelper.ObjectBeginWrite('ColumnList', True, false);
-  SetLength(FFdFieldTypes, ADefs.Count);
   for I := 0 to ADefs.Count - 1 do
   begin
     ADef := ADefs[I] as TQFieldDef;
@@ -957,7 +967,6 @@ begin
     FHelper.PropWriteStr('Name', ADef.Name);
     FHelper.PropWriteStr('SourceName', ADef.BaseName);
     FHelper.PropWriteInteger('SourceID', ADef.DBNo);
-    FFdFieldTypes[I] := DBType2FDType(ADef.DBType);
     FHelper.WriteType(FFdFieldTypes[I]);
     FHelper.PropWriteInteger('Precision', ADef.Precision);
     FHelper.PropWriteInteger('Scale', ADef.Scale);
@@ -1054,6 +1063,8 @@ function TQFDConverter.WriteRecord(ARec: TQRecord): Boolean;
 
 begin
   Result := True;
+  if Length(FFdFieldTypes)=0 then
+    PrepareFieldTypes((ARec.Owner as TQDataSet).FieldDefs as TQFieldDefs);
   FHelper.ObjectBeginWrite('Row', false, false);
   try
     if ARec.Status <> usUnmodified then

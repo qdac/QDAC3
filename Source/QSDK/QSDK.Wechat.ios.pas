@@ -21,6 +21,7 @@ type
   SendAuthReq = interface;
   WXMediaMessage = interface;
 
+  {I 'wxpay.inc'}
   /// <summary>微信Api接口函数对象</summary>
   WXApi = interface(NSObject) // 在这里声明对象方法(-)
     ['{D2B85162-56EC-49A1-8147-44FF05A43147}']

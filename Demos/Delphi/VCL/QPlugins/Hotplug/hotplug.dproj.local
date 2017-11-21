@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2017/06/05 19:31:36.000.852,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/09/24 21:49:35.000.900,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/09/29 13:52:47.000.917,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/09/29 19:56:19.000.469,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/10/14 11:26:00.839,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/10/14 11:26:50.817,H:\User\QDAC\Demos\Delphi\VCL\QPlugins\Hotplug\Unit1.dfm=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.dfm</Transaction>
+    <Transaction>2017/10/14 11:26:50.817,H:\User\QDAC\Demos\Delphi\VCL\QPlugins\Hotplug\Unit1.pas=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/10/14 11:26:53.387,H:\User\QDAC\Demos\Delphi\VCL\QPlugins\Hotplug\hotplug.dproj=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+  </Transactions>
+	<ActiveMobileDevice>
+		<NoProfile Android="Nexus_5X_API_26"/>
+		<POSX iOSSimulator="iPhone5"/>
+	</ActiveMobileDevice>
+</BorlandProject>

@@ -936,6 +936,7 @@ type
     property MaxItems: Integer read FMaxItems write FMaxItems;
     property Count: Integer read FCount;
   end;
+
   //
   TQWorkerExtClass = class of TQWorkerExt;
 
@@ -1633,6 +1634,7 @@ type
     FPosted: Integer; // 已经提交给QWorker执行的数量
     FTag: Pointer;
     FCanceled: Integer;
+    FRunningWorkers, FMaxWorkers: Integer;
     FFreeAfterDone: Boolean;
     function GetCount: Integer;
     procedure DoJobExecuted(AJob: PQJob);
@@ -1753,6 +1755,8 @@ type
     property FreeAfterDone: Boolean read FFreeAfterDone write FFreeAfterDone;
     /// <summary>已执行完成的作业数量</summary>
     property Runs: Integer read FRuns;
+    /// <summary>允许同时执行的工作者数量，<=0为不限制（默认）>/summary>
+    property MaxWorkers: Integer read FMaxWorkers write FMaxWorkers;
   end;
 
   TQForJobs = class
@@ -6461,7 +6465,7 @@ begin
         begin
           AIsDone := True;
           FWaitResult := wrSignaled;
-          FEvent.SetEvent;
+          AtomicExchange(FPosted,0);
         end
         else if ByOrder then
         begin
@@ -6471,7 +6475,17 @@ begin
             FItems.Delete(0); // 投寄失败时，Post自动释放了作业
             FWaitResult := wrAbandoned;
             AIsDone := True;
-            FEvent.SetEvent;
+          end
+        end
+        else if (FMaxWorkers > 0) and (FPosted <= FMaxWorkers) and
+          (FPosted <= FItems.Count) then
+        begin
+          if Workers.Post(FItems[FPosted-1]) = 0 then
+          begin
+            AtomicDecrement(FPosted);
+            FItems.Delete(0); // 投寄失败时，Post自动释放了作业
+            FWaitResult := wrAbandoned;
+            AIsDone := True;
           end
         end
         else
@@ -6489,14 +6503,16 @@ begin
             FWaitResult := wrAbandoned;
             AtomicExchange(FCanceled, 0);
           end;
-          FEvent.SetEvent;
         end;
       end;
     finally
       FLocker.Leave;
     end;
     if AIsDone then
+      begin
+      FEvent.SetEvent;
       DoAfterDone;
+      end;
   end;
 end;
 
@@ -6567,7 +6583,8 @@ begin
   FLocker.Enter;
   try
     FWaitResult := wrIOCompletion;
-    if FPrepareCount > 0 then // 正在添加项目，加到列表中，等待Run
+    if (FPrepareCount > 0) or ((FMaxWorkers > 0) and (FPosted >= FMaxWorkers))
+    then // 正在添加项目或者已经到达允许并发的上限，则加到列表中，等待Run或有作业完成
     begin
       FItems.Add(AJob);
       Result := True;
@@ -6605,7 +6622,8 @@ begin
       AIndex := FItems.Count
     else if AIndex < 0 then
       AIndex := 0;
-    if FPrepareCount > 0 then // 正在添加项目，加到列表中，等待Run
+    if (FPrepareCount > 0) or ((FMaxWorkers > 0) and (FPosted >= FMaxWorkers))
+    then // 正在添加项目或者已经到达允许并发的上限，则加到列表中，等待Run或有作业完成
     begin
       FItems.Insert(AIndex, AJob);
       Result := True;
@@ -6706,7 +6724,8 @@ begin
               AtomicIncrement(FPosted);
           end;
         end
-        else
+        else if (FMaxWorkers <= 0) or (FPosted < FMaxWorkers) then
+
         begin
           for I := 0 to FItems.Count - 1 do
           begin
@@ -6720,6 +6739,8 @@ begin
               end
               else
                 AtomicIncrement(FPosted);
+              if FPosted = FMaxWorkers then
+                Break;
             end;
           end;
         end;
@@ -6728,7 +6749,11 @@ begin
       FLocker.Leave;
     end;
     if FWaitResult <> wrIOCompletion then
+      begin
       DoAfterDone;
+      FEvent.SetEvent;
+      end;
+//    DebugOut('Posted remain %d',[FPosted]);
   end;
 end;
 

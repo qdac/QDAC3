@@ -5,9 +5,10 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, qplugins_vcl_formsvc, qplugins_loader_lib,
-  qstring, qplugins,qplugins_base, qplugins_params, qplugins_vcl_Messages, qplugins_formsvc,
+  qstring, qplugins_base, qplugins, qplugins_params, qplugins_vcl_Messages,
+  qplugins_formsvc,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.ComCtrls, Winapi.GDIPOBJ;
+  Vcl.ComCtrls;
 
 type
   TForm1 = class(TForm)
@@ -39,6 +40,7 @@ type
     procedure DoDockChildFree(AForm: IQFormService);
     procedure DockPage(AFormService: IQFormService;
       AHoldNeeded: Boolean = False);
+    procedure DoPageDoubleClick(ASender: TObject);
   public
     { Public declarations }
   end;
@@ -50,6 +52,12 @@ implementation
 
 uses unit2;
 {$R *.dfm}
+
+type
+  THackedPageControl = class(TPageControl)
+  public
+    property OnDblClick;
+  end;
 
 procedure TForm1.Button1Click(Sender: TObject);
 var
@@ -225,6 +233,22 @@ begin
   end;
 end;
 
+procedure TForm1.DoPageDoubleClick(ASender: TObject);
+var
+  AService: IQFormService;
+begin
+  // 双击关闭当前窗体
+  if PageControl1.PageCount > 0 then
+  begin
+    AService := IQFormService(PageControl1.ActivePage.Tag);
+    AService.Close;
+    AService.UnhookEvents;
+    FreeObject(PageControl1.ActivePage);
+    if PageControl1.PageCount > 0 then
+      PageControl1.ActivePageIndex := 0;
+  end;
+end;
+
 procedure TForm1.FormCreate(Sender: TObject);
 var
   APath: String;
@@ -234,6 +258,9 @@ begin
   PluginsManager.Loaders.Add(TQDLLLoader.Create(APath, '.dll'));
   PluginsManager.Loaders.Add(TQBPLLoader.Create(APath, '.bpl'));
   PluginsManager.Start;
+  PageControl1.ControlStyle := PageControl1.ControlStyle +
+    [csClickEvents, csDoubleClicks];
+  THackedPageControl(PageControl1).OnDblClick := DoPageDoubleClick;
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);

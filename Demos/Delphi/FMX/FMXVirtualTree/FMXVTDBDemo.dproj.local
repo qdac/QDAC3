@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2017/06/05 19:31:36.000.852,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/08/10 17:51:19.000.608,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/08/10 17:53:16.000.825,H:\User\FMXVirtualTree\Unit1.pas=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/08/10 17:53:16.000.825,H:\User\FMXVirtualTree\Unit1.fmx=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.fmx</Transaction>
+    <Transaction>2017/08/10 17:53:23.000.858,H:\User\FMXVirtualTree\Project1.dproj=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>2017/10/25 15:18:00.000.855,=H:\User\FMXVirtualTree\Unit2.pas</Transaction>
+    <Transaction>2017/10/25 15:18:24.000.683,H:\User\FMXVirtualTree\Unit2.pas=H:\User\FMXVirtualTree\qdac_fmx_virtualtree.pas</Transaction>
+    <Transaction>2017/10/25 19:34:40.000.964,H:\User\FMXVirtualTree\FMXVT.dproj=H:\User\FMXVirtualTree\Project1.dproj</Transaction>
+    <Transaction>2017/10/26 19:03:45.000.011,=H:\User\FMXVirtualTree\Unit2.pas</Transaction>
+    <Transaction>2017/10/26 19:04:20.000.679,H:\User\FMXVirtualTree\dbtreeview.fmx=H:\User\FMXVirtualTree\Unit2.fmx</Transaction>
+    <Transaction>2017/10/26 19:04:20.000.679,H:\User\FMXVirtualTree\dbtreeview.pas=H:\User\FMXVirtualTree\Unit2.pas</Transaction>
+    <Transaction>2017/10/26 19:24:21.000.605,H:\User\FMXVirtualTree\main.fmx=H:\User\FMXVirtualTree\Unit1.fmx</Transaction>
+    <Transaction>2017/10/26 19:24:21.000.605,H:\User\FMXVirtualTree\main.pas=H:\User\FMXVirtualTree\Unit1.pas</Transaction>
+    <Transaction>2017/10/26 19:24:49.000.990,=H:\User\FMXVirtualTree\Unit2.pas</Transaction>
+    <Transaction>2017/10/26 19:25:08.000.443,H:\User\FMXVirtualTree\vtdbadapter.pas=H:\User\FMXVirtualTree\Unit2.pas</Transaction>
+    <Transaction>2017/10/26 21:31:47.000.122,H:\User\FMXVirtualTree\FMXVTDBDemo.dproj=H:\User\FMXVirtualTree\FMXVT.dproj</Transaction>
+    <Transaction>2017/10/27 09:38:31.000.487,=H:\User\FMXVirtualTree\Unit2.pas</Transaction>
+    <Transaction>2017/10/27 09:41:25.000.723,H:\User\FMXVirtualTree\millonodes.pas=H:\User\FMXVirtualTree\Unit2.pas</Transaction>
+    <Transaction>2017/10/27 09:41:25.000.723,H:\User\FMXVirtualTree\millonodes.fmx=H:\User\FMXVirtualTree\Unit2.fmx</Transaction>
+    <Transaction>2017/10/28 22:34:47.000.863,H:\User\FMXVirtualTree\vtdbadapter.pas=H:\User\FMXVirtualTree\qdac_fmx_vtdbadapter.pas</Transaction>
+    <Transaction>2017/10/28 22:35:27.000.968,H:\User\FMXVirtualTree\qdac_fmx_virtualtree.pas=</Transaction>
+    <Transaction>2017/10/28 22:35:28.000.053,H:\User\FMXVirtualTree\qdac_fmx_vtdbadapter.pas=</Transaction>
+    <Transaction>2017/11/07 10:27:57.000.334,=H:\User\FMXVirtualTree\Unit2.pas</Transaction>
+    <Transaction>2017/11/07 10:28:11.000.861,H:\User\FMXVirtualTree\fmxvteditors.pas=H:\User\FMXVirtualTree\Unit2.pas</Transaction>
+    <Transaction>2017/11/07 10:52:29.000.014,=H:\User\FMXVirtualTree\Unit2.pas</Transaction>
+    <Transaction>2017/11/07 10:53:53.000.340,H:\User\FMXVirtualTree\inspector.fmx=H:\User\FMXVirtualTree\Unit2.fmx</Transaction>
+    <Transaction>2017/11/07 10:53:53.000.340,H:\User\FMXVirtualTree\inspector.pas=H:\User\FMXVirtualTree\Unit2.pas</Transaction>
+  </Transactions>
+	<ActiveMobileDevice>
+		<POSX10.3 iOSSimulator="iPhone5"/>
+		<NoProfile iOSSimulator="iPhone5" Android="CJL5T15B18044567"/>
+		<POSX iOSSimulator="iPhone5"/>
+	</ActiveMobileDevice>  <ProjectSortOrder AutoSort="0" SortType="0">
+    <File Path="android-support-v4.dex.jar"/>
+    <File Path="cloud-messaging.dex.jar"/>
+    <File Path="fmx.dex.jar"/>
+    <File Path="google-analytics-v2.dex.jar"/>
+    <File Path="google-play-billing.dex.jar"/>
+    <File Path="google-play-licensing.dex.jar"/>
+    <File Path="google-play-services.dex.jar"/>
+    <File Path="main.pas"/>
+    <File Path="main.fmx"/>
+    <File Path="dbtreeview.pas"/>
+    <File Path="dbtreeview.fmx"/>
+    <File Path="millonodes.pas"/>
+    <File Path="millonodes.fmx"/>
+    <File Path="fmxvteditors.pas"/>
+    <File Path="inspector.pas"/>
+    <File Path="inspector.fmx"/>
+  </ProjectSortOrder>
+</BorlandProject>

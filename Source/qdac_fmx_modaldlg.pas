@@ -51,22 +51,6 @@ type
     procedure ShowModal(AResult: TFormModalProc);
   end;
 
-  TFormDisposeMgr = class
-  private
-    FIdleMsgId: Cardinal;
-    FPendings: array of TObject;
-    FCount: Integer;
-    procedure DoAppIdle(const Sender: TObject;
-      const Msg: System.Messaging.TMessage);
-  public
-    constructor Create; overload;
-    destructor Destroy; override;
-    procedure Push(AObj: TObject);
-  end;
-
-var
-  FreeMgr: TFormDisposeMgr;
-
 procedure ModalDialog(F: TForm; OnResult: TFormModalProc;
   ACloseAction: TCloseAction = TCloseAction.caFree);
 
@@ -120,69 +104,14 @@ begin
         if Assigned(FResultProc) then
           FResultProc(FForm);
       end;
-//      if (not Assigned(FOldClose)) and (FCloseAction = TCloseAction.caFree) then
-//        FreeMgr.Push(FForm);
-      CloseAllPopups;
     end);
 {$ELSE}
   FForm.ShowModal;
   if Assigned(FResultProc) then
     FResultProc(FForm);
-  CloseAllPopups;
-  if FCloseAction=TCloseAction.caFree then
-    FForm.DisposeOf;
 {$ENDIF}
 end;
 
-{ TFormDisposeMgr }
 
-constructor TFormDisposeMgr.Create;
-begin
-  inherited;
-  FIdleMsgId := TMessageManager.DefaultManager.SubscribeToMessage(TIdleMessage,
-    DoAppIdle);
-end;
-
-destructor TFormDisposeMgr.Destroy;
-begin
-  TMessageManager.DefaultManager.Unsubscribe(TIdleMessage, FIdleMsgId);
-  inherited;
-end;
-
-procedure TFormDisposeMgr.DoAppIdle(const Sender: TObject;
-const Msg: System.Messaging.TMessage);
-var
-  I: Integer;
-begin
-  if FCount > 0 then
-  begin
-    for I := 0 to FCount - 1 do
-      FPendings[I].DisposeOf;
-    if Length(FPendings) > 32 then
-      SetLength(FPendings, 32);
-    FCount := 0;
-  end;
-end;
-
-procedure TFormDisposeMgr.Push(AObj: TObject);
-begin
-  if FCount = Length(FPendings) then
-  begin
-    if FCount = 0 then
-      SetLength(FPendings, 32)
-    else
-      SetLength(FPendings, Length(FPendings) shl 1);
-  end;
-  FPendings[FCount] := AObj;
-  Inc(FCount);
-end;
-
-initialization
-
-FreeMgr := TFormDisposeMgr.Create;
-
-finalization
-
-FreeMgr.DisposeOf;
 
 end.

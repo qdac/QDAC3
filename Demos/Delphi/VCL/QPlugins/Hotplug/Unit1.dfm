@@ -1,0 +1,59 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  BorderStyle = bsDialog
+  Caption = #26381#21153#28909#25554#25320#31034#20363
+  ClientHeight = 421
+  ClientWidth = 594
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  OnCreate = FormCreate
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Memo1: TMemo
+    Left = 0
+    Top = 41
+    Width = 594
+    Height = 380
+    Align = alClient
+    TabOrder = 0
+    ExplicitLeft = 8
+    ExplicitTop = 47
+    ExplicitWidth = 185
+    ExplicitHeight = 89
+  end
+  object Panel1: TPanel
+    Left = 0
+    Top = 0
+    Width = 594
+    Height = 41
+    Align = alTop
+    TabOrder = 1
+    ExplicitLeft = 208
+    ExplicitTop = 208
+    ExplicitWidth = 185
+    object Button1: TButton
+      Left = 8
+      Top = 9
+      Width = 75
+      Height = 25
+      Caption = #35843#29992#26381#21153
+      TabOrder = 0
+      OnClick = Button1Click
+    end
+    object Button2: TButton
+      Left = 96
+      Top = 8
+      Width = 75
+      Height = 25
+      Caption = #26367#25442#26381#21153
+      TabOrder = 1
+      OnClick = Button2Click
+    end
+  end
+end

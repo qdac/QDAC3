@@ -1,0 +1,13 @@
+object frmDBTree: TfrmDBTree
+  Left = 0
+  Top = 0
+  Caption = #26641#24418#26174#31034#25968#25454
+  ClientHeight = 480
+  ClientWidth = 640
+  Position = ScreenCenter
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  DesignerMasterStyle = 0
+end

@@ -1,0 +1,181 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'FMX VirtualTreeView '#31616#21333#25968#25454#34920#26684#31034#20363
+  ClientHeight = 480
+  ClientWidth = 640
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  DesignerMasterStyle = 0
+  object Layout1: TLayout
+    Align = Right
+    Position.X = 480.000000000000000000
+    Size.Width = 160.000000000000000000
+    Size.Height = 453.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object chkHorizLine: TCheckBox
+      IsChecked = True
+      Position.X = 8.000000000000000000
+      Position.Y = 40.000000000000000000
+      TabOrder = 1
+      Text = #32472#21046#27700#24179#34920#26684#32447
+      OnChange = chkTreeLineChange
+    end
+    object chkTreeLine: TCheckBox
+      IsChecked = True
+      Position.X = 8.000000000000000000
+      Position.Y = 80.000000000000000000
+      TabOrder = 9
+      Text = #32472#21046#32467#28857#36830#32447
+      OnChange = chkTreeLineChange
+    end
+    object chkShowHeader: TCheckBox
+      Position.X = 8.000000000000000000
+      Position.Y = 224.000000000000000000
+      TabOrder = 7
+      Text = #26174#31034#26631#39064
+      OnChange = chkShowHeaderChange
+    end
+    object chkNodeButton: TCheckBox
+      IsChecked = True
+      Position.X = 8.000000000000000000
+      Position.Y = 101.000000000000000000
+      TabOrder = 8
+      Text = #32472#21046#32467#28857#25353#38062
+      OnChange = chkTreeLineChange
+    end
+    object chkVertLine: TCheckBox
+      IsChecked = True
+      Position.X = 8.000000000000000000
+      Position.Y = 60.000000000000000000
+      TabOrder = 0
+      Text = #32472#21046#22402#30452#34920#26684#32447
+      OnChange = chkTreeLineChange
+    end
+    object Button1: TButton
+      Position.X = 8.000000000000000000
+      Position.Y = 8.000000000000000000
+      Size.Width = 25.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 13
+      Text = #8593
+      OnClick = Button1Click
+    end
+    object Button2: TButton
+      Position.X = 40.000000000000000000
+      Position.Y = 8.000000000000000000
+      Size.Width = 25.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 11
+      Text = #8595
+      OnClick = Button2Click
+    end
+    object Button3: TButton
+      Position.X = 72.000000000000000000
+      Position.Y = 8.000000000000000000
+      Size.Width = 25.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 12
+      Text = #8592
+      OnClick = Button3Click
+    end
+    object Button4: TButton
+      Position.X = 104.000000000000000000
+      Position.Y = 8.000000000000000000
+      Size.Width = 25.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 10
+      Text = #8594
+      OnClick = Button4Click
+    end
+    object chkDrawHover: TCheckBox
+      Position.X = 8.000000000000000000
+      Position.Y = 121.000000000000000000
+      TabOrder = 6
+      Text = #32472#21046#28909#28857#32972#26223
+      OnChange = chkTreeLineChange
+    end
+    object chkRowSelection: TCheckBox
+      IsChecked = True
+      Position.X = 8.000000000000000000
+      Position.Y = 142.000000000000000000
+      TabOrder = 5
+      Text = #32472#21046#34892#36873#29366#24577
+      OnChange = chkTreeLineChange
+    end
+    object chkColSelection: TCheckBox
+      Position.X = 8.000000000000000000
+      Position.Y = 162.000000000000000000
+      TabOrder = 4
+      Text = #32472#21046#21015#36873#29366#24577
+      OnChange = chkTreeLineChange
+    end
+    object chkColSizable: TCheckBox
+      Position.X = 8.000000000000000000
+      Position.Y = 203.000000000000000000
+      TabOrder = 2
+      Text = #32472#21046#35843#25972#21015#23485
+      OnChange = chkRowSizableChange
+    end
+    object chkRowSizable: TCheckBox
+      Position.X = 8.000000000000000000
+      Position.Y = 183.000000000000000000
+      TabOrder = 3
+      Text = #20801#35768#35843#25972#34892#39640
+      OnChange = chkRowSizableChange
+    end
+  end
+  object Label1: TLabel
+    Align = Bottom
+    Margins.Left = 5.000000000000000000
+    Margins.Top = 5.000000000000000000
+    Margins.Right = 5.000000000000000000
+    Margins.Bottom = 5.000000000000000000
+    Position.X = 5.000000000000000000
+    Position.Y = 458.000000000000000000
+    Size.Width = 630.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = #40736#26631#28378#21160#26102#25353#19979'Ctrl'#27700#24179#28378#21160
+    TabOrder = 1
+  end
+  object adsData: TADODataSet
+    Parameters = <>
+    Left = 496
+    Top = 80
+    object adsDataId: TIntegerField
+      FieldName = 'Id'
+    end
+    object adsDataName: TStringField
+      DisplayLabel = #21697#21517
+      FieldName = 'Name'
+      Size = 30
+    end
+    object adsDataPrice: TCurrencyField
+      DisplayLabel = #21333#20215
+      FieldName = 'Price'
+    end
+    object adsDataSold: TFloatField
+      DisplayLabel = #38144#21806#36827#24230
+      FieldName = 'Sold'
+    end
+    object adsDataPackable: TBooleanField
+      DisplayLabel = #25171#21253#38144#21806
+      FieldName = 'Packable'
+    end
+    object adsDataStatus: TBooleanField
+      DisplayLabel = #25480#26435#29366#24577
+      FieldName = 'Status'
+    end
+    object adsDataParent: TIntegerField
+      FieldName = 'Parent'
+    end
+  end
+end

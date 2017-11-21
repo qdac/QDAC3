@@ -242,7 +242,7 @@ type
     function ShareText(ATarget: TWechatSession; const S: String): Boolean;
     function ShareWebPage(ATarget: TWechatSession;
       const ATitle, AContent, AUrl: String; APicture: TBitmap): Boolean;
-    function ShareBitmap(ATarget: TWechatSession;ABitmap:TBitmap):Boolean;
+    function ShareBitmap(ATarget: TWechatSession; ABitmap: TBitmap): Boolean;
     // function ShareVideo(const S:String):Boolean;
 
     property AppId: String read getAppId write setAppId;
@@ -288,6 +288,7 @@ implementation
 
 uses FMX.platform, qstring, qdigest{$IFDEF ANDROID}, qsdk.wechat.android{$ENDIF}
 {$IFDEF IOS}, qsdk.wechat.ios{$ENDIF};
+{$I 'wxapp.inc'}
 
 type
   TWechatParam = class
@@ -319,6 +320,11 @@ begin
   begin
     RegisterWechatService;
     TPlatformServices.Current.SupportsPlatformService(IWechatService, Result);
+    if Assigned(Result) then
+    begin
+      Result.AppId := SWechatAppId;
+      Result.MchId := SWechatMchId;
+    end;
   end;
 end;
 
@@ -390,8 +396,9 @@ var
   I: Integer;
 begin
   FItems.Sort;
+  S:='';
   for I := 0 to FItems.Count - 1 do
-    S := FItems[I] + '=' + TWechatParam(FItems.Objects[I]).Value + '&';
+    S := S+FItems[I] + '=' + TWechatParam(FItems.Objects[I]).Value + '&';
   S := S + 'key=' + FKey;
   Result := DigestToString(MD5Hash(S));
 end;

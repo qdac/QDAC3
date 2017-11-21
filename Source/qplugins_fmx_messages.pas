@@ -11,7 +11,7 @@ const
 
 implementation
 
-uses classes, sysutils, syncobjs, qstring, qplugins,qplugins_base,
+uses classes, sysutils, syncobjs, qstring, qplugins, qplugins_base,
   qplugins_params, qplugins_messages, qdac_postqueue, system.messaging,
   fmx.types, fmx.platform, fmx.controls, fmx.forms
 {$IFDEF MSWINDOWS}, fmx.platform.Win, windows, messages{$ENDIF};
@@ -37,6 +37,7 @@ type
     procedure HandleIdle; virtual; stdcall;
     function IsShowModal: Boolean; stdcall;
     procedure Run;
+    function Running: Boolean;
     function HandleMessage: Boolean; overload;
     procedure WaitMessage;
     function GetDefaultTitle: string;
@@ -53,11 +54,12 @@ type
     IFMXApplicationService)
   protected
     FTerminating: Boolean;
+    FRunning:Boolean;
     FOldAppService: IFMXApplicationService;
     function IsFilterShowModal: Boolean;
     procedure Notify(const AId: Cardinal; AParams: IQParams;
       var AFireNext: Boolean); stdcall;
-    function IsShareForm(AFormClass:Pointer): Boolean;
+    function IsShareForm(AFormClass: Pointer): Boolean;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -65,6 +67,7 @@ type
     function GetAppWnd: HWND;
     // IFMXApplicationService
     procedure Run;
+    function Running: Boolean;
     function HandleMessage: Boolean;
     procedure WaitMessage;
     function GetDefaultTitle: string;
@@ -376,14 +379,21 @@ end;
 
 procedure TQFMXMessageService.RestoreHook;
 begin
+  Terminate;
   TPlatformServices.Current.RemovePlatformService(IFMXApplicationService);
   TPlatformServices.Current.AddPlatformService(IFMXApplicationService,
-    (_MsgFilter as TQFMXMessageService).FOldAppService);
+    FOldAppService);
+  RegisterApplicationHWNDProc(nil);
 end;
 
 procedure TQFMXMessageService.Run;
 begin
   FOldAppService.Run;
+end;
+
+function TQFMXMessageService.Running: Boolean;
+begin
+  Result := FOldAppService.Running;
 end;
 
 procedure TQFMXMessageService.SetTitle(const Value: string);
@@ -474,7 +484,7 @@ begin
   end;
 end;
 
-function TQHostMessageService.IsShareForm(AFormClass:Pointer): Boolean;
+function TQHostMessageService.IsShareForm(AFormClass: Pointer): Boolean;
   function FormInstance: HMODULE;
   type
     TTestMethod = procedure of object;
@@ -504,7 +514,7 @@ function TQHostMessageService.IsShareForm(AFormClass:Pointer): Boolean;
   end;
 
 begin
-  Result := true;// FormInstance = AFormClassInstance;
+  Result := true; // FormInstance = AFormClassInstance;
 end;
 
 procedure TQHostMessageService.Notify(const AId: Cardinal; AParams: IQParams;
@@ -516,6 +526,11 @@ end;
 procedure TQHostMessageService.Run;
 begin
   FOldAppService.Run;
+end;
+
+function TQHostMessageService.Running: Boolean;
+begin
+  Result:=FOldAppService.Running;
 end;
 
 procedure TQHostMessageService.SetTitle(const Value: string);

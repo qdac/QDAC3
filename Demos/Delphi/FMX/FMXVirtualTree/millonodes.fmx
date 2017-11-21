@@ -1,0 +1,31 @@
+object frmMillioNodes: TfrmMillioNodes
+  Left = 0
+  Top = 0
+  Caption = #30334#19975#32467#28857#27979#35797
+  ClientHeight = 480
+  ClientWidth = 640
+  Position = ScreenCenter
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  DesignerMasterStyle = 0
+  object Layout1: TLayout
+    Align = Right
+    Position.X = 528.000000000000000000
+    Size.Width = 112.000000000000000000
+    Size.Height = 480.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object Button1: TButton
+      Position.X = 8.000000000000000000
+      Position.Y = 16.000000000000000000
+      Size.Width = 97.000000000000000000
+      Size.Height = 33.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = #21019#24314'100'#19975#32467#28857
+      OnClick = Button1Click
+    end
+  end
+end

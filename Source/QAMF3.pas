@@ -4005,7 +4005,7 @@ var
     AMsgExt.Target := ReadAMF0String(p, pe);
     AMsgExt.Response := ReadAMF0String(p, pe);
     ALen := ReadAMF0Int32(p, pe);
-    if IntPtr(p) + ALen < IntPtr(pe) then
+    if IntPtr(p) + ALen <= IntPtr(pe) then
       Result := AMsg.ReadAMF0Value(p, pe)
     else
     begin

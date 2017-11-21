@@ -18,13 +18,14 @@ type
     adsDataName: TStringField;
     Button2: TButton;
     Button3: TButton;
+    Button4: TButton;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
+    procedure Button4Click(Sender: TObject);
   private
     { Private declarations }
-    procedure DoReplaceRows(AMacro: TQMacroItem; const AQuoter: QCharW);
     procedure DoOddMacro(AMacro: TQMacroItem; const AQuoter: QCharW);
     procedure DoEvenMacro(AMacro: TQMacroItem; const AQuoter: QCharW);
     procedure DoPrintInfo(AMacro: TQMacroItem; const AQuoter: QCharW);
@@ -93,22 +94,24 @@ const
   STableTemplate: QStringW = '<html><head><title><%Title%></title></head>' + //
     '<body>这是一个表格<table border="1"  cellspacing="0" cellpadding="0" bordercolor="#000000" style="BORDER-COLLAPSE: collapse">'
     + //
-    '<th><tr><td>编号</td><td>姓名</td></tr></th>' + //
-    '<%Rows("<tr><td>%Id%</td><td>%Name%""</td></tr>")%>' + //
+    '<th><tr><td>记录号</td><td>序号</td><td>编号</td><td>姓名</td></tr></th>' + //
+    '%adsData.@Rows("<tr><td>%adsData.@RecNo%</td><td>%adsData.@Rows.@Index%<td>%Id%</td><td>%Name%</td></tr>","%","%")%'
+    + //
     '</table></body>';
 var
   AMacros: TQMacroManager;
-  AHtmlFile: String;
+  AHtmlFile, AHtmlText, ATag: String;
 begin
   AMacros := TQMacroManager.Create;
   try
-    AMacros.Push('Title', 'QMacros HTML表格');
-    AMacros.Push('Rows', DoReplaceRows);
+    AMacros.Push(adsData, '');
+    AMacros.Push('Title', 'QMacros HTML Tag 替换');
+    AHtmlText := AMacros.Replace(STableTemplate, '%', '%', MRF_PARSE_PARAMS);
     AHtmlFile := ExtractFilePath(Application.ExeName) + 'index.html';
-    SaveTextW(AHtmlFile, AMacros.Replace(STableTemplate, '<%', '%>',
-      MRF_PARSE_PARAMS));
+    SaveTextW(AHtmlFile, AHtmlText);
     WebBrowser1.Navigate('file:///' + StringReplaceW(AHtmlFile, '\', '/',
       [rfReplaceAll]));
+    AMacros.Pop(adsData, '');
   finally
     FreeAndNil(AMacros);
   end;
@@ -163,6 +166,40 @@ begin
   end;
 end;
 
+procedure TForm1.Button4Click(Sender: TObject);
+const
+  STemplate: QStringW = '<html><head><title>字符串列表示例</title></head>' + //
+    '<body>' + //
+    '%List("<p>Welcome %List.Value%,you are %List.@Index% of our friends","%","%")%'
+    + '</body>';
+var
+  AList: TStringList;
+  AMacros: TQMacroManager;
+  AHtmlFile: String;
+  AIterator: IQIterator;
+begin
+  AList := TStringList.Create;
+  AList.Text := 'Joson'#13#10'Mikelin';
+  AMacros := TQMacroManager.Create;
+  try
+    AIterator := TQMacroStringsIterator.Create(AList);
+    AMacros.Push('List', AIterator);
+    AMacros.Push('List.Value',
+      procedure(AMacro: TQMacroItem; const AQuoter: QCharW)
+      begin
+        AMacro.Value.Value := AList[AIterator.GetItemIndex];
+      end);
+    AHtmlFile := ExtractFilePath(Application.ExeName) + 'index.html';
+    SaveTextW(AHtmlFile, AMacros.Replace(STemplate, '%', '%',
+      MRF_PARSE_PARAMS));
+    WebBrowser1.Navigate('file:///' + StringReplaceW(AHtmlFile, '\', '/',
+      [rfReplaceAll]));
+  finally
+    FreeAndNil(AMacros);
+    FreeAndNil(AList);
+  end;
+end;
+
 procedure TForm1.DoEvenMacro(AMacro: TQMacroItem; const AQuoter: QCharW);
 var
   AValue: Integer;
@@ -189,39 +226,12 @@ end;
 
 procedure TForm1.DoPrintInfo(AMacro: TQMacroItem; const AQuoter: QCharW);
 begin
-AMacro.Value.Value:='QMacros '+AMacro.Params[1].AsString+'<BR/>';
-with AMacro.Params[0] do
+  AMacro.Value.Value := 'QMacros ' + AMacro.Params[1].AsString + '<BR/>';
+  with AMacro.Params[0] do
   begin
-  AMacro.Value.Value:=AMacro.Value.Value+'工程名称:'+ValueByName('name','')+'<BR/>'+
-    '版本号:'+ValueByName('version','')+'<BR/>'+
-    '版权：'+ValueByName('copyright','');
-  end;
-end;
-
-procedure TForm1.DoReplaceRows(AMacro: TQMacroItem; const AQuoter: QCharW);
-var
-  AMacros: TQMacroManager;
-  AReplace: TQMacroComplied;
-  AHelper: TQStringCatHelperW;
-begin
-  AMacros := TQMacroManager.Create;
-  AHelper := TQStringCatHelperW.Create;
-  adsData.DisableControls;
-  try
-    AMacros.Push(adsData, '');
-    adsData.First;
-    AReplace := AMacros.Complie(AMacro.Params[0].AsString, '%', '%');
-    while not adsData.Eof do
-    begin
-      AHelper.Cat(AReplace.Replace);
-      adsData.Next;
-    end;
-    AMacro.Value.Value := AHelper.Value;
-  finally
-    FreeAndNil(AMacros);
-    FreeAndNil(AHelper);
-    FreeAndNil(AReplace);
-    adsData.EnableControls;
+    AMacro.Value.Value := AMacro.Value.Value + '工程名称:' + ValueByName('name', '')
+      + '<BR/>' + '版本号:' + ValueByName('version', '') + '<BR/>' + '版权：' +
+      ValueByName('copyright', '');
   end;
 end;
 

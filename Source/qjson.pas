@@ -1246,6 +1246,13 @@ type
     property DoEscape: Boolean read FDoEscape write FDoEscape;
   end;
 
+  TJsonDatePrecision = (jdpMillisecond, jdpSecond);
+  TJsonIntToTimeStyle = (tsDeny, tsSecondsFrom1970, tsSecondsFrom1899,
+    tsMsFrom1970, tsMsFrom1899);
+
+const
+  JSON_NO_TIMEZONE = -128;
+
 var
   /// <summary>是否启用严格检查模式，在严格模式下：
   /// 1.名称或字符串必需使用双引号包含起来,如果为False，则名称可以没有引号或使用单引号。
@@ -1260,6 +1267,11 @@ var
   JsonTimeFormat: QStringW;
   /// <summary>日期时间类型转换为Json数据时会转换成字符串，这个变量控制如何格式化</summary>
   JsonDateTimeFormat: QStringW;
+  /// <summary>Json 日期时间类型的时区，仅在Strict模式下生效，设置为相应的时区，以便输出</summary>
+  JsonTimezone: Shortint;
+  /// <summary>Json 严格模式下日期类型的精度，默认为毫秒，可以设置为秒以便与某些系统兼容</summary>
+  JsonDatePrecision: TJsonDatePrecision;
+  JsonIntToTimeStyle: TJsonIntToTimeStyle;
   /// <summary>在ItemByName/ItemByPath/ValueByName/ValueByPath等函数的判断中，是否区分名称大小写</summary>
   JsonCaseSensitive: Boolean;
   /// 在需要新建一个TQJson对象时触发
@@ -2725,7 +2737,7 @@ begin
   AItem := ItemByPath(APath);
   if Assigned(AItem) then
   begin
-    if AItem.TryGetAsFloat(Result) then
+    if not AItem.TryGetAsFloat(Result) then
       Result := ADefVal;
   end
   else
@@ -2816,7 +2828,6 @@ var
   ACol, ARow: Integer;
   ALine: QStringW;
   pLine: PQCharW;
-  ALineText: array [0 .. 102] of QCharW;
   procedure ErrorLine;
   var
     pl, pls, pe: PQCharW;
@@ -2859,7 +2870,6 @@ end;
 
 procedure TQJson.FromType(const AValue: String; AType: TQJsonDataType);
 var
-  ANode: TQJson;
   p: PQCharW;
   ABuilder: TQStringCatHelperW;
   procedure ToDateTime;
@@ -3809,13 +3819,25 @@ function TQJson.InternalEncode(ABuilder: TQStringCatHelperW; ADoFormat: Boolean;
   var
     MS: Int64; // 时区信息不保存
   const
-    JsonTimeStart: PWideChar = '"/DATE(';
-    JsonTimeEnd: PWideChar = ')/"';
+    JsonTimeStart: PWideChar = '/DATE(';
+    JsonTimeEnd: PWideChar = ')/';
+    UnixDelta: Int64 = 25569;
   begin
-    MS := Trunc(ATime * 86400000);
-    ABuilder.Cat(JsonTimeStart, 7);
-    ABuilder.Cat(IntToStr(MS));
-    ABuilder.Cat(JsonTimeEnd, 3);
+    MS := Trunc((ATime - UnixDelta) * 86400000);
+    ABuilder.Cat(JsonTimeStart, 6);
+    if (JsonTimeZone >= -12) and (JsonTimeZone <= 12) then
+    begin
+      Dec(MS, 3600000 * JsonTimeZone);
+      if JsonDatePrecision = jdpSecond then
+        MS := MS div 1000;
+      ABuilder.Cat(IntToStr(MS));
+      if JsonTimeZone >= 0 then
+        ABuilder.Cat('+');
+      ABuilder.Cat(JsonTimeZone);
+    end
+    else
+      ABuilder.Cat(IntToStr(MS));
+    ABuilder.Cat(JsonTimeEnd, 2);
   end;
   procedure AddComment(const S: QStringW);
   var
@@ -4677,10 +4699,12 @@ end;
 function TQJson.ParseJsonTime(p: PQCharW; var ATime: TDateTime): Boolean;
 var
   MS, TimeZone: Int64;
+const
+  UnixDelta: Int64 = 25569;
 begin
   // Javascript日期格式为/DATE(自1970.1.1起到现在的毫秒数+时区)/
   Result := False;
-  if not StartWithW(p, '/DATE', False) then
+  if not StartWithW(p, '/DATE', True) then
     Exit;
   Inc(p, 5);
   SkipSpaceW(p);
@@ -4701,9 +4725,12 @@ begin
     TimeZone := 0;
   if p^ = ')' then
   begin
-    ATime := (MS div 86400000) + ((MS mod 86400000) / 86400000.0);
+    if (MS > 10000000000) or (JsonDatePrecision = jdpMillisecond) then
+      ATime := UnixDelta + (MS div 86400000) + ((MS mod 86400000) / 86400000)
+    else
+      ATime := UnixDelta + (MS div 86400) + ((MS mod 86400) / 86400);
     if TimeZone <> 0 then
-      ATime := IncHour(ATime, -TimeZone);
+      ATime := IncHour(ATime, TimeZone);
     Inc(p);
     SkipSpaceW(p);
     Result := True
@@ -5475,7 +5502,7 @@ begin
                   AParamValues[I] := AItemValue.AsInteger;
                 tkChar:
                   AParamValues[I] :=
-                  {$IFNDEF NEXTGEN}AnsiChar(CharOfValue){$ELSE}CharOfValue{$ENDIF};
+{$IFNDEF NEXTGEN}AnsiChar(CharOfValue){$ELSE}CharOfValue{$ENDIF};
                 tkEnumeration:
                   AParamValues[I] := AItemValue.AsInteger;
                 tkFloat:
@@ -5729,8 +5756,55 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
                 else if AChild.DataType in [jdtNull, jdtUnknown] then
                   AFields[J].SetValue(ABaseAddr, 0)
                 else
-                  raise Exception.CreateFmt(SBadConvert,
-                    [AChild.AsString, JsonTypeName[AChild.DataType]]);
+                begin
+                  if AChild.DataType = jdtInteger then // 整数？Unix 时间戳？
+                  begin
+                    case JsonIntToTimeStyle of
+                      tsDeny:
+                        raise Exception.CreateFmt(SBadConvert,
+                          [AChild.AsString, JsonTypeName[jdtDateTime]]);
+                      tsSecondsFrom1970: // Unix
+                        begin
+                          if (JsonTimeZone >= -12) and (JsonTimeZone <= 12) then
+                            AFields[J].SetValue(ABaseAddr,
+                              IncHour(UnixToDateTime(AChild.AsInt64),
+                              JsonTimeZone))
+                          else
+                            AFields[J].SetValue(ABaseAddr,
+                              UnixToDateTime(AChild.AsInt64));
+                        end;
+                      tsSecondsFrom1899:
+                        begin
+                          if (JsonTimeZone >= -12) and (JsonTimeZone <= 12) then
+                            AFields[J].SetValue(ABaseAddr,
+                              IncHour(AChild.AsInt64 / 86400, JsonTimeZone))
+                          else
+                            AFields[J].SetValue(ABaseAddr,
+                              AChild.AsInt64 / 86400);
+                        end;
+                      tsMsFrom1970:
+                        begin
+                          if (JsonTimeZone >= -12) and (JsonTimeZone <= 12) then
+                            AFields[J].SetValue(ABaseAddr,
+                              IncHour(IncMilliSecond(UnixDateDelta,
+                              AChild.AsInt64), JsonTimeZone))
+                          else
+                            AFields[J].SetValue(ABaseAddr,
+                              IncMilliSecond(UnixDateDelta, AChild.AsInt64));
+                        end;
+                      tsMsFrom1899:
+                        if (JsonTimeZone >= -12) and (JsonTimeZone <= 12) then
+                          AFields[J].SetValue(ABaseAddr,
+                            IncHour(AChild.AsInt64 / 86400000, JsonTimeZone))
+                        else
+                          AFields[J].SetValue(ABaseAddr,
+                            AChild.AsInt64 / 86400000);
+                    end;
+                  end
+                  else
+                    raise Exception.CreateFmt(SBadConvert,
+                      [AChild.AsString, JsonTypeName[AChild.DataType]]);
+                end;
               end
               else
                 AFields[J].SetValue(ABaseAddr, AChild.AsFloat);
@@ -7086,12 +7160,29 @@ end;
 procedure TQJsonStreamHelper.WriteDateTime(const V: TDateTime);
   function JsonDateTime: QStringW;
   var
-    MS: Int64;
-    // 时区信息不保存
+    MS: Int64; // 时区信息不保存
+  const
+    JsonTimeStart: PWideChar = '/DATE(';
+    JsonTimeEnd: PWideChar = ')/';
+    UnixDelta: Int64 = 25569;
   begin
-    MS := Trunc(V * 86400000);
-    Result := '"/DATE(' + IntToStr(MS) + ')/"';
+    MS := Trunc((V - UnixDelta) * 86400000);
+    Result := JsonTimeStart;
+    if (JsonTimeZone >= -12) and (JsonTimeZone <= 12) then
+    begin
+      Dec(MS, 3600000 * JsonTimeZone);
+      if JsonDatePrecision = jdpSecond then
+        MS := MS div 1000;
+      Result := Result + IntToStr(MS);
+      if JsonTimeZone >= 0 then
+        Result := Result + '+';
+      Result := Result + IntToStr(JsonTimeZone);
+    end
+    else
+      Result := Result + IntToStr(MS);
+    Result := Result + JsonTimeEnd;
   end;
+
   function FormatedJsonTime: QStringW;
   var
     ADate: Integer;
@@ -7190,6 +7281,9 @@ JsonCaseSensitive := True;
 JsonDateFormat := 'yyyy-mm-dd';
 JsonDateTimeFormat := 'yyyy-mm-dd''T''hh:nn:ss.zzz';
 JsonTimeFormat := 'hh:nn:ss.zzz';
+JsonTimezone := JSON_NO_TIMEZONE;
+JsonDatePrecision := jdpMillisecond;
+JsonIntToTimeStyle := tsDeny;
 OnQJsonCreate := nil;
 OnQJsonFree := nil;
 

@@ -3751,7 +3751,8 @@ type
       write setWXEventHandler;
   end;
 
-  [JavaSignature('com/jlgoldenbay/ddb/wxapi/WXPayEntryActivity')]
+{$I 'wxpayactivity.inc'}
+
   JWXPayEntryActivity = interface(JActivity)
     // or JObject // SuperSignature: android/app/Activity
     ['{0011B21A-C602-4435-8F87-241B8968AC64}']
@@ -3838,7 +3839,7 @@ type
     function ShareText(ATarget: TWechatSession; const S: String): Boolean;
     function ShareWebPage(ATarget: TWechatSession;
       const atitle, AContent, aurl: String; ABitmap: TBitmap): Boolean;
-    function ShareBitmap(ATarget: TWechatSession;ABitmap: TBitmap): Boolean;
+    function ShareBitmap(ATarget: TWechatSession; ABitmap: TBitmap): Boolean;
     function IsAPISupported: Boolean;
     function SendRequest(ARequest: IWechatRequest): Boolean;
     function SendResponse(AResp: IWechatResponse): Boolean;
@@ -4322,7 +4323,8 @@ begin
   FPayKey := AKey;
 end;
 
-function TAndroidWechatService.ShareBitmap(ATarget: TWechatSession;ABitmap: TBitmap): Boolean;
+function TAndroidWechatService.ShareBitmap(ATarget: TWechatSession;
+  ABitmap: TBitmap): Boolean;
 var
   imgObj: JWXImageObject;
   msg: JWXMediaMessage;
@@ -4552,7 +4554,27 @@ begin
   FExtData := JStringToString(APayResp.extData);
   if ErrorCode = TJBaseResp_ErrCode.JavaClass.ERR_OK then
     FPayResult := TWechatPayResult.wprOk
-  else if ErrorCode = TJBaseResp_ErrCode.JavaClass.ERR_USER_CANCEL then
+  else
+  begin
+    if Length(ErrorMsg) = 0 then
+    begin
+      if ErrorCode = TJBaseResp_ErrCode.JavaClass.ERR_COMM then
+        FErrorMsg := 'ERR_COMM'
+      else if ErrorCode = TJBaseResp_ErrCode.JavaClass.ERR_USER_CANCEL then
+        FErrorMsg := 'ERR_USER_CANCEL'
+      else if ErrorCode = TJBaseResp_ErrCode.JavaClass.ERR_SENT_FAILED then
+        FErrorMsg := 'ERR_SENT_FAILED'
+      else if ErrorCode = TJBaseResp_ErrCode.JavaClass.ERR_AUTH_DENIED then
+        FErrorMsg := 'ERR_AUTH_DENIED'
+      else if ErrorCode = TJBaseResp_ErrCode.JavaClass.ERR_UNSUPPORT then
+        FErrorMsg := 'ERR_UNSUPPORT'
+      else if ErrorCode = TJBaseResp_ErrCode.JavaClass.ERR_BAN then
+        FErrorMsg := 'ERR_BAN'
+      else
+        FErrorMsg := 'ERR_UNKNOWN';
+    end;
+  end;
+  if ErrorCode = TJBaseResp_ErrCode.JavaClass.ERR_USER_CANCEL then
     FPayResult := TWechatPayResult.wprCancel
   else
     FPayResult := TWechatPayResult.wprError;

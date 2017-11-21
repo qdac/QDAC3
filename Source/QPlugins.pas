@@ -6,8 +6,9 @@ interface
 {$HPPEMIT '#pragma link "qplugins"'}
 
 uses classes, sysutils, types, qstring, qvalue, qtimetypes, qdac_postqueue,
-  qplugins_base,qplugins_params, syncobjs, math{$IFDEF MSWINDOWS}, windows{$ENDIF} {$IFDEF POSIX},
-  Posix.Unistd{$ENDIF}{$IFDEF UNICODE},
+  qplugins_base, qplugins_params, syncobjs, math{$IFDEF MSWINDOWS},
+  windows{$ENDIF} {$IFDEF POSIX},
+  Posix.Unistd, Posix.PThread{$ENDIF}{$IFDEF UNICODE},
   Generics.collections{$ENDIF};
 
 { QPlugins 插件管理引擎 Delphi 接口实现单元，其它编程语言会有自己的实现
@@ -101,9 +102,13 @@ type
     procedure SetLastError(ACode: Cardinal; AMsg: QStringW);
     procedure ValidName(const S: QStringW);
     function GetOriginObject: Pointer; virtual; stdcall;
+    /// <summary>
+    /// 判断指定的
+    /// </summary>
     function IsInModule(AModule: THandle): Boolean; stdcall;
     function GetInstanceCreator: IQService; virtual; stdcall;
     procedure ClearExts;
+    procedure _GetId(AId: PGuid); stdcall;
     function _GetParent: StandInterfaceResult; stdcall;
     function _GetInstanceCreator: StandInterfaceResult; stdcall;
     function _GetAttrs: StandInterfaceResult; stdcall;
@@ -147,6 +152,9 @@ type
     function IndexOf(AItem: IQService): Integer; virtual; stdcall;
     procedure Delete(AIndex: Integer); virtual; stdcall;
     function MoveTo(AIndex, ANewIndex: Integer): Boolean; virtual; stdcall;
+    /// <summary>
+    /// 从父中
+    /// </summary>
     procedure Remove(AItem: IQService); virtual; stdcall;
     procedure Clear; virtual; stdcall;
     function QueryInterface(const IID: TGuid; out Obj): HRESULT;
@@ -162,26 +170,39 @@ type
 
   TQNotifyManager = class;
 
-  TQNotifyItem = class
+  TQNotifyBroadcast = class(TQInterfacedObject, IQNotifyBroadcast)
   private
-    function GetCount: Integer;
-    function GetItems(AIndex: Integer): IQNotify;
   protected
-    FId: Cardinal;
-    FName: QStringW;
+    FNotifyId: Cardinal;
     FItems: TQPointerList;
+    function GetCount: Integer; stdcall;
+    function GetItems(AIndex: Integer): IQNotify; stdcall;
+    function Add(ANotify: IQNotify): Integer; stdcall;
+    procedure Remove(ANotify: IQNotify); stdcall;
+    procedure Clear; stdcall;
+    procedure Send(AParams: IQParams); stdcall;
+    procedure Post(AParams: IQParams); stdcall;
+    procedure HandlePost(AParams: IInterface);
+    procedure DoNotify(AParams: IQParams);
+    function EnumSubscribe(ACallback: TQSubscribeEnumCallback; AParam: Int64)
+      : Integer; stdcall;
+  public
+    constructor Create; override;
+    constructor Create(AId: Cardinal); overload;
+    destructor Destroy; override;
+    property Id: Cardinal read FNotifyId;
+    property Items[AIndex: Integer]: IQNotify read GetItems; default;
+    property Count: Integer read GetCount;
+  end;
+
+  TQNotifyItem = class(TQNotifyBroadcast)
+  protected
+    FName: QStringW;
     FOwner: TQNotifyManager;
   public
     constructor Create(AOwner: TQNotifyManager; AId: Cardinal;
       AName: QStringW); overload;
-    destructor Destroy; override;
-    function Add(ANotify: IQNotify): Integer;
-    procedure Remove(ANotify: IQNotify);
-    procedure Clear;
-    property Id: Cardinal read FId;
     property Name: QStringW read FName;
-    property Items[AIndex: Integer]: IQNotify read GetItems; default;
-    property Count: Integer read GetCount;
   end;
 
   TQNotifyManager = class(TQInterfacedObject, IQNotifyManager)
@@ -208,6 +229,7 @@ type
     function GetId(const AIndex: Integer): Cardinal; stdcall;
     function GetName(const AIndex: Integer): PWideChar; stdcall;
     property Count: Integer read GetCount;
+    function HasSubscriber(const AId: Cardinal): Boolean; stdcall;
     property Id[const AIndex: Integer]: Cardinal read GetId;
     property Name[const AIndex: Integer]: PWideChar read GetName;
   end;
@@ -478,11 +500,6 @@ resourcestring
 
 type
 
-  TQStringService = class(TQService, IQStringService)
-  public
-    function NewString(const S: PWideChar): IQString; stdcall;
-  end;
-
   PServiceWaitItem = ^TServiceWaitItem;
 
   TServiceWaitItem = record
@@ -546,6 +563,8 @@ type
     function NewString: IQString; overload; stdcall;
     function NewString(const ASource: PWideChar): IQString; overload; stdcall;
     function NewString(const S: QStringW): IQString; overload;
+    function NewBroadcast(const AId: Cardinal): IQNotifyBroadcast; stdcall;
+
     function _GetLoaders: StandInterfaceResult; stdcall;
     function _GetRouters: StandInterfaceResult; stdcall;
     function _GetServices: StandInterfaceResult; stdcall;
@@ -556,6 +575,7 @@ type
     function _NewString(const ASource: PWideChar): StandInterfaceResult;
       overload; stdcall;
     procedure _AsynCall(AProc: TQAsynProcG; AParams: IQParams); stdcall;
+    function _NewBroadcast(const AId: Cardinal): Pointer; stdcall;
     function _AddRef: Integer; override; stdcall;
     function _Release: Integer; override; stdcall;
     property Services: IQServices read GetServices;
@@ -582,6 +602,7 @@ type
 var
   MapHandle: THandle = 0;
   OwnerInstance: THandle;
+  PluginsTerminated: Boolean = false;
   _PluginsManager: IQPluginsManager = nil;
   PluginsManagerNameSpace: QStringW;
   _MgrReplaceNotify: IQNotify = nil;
@@ -622,9 +643,8 @@ begin
   P := MapViewOfFile(MapHandle, FILE_MAP_WRITE, 0, 0, 0);
   PPointer(P)^ := Pointer(_PluginsManager);
   UnmapViewOfFile(P);
-  StringService := TQStringService.Create(IQStringService, 'NewString');
-  _PluginsManager.Services.Add(StringService as IQService);
-  DebugOut('QPluginsManager registered at %x with Name %s', [IntPtr(_PluginsManager),PluginsManagerNameSpace]);
+  DebugOut('QPluginsManager registered at %x with Name %s',
+    [IntPtr(_PluginsManager), PluginsManagerNameSpace]);
 end;
 
 procedure UnregisterManager;
@@ -640,9 +660,11 @@ begin
     if HInstance <> OwnerInstance then
       _PluginsManager.ModuleUnloading(HInstance)
     else
+    begin
       (_PluginsManager as IQServices).Clear;
+      PluginsTerminated := true;
+    end;
     _PluginsManager := nil;
-    StringService := nil;
     if MapHandle <> 0 then
     begin
       CloseHandle(MapHandle);
@@ -658,28 +680,26 @@ var
 begin
   OwnerInstance := HInstance;
   _PluginsManager := TQPluginsManager.Create;
-  MapHandle := FileCreate(PluginsManagerNameSpace, fmOpenWrite,
-    fmShareDenyWrite);
-  if MapHandle <> THandle(-1) then
-  begin
-    AVal := Pointer(_PluginsManager);
-    FileWrite(MapHandle, AVal^, SizeOf(AVal));
-  end;
-  StringService := TQStringService.Create(IQStringService, 'NewString');
-  _PluginsManager.Services.Add(StringService as IQService);
 end;
 
 procedure UnregisterManager;
 begin
-  if MapHandle <> THandle(-1) then
+  if _PluginsManager <> nil then
   begin
-    FileClose(MapHandle);
-    DeleteFile(PluginsManagerNameSpace);
-    MapHandle := THandle(-1);
-    if HInstance = MainInstance then
-      _PluginsManager.Clear;
+    if _MgrReplaceNotify <> nil then
+    begin
+      (_PluginsManager as IQNotifyManager).Unsubscribe(NID_MANAGER_REPLACED,
+        _MgrReplaceNotify);
+      _MgrReplaceNotify := nil;
+    end;
+    if HInstance <> OwnerInstance then
+      _PluginsManager.ModuleUnloading(HInstance)
+    else
+    begin
+      (_PluginsManager as IQServices).Clear;
+      PluginsTerminated := true;
+    end;
     _PluginsManager := nil;
-    StringService := nil;
   end;
 end;
 {$ENDIF}
@@ -705,6 +725,8 @@ function PluginsManager: IQPluginsManager;
       UnmapViewOfFile(P);
       { Close the file mapping }
       CloseHandle(AHandle);
+      DebugOut('Find PluginsManager at %x with Name %s',
+        [IntPtr(Pointer(_PluginsManager)), PluginsManagerNameSpace]);
       OwnerInstance := (_PluginsManager as IQService).GetOwnerInstance;
     end;
   end;
@@ -729,10 +751,9 @@ function PluginsManager: IQPluginsManager;
 {$ENDIF}
 
 begin
-  if not Assigned(_PluginsManager) then
+  if not(Assigned(_PluginsManager) or PluginsTerminated) then
   begin
     FindManager;
-    StringService := _PluginsManager as IQStringService;
     GlobalLocker := _PluginsManager as IQLocker;
     if Assigned(_PluginsManager) then
     begin
@@ -925,9 +946,9 @@ function TQService.QueryInterface(const IID: TGuid; out Obj): HRESULT;
   end;
 
 begin
-  Result := inherited QueryInterface(IID, Obj);
+  Result := QueryExt;
   if Result = E_NOINTERFACE then
-    Result := QueryExt;
+    Result := inherited QueryInterface(IID, Obj);
 end;
 
 function TQService.GetInstance: IQService;
@@ -1005,6 +1026,11 @@ begin
   Result := PointerOf(GetAttrs);
 end;
 
+procedure TQService._GetId(AId: PGuid);
+begin
+  AId^ := FId;
+end;
+
 function TQService._GetInstance: StandInterfaceResult;
 begin
   Result := PointerOf(GetInstance);
@@ -1074,7 +1100,7 @@ var
   AMgr: IQPluginsManager;
   AFound: Boolean;
 begin
-  if Assigned(APath) then
+  if Assigned(APath) and Assigned(_PluginsManager) then
   begin
     AMgr := PluginsManager;
     if CharInW(APath, PathDelimiter) then
@@ -1333,8 +1359,6 @@ begin
     AService := ById(IID, false);
     if Assigned(AService) then
       Result := AService.QueryInterface(IID, Obj)
-    else
-      Result := E_NOINTERFACE;
   end;
 end;
 
@@ -1520,11 +1544,12 @@ begin
   FLoaders := TQServices.Create
     (StringToGuid('{0BBAEE7C-ECD0-4CFA-A968-34BF071623DE}'), 'Loaders');
   Add(FLoaders as IQService);
-  DebugOut('TQPluginsManager Creaeed,Address:%x',[IntPtr(Self)]);
+  DebugOut('TQPluginsManager Created,Address:%x', [IntPtr(Self)]);
 end;
 
 destructor TQPluginsManager.Destroy;
 begin
+  DebugOut('TQPluginsManager Freed,Address:%x', [IntPtr(Self)]);
   FRouters := nil;
   FServices := nil;
   FLoaders := nil;
@@ -1567,13 +1592,13 @@ begin
           AProgress[1].AsInteger := I;
           AProgress[2].AsInteger := ALoaders.Count;
           FNotifyMgr.Send(NID_LOADERS_PROGRESS, AProgress);
-          if not (FActiveLoader as IQService).Execute(AParams, AResult) then
+          if not(FActiveLoader as IQService).Execute(AParams, AResult) then
           begin
             AError := TQParams.Create;
             AError.Add('Sender', ptUnicodeString).AsString := NewString(APath);
             AError.Add('Action', ptUInt8).AsInteger := AStartAction;
             AError.Add('ErrorCode', ptUInt32).AsInt64 :=
-              (FActiveLoader as IQService) .LastError;
+              (FActiveLoader as IQService).LastError;
             AError.Add('ErrorMsg', ptUnicodeString).AsString :=
               NewString((FActiveLoader as IQService).LastErrorMsg);
             FNotifyMgr.Send(NID_LOADER_ERROR, AError);
@@ -1608,7 +1633,7 @@ function PathRoot(var P: PWideChar): IQServices;
 var
   AName: QStringW;
   I: Integer;
-  AServices:IQServices;
+  AServices: IQServices;
 begin
   if CharInW(P, PathDelimiter) then
     Inc(P);
@@ -1616,7 +1641,7 @@ begin
   AName := DecodeTokenW(P, PathDelimiter, NullChar, true);
   Lock;
   try
-    AServices:=_PluginsManager as IQServices;
+    AServices := _PluginsManager as IQServices;
     for I := 0 to AServices.Count - 1 do
     begin
       if StrCmpW(AServices[I].Name, PWideChar(AName), true) = 0 then
@@ -1696,6 +1721,11 @@ begin
   Result := FServices;
 end;
 
+function TQPluginsManager.NewBroadcast(const AId: Cardinal): IQNotifyBroadcast;
+begin
+  Result := TQNotifyBroadcast.Create(AId);
+end;
+
 function TQPluginsManager.NewParams: IQParams;
 begin
   Result := TQParams.Create;
@@ -1736,12 +1766,11 @@ end;
 
 procedure TQPluginsManager.ProcessQueuedCalls;
 begin
-
+  qdac_postqueue.ProcessAsynCalls;
 end;
 
 function TQPluginsManager.QueryInterface(const IID: TGuid; out Obj): HRESULT;
 begin
-  // 重载已实现对IQNotifyManager接口的查询
   if SameId(IID, IQNotifyManager) then
     Result := FNotifyMgr.QueryInterface(IID, Obj)
   else if SameId(IID, IQLocker) then
@@ -1985,6 +2014,11 @@ begin
   Result := PointerOf(GetServices);
 end;
 
+function TQPluginsManager._NewBroadcast(const AId: Cardinal): Pointer;
+begin
+  Result := PointerOf(NewBroadcast(AId));
+end;
+
 function TQPluginsManager._NewParams: StandInterfaceResult;
 begin
   Result := PointerOf(NewParams);
@@ -2189,6 +2223,19 @@ begin
   end;
 end;
 
+function TQNotifyManager.HasSubscriber(const AId: Cardinal): Boolean;
+begin
+  Lock;
+  try
+    if AId < Cardinal(FItems.Count) then
+      Result := TQNotifyItem(FItems[AId]).GetCount > 0
+    else
+      Result := False;
+  finally
+    Unlock;
+  end;
+end;
+
 function TQNotifyManager.IdByName(const AName: PWideChar): Cardinal;
 var
   I: Integer;
@@ -2231,6 +2278,8 @@ end;
 procedure TQNotifyManager.Post(AId: Cardinal; AParams: IQParams);
 begin
   // 追加最后一个参数为通知的ID
+  if not Assigned(AParams) then
+    AParams := TQParams.Create;
   AParams.Add('@NID', ptInt32).AsInteger := Integer(AId);
   AsynCall(HandlePost, AParams);
 end;
@@ -2239,8 +2288,7 @@ procedure TQNotifyManager.Send(AId: Cardinal; AParams: IQParams);
 var
   AEvent: TEvent;
 begin
-  if MainThreadId = {$IFDEF NEXTGEN}TThread.Current.ThreadID
-{$ELSE}GetCurrentThreadId {$ENDIF} then
+  if MainThreadId = GetCurrentThreadId then
     DoNotify(AId, AParams)
   else
   begin
@@ -2289,59 +2337,12 @@ begin
 end;
 
 { TQNotifyItem }
-
-function TQNotifyItem.Add(ANotify: IQNotify): Integer;
-begin
-  ANotify._AddRef;
-  Result := FItems.Add(Pointer(ANotify));
-end;
-
-procedure TQNotifyItem.Clear;
-var
-  I: Integer;
-begin
-  for I := 0 to FItems.Count - 1 do
-    IQNotify(FItems[I])._Release;
-  FItems.Clear;
-end;
-
 constructor TQNotifyItem.Create(AOwner: TQNotifyManager; AId: Cardinal;
   AName: QStringW);
 begin
-  inherited Create;
+  inherited Create(AId);
   FOwner := AOwner;
-  FItems := TQPointerList.Create;
-  FId := AId;
   FName := AName;
-end;
-
-destructor TQNotifyItem.Destroy;
-begin
-  Clear;
-  FreeAndNil(FItems);
-  inherited;
-end;
-
-function TQNotifyItem.GetCount: Integer;
-begin
-  Result := FItems.Count;
-end;
-
-function TQNotifyItem.GetItems(AIndex: Integer): IQNotify;
-begin
-  Result := IQNotify(FItems[AIndex]);
-end;
-
-procedure TQNotifyItem.Remove(ANotify: IQNotify);
-var
-  I: Integer;
-begin
-  I := FItems.IndexOf(Pointer(ANotify));
-  if I <> -1 then
-  begin
-    FItems.Delete(I);
-    ANotify._Release;
-  end;
 end;
 
 { TQManagerChangeHandler }
@@ -2903,13 +2904,6 @@ begin
   FLocker.Leave;
 end;
 
-{ TQStringService }
-
-function TQStringService.NewString(const S: PWideChar): IQString;
-begin
-  Result := TQUnicodeString.Create(S);
-end;
-
 { TQInterfaceHolder }
 
 constructor TQInterfaceHolder.Create(AOwner: TComponent;
@@ -2923,6 +2917,200 @@ constructor TQInterfaceHolder.Create(AOwner: TComponent);
 begin
   inherited;
 end;
+
+{ TQNotifyBroadcast }
+
+function TQNotifyBroadcast.Add(ANotify: IQNotify): Integer;
+begin
+  if Assigned(ANotify) then
+  begin
+    ANotify._AddRef;
+    Result := FItems.Add(Pointer(ANotify));
+  end
+  else
+    Result := -1;
+end;
+
+procedure TQNotifyBroadcast.Clear;
+var
+  I: Integer;
+begin
+  for I := 0 to FItems.Count - 1 do
+    IQNotify(FItems[I])._Release;
+  FItems.Clear;
+end;
+
+constructor TQNotifyBroadcast.Create;
+begin
+  inherited;
+  // 不允许调用它创建实例
+end;
+
+constructor TQNotifyBroadcast.Create(AId: Cardinal);
+begin
+  inherited Create;
+  FNotifyId := AId;
+  FItems := TQPointerList.Create;
+end;
+
+destructor TQNotifyBroadcast.Destroy;
+begin
+  Clear;
+  FreeAndNil(FItems);
+  inherited;
+end;
+
+procedure TQNotifyBroadcast.DoNotify(AParams: IQParams);
+var
+  I: Integer;
+  AItems: array of IQNotify;
+  AFireNext: Boolean;
+  AFireProcessNotify: Boolean;
+  AProcessParams: IQParams;
+  AMgr: IQNotifyManager;
+begin
+  AMgr := PluginsManager as IQNotifyManager;
+  Lock;
+  try
+    SetLength(AItems, Count);
+    for I := 0 to Count - 1 do
+      AItems[I] := IQNotify(FItems[I]);
+  finally
+    Unlock;
+  end;
+  AFireProcessNotify := (Id <> NID_NOTIFY_PROCESSING) and
+    (Id <> NID_NOTIFY_PROCESSED);
+  if AFireProcessNotify and Assigned(AMgr) then
+  begin
+    AProcessParams := TQParams.Create;
+    AProcessParams.Add('Id', ptUInt32).AsInt64 := Id;
+    AProcessParams.Add('Params', ptInterface).AsInterface := AParams;
+    AMgr.Send(NID_NOTIFY_PROCESSING, AProcessParams);
+  end;
+  try
+    AFireNext := true;
+    for I := 0 to High(AItems) do
+    begin
+      AItems[I].Notify(Id, AParams, AFireNext);
+      if not AFireNext then
+        break;
+    end;
+  finally
+    if AFireProcessNotify and Assigned(AMgr) then
+      AMgr.Send(NID_NOTIFY_PROCESSED, AProcessParams);
+  end;
+end;
+
+function TQNotifyBroadcast.EnumSubscribe(ACallback: TQSubscribeEnumCallback;
+  AParam: Int64): Integer;
+var
+  I: Integer;
+  AContinue: Boolean;
+begin
+  Result := 0;
+  if Assigned(ACallback) then
+  begin
+    AContinue := True;
+    for I := 0 to FItems.Count - 1 do
+    begin
+      ACallback(IQNotify(FItems[I]), AParam, AContinue);
+      Inc(Result);
+      if not AContinue then
+        Break;
+    end;
+  end;
+end;
+
+function TQNotifyBroadcast.GetCount: Integer;
+begin
+  Result := FItems.Count;
+end;
+
+function TQNotifyBroadcast.GetItems(AIndex: Integer): IQNotify;
+begin
+  Result := IQNotify(FItems[AIndex]);
+end;
+
+procedure TQNotifyBroadcast.HandlePost(AParams: IInterface);
+var
+  ANotifyParams: IQParams;
+  AEventParam: IQParam;
+  AEvent: TEvent;
+begin
+  ANotifyParams := AParams as IQParams;
+  AEvent := nil;
+  AEventParam := ANotifyParams.ByName('@EVT');
+  if Assigned(AEventParam) then
+    AEvent := Pointer(AEventParam.AsInt64);
+  DoNotify(ANotifyParams);
+  if Assigned(AEvent) then
+    AEvent.SetEvent;
+end;
+
+procedure TQNotifyBroadcast.Post(AParams: IQParams);
+begin
+  AsynCall(HandlePost, AParams);
+end;
+
+procedure TQNotifyBroadcast.Remove(ANotify: IQNotify);
+var
+  I: Integer;
+begin
+  I := FItems.IndexOf(Pointer(ANotify));
+  if I <> -1 then
+  begin
+    FItems.Delete(I);
+    ANotify._Release;
+  end;
+end;
+
+procedure TQNotifyBroadcast.Send(AParams: IQParams);
+var
+  AEvent: TEvent;
+begin
+  if MainThreadId = GetCurrentThreadId then
+    DoNotify(AParams)
+  else
+  begin
+    if not Assigned(AParams) then
+      AParams := TQParams.Create;
+    AEvent := TEvent.Create;
+    try
+      AParams.Add('@EVT', ptInt64).AsInt64 := IntPtr(AEvent);
+      Post(AParams);
+      AEvent.WaitFor(INFINITE);
+    finally
+      FreeAndNil(AEvent);
+    end;
+  end;
+end;
+
+{$IFNDEF MSWINDOWS}
+
+type
+  THostPluginsManager = function: Pointer; stdcall;
+
+function HostPluginsManager: Pointer; stdcall;
+  function CallHost: Pointer;
+  var
+    AHostEntry: THostPluginsManager;
+  begin
+    AHostEntry := GetProcAddress(MainInstance, 'HostPluginsManager');
+    if Assigned(AHostEntry) then
+      Result := AHostEntry
+    else
+      Result := nil;
+  end;
+
+begin
+  if IsLibrary then
+    CallHost
+  else
+    Result := PointerOf(PluginsManager);
+end;
+
+exports HostPluginsManager;
+{$ENDIF}
 
 initialization
 

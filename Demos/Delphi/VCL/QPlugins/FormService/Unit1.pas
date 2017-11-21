@@ -8,7 +8,8 @@ uses
   Controls, Forms, Dialogs, DB, Grids, DBGrids, qdb,
   qprov_pgsql,
   // qplugins所需要的单元
-  qplugins,qplugins_base, qplugins_params, qplugins_formsvc, qplugins_vcl_formsvc,
+  qplugins_base, qplugins, qplugins_params, qplugins_formsvc,
+  qplugins_vcl_formsvc,
   ExtCtrls, StdCtrls;
 
 type

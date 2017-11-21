@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2017/06/05 19:31:36.000.852,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/09/24 21:49:35.000.900,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/09/29 13:52:47.000.917,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/09/29 19:56:19.000.469,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2017/10/21 16:07:40.000.485,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2017/10/25 10:10:37.000.037,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2017/10/28 08:53:41.000.388,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2017/10/28 09:46:42.000.704,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2017/10/29 16:32:38.000.950,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2017/10/29 16:40:06.000.522,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit3.pas</Transaction>
+    <Transaction>2017/10/29 16:42:38.000.863,C:\Users\swish\Documents\Embarcadero\Studio\Projects\qupgrade.pas=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit3.pas</Transaction>
+    <Transaction>2017/10/30 16:43:53.000.911,C:\Users\swish\Documents\Embarcadero\Studio\Projects\main.dfm=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit2.dfm</Transaction>
+    <Transaction>2017/10/30 16:43:53.000.911,C:\Users\swish\Documents\Embarcadero\Studio\Projects\main.pas=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2017/10/30 16:43:59.000.933,C:\Users\swish\Documents\Embarcadero\Studio\Projects\updater.dproj=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>2017/10/30 17:08:23.000.669,C:\Users\swish\Documents\Embarcadero\Studio\Projects\qhttprequest.pas=C:\Users\swish\Documents\Embarcadero\Studio\Projects\qupgrade.pas</Transaction>
+    <Transaction>2017/10/30 19:21:07.000.997,H:\User\Demos\Updater\updater.dproj=C:\Users\swish\Documents\Embarcadero\Studio\Projects\updater.dproj</Transaction>
+    <Transaction>2017/10/30 19:21:28.000.717,H:\User\Demos\Updater\main.dfm=C:\Users\swish\Documents\Embarcadero\Studio\Projects\main.dfm</Transaction>
+    <Transaction>2017/10/30 19:21:28.000.717,H:\User\Demos\Updater\main.pas=C:\Users\swish\Documents\Embarcadero\Studio\Projects\main.pas</Transaction>
+    <Transaction>2017/10/30 19:21:42.000.206,H:\User\Demos\Updater\qhttprequest.pas=C:\Users\swish\Documents\Embarcadero\Studio\Projects\qhttprequest.pas</Transaction>
+    <Transaction>2017/10/31 19:37:28.000.083,H:\User\QDAC\qhttprequest.pas=H:\User\Demos\Updater\qhttprequest.pas</Transaction>
+    <Transaction>2017/10/31 19:38:20.000.193,H:\User\QDAC\Source\qhttprequest.pas=H:\User\QDAC\qhttprequest.pas</Transaction>
+    <Transaction>2017/10/31 19:47:40.000.748,=H:\User\Demos\Updater\Unit1.pas</Transaction>
+    <Transaction>2017/10/31 20:00:30.000.339,H:\User\QDAC\Source\qhttprequest.pas=</Transaction>
+    <Transaction>2017/11/12 14:25:39.066,H:\User\Demos\Updater\httpdemo.dproj=H:\User\Demos\Updater\updater.dproj</Transaction>
+  </Transactions>
+	<ActiveMobileDevice>
+		<NoProfile Android="Nexus_5X_API_26"/>
+		<POSX iOSSimulator="iPhone5"/>
+	</ActiveMobileDevice>
+</BorlandProject>

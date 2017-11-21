@@ -67,6 +67,15 @@ object Form1: TForm1
       TabOrder = 2
       OnClick = Button3Click
     end
+    object Button4: TButton
+      Left = 280
+      Top = 8
+      Width = 75
+      Height = 25
+      Caption = #23383#31526#20018#21015#34920
+      TabOrder = 3
+      OnClick = Button4Click
+    end
   end
   object adsData: TADODataSet
     Parameters = <>

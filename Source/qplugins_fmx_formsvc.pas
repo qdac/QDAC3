@@ -1416,5 +1416,4 @@ finalization
 UnregisterServices(PQCharW(FreeNotificationRoot), [LocalFreeNotifyServiceName]);
 LocalFreeNotifyService.Clear;
 LocalFreeNotifyService := nil;
-TStyleManager.SetStyle(nil);
 end.

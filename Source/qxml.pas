@@ -2819,31 +2819,54 @@ var
       end;
     end;
   end;
+  function DefaultTagNeeded: Boolean;
+  var
+    I, C: Integer;
+  begin
+    if NodeType = xntNode then
+    begin
+      if Length(FName) = 0 then // 自己是结点，但没有名称
+      begin
+        case ACount of
+          0:
+            Result := Assigned(FAttrs) and (Attrs.Count > 0);
+          1:
+            Result := Items[0].NodeType in [xntText, xntCData]
+        else
+          begin
+            C := 0;
+            for I := 0 to Count - 1 do
+            begin
+              if Items[I].NodeType <> xntComment then
+                Inc(C);
+              if C > 1 then
+                Break;
+            end;
+            Result := C > 1;
+          end;
+        end;
+      end
+      else
+        Result:=False;
+    end
+    else
+      Result := False;
+  end;
 
 begin
   Result := ABuilder;
-  ADefaultTag := False;
   ACount := Count;
-  if NodeType = xntNode then
-  begin
-    if Length(FName) = 0 then // 自己是结点，但没有名称
-    begin
-      case ACount of
-        0:
-          ADefaultTag := Assigned(FAttrs) and (Attrs.Count > 0);
-        1:
-          ADefaultTag := Items[0].NodeType in [xntText, xntCData]
-      else
-        ADefaultTag := True;
-      end;
-    end;
-  end;
+  ADefaultTag:=DefaultTagNeeded;
   if ADefaultTag then
+  begin
     ABuilder.Cat(TagXMLStart, 4);
-  DoEncode(Self, 0);
-  if ADefaultTag and ((Count > 0) or (not XMLTagShortClose)) then
-    // XMLTagShortClose为True并且Count=0时在InternalEncode中已处理
-    ABuilder.Cat(TagXMLEnd, 6);
+    DoEncode(Self, 0);
+    if ((Count > 0) or (not XMLTagShortClose)) then
+      // XMLTagShortClose为True并且Count=0时在InternalEncode中已处理
+      ABuilder.Cat(TagXMLEnd, 6);
+  end
+  else
+    DoEncode(Self, 0);
 end;
 
 function TQXMLNode.IsChildOf(AParent: TQXMLNode): Boolean;
