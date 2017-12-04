@@ -213,6 +213,16 @@ type
 
   TWechatSession = (Session, Timeline, Favorite);
 
+  IWechatSigner = interface
+    ['{C06D210C-2DF7-413F-BFE6-E5CEAD764DA1}']
+    procedure Add(const AKey, AValue: String);
+    procedure Clear;
+    function GetSign: String;
+    function GetKey: String;
+    property Sign: String read GetSign;
+    property Key: String read GetKey;
+  end;
+
   IWechatService = interface
     ['{10370690-72BC-438C-8105-042D2029B895}']
     procedure Unregister;
@@ -239,6 +249,7 @@ type
     function CreateObject(AObjId: TGuid): IWechatObject;
     function Pay(APrepayId, AnonceStr, ASign: String;
       ATimeStamp: Integer): Boolean;
+    procedure EnableSignCheck(ASigner:IWechatSigner);
     function ShareText(ATarget: TWechatSession; const S: String): Boolean;
     function ShareWebPage(ATarget: TWechatSession;
       const ATitle, AContent, AUrl: String; APicture: TBitmap): Boolean;
@@ -258,15 +269,7 @@ type
       write setOnResponse;
   end;
 
-  IWechatSigner = interface
-    ['{C06D210C-2DF7-413F-BFE6-E5CEAD764DA1}']
-    procedure Add(const AKey, AValue: String);
-    procedure Clear;
-    function GetSign: String;
-    function GetKey: String;
-    property Sign: String read GetSign;
-    property Key: String read GetKey;
-  end;
+
 
   TWechatObject = class(TInterfacedObject, IInterface)
   protected

@@ -1378,12 +1378,12 @@ function HtmlUnescape(const S: QStringW): QStringW;
 function JavaEscape(const S: QStringW; ADoEscape: Boolean): QStringW;
 function JavaUnescape(const S: QStringW; AStrictEscape: Boolean): QStringW;
 function HtmlTrimText(const S: QStringW): QStringW;
-function UrlEncode(const ABytes: PByte; l: Integer; ASpacesAsPlus: Boolean)
+function UrlEncode(const ABytes: PByte; l: Integer; ASpacesAsPlus: Boolean;AEncodePercent:Boolean=False)
   : QStringW; overload;
-function UrlEncode(const ABytes: TBytes; ASpacesAsPlus: Boolean)
+function UrlEncode(const ABytes: TBytes; ASpacesAsPlus: Boolean;AEncodePercent:Boolean=False)
   : QStringW; overload;
 function UrlEncode(const S: QStringW; ASpacesAsPlus: Boolean;
-  AUtf8Encode: Boolean = True): QStringW; overload;
+  AUtf8Encode: Boolean = True;AEncodePercent:Boolean=False): QStringW; overload;
 function UrlDecode(const AUrl: QStringW;
   var AScheme, AHost, ADocument: QStringW; var APort: Word; AParams: TStrings;
   AUtf8Encode: Boolean = True): Boolean;
@@ -7574,7 +7574,7 @@ begin
     Result := '';
 end;
 
-function UrlEncode(const ABytes: PByte; l: Integer; ASpacesAsPlus: Boolean)
+function UrlEncode(const ABytes: PByte; l: Integer; ASpacesAsPlus,AEncodePercent: Boolean)
   : QStringW; overload;
 const
   SafeChars: array [33 .. 127] of Byte = ( //
@@ -7603,7 +7603,7 @@ begin
   pe := PByte(IntPtr(ps) + l);
   while IntPtr(ps) < IntPtr(pe) do
   begin
-    if (ps^ = Ord('%')) and (IntPtr(pe) - IntPtr(ps) > 2) and
+    if (not AEncodePercent) and  (ps^ = Ord('%')) and (IntPtr(pe) - IntPtr(ps) > 2) and
       (PByte(IntPtr(ps) + 1)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
       Ord('0') .. Ord('9')]) and
       (PByte(IntPtr(ps) + 2)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
@@ -7621,7 +7621,7 @@ begin
   ps := ABytes;
   while IntPtr(ps) < IntPtr(pe) do
   begin
-    if (ps^ = Ord('%')) and (IntPtr(pe) - IntPtr(ps) > 2) and
+    if (not AEncodePercent) and (ps^ = Ord('%')) and (IntPtr(pe) - IntPtr(ps) > 2) and
       (PByte(IntPtr(ps) + 1)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
       Ord('0') .. Ord('9')]) and
       (PByte(IntPtr(ps) + 2)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
@@ -7657,7 +7657,7 @@ begin
   end;
 end;
 
-function UrlEncode(const ABytes: TBytes; ASpacesAsPlus: Boolean)
+function UrlEncode(const ABytes: TBytes; ASpacesAsPlus,AEncodePercent: Boolean)
   : QStringW; overload;
 begin
   if Length(ABytes) > 0 then
@@ -7666,7 +7666,7 @@ begin
     SetLength(Result, 0);
 end;
 
-function UrlEncode(const S: QStringW; ASpacesAsPlus, AUtf8Encode: Boolean)
+function UrlEncode(const S: QStringW; ASpacesAsPlus, AUtf8Encode,AEncodePercent: Boolean)
   : QStringW; overload;
 var
   ABytes: QStringA;
@@ -7677,7 +7677,7 @@ begin
       ABytes := qstring.Utf8Encode(S)
     else
       ABytes := AnsiEncode(S);
-    Result := UrlEncode(PByte(PQCharA(ABytes)), ABytes.Length, ASpacesAsPlus);
+    Result := UrlEncode(PByte(PQCharA(ABytes)), ABytes.Length, ASpacesAsPlus,AEncodePercent);
   end
   else
     Result := S;
@@ -8064,7 +8064,7 @@ const
     'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
   WeekNames: array [0 .. 6] of QStringW = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri',
     'Sat', 'Sun');
-  Comma: PWideChar = ',';
+  Comma: WideChar = ',';
   Digits: PWideChar = '0123456789';
   // Web 日期格式：星期, 日 月 年 时:分:秒 GMT
 begin

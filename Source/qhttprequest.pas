@@ -11,6 +11,7 @@ interface
 uses Classes, Sysutils, Types, Contnrs, QString, QDigest, QJson,
   SyncObjs{$IFDEF UNICODE},
   System.Generics.Collections{$ENDIF};
+{$I 'qdac.inc'}
 
 type
   TQUrl = class;
@@ -57,6 +58,7 @@ type
     constructor Create(AUrl: QStringW); overload;
     destructor Destroy; override;
     procedure Assign(ASource: TQUrl);
+    procedure SortParams(ACaseSensitive:Boolean=false;AUseLocale:Boolean=false;Compare: TStringListSortCompare = nil);
     property SchemePort: Word read GetSchemePort;
     property Scheme: QStringW read FScheme write SetScheme;
     property Host: QStringW read FHost write SetHost;
@@ -153,7 +155,7 @@ type
     procedure SetResponseStream(const Value: TStream);
     function GetContentAsString: QStringW;
     function GetResponseCharset: String;
-    function GetResultUrl: String;
+    function GetResultUrl: QStringW;
     function StartWith(AHttpClient: TObject): Boolean;
     function GetUserAgent: QStringW;
     procedure SetUserAgent(const Value: QStringW);
@@ -169,8 +171,8 @@ type
   public
     constructor Create(ASender: TObject); overload;
     destructor Destroy; override;
-    property Url: String read FUrl write FUrl;
-    property ResultUrl: String read GetResultUrl;
+    property Url: QStringW read FUrl write FUrl;
+    property ResultUrl: QStringW read GetResultUrl;
     property Action: TQHttpClientAction read FAction write FAction;
     property Sender: TObject read FSender;
     property RequestStream: TStream read FRequestStream write FRequestStream;
@@ -227,6 +229,7 @@ type
     constructor Create; overload;
     destructor Destroy; override;
     procedure Push(ARequest: TQHttpRequestItem); virtual;
+    procedure Clear(AExclude: TQHttpRequestItem = nil);
     function Get(const AUrl: QStringW; var AResult: QStringW;
       AHeaders: IQHttpHeaders = nil): Integer; overload;
     function Get(const AUrl: QStringW; AReplyStream: TStream;
@@ -235,6 +238,8 @@ type
       AHeaders: IQHttpHeaders = nil): Integer; overload;
     function Post(const AUrl: QStringW; AReplyStream: TStream;
       AHeaders: IQHttpHeaders = nil): Integer; overload;
+    function Rest(const AUrl: QStringW; ASource, AResult: TQJson;
+      AHeaders: IQHttpHeaders = nil; AfterDone: TNotifyEvent = nil): Integer;
     property MaxClients: Integer read FMaxClients write FMaxClients;
     property DefaultHeaders: IQHttpHeaders read FDefaultHeaders;
   end;
@@ -302,7 +307,7 @@ type
     // 请求执行线程
     FWorkThread: TThread;
     // 请求动作
-    FAction: String;
+    FAction: QStringW;
     // 请求的内容数据流
     FRequestStream: TStream;
     // 返回的结果流
@@ -390,7 +395,7 @@ implementation
 
 {$IF RTLVersion>=27}
 {$DEFINE SYSHTTP }
-{$ENDIF}
+{$IFEND}
 
 uses zlib{$IFDEF SYSHTTP}, System.Net.HttpClient,
   System.Net.UrlClient{$ENDIF}
@@ -462,7 +467,7 @@ type
   end;
 {$ELSE}
 
-  THeadersHelper = class(TInterfacedObject, IQHttpHeaders)
+  THeadersHelper = class(TInterfacedObject, IQHttpHeaders, IInterface)
   protected
     FHeaders: TQHttpHeaders;
     function GetHeaderValue(const AName: QStringW): QStringW;
@@ -483,14 +488,34 @@ type
     constructor Create; overload;
     constructor Create(AHeaders: TQHttpHeaders); overload;
     destructor Destroy; override;
+    function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
     property Headers: TQHttpHeaders read FHeaders write SetHeaders;
   end;
 
   THttpClientClass = TQHttpClient;
 {$ENDIF}
+{$IF RTLVersion=18}
 
-  // IPv4 DNS 解析支持，不支持 IPv6
-function DNSLookupV4(const AHost: String): Cardinal;
+const
+  ObjCastGUID: TGUID = '{CEDF24DE-80A4-447D-8C75-EB871DC121FD}';
+
+type
+  TinflateInit2_ = function(var strm: TZStreamRec; windowBits: Integer;
+    version: PAnsiChar; stream_size: Integer): Integer; cdecl;
+
+var
+  inflateInit2_: TinflateInit2_ = nil;
+  ZLibHandle: HINST;
+
+function ObjectOf(AIntf: IInterface): TObject;
+begin
+  if not Supports(AIntf, ObjCastGUID, Result) then
+    Result := nil;
+end;
+{$IFEND}
+
+// IPv4 DNS 解析支持，不支持 IPv6
+function DNSLookupV4(const AHost: QStringW): Cardinal;
 var
   Utf8Host: QStringA;
   AEntry: PHostEnt;
@@ -678,7 +703,7 @@ begin
   AThread.OnTerminate := DoThreadTerminated;
   AThread.Suspended := false;
   if FIsWaiting then
-    FNotifyEvent.WaitFor();
+    FNotifyEvent.WaitFor(INFINITE);
 end;
 
 procedure TQHttpClient.Post(const AUrl: String;
@@ -889,19 +914,31 @@ var
       Inc(p);
     end;
   end;
-
+{$IF RTLVERSION=18}
+  function InflateInit(var strm: TZStreamRec): Integer;
+  begin
+    Result := inflateInit_(strm, ZLIB_VERSION, SizeOf(TZStreamRec));
+  end;
+  function inflateInit2(var strm: TZStreamRec; windowBits: Integer): Integer;
+  begin
+    Result := inflateInit2_(strm, windowBits, ZLIB_VERSION,
+      SizeOf(TZStreamRec));
+  end;
+{$IFEND}
   procedure FlushChunk(ABlock: PByte; ASize: Integer);
   var
     ARetVal: Integer;
     AHave: Cardinal;
-    AStrm: Z_Stream;
+    AStrm: TZStreamRec;
     ABuf: array [0 .. 65535] of Byte;
   begin
     if AIsGZip or AIsDeflate then
     begin
       AStrm.zalloc := nil;
       AStrm.zfree := nil;
+{$IF RTLVersion>18}
       AStrm.opaque := nil;
+{$IFEND}
       AStrm.avail_in := 0;
       AStrm.next_in := nil;
       if AIsGZip then
@@ -911,7 +948,7 @@ var
       if ARetVal <> Z_OK then
         raise Exception.Create(SZlibError);
       AStrm.avail_in := ASize;
-      AStrm.next_in := ABlock;
+      AStrm.next_in := Pointer(ABlock);
       repeat
         AStrm.avail_out := 65536;
         AStrm.next_out := @ABuf[0];
@@ -959,12 +996,13 @@ var
           ps := ATemp.Memory;
           for I := 2 to AReaded do
           begin
-            if (ps[I] = 10) and (ps[I - 1] = 13) then
+            if (PByte(IntPtr(ps) + I)^ = 10) and
+              (PByte(IntPtr(ps) + I - 1)^ = 13) then
             // 块头长度结束
             begin
               AChunkSize := ParseChunkSize(ps) + 2; // Chunk以#13#10结束，需要考虑在内
               AOffset := AReaded - I - 1;
-              Move(ps[I + 1], ps[0], AOffset);
+              Move(PByte(IntPtr(ps) + I + 1)^, ps^, AOffset);
               ATemp.Position := AOffset;
               AReaded := AOffset;
               Break;
@@ -986,7 +1024,7 @@ var
           begin
             ps := ATemp.Memory;
             FlushChunk(ATemp.Memory, AChunkSize - 2);
-            Move(ps[AChunkSize], ps[0], AReaded - AChunkSize);
+            Move(PByte(IntPtr(ps) + AChunkSize)^, ps^, AReaded - AChunkSize);
             Dec(AReaded, AChunkSize);
             ATemp.Position := AReaded;
             AChunkSize := -1;
@@ -1303,7 +1341,7 @@ begin
     Result := Result + '@';
   end;
   Result := Result + RequestHost;
-  if Length(FDocument) > 0 then
+  if Length(FDocument) = 0 then
     Result := Result + '/'
   else
     Result := Result + ExtractPath + '/';
@@ -1326,8 +1364,8 @@ begin
         Result := Result + UrlEncode(FParams.Names[I], SpaceAsPlus) + '=' +
           UrlEncode(FParams.ValueFromIndex[I], SpaceAsPlus)
       else
-        Result := Result + UrlEncode(FParams.Names[I], SpaceAsPlus) + '=' +
-          UrlEncode(FParams.ValueFromIndex[I], SpaceAsPlus);
+        Result := Result + '&' + UrlEncode(FParams.Names[I], SpaceAsPlus) + '='
+          + UrlEncode(FParams.ValueFromIndex[I], SpaceAsPlus);
     end;
   end;
   if Length(FBookmark) > 0 then
@@ -1533,6 +1571,38 @@ begin
   end;
 end;
 
+function SortByName(List: TStringList; Index1, Index2: Integer): Integer;
+begin
+  {$IF RTLVersion>=31}
+  if List.UseLocale then
+  begin
+    if List.CaseSensitive then
+      Result := AnsiCompareStr(List.Names[Index1], List.Names[Index2])
+    else
+      Result := AnsiCompareText(List.Names[Index1], List.Names[Index2])
+  end
+  else
+  {$IFEND}
+  begin
+    if List.CaseSensitive then
+      Result := CompareStr(List.Names[Index1], List.Names[Index2])
+    else
+      Result := CompareText(List.Names[Index1], List.Names[Index2]);
+  end;
+end;
+
+procedure TQUrl.SortParams(ACaseSensitive,AUseLocale:Boolean;Compare: TStringListSortCompare);
+begin
+  FParams.CaseSensitive:=ACaseSensitive;
+  {$IF RTLVersion>=31}
+  FParams.UseLocale:=AUseLocale;
+  {$IFEND}
+  if Assigned(Compare) then
+    FParams.CustomSort(Compare)
+  else
+    FParams.CustomSort(SortByName);
+end;
+
 { TQHttpHeaders }
 
 constructor TQHttpHeaders.Create;
@@ -1631,42 +1701,54 @@ var
 {$ENDIF}
 begin
   FStopTime := Now;
-{$IFDEF SYSHTTP}
-  if Assigned(FResponse) then
+  if Assigned(HttpClient) then
   begin
-    with FResponse as IHttpResponse do
+{$IFDEF SYSHTTP}
+    if Assigned(FResponse) then
     begin
-      if ((StatusCode >= 300) and (StatusCode <= 303)) or (StatusCode = 307)
-      then
+      with FResponse as IHttpResponse do
       begin
-        // 官方规定是如果POST改成GET，我暂时不改不知道行不行:)
-        FResultUrl := UrlMerge(ResultUrl, GetHeaderValue('Location'));
-        if MainThreadNotify then
-          TThread.Synchronize(nil, DoRedirect)
+        if ((StatusCode >= 300) and (StatusCode <= 303)) or (StatusCode = 307)
+        then
+        begin
+          // 官方规定是如果POST改成GET，我暂时不改不知道行不行:)
+          FResultUrl := UrlMerge(ResultUrl, GetHeaderValue('Location'));
+          if MainThreadNotify then
+            TThread.Synchronize(nil, DoRedirect)
+          else
+            DoRedirect;
+          if (FRedirectTimes < FMaxRedirectTimes) and FAllowRedirect then
+            StartWith(HttpClient);
+          Exit;
+        end
         else
-          DoRedirect;
-        if (FRedirectTimes < FMaxRedirectTimes) and FAllowRedirect then
-          StartWith(HttpClient);
-        Exit;
-      end
-      else
-      begin
-        FStatusCode := StatusCode;
-        FStatusText := StatusText;
-        (FResponseHeaders as THeadersHelper).Headers := GetHeaders;
-        // (FRequestHeaders as THeadersHelper).Headers:=(HttpClient as THttpClientClass).Get.
+        begin
+          FStatusCode := StatusCode;
+          FStatusText := StatusText;
+          (FResponseHeaders as THeadersHelper).Headers := GetHeaders;
+          // (FRequestHeaders as THeadersHelper).Headers:=(HttpClient as THttpClientClass).Get.
+        end;
       end;
     end;
-  end;
-  // (FResponseHeaders as THeadersHelper):=AClient.
+    // (FResponseHeaders as THeadersHelper):=AClient.
 {$ELSE}
-  AClient := THttpClientClass(HttpClient);
-  (FResponseHeaders as THeadersHelper).FHeaders.Assign(AClient.ResponseHeaders);
-  (FRequestHeaders as THeadersHelper).FHeaders.Assign(AClient.RequestHeaders);
-  FStatusCode := AClient.StatusCode;
-  FStatusText := AClient.StatusText;
-  FResultUrl := AClient.ResultUrl.Url;
+    AClient := THttpClientClass(HttpClient);
+{$IF RTLVersion=18}
+    (ObjectOf(FResponseHeaders) as THeadersHelper)
+{$ELSE}
+    (FResponseHeaders as THeadersHelper)
+{$IFEND}.FHeaders.Assign(AClient.ResponseHeaders);
+{$IF RTLVersion=18}
+    (ObjectOf(FRequestHeaders) as THeadersHelper)
+{$ELSE}
+    (FRequestHeaders as THeadersHelper)
+{$IFEND}
+      .FHeaders.Assign(AClient.RequestHeaders);
+    FStatusCode := AClient.StatusCode;
+    FStatusText := AClient.StatusText;
+    FResultUrl := AClient.ResultUrl.Url;
 {$ENDIF}
+  end;
   DoProgress;
   if MainThreadNotify then
     TThread.Synchronize(nil, DoMainThreadAfterDone)
@@ -1880,6 +1962,7 @@ const
     AIsContentType: Boolean;
   const
     SpaceChars: PWideChar = ' '#9#13#10;
+    TagEnd: PWideChar = '>';
   begin
     FResponseStream.Position := 0;
     AReaded := FResponseStream.Read(ABuf[0], 8192);
@@ -1906,7 +1989,7 @@ const
           begin
             SkipSpaceW(p);
             ps := p;
-            SkipUntilW(p, '>');
+            SkipUntilW(p, TagEnd);
             ALine := StrDupX(ps, (IntPtr(p) - IntPtr(ps)) shr 1 - 1);
             // />不包含在内
             // <meta charset=xxx> 或 <meta http-equiv="content-type" content="text/html; charset=XXX">
@@ -1983,7 +2066,7 @@ begin
     Result := DecodeContentType(AValue);
 end;
 
-function TQHttpRequestItem.GetResultUrl: String;
+function TQHttpRequestItem.GetResultUrl: QStringW;
 begin
   if Length(FResultUrl) = 0 then
     Result := FUrl
@@ -2113,7 +2196,8 @@ begin
 {$ELSE}
   AClient.AfterDone := DoAfterDone;
   AClient.OnRedirect := DoClientRedirect;
-  AClient.RequestHeaders.Assign((RequestHeaders as THeadersHelper).FHeaders);
+  AClient.RequestHeaders.Assign
+    (({$IF RTLVersion=18}ObjectOf(RequestHeaders){$ELSE}RequestHeaders{$IFEND} as THeadersHelper).FHeaders);
   AClient.MaxRedirects := FMaxRedirectTimes;
   case Action of
     reqGet:
@@ -2129,6 +2213,34 @@ end;
 
 { TQHttpRequests }
 
+procedure TQHttpRequests.Clear(AExclude: TQHttpRequestItem);
+var
+  AReq: TQHttpRequestItem;
+  I: Integer;
+begin
+  try
+    I := 0;
+    while I < FRequests.Count do
+    begin
+      AReq := FRequests[I] as TQHttpRequestItem;
+      if AReq <> AExclude then
+      begin
+        AReq.FStatusCode := 1223; // Windows Error code of ERROR_CANCELLED;
+        AReq.FStatusText := SUserCanceled;
+        AReq.FAbort := True;
+        if not Assigned(AReq.HttpClient) then
+          RequestDone(AReq)
+        else
+          Inc(I);
+      end
+      else
+        Inc(I);
+    end;
+  finally
+    FRequests.OwnsObjects := True;
+  end;
+end;
+
 constructor TQHttpRequests.Create;
 begin
   inherited Create;
@@ -2140,17 +2252,8 @@ begin
 end;
 
 destructor TQHttpRequests.Destroy;
-var
-  AReq: TQHttpRequestItem;
 begin
-  while FRequests.Count > 0 do
-  begin
-    AReq := FRequests[FRequests.Count - 1] as TQHttpRequestItem;
-    AReq.FStatusCode := 1223; // Windows Error code of ERROR_CANCELLED;
-    AReq.FStatusText := SUserCanceled;
-    AReq.FAbort := True;
-    RequestDone(AReq);
-  end;
+  Clear;
   FHttpClients.Clear;
   FreeAndNil(FHttpClients);
   FreeAndNil(FRequests);
@@ -2172,14 +2275,14 @@ begin
   AEvent := TEvent.Create(nil, false, false, '');
   try
     AReq.Url := AUrl;
-    AReq.Action := TQHttpClientAction.reqGet;
+    AReq.Action := reqGet;
     AReq.Tag := IntPtr(AEvent);
     AReq.FreeAfterDone := False;
     if Assigned(AHeaders) then
       AReq.RequestHeaders.Replace(AHeaders);
     AReq.AfterDone := DoEventReqDone;
     Push(AReq);
-    AEvent.WaitFor();
+    AEvent.WaitFor(INFINITE);
     AResult := AReq.ContentAsString;
     Result := AReq.StatusCode;
   finally
@@ -2198,7 +2301,7 @@ begin
   AEvent := TEvent.Create(nil, false, false, '');
   try
     AReq.Url := AUrl;
-    AReq.Action := TQHttpClientAction.reqGet;
+    AReq.Action := reqGet;
     AReq.Tag := IntPtr(AEvent);
     AReq.FreeAfterDone := False;
     AReq.ResponseStream := AReplyStream;
@@ -2206,7 +2309,7 @@ begin
     if Assigned(AHeaders) then
       AReq.RequestHeaders.Replace(AHeaders);
     Push(AReq);
-    AEvent.WaitFor();
+    AEvent.WaitFor(INFINITE);
     Result := AReq.StatusCode;
   finally
     FreeAndNil(AEvent);
@@ -2224,14 +2327,14 @@ begin
   AEvent := TEvent.Create(nil, false, false, '');
   try
     AReq.Url := AUrl;
-    AReq.Action := TQHttpClientAction.reqPost;
+    AReq.Action := reqPost;
     AReq.Tag := IntPtr(AEvent);
     AReq.FreeAfterDone := False;
     if Assigned(AHeaders) then
       AReq.RequestHeaders.Replace(AHeaders);
     AReq.AfterDone := DoEventReqDone;
     Push(AReq);
-    AEvent.WaitFor();
+    AEvent.WaitFor(INFINITE);
     AResult := AReq.ContentAsString;
     Result := AReq.StatusCode;
   finally
@@ -2250,7 +2353,7 @@ begin
   AEvent := TEvent.Create(nil, false, false, '');
   try
     AReq.Url := AUrl;
-    AReq.Action := TQHttpClientAction.reqPost;
+    AReq.Action := reqPost;
     AReq.Tag := IntPtr(AEvent);
     AReq.FreeAfterDone := False;
     AReq.ResponseStream := AReplyStream;
@@ -2258,7 +2361,7 @@ begin
     if Assigned(AHeaders) then
       AReq.RequestHeaders.Replace(AHeaders);
     Push(AReq);
-    AEvent.WaitFor();
+    AEvent.WaitFor(INFINITE);
     Result := AReq.StatusCode;
   finally
     FreeAndNil(AEvent);
@@ -2292,23 +2395,78 @@ begin
   end
   else
     FRequests.Remove(ARequest);
-  for I := 0 to FRequests.Count - 1 do
+  if Assigned(AClient) then
   begin
-    ARequest := FRequests[I] as TQHttpRequestItem;
-    if not Assigned(ARequest.HttpClient) then
+    for I := 0 to FRequests.Count - 1 do
     begin
-      if ARequest.StartWith(AClient) then
-        Exit;
+      ARequest := FRequests[I] as TQHttpRequestItem;
+      if not Assigned(ARequest.HttpClient) then
+      begin
+        if ARequest.StartWith(AClient) then
+          Exit;
+      end;
+    end;
+    // 没有需要处理的请求了，则将自己标记为空闲
+    I := FHttpClients.IndexOf(AClient);
+    if I <> -1 then
+    begin
+      if FBusyClients > 1 then
+        // 超过1个才有必要，只有一个客户端时，没必交换
+        FHttpClients.Exchange(I, FBusyClients - 1);
+      Dec(FBusyClients);
     end;
   end;
-  // 没有需要处理的请求了，则将自己标记为空闲
-  I := FHttpClients.IndexOf(AClient);
-  if I <> -1 then
+end;
+
+function TQHttpRequests.Rest(const AUrl: QStringW; ASource, AResult: TQJson;
+AHeaders: IQHttpHeaders; AfterDone: TNotifyEvent): Integer;
+var
+  AReq: TQHttpRequestItem;
+  AReqStream: TMemoryStream;
+  AEvent: TEvent;
+begin
+  AReq := TQHttpRequestItem.Create(Self);
+  if not Assigned(AfterDone) then
   begin
-    if FBusyClients > 1 then
-      // 超过1个才有必要，只有一个客户端时，没必交换
-      FHttpClients.Exchange(I, FBusyClients - 1);
-    Dec(FBusyClients);
+    AEvent := TEvent.Create(nil, false, false, '');
+    AReq.AfterDone := DoEventReqDone;
+    AReq.FreeAfterDone := False;
+  end
+  else
+  begin
+    AReq.AfterDone := AfterDone;
+    AEvent := nil;
+  end;
+  try
+    AReq.Url := AUrl;
+    if Assigned(ASource) then
+    begin
+      AReq.Action := reqPost;
+      AReq.RequestStream := TMemoryStream.Create;
+      AReq.RequestHeaders.Values['Content-Type'] := 'application/json';
+      ASource.SaveToStream(AReq.RequestStream, teUTF8, false, false);
+    end
+    else
+      AReq.Action := reqGet;
+    AReq.Tag := IntPtr(AEvent);
+    if Assigned(AHeaders) then
+      AReq.RequestHeaders.Replace(AHeaders);
+    Push(AReq);
+    if Assigned(AEvent) then
+    begin
+      AEvent.WaitFor(INFINITE);
+      Result := AReq.StatusCode;
+      if Assigned(AResult) then
+        AResult.Parse(AReq.ContentAsString);
+    end
+    else
+      Result := 200;
+  finally
+    if Assigned(AEvent) then
+    begin
+      FreeAndNil(AEvent);
+      FreeAndNil(AReq);
+    end;
   end;
 end;
 
@@ -2564,6 +2722,17 @@ begin
   end;
 end;
 
+function THeadersHelper.QueryInterface(const IID: TGUID; out Obj): HResult;
+begin
+  if SameId(IID, ObjCastGUID) then
+  begin
+    Pointer(Obj) := Pointer(Self);
+    Result := S_OK;
+  end
+  else
+    Result := inherited QueryInterface(IID, Obj);
+end;
+
 procedure THeadersHelper.RemoveHeader(AName: QStringW);
 begin
   FHeaders.RemoveHeader(AName);
@@ -2634,15 +2803,18 @@ var
   AHead: TQHttpRequestItem;
   AFileSize: Int64;
   AContinue: Boolean;
-  function DecodeFileName: String;
+  function DecodeFileName: QStringW;
   var
-    Value: String;
+    Value: QStringW;
+  const
+    ItemDelimiter: PWideChar = ';';
+    NullChar: WideChar = #0;
   begin
     // 查找Content-disposition中的文件名约定
     Value := AHead.ResponseHeaders['content-disposition'];
     while Length(Value) > 0 do
     begin
-      Result := Trim(DecodeTokenW(Value, ';', #0, false, true));
+      Result := Trim(DecodeTokenW(Value, ItemDelimiter, NullChar, false, true));
       if LowerCase(NameOfW(Result, '=')) = 'filename' then
         Result := DequotedStrW(ValueOfW(Result, '='), '"')
       else
@@ -2681,6 +2853,7 @@ begin
   if AHead.StatusCode = 200 then
   begin
     CheckHTST;
+    AContinue := True;
     FFileSize := StrToInt64Def(AHead.ResponseHeaders['content-length'], 0);
     if Length(FileName) = 0 then
     begin
@@ -2689,20 +2862,23 @@ begin
       if AHead.ResponseHeaders['accept-ranges'] <> 'bytes' then
         // 如果服务器不支持断点续传，就设置ResumeBroke为False，以避免启用断点续传
         ResumeBroken := False
-      else
-      begin
-        AFileSize := SizeOfFile(FilePath);
-        if AFileSize > 0 then
-        begin
-          if AFileSize >= FFileSize then
-            ResumeBroken := False;
-          if ResumeBroken then
-            RequestHeaders['Range'] := 'bytes=' + IntToStr(AFileSize) + '-';
-        end;
-      end;
     end;
-    AContinue := True;
-    if Assigned(BeforeDownload) then
+    AFileSize := SizeOfFile(FilePath);
+    if AFileSize > 0 then
+    begin
+      if AFileSize > FFileSize then
+        ResumeBroken := False
+      else if AFileSize = FFileSize then
+      begin
+        AContinue := False;
+        FStatusCode := 304;
+        FStatusText := 'Not Modified';
+        ResumeBroken := False;
+      end;
+      if ResumeBroken then
+        RequestHeaders['Range'] := 'bytes=' + IntToStr(AFileSize) + '-';
+    end;
+    if AContinue and Assigned(BeforeDownload) then
     begin
       BeforeDownload(Self, AHead.ResponseHeaders, AContinue);
       if not AContinue then
@@ -2764,9 +2940,18 @@ end;
 initialization
 
 StartSocket;
+{$IF RTLVersion=18}
+zlibhandle := LoadLibrary('zlib1.dll');
+if zlibhandle <> 0 then
+  inflateInit2_ := GetProcAddress(zlibhandle, 'inflateInit2_');
+{$IFEND}
 
 finalization
 
 CleanSocket;
+{$IF RTLVersion=18}
+if zlibhandle <> 0 then
+  FreeLibrary(zlibhandle);
+{$IFEND}
 
 end.

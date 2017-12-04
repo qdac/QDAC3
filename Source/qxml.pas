@@ -4694,10 +4694,10 @@ begin
         StrCat(pd, '&gt;');
       '&':
         StrCat(pd, '&amp;');
-      '''':
-        StrCat(pd, '&apos;');
-      '"':
-        StrCat(pd, '&quot;')
+//      '''':
+//        StrCat(pd, '&apos;');
+//      '"':
+//        StrCat(pd, '&quot;')
     else
       begin
         pd^ := ps^;

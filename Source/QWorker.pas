@@ -4211,7 +4211,7 @@ begin
                 Break;
               end;
             end;
-          pcrTimeout:
+          pcrExpired:
             begin
               if APlan.Runnings = 0 then
               begin

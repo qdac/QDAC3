@@ -2791,15 +2791,25 @@ begin
           end
           else
             Dec(l);
-        until l = 0;
-        if l > 0 then
+        until l < 0;
+        if l >= 0 then
         begin
           AName := StrDupX(pn, l);
-          Result := AParent.ItemByName(AName);
-          if Result = nil then
-            Result := AParent.Add(AName, jdtArray)
-          else if Result.DataType <> jdtArray then
-            raise Exception.CreateFmt(SBadJsonArray, [AName]);
+          if Length(AName) > 0 then
+          begin
+            Result := AParent.ItemByName(AName);
+            if EndWithW(AName,']',false) then
+              begin
+              Result:=AParent.ForcePath(AName);
+              Result.DataType:=jdtArray;
+              end
+            else if Result = nil then
+              Result := AParent.Add(AName, jdtArray)
+            else if Result.DataType <> jdtArray then
+              raise Exception.CreateFmt(SBadJsonArray, [AName]);
+          end
+          else //Self
+            Result:=AParent;
           if AIndex >= 0 then
           begin
             while Result.Count <= AIndex do

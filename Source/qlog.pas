@@ -1168,8 +1168,9 @@ function TQLogCastor.NextWriter: PLogWriterItem;
 begin
   FCS.Enter;
   if Assigned(FActiveWriter) then
-    FActiveWriter := FActiveWriter.Next;
-  Result := FActiveWriter;
+    FActiveWriter := FActiveWriter.Next
+  else
+    Result := FWriters;
   FCS.Leave;
 end;
 
@@ -1188,6 +1189,8 @@ begin
         begin
           if AItem.Writer = AWriter then
           begin
+            if AItem = FWriters then
+              FWriters := AItem.Next;
             if Assigned(AItem.Prior) then
               AItem.Prior.Next := AItem.Next;
             if Assigned(AItem.Next) then

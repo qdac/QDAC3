@@ -21,7 +21,7 @@ type
   SendAuthReq = interface;
   WXMediaMessage = interface;
 
-  {I 'wxpay.inc'}
+  { I 'wxpay.inc' }
   /// <summary>微信Api接口函数对象</summary>
   WXApi = interface(NSObject) // 在这里声明对象方法(-)
     ['{D2B85162-56EC-49A1-8147-44FF05A43147}']
@@ -789,6 +789,7 @@ type
     FMsgId: Integer;
     FLastErrorMsg: String;
     FLastError: Integer;
+    FSigner: IWechatSigner;
     FRegistered: Boolean;
     FOnRequest: TWechatRequestEvent;
     FOnResponse: TWechatResponseEvent;
@@ -826,6 +827,7 @@ type
     procedure setDevId(const AId: String);
     function Pay(aprepayId, anonceStr, asign: String;
       atimeStamp: Integer): Boolean;
+    procedure EnableSignCheck(ASigner: IWechatSigner);
     function getPayKey: String;
     procedure setPayKey(const AKey: String);
 
@@ -1009,6 +1011,11 @@ begin
     FOnRequest(TiOSWechatRequest.Create(P1));
 end;
 
+procedure TiOSWechatService.EnableSignCheck(ASigner: IWechatSigner);
+begin
+  FSigner := ASigner;
+end;
+
 function TiOSWechatService.OpenUrl(const AUrl: String): Boolean;
 begin
 
@@ -1025,6 +1032,7 @@ const
   PrepayUrl = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
 var
   AReq: PayReq;
+  AExpectSign: String;
 begin
   AReq := TPayReq.Create;
   // AReq .appid := StringToJString(FAppId);
@@ -1034,6 +1042,19 @@ begin
   AReq.setNonceStr(StrToNSStr(anonceStr));
   AReq.setTimeStamp(atimeStamp);
   AReq.setSign(StrToNSStr(asign));
+  if Assigned(FSigner) then
+  begin
+    FSigner.Clear;
+    FSigner.Add('appid', FAppId);
+    FSigner.Add('partnerid', FMchId);
+    FSigner.Add('prepayid', aprepayId);
+    FSigner.Add('noncestr', anonceStr);
+    FSigner.Add('package', 'Sign=WXPay');
+    FSigner.Add('timestamp', IntToStr(atimeStamp));
+    AExpectSign := FSigner.Sign;
+    if AExpectSign <> ASign then
+      raise Exception.CreateFmt(SSignMismatch, [ASign, AExpectSign]);
+  end;
   Debugout('WXPay Start with PrepayId %s,NonceStr %s,Timestamp %d ,Sign %s',
     [aprepayId, anonceStr, atimeStamp, asign]);
   Result := Registered and TWXApi.OCClass.sendReq(AReq);

@@ -200,7 +200,7 @@ type
 
   TQPlanTimeAcceptEvent = procedure(const ASender: PQPlanMask; ATime: TDateTime;
     var Accept: Boolean) of object;
-  TQPlanTimeoutCheckResult = (pcrOk, pcrNotArrived, pcrTimeout);
+  TQPlanTimeoutCheckResult = (pcrOk, pcrNotArrived, pcrTimeout, pcrExpired);
 
   TQPlanMask = record
   private
@@ -2727,6 +2727,10 @@ const
 begin
   if Accept(ATime) then
     Result := pcrOk
+  else if ATime < FStartTime then
+    Result := pcrNotArrived
+  else if ATime > FStopTime then
+    Result := pcrExpired
   else
   begin
     ANext := NextTime;

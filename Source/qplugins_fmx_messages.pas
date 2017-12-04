@@ -13,7 +13,7 @@ implementation
 
 uses classes, sysutils, syncobjs, qstring, qplugins, qplugins_base,
   qplugins_params, qplugins_messages, qdac_postqueue, system.messaging,
-  fmx.types, fmx.platform, fmx.controls, fmx.forms
+  fmx.types, fmx.platform, fmx.controls, fmx.forms, fmx.canvas.d2d
 {$IFDEF MSWINDOWS}, fmx.platform.Win, windows, messages{$ENDIF};
 
 resourcestring
@@ -54,7 +54,7 @@ type
     IFMXApplicationService)
   protected
     FTerminating: Boolean;
-    FRunning:Boolean;
+    FRunning: Boolean;
     FOldAppService: IFMXApplicationService;
     function IsFilterShowModal: Boolean;
     procedure Notify(const AId: Cardinal; AParams: IQParams;
@@ -530,7 +530,7 @@ end;
 
 function TQHostMessageService.Running: Boolean;
 begin
-  Result:=FOldAppService.Running;
+  Result := FOldAppService.Running;
 end;
 
 procedure TQHostMessageService.SetTitle(const Value: string);
@@ -623,6 +623,8 @@ begin
   end;
 end;
 
+
+
 initialization
 
 if HInstance <> MainInstance then
@@ -639,10 +641,10 @@ end;
 finalization
 
 if HInstance <> MainInstance then
-  UnregisterMessageService
-else
 begin
+  UnregisterMessageService;
+end
+else
   MsgFilters := nil;
-end;
 
 end.

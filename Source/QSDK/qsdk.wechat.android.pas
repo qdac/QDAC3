@@ -3782,6 +3782,9 @@ uses system.classes, system.sysutils, system.Generics.Collections, fmx.platform,
   AndroidAPI.Helpers, system.Net.HttpClient, qstring, qxml, qjson, qdigest,
   qsdk.wechat;
 
+resourcestring
+  SSignMismatch = '业务签名校验失败，参数值：%s ，期望值为 %s';
+
 type
   TWechatResponse = class(TInterfacedObject, IWechatResponse)
   private
@@ -3827,6 +3830,7 @@ type
     FOnRequest: TWechatRequestEvent;
     FOnResponse: TWechatResponseEvent;
     FPayActivity: JActivity;
+    FSigner: IWechatSigner;
     function NextTransaction: String;
     function BitmapToArray(ABitmap: TBitmap): TJavaArray<Byte>;
   public
@@ -3857,6 +3861,7 @@ type
     procedure setDevId(const AId: String);
     function Pay(aprepayId, anonceStr, asign: String;
       atimeStamp: Integer): Boolean;
+    procedure EnableSignCheck(ASigner: IWechatSigner);
     function getPayKey: String;
     procedure setPayKey(const AKey: String);
     procedure onReq(P1: JBaseReq); cdecl;
@@ -4117,6 +4122,11 @@ begin
     result := TAndroidWechatBaseRequest.Create;
 end;
 
+procedure TAndroidWechatService.EnableSignCheck(ASigner: IWechatSigner);
+begin
+  FSigner := ASigner;
+end;
+
 function TAndroidWechatService.getAppId: String;
 begin
   result := FAppId;
@@ -4215,6 +4225,7 @@ const
   PrepayUrl = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
 var
   AReq: JPayReq;
+  AExpectSign: String;
 begin
   AReq := TJPayReq.JavaClass.init;
   AReq.appId := StringToJString(FAppId);
@@ -4224,6 +4235,19 @@ begin
   AReq.nonceStr := StringToJString(anonceStr);
   AReq.timeStamp := StringToJString(IntToStr(atimeStamp));
   AReq.sign := StringToJString(asign);
+  if Assigned(FSigner) then
+  begin
+    FSigner.Clear;
+    FSigner.Add('appid', FAppId);
+    FSigner.Add('partnerid', FMchId);
+    FSigner.Add('prepayid', aprepayId);
+    FSigner.Add('noncestr', anonceStr);
+    FSigner.Add('package', 'Sign=WXPay');
+    FSigner.Add('timestamp', IntToStr(atimeStamp));
+    AExpectSign := FSigner.Sign;
+    if AExpectSign <> ASign then
+      raise Exception.CreateFmt(SSignMismatch, [ASign, AExpectSign]);
+  end;
   Debugout('WXPay Start with PrepayId %s,NonceStr %s,Timestamp %d ,Sign %s',
     [aprepayId, anonceStr, atimeStamp, asign]);
   result := Registered and FInstance.sendReq(AReq as JBaseReq);
@@ -4573,11 +4597,11 @@ begin
       else
         FErrorMsg := 'ERR_UNKNOWN';
     end;
+    if ErrorCode = TJBaseResp_ErrCode.JavaClass.ERR_USER_CANCEL then
+      FPayResult := TWechatPayResult.wprCancel
+    else
+      FPayResult := TWechatPayResult.wprError;
   end;
-  if ErrorCode = TJBaseResp_ErrCode.JavaClass.ERR_USER_CANCEL then
-    FPayResult := TWechatPayResult.wprCancel
-  else
-    FPayResult := TWechatPayResult.wprError;
 end;
 
 function TWechatPayResponse.getExtData: String;
