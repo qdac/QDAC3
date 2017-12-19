@@ -2307,15 +2307,12 @@ end;
 
 function TQNotifyManager.Subscribe(ANotifyId: Cardinal;
   AHandler: IQNotify): Boolean;
-var
-  AItem: TQNotifyItem;
 begin
   Lock;
   try
     if ANotifyId <= Cardinal(FItems.Count) then
     begin
-      AItem := FItems[ANotifyId];
-      AItem.Add(AHandler);
+      TQNotifyItem(FItems[ANotifyId]).Add(AHandler);
       Result := true;
     end
     else

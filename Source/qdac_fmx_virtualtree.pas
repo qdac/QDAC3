@@ -3467,7 +3467,7 @@ begin
       FStates := FStates + [TQVTNodeState.nsHasChildren]
     else
       FStates := FStates - [TQVTNodeState.nsHasChildren];
-    TreeView.InvalidateNode(Self);
+    TreeView.NodeContentChanged;
   end;
 end;
 
@@ -3613,7 +3613,10 @@ begin
     Font := ATextSettings.Font;
     Color := ATextSettings.FontColor;
     RightToLeft := false;
-    Padding.Rect := Rect(2, 2, 2, 2);
+    if ARect.Height - 4 > (Font.Size * 4 / 3) then
+      Padding.Rect := Rect(2, 2, 2, 2)
+    else
+      Padding.Rect := Rect(2, 0, 2, 0);
     // 不支持从右到左阅读TFillTextFlag.RightToLeft in ATextSettings.;
     EndUpdate;
     RenderLayout(ATreeView.Canvas);
@@ -4223,8 +4226,10 @@ begin
   if Supports(AData, IQVTImageCellData, AImage) then
   begin
     ABitmap := AImage.GetImage;
-    AData.TreeView.Canvas.DrawBitmap(ABitmap, RectF(0, 0, ABitmap.Width,
-      ABitmap.Height), AStateRect, AData.TreeView.Opacity, AImage.GetHighSpeed);
+    if Assigned(ABitmap) then
+      AData.TreeView.Canvas.DrawBitmap(ABitmap, RectF(0, 0, ABitmap.Width,
+        ABitmap.Height), AStateRect, AData.TreeView.Opacity,
+        AImage.GetHighSpeed);
   end;
   inherited Draw(AContentRect, AData);
 end;
