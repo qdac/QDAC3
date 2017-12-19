@@ -4,6 +4,15 @@ interface
 
 uses classes, sysutils, qplugins_base;
 
+const
+  MC_CAPTION = $01;
+  MC_ICON = $02;
+  MC_VISIBLE = $04;
+  MC_ENABLED = $08;
+  MC_EXTS = $10;
+  MC_ALIGN = $20;
+  MC_CHILDREN = $40;
+
 type
 
   IQMenuCategory = interface;
@@ -90,7 +99,7 @@ type
     /// <summary>
     /// 从另一个图片中复制一份拷贝
     /// </summary>
-    procedure Assign(ASource:IQImage);stdcall;
+    procedure Assign(ASource: IQImage); stdcall;
     /// <summary>
     /// 图片末次变更ID
     /// </summary>
@@ -226,6 +235,11 @@ type
     /// </seealso>
     procedure SetImage(AImage: IQImage); stdcall;
 
+    function GetTag: Pointer; stdcall;
+    procedure SetTag(const V: Pointer); stdcall;
+    function GetChanges: Integer; stdcall;
+    procedure BeginUpdate; stdcall;
+    procedure EndUpdate; stdcall;
     /// <summary>
     /// 项目标题
     /// </summary>
@@ -258,6 +272,8 @@ type
     /// 末次变更ID
     /// </summary>
     property LastChangeId: Integer read GetLastChangeId;
+    property Tag: Pointer read GetTag write SetTag;
+    property Changes: Integer read GetChanges;
   end;
 
   /// <summary>
@@ -352,7 +368,8 @@ type
     /// <summary>
     /// 菜单图标对齐方式
     /// </summary>
-    property ImageAlign: TImageAlignLayout read GetImageAlign write SetImageAlign;
+    property ImageAlign: TImageAlignLayout read GetImageAlign
+      write SetImageAlign;
     /// <summary>
     /// 当前 菜单项目类型
     /// </summary>
@@ -388,14 +405,14 @@ type
     /// <returns>
     /// 返回的实际接口类型是IQMenuItem，注意用完要减少引用计数
     /// </returns>
-    function AddMenu: Pointer; stdcall;
+    function AddMenu(const AName, ACaption: PWidechar): Pointer; stdcall;
     /// <summary>
     /// 添加一个子分类
     /// </summary>
     /// <returns>
     /// 返回的实际接口类型是 IQMenuCategory，注意用完要减少引用计数
     /// </returns>
-    function AddCategory: Pointer; stdcall;
+    function AddCategory(const AName, ACaption: PWidechar): Pointer; stdcall;
     /// <summary>
     /// 删除指定索引的子项
     /// </summary>
@@ -503,7 +520,7 @@ type
     /// <returns>
     /// 实际返回的接口类型为 IQMenuCategory，注意使用完成需要减小引用计数
     /// </returns>
-    function AddCategory: Pointer; stdcall;
+    function AddCategory(const AName, ACaption: PWidechar): Pointer; stdcall;
     /// <summary>
     /// 删除指定索引的项目
     /// </summary>
@@ -515,6 +532,13 @@ type
     /// 清除所有的项目
     /// </summary>
     procedure Clear; stdcall;
+    /// <summary>获取指定路径的项目地址，路径分隔符以/分隔</summary>
+    /// <returns>返回对应的路径的IQMenuBase实例地址</returns>
+    function ItemByPath(APath: PWideChar): Pointer; stdcall; // IQMenuBase
+    /// <summary>强制创建指定分类路径，路径分隔符以/分隔</summary>
+    /// <returns>返回对应的路径的IQMenuBase实例地址</returns>
+    function ForceCategories(APath: PWideChar): Pointer; stdcall;
+    // IQMenuCategory
     /// <summary>
     /// 获取指定分类的索引
     /// </summary>

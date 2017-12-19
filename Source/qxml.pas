@@ -23,6 +23,9 @@ unit qxml;
 }
 // 测试环境仅为Delphi 2007或XE6，其它版本的开发环境，请自行修改
 { 修订日志
+  2017.12.15
+  ==========
+  * 修正了 XMLEncode 的编码处理，对属性值的引号进行转义，对结点内容文本的引号不进行转义
   2017.1.4
   =========
   * 修正了 XML 编码时，未正确处理空 XML 文件的问题（麦子仲肥报告）
@@ -391,8 +394,8 @@ type
     FData: Pointer;
     function GetCount: Integer;
     function GetItems(AIndex: Integer): TQXMLNode;
-    function XMLEncode(const S: QStringW; AppendSpace: Boolean = False)
-      : QStringW;
+    function XMLEncode(const S: QStringW; AConvertQuoter: Boolean;
+      AppendSpace: Boolean): QStringW;
     function XMLDecode(const p: PQCharW; l: Integer): QStringW; overload;
     function GetItemIndex: Integer;
     function GetText: QStringW;
@@ -2739,7 +2742,7 @@ var
     begin
       for I := 0 to AItem.FAttrs.Count - 1 do
         ABuilder.Cat(Space, 1).Cat(AItem.Attrs[I].FName).Cat(ValueStart, 2)
-          .Cat(XMLEncode(AItem.Attrs[I].FValue)).Cat(Quoter);
+          .Cat(XMLEncode(AItem.Attrs[I].FValue,true,false)).Cat(Quoter);
     end;
     if AItem.Count = 0 then
     begin
@@ -2783,7 +2786,7 @@ var
             begin
               // if ADoFormat then
               // ABuilder.Replicate(AIndent, ALevel);
-              ABuilder.Cat(XMLEncode(ANode.FName, True));
+              ABuilder.Cat(XMLEncode(ANode.FName,false, True));
               if ADoFormat and (I < AItem.Count - 1) then
                 ABuilder.Cat(SLineBreak);
             end;
@@ -2847,7 +2850,7 @@ var
         end;
       end
       else
-        Result:=False;
+        Result := False;
     end
     else
       Result := False;
@@ -2856,7 +2859,7 @@ var
 begin
   Result := ABuilder;
   ACount := Count;
-  ADefaultTag:=DefaultTagNeeded;
+  ADefaultTag := DefaultTagNeeded;
   if ADefaultTag then
   begin
     ABuilder.Cat(TagXMLStart, 4);
@@ -4644,7 +4647,8 @@ begin
   SetLength(Result, pd - PQCharW(Result));
 end;
 
-function TQXMLNode.XMLEncode(const S: QStringW; AppendSpace: Boolean): QStringW;
+function TQXMLNode.XMLEncode(const S: QStringW;
+  AConvertQuoter, AppendSpace: Boolean): QStringW;
 var
   ps, pd: PQCharW;
   ASpaceCount: Integer;
@@ -4694,10 +4698,26 @@ begin
         StrCat(pd, '&gt;');
       '&':
         StrCat(pd, '&amp;');
-//      '''':
-//        StrCat(pd, '&apos;');
-//      '"':
-//        StrCat(pd, '&quot;')
+      '''':
+        begin
+          if AConvertQuoter then
+            StrCat(pd, '&apos;')
+          else
+          begin
+            pd^ := ps^;
+            Inc(pd);
+          end;
+        end;
+      '"':
+        begin
+          if AConvertQuoter then
+            StrCat(pd, '&quot;')
+          else
+          begin
+            pd^ := ps^;
+            Inc(pd);
+          end;
+        end
     else
       begin
         pd^ := ps^;

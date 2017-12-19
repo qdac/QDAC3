@@ -133,6 +133,12 @@ type
     function StateSizable: Boolean;
   end;
 
+  IQVTImageCellData = interface(IQVTCellLayoutData)
+    ['{4D9429CE-C5C3-4D97-B177-FBD17D315C42}']
+    function GetImage: TBitmap;
+    function GetHighSpeed: Boolean;
+  end;
+
   TQCellBlockData = record
     Bounds: TRectF;
     Size: TSizeF;
@@ -181,14 +187,6 @@ type
     property CheckStates: TQVTCheckStates read GetCheckStates
       write SetCheckStates;
     property RadioBounds: TRectF read GetRadioBounds write SetRadioBounds;
-  end;
-
-  // 带图标的单元格数据
-  IQVTImageCellData = interface
-    ['{C018C791-B524-465A-8AE1-7C8ACEEF1E1A}']
-    // 图像
-    function GetBitmap: TBitmap;
-    property Bitmap: TBitmap read GetBitmap;
   end;
 
   IQVTDrawer = interface
@@ -547,28 +545,6 @@ type
     procedure Draw(ARect: TRectF; AData: IQVTCellData); override;
   end;
 
-  // 默认的主列绘制器，用于绘制带树形视图的文本内容
-  TQVTMasterDrawer = class(TQVTTextDrawer)
-  private
-    class var FStatePath: array [Boolean] of TPathData;
-    class function GetCascadedPath: TPathData; static;
-    class function GetExpandedPath: TPathData; static;
-    class procedure SetCascadedPath(const Value: TPathData); static;
-    class procedure SetExpandedPath(const Value: TPathData); static;
-  protected
-    FCurrentPath: array [Boolean] of TPathData;
-    procedure Draw(ARect: TRectF; AData: IQVTCellData); override;
-  public
-    class constructor Create;
-    class destructor Destroy;
-    constructor Create; overload;
-    destructor Destroy; override;
-    class property ExpandedPath: TPathData read GetExpandedPath
-      write SetExpandedPath;
-    class property CascadedPath: TPathData read GetCascadedPath
-      write SetCascadedPath;
-  end;
-
   // 默认的进度状态绘制器，用于绘制进度条
   TQVTProgressDrawer = class(TQVTTextDrawer)
     procedure Draw(ARect: TRectF; AData: IQVTCellData); override;
@@ -642,8 +618,30 @@ type
   end;
 
   // 默认的图片绘制器，用于绘制图片结点
-  TQVTImageDrawer = class(TQVTTextDrawer)
+  TQVTImageDrawer = class(TQVTStateDrawer)
     procedure Draw(ARect: TRectF; AData: IQVTCellData); override;
+  end;
+
+  // 默认的主列绘制器，用于绘制带树形视图的文本内容
+  TQVTMasterDrawer = class(TQVTImageDrawer)
+  private
+    class var FStatePath: array [Boolean] of TPathData;
+    class function GetCascadedPath: TPathData; static;
+    class function GetExpandedPath: TPathData; static;
+    class procedure SetCascadedPath(const Value: TPathData); static;
+    class procedure SetExpandedPath(const Value: TPathData); static;
+  protected
+    FCurrentPath: array [Boolean] of TPathData;
+    procedure Draw(ARect: TRectF; AData: IQVTCellData); override;
+  public
+    class constructor Create;
+    class destructor Destroy;
+    constructor Create; overload;
+    destructor Destroy; override;
+    class property ExpandedPath: TPathData read GetExpandedPath
+      write SetExpandedPath;
+    class property CascadedPath: TPathData read GetCascadedPath
+      write SetCascadedPath;
   end;
 
   // 默认带状态图片绘制器，用于绘制带状态的结点
@@ -4216,9 +4214,19 @@ end;
 { TQVTImageDrawer }
 
 procedure TQVTImageDrawer.Draw(ARect: TRectF; AData: IQVTCellData);
+var
+  AImage: IQVTImageCellData;
+  ABitmap: TBitmap;
+  AStateRect, AContentRect: TRectF;
 begin
-  inherited;
-
+  CalcLayouts(AData, ARect, AStateRect, AContentRect);
+  if Supports(AData, IQVTImageCellData, AImage) then
+  begin
+    ABitmap := AImage.GetImage;
+    AData.TreeView.Canvas.DrawBitmap(ABitmap, RectF(0, 0, ABitmap.Width,
+      ABitmap.Height), AStateRect, AData.TreeView.Opacity, AImage.GetHighSpeed);
+  end;
+  inherited Draw(AContentRect, AData);
 end;
 
 { TQVTStateDrawer }

@@ -588,8 +588,8 @@ type
     /// <param name="AValue">要添加的内容的值表达式（字符串）</param>
     /// <param name="ADataType">表达式类型，如果为jdtUnknown，则会自动检测内容类型</param>
     /// <returns>返回创建的结点索引</returns>
-    function Add(AName, AValue: QStringW;
-      ADataType: TQJsonDataType = jdtUnknown): Integer; overload;
+    function Add(AName, AValue: QStringW; ADataType: TQJsonDataType)
+      : Integer; overload;
     /// <summary>添加一个数组</summary>
     /// <param name="AName">要添加的对象的结点名称</param>
     /// <param name="AItems">要添加的数组内容</param>
@@ -2798,18 +2798,18 @@ begin
           if Length(AName) > 0 then
           begin
             Result := AParent.ItemByName(AName);
-            if EndWithW(AName,']',false) then
-              begin
-              Result:=AParent.ForcePath(AName);
-              Result.DataType:=jdtArray;
-              end
+            if EndWithW(AName, ']', false) then
+            begin
+              Result := AParent.ForcePath(AName);
+              Result.DataType := jdtArray;
+            end
             else if Result = nil then
               Result := AParent.Add(AName, jdtArray)
             else if Result.DataType <> jdtArray then
               raise Exception.CreateFmt(SBadJsonArray, [AName]);
           end
-          else //Self
-            Result:=AParent;
+          else // Self
+            Result := AParent;
           if AIndex >= 0 then
           begin
             while Result.Count <= AIndex do
