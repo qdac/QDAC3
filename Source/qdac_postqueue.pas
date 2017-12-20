@@ -109,13 +109,16 @@ begin
 {$IFDEF MSWINDOWS}
   DeallocateHWnd(FAsynWnd);
 {$ELSE}
-  FAsynThread.Terminate;
-  with TQPostThread(FAsynThread) do
+  if Assigned(FAsynThread) then
   begin
-    FQueue := nil;
-    FEvent.SetEvent;
+    FAsynThread.Terminate;
+    with TQPostThread(FAsynThread) do
+    begin
+      FQueue := nil;
+      FEvent.SetEvent;
+    end;
+    FAsynThread := nil;
   end;
-  FAsynThread := nil;
 {$ENDIF}
   FreeAndNil(FLocker);
   inherited;

@@ -202,6 +202,8 @@ type
   public
     constructor Create(AOwner: TQNotifyManager; AId: Cardinal;
       AName: QStringW); overload;
+    function _AddRef: Integer; override; stdcall;
+    function _Release: Integer; override; stdcall;
     property Name: QStringW read FName;
   end;
 
@@ -2050,46 +2052,41 @@ end;
 procedure TQNotifyManager.Clear;
 var
   I: Integer;
+  AItem: TQNotifyItem;
 begin
   for I := 0 to FItems.Count - 1 do
-    FreeObject(TQNotifyItem(FItems[I]));
+    TQNotifyItem(FItems[I])._Release;
   FItems.Clear;
 end;
 
 constructor TQNotifyManager.Create;
+  function AddDefault(AId: Integer; AName: String): TQNotifyItem;
+  begin
+    Result := TQNotifyItem.Create(Self, AId, AName);
+    Result._AddRef;
+    FItems.Add(Result);
+  end;
+
 begin
   inherited Create;
   FItems := TQPointerList.Create;
-  FItems.Add(TQNotifyItem.Create(Self, NID_MANAGER_REPLACED,
-    'Manager.Replaced'));
-  FItems.Add(TQNotifyItem.Create(Self, NID_MANAGER_FREE, 'Manager.Free'));
-  FItems.Add(TQNotifyItem.Create(Self, NID_LOADERS_STARTING,
-    'Manager.Loaders.Starting'));
-  FItems.Add(TQNotifyItem.Create(Self, NID_LOADERS_STARTED,
-    'Manager.Loaders.Started'));
-  FItems.Add(TQNotifyItem.Create(Self, NID_LOADERS_STOPPING,
-    'Manager.Loaders.Stopping'));
-  FItems.Add(TQNotifyItem.Create(Self, NID_LOADERS_STOPPED,
-    'Manager.Loaders.Stopped'));
-  FItems.Add(TQNotifyItem.Create(Self, NID_LOADERS_PROGRESS,
-    'Manager.Loaders.OnProgress'));
-  FItems.Add(TQNotifyItem.Create(Self, NID_LOADER_ERROR,
-    'Manager.Loaders.OnError'));
-  FItems.Add(TQNotifyItem.Create(Self, NID_PLUGIN_LOADING,
-    'Manager.Plugin.Loading'));
-  FItems.Add(TQNotifyItem.Create(Self, NID_PLUGIN_LOADED,
-    'Manager.Plugin.Loaded'));
-  FItems.Add(TQNotifyItem.Create(Self, NID_PLUGIN_UNLOADING,
-    'Manager.Plugin.Unloading'));
-  FItems.Add(TQNotifyItem.Create(Self, NID_PLUGIN_UNLOADED,
-    'Manager.Plugin.Unloaded'));
-  FBeforeProcessNotify := TQNotifyItem.Create(Self, NID_NOTIFY_PROCESSING,
+  AddDefault(NID_MANAGER_REPLACED, 'Manager.Replaced');
+  AddDefault(NID_MANAGER_FREE, 'Manager.Free');
+  AddDefault(NID_LOADERS_STARTING, 'Manager.Loaders.Starting');
+  AddDefault(NID_LOADERS_STARTED, 'Manager.Loaders.Started');
+  AddDefault(NID_LOADERS_STOPPING, 'Manager.Loaders.Stopping');
+  AddDefault(NID_LOADERS_STOPPED, 'Manager.Loaders.Stopped');
+  AddDefault(NID_LOADERS_PROGRESS, 'Manager.Loaders.OnProgress');
+  AddDefault(NID_LOADER_ERROR, 'Manager.Loaders.OnError');
+  AddDefault(NID_PLUGIN_LOADING, 'Manager.Plugin.Loading');
+  AddDefault(NID_PLUGIN_LOADED, 'Manager.Plugin.Loaded');
+  AddDefault(NID_PLUGIN_UNLOADING, 'Manager.Plugin.Unloading');
+  AddDefault(NID_PLUGIN_UNLOADED, 'Manager.Plugin.Unloaded');
+  FBeforeProcessNotify := AddDefault(NID_NOTIFY_PROCESSING,
     'Manager.NotifyManager.Processing');
-  FAfterProcessNotify := TQNotifyItem.Create(Self, NID_NOTIFY_PROCESSED,
+  FAfterProcessNotify := AddDefault(NID_NOTIFY_PROCESSED,
     'Manager.NotifyManager.Processed');
-  FItems.Add(FBeforeProcessNotify);
-  FItems.Add(FAfterProcessNotify);
-  FItems.Add(TQNotifyItem.Create(Self, NID_SERVICE_READY, 'Services.Ready'));
+  AddDefault(NID_SERVICE_READY, 'Services.Ready');
   FNextId := FItems.Count;
 end;
 
@@ -2239,6 +2236,7 @@ end;
 function TQNotifyManager.IdByName(const AName: PWideChar): Cardinal;
 var
   I: Integer;
+  AItem: TQNotifyItem;
 begin
   Result := Cardinal(-1);
   Lock;
@@ -2255,7 +2253,9 @@ begin
     begin
       Result := FNextId;
       Inc(FNextId);
-      FItems.Add(TQNotifyItem.Create(Self, Result, AName));
+      AItem := TQNotifyItem.Create(Self, Result, AName);
+      AItem._AddRef;
+      FItems.Add(AItem);
     end;
   finally
     Unlock;
@@ -2305,8 +2305,8 @@ begin
   end;
 end;
 
-function TQNotifyManager.Subscribe(ANotifyId: Cardinal;
-  AHandler: IQNotify): Boolean;
+function TQNotifyManager.Subscribe(ANotifyId: Cardinal; AHandler: IQNotify)
+  : Boolean;
 begin
   Lock;
   try
@@ -2340,6 +2340,16 @@ begin
   inherited Create(AId);
   FOwner := AOwner;
   FName := AName;
+end;
+
+function TQNotifyItem._AddRef: Integer;
+begin
+  Result := inherited;
+end;
+
+function TQNotifyItem._Release: Integer;
+begin
+  Result := inherited;
 end;
 
 { TQManagerChangeHandler }
@@ -2777,8 +2787,8 @@ begin
   end;
 end;
 
-function TQBaseLoader.UnloadServices(const AHandle: THandle;
-  AWaitDone: Boolean): Boolean;
+function TQBaseLoader.UnloadServices(const AHandle: THandle; AWaitDone: Boolean)
+  : Boolean;
 var
   AParams: TQParams;
   I: Integer;

@@ -58,7 +58,9 @@ type
   // 重新实现 TInterfacedObject，以便子类能够重载 QueryInterface 方法
   TQInterfacedObject = class(TObject, IInterface)
   protected
+    {$IFNDEF AUTOREFCOUNT}
     FRefCount: Integer;
+    {$ENDIF}
     FDisableRefCount: Integer;
   public
     constructor Create; overload; virtual;
