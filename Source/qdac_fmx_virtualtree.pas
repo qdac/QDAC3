@@ -461,7 +461,6 @@ type
     procedure SetChildCount(const Value: Integer); virtual;
     function GetHeight: Single; virtual;
     procedure SetHeight(const value: Single);
-    procedure NeedInitialized;
     procedure InitChildren;
     procedure CleanDirty(ANode: TQVTNode);
     procedure Dirty(ANode: TQVTNode);
@@ -505,6 +504,9 @@ type
     procedure Clear;
     procedure Expand(const ANest: Boolean = false);
     procedure SetFocus;
+    procedure NeedInitialized;
+    procedure Reinit;
+    procedure ReinitChildren;
     function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
     property Parent: TQVTNode read FParent;
     property States: TQVTNodeStates read FStates write SetStates;
@@ -765,6 +767,8 @@ type
     FMouseDownOffset: TPointF;
     FMouseDownNode: TQVTNode;
     FMouseDownColumn: Integer;
+    FEditingNode: TQVTNode;
+    FEditingColumn: Integer;
     FTintColor: TAlphaColor;
     FInplaceEditor: IQVTInplaceEditor; // 当前编辑器
     FSortColumns: TQVTSortColumns;
@@ -782,6 +786,9 @@ type
     FOnGetCellEditor: TQVTGetCellEditorEvent;
     FOnTitleClick: TQVTTitleNotifyEvent;
     FOnSortmarkerChanged: TNotifyEvent;
+    FBeforeEdit: TQVTColumnNotifyEvent;
+    FOnCancelEdit: TQVTColumnNotifyEvent;
+    FAfterEdit: TQVTColumnNotifyEvent;
     procedure SetFocusColumn(const Value: Integer);
     procedure SetPaintOptions(const Value: TQVTPaintOptions);
     procedure SetSpace(const Value: TPointF);
@@ -798,6 +805,7 @@ type
     procedure CheckForBrowseMode(ASender: TObject);
     procedure RowDirty(ARowIndex: Integer);
     procedure InitNode(ANode: TQVTNode);
+    procedure CalcVisibleNodes;
     function CreateNode: TQVTNode;
     function GetRootNodeCount: Integer;
     procedure SetRootNodeCount(const Value: Integer);
@@ -859,6 +867,11 @@ type
     property OnCellClick: TQVTCellClickEvent read FOnCellClick
       write FOnCellClick;
     property OnCanEdit: TQVTAcceptEvent read FOnCanEdit write FOnCanEdit;
+    property BeforeEdit: TQVTColumnNotifyEvent read FBeforeEdit
+      write FBeforeEdit;
+    property AfterEdit: TQVTColumnNotifyEvent read FAfterEdit write FAfterEdit;
+    property OnCancelEdit: TQVTColumnNotifyEvent read FOnCancelEdit
+      write FOnCancelEdit;
     property OnGetCellEditor: TQVTGetCellEditorEvent read FOnGetCellEditor
       write FOnGetCellEditor;
     property OnTitleClick: TQVTTitleNotifyEvent read FOnTitleClick
@@ -1358,6 +1371,8 @@ begin
     Result := CanEdit(ANode, ACol);
   if Result then
   begin
+    if Assigned(FBeforeEdit) then
+      FBeforeEdit(Self, ANode, ACol);
     FInplaceEditor := CreateEditor(ANode, ACol);
     if Assigned(FInplaceEditor) then
     begin
@@ -1376,6 +1391,8 @@ begin
           R.Right := LR.Right;
         FInplaceEditor.SetBounds(R);
         FInplaceEditor.Show;
+        FEditingNode := ANode;
+        FEditingColumn := ACol;
       end
       else
         FInplaceEditor := nil;
@@ -1416,12 +1433,53 @@ begin
     Result.cx := Result.cx - FSpace.X;
 end;
 
+procedure TQVirtualTreeView.CalcVisibleNodes;
+var
+  W: Single;
+  ANode: TQVTNode;
+  R, AClientRect: TRectF;
+begin
+  W := Header.Width;
+  if TQVTState.tsVisibleChanged in FStates then
+  begin
+    FVisibleNodes.Clear;
+    AClientRect := RectF(Padding.Left, Padding.Top, Width - Padding.Right,
+      Height - Padding.Top);
+    if not Assigned(FFirstVisibleNode) then
+      FFirstVisibleNode := RootNode.GetFirstVisibleChild;
+    if Assigned(FFirstVisibleNode) then
+    begin
+      ANode := FFirstVisibleNode;
+      R.Left := AClientRect.Left - FPaintOffset.X;
+      R.Right := R.Left + W;
+      R.Top := AClientRect.Top - FPaintOffset.Y;
+      if R.Right > AClientRect.Right then
+        R.Right := AClientRect.Right;
+      while Assigned(ANode) do
+      begin
+        ANode.NeedInitialized;
+        ANode.FVisibleRowIndex := FVisibleNodes.Add(ANode);
+        R.Bottom := R.Top + ANode.GetHeight;
+        ANode.FDisplayRect := R;
+        R.Top := R.Bottom + FSpace.Y;
+        if R.Top > AClientRect.Bottom then
+          break;
+        ANode := GetNextVisible(ANode);
+      end;
+    end;
+    FStates := FStates - [TQVTState.tsVisibleChanged];
+    CheckScrollBars;
+  end;
+end;
+
 procedure TQVirtualTreeView.CancelEdit;
 begin
   if Assigned(FInplaceEditor) then
   begin
     FInplaceEditor.CancelEdit;
     FInplaceEditor := nil;;
+    FEditingNode := nil;
+    FEditingColumn := 0;
   end;
 end;
 
@@ -1463,6 +1521,8 @@ var
   R: TRectF;
   Targets: array of TAniCalculations.TTarget;
 begin
+  if TQVTState.tsVisibleChanged in FStates then
+    CalcVisibleNodes;
   if TQVTState.tsContentChanged in FStates then
   begin
     FContentSize := CalcScrollRange;
@@ -1758,7 +1818,13 @@ begin
   begin
     Result := FInplaceEditor.EndEdit;
     if Result then
+    begin
+      if Assigned(FAfterEdit) then
+        FAfterEdit(Self, FEditingNode, FEditingColumn);
       FInplaceEditor := nil;
+      FEditingNode := nil;
+      FEditingColumn := 0;
+    end;
   end
   else
     Result := True;
@@ -2289,7 +2355,8 @@ begin
         end;
     end;
     if (Button = TMouseButton.mbLeft) and
-      (FStates * [TQVTState.tsColSizing, TQVTState.tsRowSizing] = []) then
+      (FStates * [TQVTState.tsColSizing, TQVTState.tsRowSizing] = []) and
+      (FVertScrollBar.Visible or FHorzScrollBar.Visible) then
     begin
       FAniCalculations.Averaging := ssTouch in Shift;
       FAniCalculations.MouseDown(X, Y);
@@ -2359,7 +2426,17 @@ begin
       end;
     end;
     if FAniCalculations.Down then
-      FAniCalculations.MouseMove(X, Y);
+    begin
+      if FHorzScrollBar.Visible then
+      begin
+        if FVertScrollBar.Visible then
+          FAniCalculations.MouseMove(X, Y)
+        else
+          FAniCalculations.MouseMove(X, FMouseDownPos.Y);
+      end
+      else
+        FAniCalculations.MouseMove(FMouseDownPos.X, Y);
+    end;
   end;
   inherited;
 end;
@@ -2503,40 +2580,6 @@ var
           Break;
       end;
     end
-  end;
-
-  procedure CalcVisibleNodes;
-  var
-    W: Single;
-  begin
-    W := Header.Width;
-    if TQVTState.tsVisibleChanged in FStates then
-    begin
-      CheckScrollBars;
-      FVisibleNodes.Clear;
-      if not Assigned(FFirstVisibleNode) then
-        FFirstVisibleNode := RootNode.GetFirstVisibleChild;
-      if Assigned(FFirstVisibleNode) then
-      begin
-        ANode := FFirstVisibleNode;
-        R.Left := AClientRect.Left - FPaintOffset.X;
-        R.Right := R.Left + W;
-        if R.Right > AClientRect.Right then
-          R.Right := AClientRect.Right;
-        while Assigned(ANode) do
-        begin
-          ANode.NeedInitialized;
-          ANode.FVisibleRowIndex := FVisibleNodes.Add(ANode);
-          R.Bottom := R.Top + ANode.GetHeight;
-          ANode.FDisplayRect := R;
-          R.Top := R.Bottom + FSpace.Y;
-          if R.Top > AClientRect.Bottom then
-            break;
-          ANode := GetNextVisible(ANode);
-        end;
-      end;
-      FStates := FStates - [TQVTState.tsVisibleChanged];
-    end;
   end;
 
   procedure SetEditorPos(R: TRectF);
@@ -2685,11 +2728,11 @@ procedure TQVirtualTreeView.SetFocusNode(const Value: TQVTNode);
 begin
   if FFocusNode <> Value then
   begin
-    if (Value = nil) or (Value.CanFocus) then
+    if Assigned(Value) then
+      Value.SetFocus
+    else
     begin
       FFocusNode := Value;
-      if Assigned(Value) then
-        Value.ScrollToView;
       Invalidate;
     end;
   end;
@@ -2995,13 +3038,14 @@ begin
     Pointer(FPrior.FNext) := Next;
   if Assigned(FNext) then
     Pointer(FNext.FPrior) := Prior;
+  if RowIndex > 0 then
+    TreeView.RowDirty(RowIndex);
+  TreeView.NodeContentChanged;
   if Assigned(FParent) then
   begin
     Dec(FParent.FCount);
     Dec(FParent.FCreatedCount);
   end;
-  if RowIndex > 0 then
-    TreeView.RowDirty(RowIndex);
   _Release;
 end;
 
@@ -3064,6 +3108,7 @@ begin
         Result := False;
         Exit;
       end;
+      AParent := AParent.Parent;
     end;
   end;
 end;
@@ -3418,6 +3463,25 @@ begin
   end;
 end;
 
+procedure TQVTNode.Reinit;
+begin
+  Clear;
+  FStates := [TQVTNodeState.nsVisible];
+  FCount := -1;
+  Exts.Clear;
+  TreeView.NodeContentChanged;
+end;
+
+procedure TQVTNode.ReinitChildren;
+var
+  AChild: TQVTNode;
+begin
+  Clear;
+  FCount := -1;
+  InitChildren;
+  TreeView.NodeContentChanged;
+end;
+
 procedure TQVTNode.ScrollToView;
 begin
   TreeView.MakeNodeVisible(Self);
@@ -3427,8 +3491,9 @@ procedure TQVTNode.SetChildCount(const Value: Integer);
 var
   AChild, ANext: TQVTNode;
   I: Integer;
+  ALastInitChildReserved: Boolean;
 begin
-  if (FCount <> Value) and (Value > 0) then
+  if (FCount <> Value) and (Value >= 0) then
   begin
     if FCount < Value then
     // 如果新的子结点数量增大，则末个结点变空，以便后续初始化
@@ -3441,8 +3506,13 @@ begin
     begin
       AChild := FFirstChild;
       I := 0;
-      while Assigned(AChild) and (FCount > Value) do
+      FCreatedCount := Value;
+      FCount := Value;
+      ALastInitChildReserved := false;
+      while Assigned(AChild) and (I < Value) do
       begin
+        if AChild = FLastInitChild then
+          ALastInitChildReserved := True;
         AChild.FIndex := I;
         AChild := AChild.Next;
       end;
@@ -3450,7 +3520,18 @@ begin
       begin
         Pointer(FFirstDirtyChild) := nil;
         if Assigned(AChild.Prior) then
+        begin
           Pointer(AChild.Prior.FNext) := nil;
+          FLastChild := AChild.Prior;
+          if not ALastInitChildReserved then
+            FLastInitChild := FLastChild;
+        end
+        else
+        begin
+          FFirstChild := nil;
+          FLastChild := nil;
+          FLastInitChild := nil;
+        end;
         // 释放掉多余的结点
         while Assigned(AChild) do
         begin
@@ -3467,6 +3548,8 @@ begin
       FStates := FStates + [TQVTNodeState.nsHasChildren]
     else
       FStates := FStates - [TQVTNodeState.nsHasChildren];
+    if Self = TreeView.RootNode then
+      TreeView.FFirstVisibleNode := nil;
     TreeView.NodeContentChanged;
   end;
 end;
@@ -4230,8 +4313,10 @@ begin
       AData.TreeView.Canvas.DrawBitmap(ABitmap, RectF(0, 0, ABitmap.Width,
         ABitmap.Height), AStateRect, AData.TreeView.Opacity,
         AImage.GetHighSpeed);
-  end;
-  inherited Draw(AContentRect, AData);
+    inherited Draw(AContentRect, AData);
+  end
+  else
+    inherited Draw(ARect, AData);
 end;
 
 { TQVTStateDrawer }

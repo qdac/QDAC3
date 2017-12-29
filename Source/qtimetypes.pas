@@ -2182,7 +2182,7 @@ var
 begin
   if Assigned(FOnTimeAccept) then
     FOnTimeAccept(@Self, ATime, Result)
-  else if (ATime > FStartTime) and (ATime < FStopTime) then
+  else if (ATime > FStartTime) and (ATime < FStopTime) and (ATime>FLastTime) then
   begin
     DecodeDateTime(ATime, Y, M, D, H, N, S, MS);
     Result := Accept(@FLimits[tlpYear], Y) and Accept(@FLimits[tlpMonthOfYear],
@@ -2456,7 +2456,7 @@ var
 
 begin
   Result := Now;
-  if Result < IncSecond(FLastTime) then
+  if (Result>FLastTime) and ((Result-FLastTime)<1/86400) then//如果秒数与当前时间相同，则触发必需在下1秒之后
     Result := IncSecond(FLastTime);
   if Assigned(FOnTimeAccept) then // 用户自己定义的，现在不清楚
     Result := 0
