@@ -8,9 +8,8 @@ interface
   每个添加到 TQHttpRequests 中的请求，完成后会自动释放，请不要手工释放，否则重复释放
   会出AV时请自理
 }
-uses Classes, Sysutils, Types, Contnrs, QString, QDigest, QJson,
-  SyncObjs{$IFDEF UNICODE},
-  System.Generics.Collections{$ENDIF};
+uses Classes, Sysutils, Types, QString, QDigest, QJson,
+  SyncObjs{$IFDEF UNICODE}, System.Generics.Collections{$ELSE}, Contnrs{$ENDIF};
 {$I 'qdac.inc'}
 
 type
@@ -58,7 +57,8 @@ type
     constructor Create(AUrl: QStringW); overload;
     destructor Destroy; override;
     procedure Assign(ASource: TQUrl);
-    procedure SortParams(ACaseSensitive:Boolean=false;AUseLocale:Boolean=false;Compare: TStringListSortCompare = nil);
+    procedure SortParams(ACaseSensitive: Boolean = false;
+      AUseLocale: Boolean = false; Compare: TStringListSortCompare = nil);
     property SchemePort: Word read GetSchemePort;
     property Scheme: QStringW read FScheme write SetScheme;
     property Host: QStringW read FHost write SetHost;
@@ -215,11 +215,17 @@ type
     property OnClientBound: TQHttpRequestClientBoundEvent read FOnClientBound
       write FOnClientBound;
   end;
+{$IFDEF UNICODE}
+
+  TQObjectList = TObjectList<TObject>;
+{$ELSE}
+  TQObjectList = TObjectList;
+{$ENDIF}
 
   TQHttpRequests = class
   protected
-    FRequests: TObjectList;
-    FHttpClients: TObjectList;
+    FRequests: TQObjectList;
+    FHttpClients: TQObjectList;
     FMaxClients, FBusyClients: Integer;
     FDefaultHeaders: IQHttpHeaders;
     procedure Start(ARequest: TQHttpRequestItem);
@@ -239,7 +245,7 @@ type
     function Post(const AUrl: QStringW; AReplyStream: TStream;
       AHeaders: IQHttpHeaders = nil): Integer; overload;
     function Rest(const AUrl: QStringW; ASource, AResult: TQJson;
-      AHeaders: IQHttpHeaders = nil; AfterDone: TNotifyEvent = nil): Integer;
+      AHeaders: IQHttpHeaders = nil; AfterDone: TNotifyEvent = nil): Integer;virtual;
     property MaxClients: Integer read FMaxClients write FMaxClients;
     property DefaultHeaders: IQHttpHeaders read FDefaultHeaders;
   end;
@@ -393,13 +399,18 @@ function DNSLookupV4(const AHost: QStringW; var Addr: QStringW)
 
 implementation
 
-{$IF RTLVersion>=27}
-{$DEFINE SYSHTTP }
+{$IF RTLVersion>=28}
+{ .$DEFINE SYSHTTP }
 {$IFEND}
 
 uses zlib{$IFDEF SYSHTTP}, System.Net.HttpClient,
   System.Net.UrlClient{$ENDIF}
-{$IFDEF MSWINDOWS} , windows, winsock{$ENDIF};
+{$IFDEF MSWINDOWS} , windows, winsock{$ENDIF}
+{$IFDEF POSIX}, System.net.Socket, Posix.Base, Posix.Stdio, Posix.Pthread,
+  Posix.UniStd, IOUtils,
+  Posix.NetDB, Posix.SysSocket, Posix.Fcntl, Posix.StrOpts,
+  Posix.NetinetIn, Posix.arpainet, Posix.SysSelect, Posix.Systime{$ENDIF}
+    ;
 
 resourcestring
   SBadHttpFormat = '无效的HTTP数据格式';
@@ -422,13 +433,22 @@ const
 {$ENDIF}
 {$ENDIF}
     ') AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.75 Safari/537.36 QDAC/3.0';
+{$IFDEF POSIX}
+  INVALID_SOCKET = IntPtr(not 0);
+  SOCKET_ERROR = -1;
+  NO_ERROR = 0;
+{$ENDIF}
 
 type
+  {$IFDEF MSWINDOWS}
+  TSocketHandle=TSocket;
+  SockAddr=TSockAddr;
+  {$ENDIF}
   // HTTP 下载线程
   TQHttpThread = class(TThread)
   protected
     FRequest: TQHttpClient;
-    FSocket: TSocket;
+    FSocket: TSocketHandle;
     FException: Exception;
     FRedirectingUrl: TQUrl;
     FAllowRedirect: Boolean;
@@ -439,8 +459,11 @@ type
     constructor Create(ARequest: TQHttpClient); overload;
   end;
 
-{$IFDEF SYSHTTP}
+{$IFDEF POSIX}
 
+  TSockAddrIn = sockaddr_in;
+{$ENDIF}
+{$IFDEF SYSHTTP}
   THttpClientClass = THttpClient;
 
   THeadersHelper = class(TInterfacedObject, IQHttpHeaders)
@@ -575,15 +598,27 @@ end;
 
 function DNSLookupV4(const AHost: QStringW; var Addr: QStringW): Boolean;
 var
-  v4addr: TInAddr;
+  v4addr: Cardinal;
   v4bytes: array [0 .. 3] of Byte absolute v4addr;
 begin
-  v4addr.S_addr := DNSLookupV4(AHost);
+  v4addr := DNSLookupV4(AHost);
   Addr := IntToStr(v4bytes[0]) + '.' + IntToStr(v4bytes[1]) + '.' +
     IntToStr(v4bytes[2]) + '.' + IntToStr(v4bytes[3]);
-  Result := v4addr.S_addr <> 0;
+  Result := v4addr <> 0;
+end;
+{$IFDEF POSIX}
+
+function closesocket(Socket: TSocketHandle): Integer; inline;
+begin
+  Result := Posix.Unistd.__close(Socket);
 end;
 
+function ioctlsocket(Socket: TSocketHandle; Request: Integer; var Data)
+  : Integer; inline;
+begin
+  Result := ioctl(Socket, Request, @Data);
+end;
+{$ENDIF}
 /// <summary>取指定分隔符前的字符串</summary>
 /// <param name="S">源字符串</param>
 /// <param name="ADelimiter">分隔子串</param>
@@ -1169,9 +1204,11 @@ var
 
   procedure CreateAndConnect;
   var
-    tm: TTimeVal;
+    tm: timeval;
     mode: Integer;
     fdWrite, fdError: TFdSet;
+  const
+    FIONBIO=$51B;
   begin
     FSocket := socket(PF_INET, SOCK_STREAM, 0);
     if FSocket = INVALID_SOCKET then
@@ -1186,7 +1223,7 @@ var
     mode := 1;
     if ioctlsocket(FSocket, FIONBIO, mode) <> NO_ERROR then
       RaiseOSError;
-    connect(FSocket, TSockAddrIn(Addr), SizeOf(Addr));
+    connect(FSocket, SockAddr(Addr), SizeOf(Addr));
     mode := 0;
     if ioctlsocket(FSocket, FIONBIO, mode) <> NO_ERROR then
       RaiseOSError;
@@ -1573,7 +1610,7 @@ end;
 
 function SortByName(List: TStringList; Index1, Index2: Integer): Integer;
 begin
-  {$IF RTLVersion>=31}
+{$IF RTLVersion>=31}
   if List.UseLocale then
   begin
     if List.CaseSensitive then
@@ -1582,7 +1619,7 @@ begin
       Result := AnsiCompareText(List.Names[Index1], List.Names[Index2])
   end
   else
-  {$IFEND}
+{$IFEND}
   begin
     if List.CaseSensitive then
       Result := CompareStr(List.Names[Index1], List.Names[Index2])
@@ -1591,12 +1628,13 @@ begin
   end;
 end;
 
-procedure TQUrl.SortParams(ACaseSensitive,AUseLocale:Boolean;Compare: TStringListSortCompare);
+procedure TQUrl.SortParams(ACaseSensitive, AUseLocale: Boolean;
+  Compare: TStringListSortCompare);
 begin
-  FParams.CaseSensitive:=ACaseSensitive;
-  {$IF RTLVersion>=31}
-  FParams.UseLocale:=AUseLocale;
-  {$IFEND}
+  FParams.CaseSensitive := ACaseSensitive;
+{$IF RTLVersion>=31}
+  FParams.UseLocale := AUseLocale;
+{$IFEND}
   if Assigned(Compare) then
     FParams.CustomSort(Compare)
   else
@@ -1880,9 +1918,9 @@ begin
   if ResponseStream.Size > 0 then
   begin
     ACharset := ResponseCharset;
+    ResponseStream.Position := 0;
     if Length(ACharset) > 0 then
     begin
-      ResponseStream.Position := 0;
       if (ACharset = 'utf-8') or (ACharset = 'utf8') then
         // utf8是错误的写法，但为了兼容加入
         Result := LoadTextW(ResponseStream, teUTF8)
@@ -2244,8 +2282,8 @@ end;
 constructor TQHttpRequests.Create;
 begin
   inherited Create;
-  FRequests := TObjectList.Create;
-  FHttpClients := TObjectList.Create;
+  FRequests := TQObjectList.Create;
+  FHttpClients := TQObjectList.Create;
   FMaxClients := 1; // 默认只有一个工作
   FDefaultHeaders := THeadersHelper.Create;
   FDefaultHeaders.Values['User-Agent'] := DefaultUserAgent;
@@ -2724,12 +2762,14 @@ end;
 
 function THeadersHelper.QueryInterface(const IID: TGUID; out Obj): HResult;
 begin
+{$IF RTLVersion=18}
   if SameId(IID, ObjCastGUID) then
   begin
     Pointer(Obj) := Pointer(Self);
     Result := S_OK;
   end
   else
+{$IFEND}
     Result := inherited QueryInterface(IID, Obj);
 end;
 

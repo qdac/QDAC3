@@ -170,7 +170,8 @@ type
 
   TQNotifyManager = class;
 
-  TQNotifyBroadcast = class(TQInterfacedObject, IQNotifyBroadcast)
+  TQNotifyBroadcast = class(TQInterfacedObject, IQNotifyBroadcast,
+    IQNotifyBroadcast2)
   private
   protected
     FNotifyId: Cardinal;
@@ -178,6 +179,7 @@ type
     function GetCount: Integer; stdcall;
     function GetItems(AIndex: Integer): IQNotify; stdcall;
     function Add(ANotify: IQNotify): Integer; stdcall;
+    function AddFirst(ANotify: IQNotify): Integer; stdcall;
     procedure Remove(ANotify: IQNotify); stdcall;
     procedure Clear; stdcall;
     procedure Send(AParams: IQParams); stdcall;
@@ -2305,8 +2307,8 @@ begin
   end;
 end;
 
-function TQNotifyManager.Subscribe(ANotifyId: Cardinal; AHandler: IQNotify)
-  : Boolean;
+function TQNotifyManager.Subscribe(ANotifyId: Cardinal;
+  AHandler: IQNotify): Boolean;
 begin
   Lock;
   try
@@ -2787,8 +2789,8 @@ begin
   end;
 end;
 
-function TQBaseLoader.UnloadServices(const AHandle: THandle; AWaitDone: Boolean)
-  : Boolean;
+function TQBaseLoader.UnloadServices(const AHandle: THandle;
+  AWaitDone: Boolean): Boolean;
 var
   AParams: TQParams;
   I: Integer;
@@ -2933,6 +2935,18 @@ begin
   begin
     ANotify._AddRef;
     Result := FItems.Add(Pointer(ANotify));
+  end
+  else
+    Result := -1;
+end;
+
+function TQNotifyBroadcast.AddFirst(ANotify: IQNotify): Integer;
+begin
+  if Assigned(ANotify) then
+  begin
+    ANotify._AddRef;
+    Result := 0;
+    FItems.Insert(0,Pointer(ANotify));
   end
   else
     Result := -1;

@@ -70,7 +70,9 @@ uses classes, SysUtils, Types, qstring, SyncObjs{$IFDEF UNICODE}, ZLib{$ENDIF}
 *)
 { 修订日志
   =========
-
+  2017.12.29
+  ==========
+  * 修正了与 Syslog 协议的兼容性（优先级处理格式问题）
   2016.5.17
   =========
   * 修改了 SetDefaultLogFile 的代码，移除了不必要的锁定，并修改返回默认文件日志写入对象
@@ -210,7 +212,6 @@ type
   // 日志缓存
   TQLog = class
   private
-
   protected
     FList: TQLogList;
     FCastor: TQLogCastor;
@@ -221,6 +222,7 @@ type
     FCS: TCriticalSection;
     FMode: TQLogMode;
     FSyncEvent: TEvent;
+    FEnabled: Boolean;
     procedure SetMode(const Value: TQLogMode);
     procedure Lock;
     procedure Unlock;
@@ -237,6 +239,7 @@ type
     property Mode: TQLogMode read FMode write SetMode;
     property Castor: TQLogCastor read GetCastor;
     property Count: Integer read FCount;
+    property Enabled: Boolean read FEnabled write FEnabled;
     property Flushed: Integer read FFlushed;
   end;
 
@@ -1170,7 +1173,8 @@ begin
   if Assigned(FActiveWriter) then
     FActiveWriter := FActiveWriter.Next
   else
-    Result := FWriters;
+    FActiveWriter := FWriters;
+  Result := FActiveWriter;
   FCS.Leave;
 end;
 
@@ -1233,11 +1237,14 @@ end;
 procedure TQLog.Post(ALevel: TQLogLevel; const AFormat: QStringW;
   Args: array of const);
 begin
+  if Enabled and (not FInFree) then
+  begin
 {$IFDEF NEXTGEN}
-  Logs.Post(ALevel, Format(AFormat, Args));
+    Post(ALevel, Format(AFormat, Args));
 {$ELSE}
-  Logs.Post(ALevel, WideFormat(AFormat, Args));
+    Post(ALevel, WideFormat(AFormat, Args));
 {$ENDIF}
+  end;
 end;
 
 procedure TQLog.SetMode(const Value: TQLogMode);
@@ -1254,7 +1261,7 @@ procedure TQLog.Post(ALevel: TQLogLevel; const AMsg: QStringW);
 var
   AItem: PQLogItem;
 begin
-  if FInFree then
+  if FInFree or (not Enabled) then
     Exit;
   AItem := CreateItem(AMsg, ALevel);
   AItem.Next := nil;
@@ -1285,6 +1292,7 @@ begin
   FCS := TCriticalSection.Create;
   FSyncEvent := TEvent.Create(nil, true, False, '');
   FMode := lmAsyn;
+  FEnabled := true;
 end;
 
 function TQLog.CreateCastor: TQLogCastor;
@@ -1594,7 +1602,7 @@ var
   ABuf: array [0 .. 1023] of Byte;
   procedure CalcPri;
   begin
-    APri := '<' + IntToStr(8 + Integer(FCastor.ActiveLog.Level)) + '>';
+    APri := '<' + IntToStr(8 + Integer(FCastor.ActiveLog.Level)) + '> ';
     {
       0       Emergency: system is unusable
       1       Alert: action must be taken immediately

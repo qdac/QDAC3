@@ -1634,6 +1634,7 @@ type
     FPosted: Integer; // 已经提交给QWorker执行的数量
     FTag: Pointer;
     FCanceled: Integer;
+    FWaitingCount:Integer;
     FRunningWorkers, FMaxWorkers: Integer;
     FFreeAfterDone: Boolean;
     function GetCount: Integer;
@@ -6391,7 +6392,8 @@ begin
   begin
     if FCanceled > 0 then
       FWaitResult := wrAbandoned;
-    FEvent.SetEvent;
+    if FWaitingCount>0 then
+      FEvent.SetEvent;
   end;
 end;
 
@@ -6671,8 +6673,10 @@ begin
     end;
     if Result = wrIOCompletion then
     begin
+      AtomicIncrement(FWaitingCount);
       if MsgWaitForEvent(FEvent, ATimeout) = wrSignaled then
         Result := FWaitResult;
+      AtomicDecrement(FWaitingCount);
       if Result = wrIOCompletion then
       begin
         Cancel;
@@ -6772,6 +6776,7 @@ begin
   end;
   if Result = wrIOCompletion then
   begin
+    AtomicIncrement(FWaitingCount);
     if FEvent.WaitFor(ATimeout) = wrSignaled then
       Result := FWaitResult
     else
@@ -6779,6 +6784,7 @@ begin
       Result := wrTimeout;
       Cancel;
     end;
+    AtomicDecrement(FWaitingCount);
     if Result = wrTimeout then
       DoAfterDone;
   end;

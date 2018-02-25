@@ -1194,6 +1194,16 @@ type
       : Integer; stdcall;
   end;
 
+  IQNotifyBroadcast2=interface(IQNotifyBroadcast)
+    ['{A6D51A69-6588-4513-B9F9-45314840FF3D}']
+    /// <summary>
+    /// 添加一个响应者并将其设置为首个响应者
+    /// </summary>
+    /// <param name="ANotify">
+    /// 要添加的响应者
+    /// </param>
+    function AddFirst(ANotify: IQNotify): Integer; stdcall;
+  end;
   //
   /// <summary>
   /// 通知管理器用于内部维护多个通知和订阅者队列

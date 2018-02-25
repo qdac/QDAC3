@@ -60,6 +60,8 @@ begin
   AHook := TFormModalHook.Create(F);
   AHook.FCloseAction := ACloseAction;
   AHook.ShowModal(OnResult);
+  F.SendToBack;
+  F.BringToFront;
 end;
 
 procedure ModalDialog(AClass: TFormClass; OnResult: TFormModalProc); overload;

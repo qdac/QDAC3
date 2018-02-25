@@ -2455,9 +2455,9 @@ var
   end;
 
 begin
-  Result := Now;
-  if (Result>FLastTime) and ((Result-FLastTime)<1/86400) then//如果秒数与当前时间相同，则触发必需在下1秒之后
-    Result := IncSecond(FLastTime);
+  Result := IncSecond(FLastTime);
+//  if (Result>FLastTime) and ((Result-FLastTime)<1/86400) then//如果秒数与当前时间相同，则触发必需在下1秒之后
+//    Result := IncSecond(FLastTime);
   if Assigned(FOnTimeAccept) then // 用户自己定义的，现在不清楚
     Result := 0
   else if (Result >= FStartTime) and (Result < FStopTime) then

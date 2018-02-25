@@ -957,7 +957,21 @@ type
   /// </summary>
   TQCustomNameCharTest = procedure(AChar: Cardinal;
     var Accept, AHandled: Boolean);
-
+  /// <summary>
+  /// TRandCharType 用于生成随机字符串时确定字符串包含的字符范围
+  /// </summary>
+  TRandCharType = (
+    /// <summary>汉字</summary>
+    rctChinese,
+    /// <summary>大小写英文字母</summary>
+    rctAlpha,
+    /// <summary>数字</summary>
+    rctNum,
+    /// <summary>英文符号</summary>
+    rctSymbol,
+    /// <summary>空白字符（空格、Tab和换行符）</summary>
+    rctSpace);
+  TRandCharTypes = set of TRandCharType;
   /// <summary>
   /// 人类性别
   /// </summary>
@@ -1014,6 +1028,10 @@ function CharInW(const c, List: PQCharW; ACharLen: PInteger = nil)
 function CharInU(const c: PQCharA; const List: array of QCharA;
   ACharLen: PInteger = nil): Boolean;
 
+function StrInW(const S: QStringW; const Values: array of QStringW;
+  AIgnoreCase: Boolean = False): Integer; overload;
+function StrInW(const S: QStringW; Values: TStrings;
+  AIgnoreCase: Boolean = False): Integer; overload;
 // 检查是否是空白字符
 function IsSpaceA(const c: PQCharA; ASpaceSize: PInteger = nil): Boolean;
 function IsSpaceW(const c: PQCharW; ASpaceSize: PInteger = nil): Boolean;
@@ -1055,6 +1073,7 @@ function SkipUntilW(var p: PQCharW; AExpects: array of QCharW;
   AQuoter: QCharW = #0): Integer; overload;
 function SkipUntilW(var p: PQCharW; AExpects: PQCharW; AQuoter: QCharW = #0)
   : Integer; overload;
+function BackUntilW(var p: PQCharW; AExpects, AStartPos: PQCharW): Integer;
 // 查找字符所在行列号，返回行的起始地址
 function StrPosA(Start, Current: PQCharA; var ACol, ARow: Integer): PQCharA;
 function StrPosU(Start, Current: PQCharA; var ACol, ARow: Integer): PQCharA;
@@ -1378,12 +1397,13 @@ function HtmlUnescape(const S: QStringW): QStringW;
 function JavaEscape(const S: QStringW; ADoEscape: Boolean): QStringW;
 function JavaUnescape(const S: QStringW; AStrictEscape: Boolean): QStringW;
 function HtmlTrimText(const S: QStringW): QStringW;
-function UrlEncode(const ABytes: PByte; l: Integer; ASpacesAsPlus: Boolean;AEncodePercent:Boolean=False)
-  : QStringW; overload;
-function UrlEncode(const ABytes: TBytes; ASpacesAsPlus: Boolean;AEncodePercent:Boolean=False)
-  : QStringW; overload;
+function UrlEncode(const ABytes: PByte; l: Integer; ASpacesAsPlus: Boolean;
+  AEncodePercent: Boolean = False): QStringW; overload;
+function UrlEncode(const ABytes: TBytes; ASpacesAsPlus: Boolean;
+  AEncodePercent: Boolean = False): QStringW; overload;
 function UrlEncode(const S: QStringW; ASpacesAsPlus: Boolean;
-  AUtf8Encode: Boolean = True;AEncodePercent:Boolean=False): QStringW; overload;
+  AUtf8Encode: Boolean = True; AEncodePercent: Boolean = False)
+  : QStringW; overload;
 function UrlDecode(const AUrl: QStringW;
   var AScheme, AHost, ADocument: QStringW; var APort: Word; AParams: TStrings;
   AUtf8Encode: Boolean = True): Boolean;
@@ -1396,6 +1416,9 @@ function RightPosW(const S: QStringW; const sub: QStringW;
 function ParseInt(var S: PQCharW; var ANum: Int64): Integer;
 function ParseHex(var p: PQCharW; var Value: Int64): Integer;
 function ParseNumeric(var S: PQCharW; var ANum: Extended): Boolean;
+  overload; inline;
+function ParseNumeric(var S: PQCharW; var ANum: Extended; var AIsFloat: Boolean)
+  : Boolean; overload;
 function ParseDateTime(S: PWideChar; var AResult: TDateTime): Boolean;
 function ParseWebTime(p: PWideChar; var AResult: TDateTime): Boolean;
 function EncodeWebTime(ATime: TDateTime): String;
@@ -1501,6 +1524,8 @@ function MethodEqual(const Left, Right: TMethod): Boolean; inline;
 function UrlMerge(const ABase, ARel: QStringW): QStringW;
 procedure Debugout(const AMsg: String); overload;
 procedure Debugout(const AFmt: String; const AParams: array of const); overload;
+function RandomString(ALen: Cardinal; ACharTypes: TRandCharTypes = [])
+  : QStringW;
 
 var
   JavaFormatUtf8: Boolean;
@@ -2594,6 +2619,38 @@ begin
     end
     else
       Inc(I, Lens[I]);
+  end;
+end;
+
+function StrInW(const S: QStringW; const Values: array of QStringW;
+  AIgnoreCase: Boolean): Integer;
+var
+  I: Integer;
+begin
+  Result := -1;
+  for I := Low(Values) to High(Values) do
+  begin
+    if (Values[I] = S) or (AIgnoreCase and (CompareText(Values[I], S) = 0)) then
+    begin
+      Result := I;
+      Break;
+    end;
+  end
+end;
+
+function StrInW(const S: QStringW; Values: TStrings;
+  AIgnoreCase: Boolean = False): Integer;
+var
+  I: Integer;
+begin
+  Result := -1;
+  for I := 0 to Values.Count - 1 do
+  begin
+    if (Values[I] = S) or (AIgnoreCase and (CompareText(Values[I], S) = 0)) then
+    begin
+      Result := I;
+      Break;
+    end;
   end;
 end;
 
@@ -4145,6 +4202,18 @@ begin
       Inc(p, CharSizeW(p));
   end;
   Result := (IntPtr(p) - IntPtr(ps)) shr 1;
+end;
+
+function BackUntilW(var p: PQCharW; AExpects, AStartPos: PQCharW): Integer;
+begin
+  Result := 0;
+  while p > AStartPos do
+  begin
+    if CharInW(p, AExpects) then
+      Break;
+    Dec(p);
+    Inc(Result);
+  end;
 end;
 
 function CharUpperA(c: QCharA): QCharA;
@@ -6602,7 +6671,14 @@ begin
     begin
       ANeg := false;
       if S^ = '+' then
+      begin
         Inc(S);
+        if (S^ < '0') or (S^ > '9') then // +后必需跟数字
+        begin
+          Result := 0;
+          Exit;
+        end;
+      end;
     end;
     ANum := 0;
     while (S^ >= '0') and (S^ <= '9') do
@@ -6622,7 +6698,8 @@ begin
   end;
 end;
 
-function ParseNumeric(var S: PQCharW; var ANum: Extended): Boolean;
+function ParseNumeric(var S: PQCharW; var ANum: Extended;
+  var AIsFloat: Boolean): Boolean;
 var
   ps: PQCharW;
   function ParseHexInt: Boolean;
@@ -6659,6 +6736,7 @@ var
         ANum := iVal;
       if S^ = '.' then // 小数部分
       begin
+        AIsFloat := True;
         Inc(S);
         ACount := ParseInt(S, iVal);
         if ACount > 0 then
@@ -6671,12 +6749,12 @@ var
       end;
       if (S^ = 'e') or (S^ = 'E') then
       begin
+        AIsFloat := True;
         Inc(S);
         if ParseNumeric(S, APow) then
-        begin
-          ANum := ANum * Power(10, APow);
-
-        end;
+          ANum := ANum * Power(10, APow)
+        else
+          S := ps;
       end;
       Result := (S <> ps);
     except
@@ -6687,6 +6765,7 @@ var
 
 begin
   ps := S;
+  AIsFloat := False;
   if (S^ = '$') or (S^ = '&') then
   begin
     Inc(S);
@@ -6703,6 +6782,13 @@ begin
     Result := ParseDec;
   if not Result then
     S := ps;
+end;
+
+function ParseNumeric(var S: PQCharW; var ANum: Extended): Boolean;
+var
+  AIsFloat: Boolean;
+begin
+  Result := ParseNumeric(S, ANum, AIsFloat);
 end;
 
 function NameOfW(const S: QStringW; ASpliter: QCharW): QStringW;
@@ -7574,8 +7660,8 @@ begin
     Result := '';
 end;
 
-function UrlEncode(const ABytes: PByte; l: Integer; ASpacesAsPlus,AEncodePercent: Boolean)
-  : QStringW; overload;
+function UrlEncode(const ABytes: PByte; l: Integer;
+  ASpacesAsPlus, AEncodePercent: Boolean): QStringW; overload;
 const
   SafeChars: array [33 .. 127] of Byte = ( //
     0, 0, 0, 0, 0, 0, 0, 0, //
@@ -7603,7 +7689,8 @@ begin
   pe := PByte(IntPtr(ps) + l);
   while IntPtr(ps) < IntPtr(pe) do
   begin
-    if (not AEncodePercent) and  (ps^ = Ord('%')) and (IntPtr(pe) - IntPtr(ps) > 2) and
+    if (not AEncodePercent) and (ps^ = Ord('%')) and
+      (IntPtr(pe) - IntPtr(ps) > 2) and
       (PByte(IntPtr(ps) + 1)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
       Ord('0') .. Ord('9')]) and
       (PByte(IntPtr(ps) + 2)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
@@ -7621,7 +7708,8 @@ begin
   ps := ABytes;
   while IntPtr(ps) < IntPtr(pe) do
   begin
-    if (not AEncodePercent) and (ps^ = Ord('%')) and (IntPtr(pe) - IntPtr(ps) > 2) and
+    if (not AEncodePercent) and (ps^ = Ord('%')) and
+      (IntPtr(pe) - IntPtr(ps) > 2) and
       (PByte(IntPtr(ps) + 1)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
       Ord('0') .. Ord('9')]) and
       (PByte(IntPtr(ps) + 2)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
@@ -7657,7 +7745,7 @@ begin
   end;
 end;
 
-function UrlEncode(const ABytes: TBytes; ASpacesAsPlus,AEncodePercent: Boolean)
+function UrlEncode(const ABytes: TBytes; ASpacesAsPlus, AEncodePercent: Boolean)
   : QStringW; overload;
 begin
   if Length(ABytes) > 0 then
@@ -7666,8 +7754,8 @@ begin
     SetLength(Result, 0);
 end;
 
-function UrlEncode(const S: QStringW; ASpacesAsPlus, AUtf8Encode,AEncodePercent: Boolean)
-  : QStringW; overload;
+function UrlEncode(const S: QStringW; ASpacesAsPlus, AUtf8Encode,
+  AEncodePercent: Boolean): QStringW; overload;
 var
   ABytes: QStringA;
 begin
@@ -7677,7 +7765,8 @@ begin
       ABytes := qstring.Utf8Encode(S)
     else
       ABytes := AnsiEncode(S);
-    Result := UrlEncode(PByte(PQCharA(ABytes)), ABytes.Length, ASpacesAsPlus,AEncodePercent);
+    Result := UrlEncode(PByte(PQCharA(ABytes)), ABytes.Length, ASpacesAsPlus,
+      AEncodePercent);
   end
   else
     Result := S;
@@ -8499,9 +8588,12 @@ begin
 end;
 
 procedure FreeAndNilObject(var AObject);
+var
+  ATemp: TObject;
 begin
-  FreeObject(TObject(AObject));
+  ATemp := TObject(AObject);
   Pointer(AObject) := nil;
+  FreeObject(ATemp);
 end;
 
 function HashOf(p: Pointer; l: Integer): Cardinal;
@@ -11961,6 +12053,60 @@ end;
 procedure Debugout(const AFmt: String; const AParams: array of const);
 begin
   Debugout(Format(AFmt, AParams));
+end;
+
+function RandomString(ALen: Cardinal; ACharTypes: TRandCharTypes): QStringW;
+var
+  p: PQCharW;
+  K: Integer;
+  V: TRandCharType;
+  C: QCharW;
+const
+  SpaceChars: array [0 .. 3] of QCharW = (#9, #10, #13, #32);
+begin
+  if ACharTypes = [] then//如果未设置，则默认为大小写字母
+    ACharTypes := [rctAlpha];
+  SetLength(Result, ALen);
+  p := PQCharW(Result);
+  while ALen > 0 do
+  begin
+    V := TRandCharType(Random(5));
+    if V in ACharTypes then
+    begin
+      case V of
+        rctChinese:
+          p^ := QCharW($4E00 + Random($9FA5 - $4E00));
+        rctAlpha:
+          begin
+            K := Random(52);
+            if K < 26 then
+              p^ := QCharW(Ord('A') + K)
+            else
+              p^ := QCharW(Ord('a') + K - 26);
+          end;
+        rctNum:
+          p^ := QCharW(Ord('0') + Random(10));
+        rctSymbol: // 只管英文符号
+          begin
+            // $21~$2F,$3A~$40,$5B-$60,$7B~$7E
+            case Random(4) of
+              0: // !->/
+                p^ := QCharW($21 + Random(16));
+              1: // :->@
+                p^ := QCharW($3A + Random(7));
+              2: // [->`
+                p^ := QCharW($5B + Random(6));
+              3: // {->~
+                p^ := QCharW($7B + Random(4));
+            end;
+          end;
+        rctSpace:
+          p^ := SpaceChars[Random(4)];
+      end;
+      Dec(ALen);
+      Inc(p);
+    end;
+  end;
 end;
 
 { TQSingleton<T> }

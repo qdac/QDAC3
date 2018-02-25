@@ -6545,6 +6545,7 @@ function TQJson.TryParseValue(ABuilder: TQStringCatHelperW;
 var
   ANum: Extended;
   AComment: QStringW;
+  AIsFloat: Boolean;
 const
   JsonEndChars: PWideChar = ',]}';
   MaxInt64: Int64 = 9223372036854775807;
@@ -6563,7 +6564,7 @@ begin
     BuildJsonString(ABuilder, p);
     AsString := ABuilder.Value;
   end
-  else if ParseNumeric(p, ANum) then // Êý×Ö£¿
+  else if ParseNumeric(p, ANum, AIsFloat) then // Êý×Ö£¿
   begin
     SkipSpaceAndComment(p, AComment);
     if Length(AComment) > 0 then
@@ -6571,7 +6572,7 @@ begin
     if (p^ = #0) or CharInW(p, JsonEndChars) then
     begin
       if (ANum >= MinInt64) and (ANum <= MaxInt64) and
-        SameValue(ANum, Trunc(ANum), 5E-324) then
+        (not AIsFloat) then
         AsInt64 := Trunc(ANum)
       else
         AsFloat := ANum;
