@@ -1,0 +1,99 @@
+object Form3: TForm3
+  Left = 0
+  Top = 0
+  Caption = 'Area tree'
+  ClientHeight = 480
+  ClientWidth = 640
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  DesignerMasterStyle = 0
+  object QVirtualTreeView1: TQVirtualTreeView
+    SelectionColor = claLightblue
+    HoverColor = claLightpink
+    TintColor = claBlack
+    NodeIndent = 16.000000000000000000
+    Header.Columns = <
+      item
+        Title.Text = 'Name'
+        Title.DrawerType = dtHeader
+        Title.Clickable = False
+        Title.SortOnClick = False
+        Title.SortMarker = smNone
+        Frozen = False
+        Visible = True
+        ReadOnly = False
+        Enabled = True
+        DrawerType = dtDefault
+        Width = 488.000000000000000000
+        CellData = QVTCustomTextCell1
+        Tag = 0
+      end
+      item
+        Title.Text = 'Code'
+        Title.DrawerType = dtHeader
+        Title.Clickable = False
+        Title.SortOnClick = False
+        Title.SortMarker = smNone
+        Frozen = False
+        Visible = True
+        ReadOnly = False
+        Enabled = True
+        DrawerType = dtDefault
+        Width = 75.000000000000000000
+        CellData = QVTCustomTextCell1
+        Tag = 0
+      end
+      item
+        Title.Text = 'Type'
+        Title.DrawerType = dtHeader
+        Title.Clickable = False
+        Title.SortOnClick = False
+        Title.SortMarker = smNone
+        Frozen = False
+        Visible = True
+        ReadOnly = False
+        Enabled = True
+        DrawerType = dtDefault
+        Width = 75.000000000000000000
+        CellData = QVTCustomTextCell1
+        Tag = 0
+      end>
+    Header.Options = [hoVisible, hoResizable]
+    Header.MasterColumn = 0
+    Header.AutoSizeColumn = 0
+    Header.Height = 20.000000000000000000
+    DefaultRowHeight = 20.000000000000000000
+    Options = []
+    PaintOptions = [poTreeLine, poRowSelection, poNodeButton]
+    RootNodeCount = 0
+    ColSpace = 1.000000000000000000
+    RowSpace = 1.000000000000000000
+    OnInitNode = QVirtualTreeView1InitNode
+    OnFocusChanged = QVirtualTreeView1FocusChanged
+    Align = Client
+    HitTest = True
+    Size.Width = 640.000000000000000000
+    Size.Height = 439.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+  end
+  object Label1: TLabel
+    Align = Top
+    Size.Width = 640.000000000000000000
+    Size.Height = 41.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.WordWrap = False
+    Text = 'Label1'
+    TabOrder = 2
+  end
+  object QVTCustomTextCell1: TQVTCustomTextCell
+    Enabled = True
+    Sides = [Top, Left, Bottom, Right]
+    OnGetText = QVTCustomTextCell1GetText
+    Left = 448
+    Top = 104
+  end
+end

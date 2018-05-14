@@ -1,0 +1,162 @@
+object Form2: TForm2
+  Left = 0
+  Top = 0
+  Caption = 'Form2'
+  ClientHeight = 537
+  ClientWidth = 648
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object QVirtualTreeView1: TQVirtualTreeView
+    SelectionColor = claLightblue
+    HoverColor = claLightpink
+    TintColor = claBlack
+    NodeIndent = 8.000000000000000000
+    Header.Columns = <
+      item
+        Title.Text = 'SeqNo'
+        Title.DrawerType = dtHeader
+        Title.Clickable = True
+        Title.SortOnClick = False
+        Title.SortMarker = smNone
+        Frozen = False
+        Visible = True
+        ReadOnly = False
+        Enabled = True
+        DrawerType = dtDefault
+        Width = 165.000000000000000000
+        CellData = tcSeqNo
+        Editor = teName
+        Tag = 0
+      end
+      item
+        Title.Text = 'Name'
+        Title.DrawerType = dtHeader
+        Title.Clickable = True
+        Title.SortOnClick = False
+        Title.SortMarker = smNone
+        Frozen = False
+        Visible = True
+        ReadOnly = False
+        Enabled = True
+        DrawerType = dtDefault
+        Width = 230.000000000000000000
+        CellData = tcName
+        Editor = teName
+        Tag = 0
+      end
+      item
+        Title.Text = 'Age'
+        Title.DrawerType = dtHeader
+        Title.Clickable = False
+        Title.SortOnClick = False
+        Title.SortMarker = smNone
+        Frozen = False
+        Visible = True
+        ReadOnly = False
+        Enabled = True
+        DrawerType = dtProgress
+        Width = 120.000000000000000000
+        CellData = pcAge
+        Editor = deAge
+        Tag = 0
+      end
+      item
+        Title.Text = 'Sex'
+        Title.DrawerType = dtHeader
+        Title.Clickable = False
+        Title.SortOnClick = False
+        Title.SortMarker = smNone
+        Frozen = False
+        Visible = True
+        ReadOnly = False
+        Enabled = True
+        DrawerType = dtRadio
+        Width = 75.000000000000000000
+        CellData = rcSex
+        Tag = 0
+      end>
+    Header.Options = [hoVisible, hoResizable]
+    Header.MasterColumn = 0
+    Header.AutoSizeColumn = -1
+    Header.Height = 20.000000000000000000
+    DefaultRowHeight = 20.000000000000000000
+    Options = [toEditable]
+    PaintOptions = [poHorizLine, poVertLine, poTreeLine, poCellSelection, poNodeButton]
+    RootNodeCount = 50
+    ColSpace = 0.000000000000000000
+    RowSpace = 1.000000000000000000
+    OnGetCellSpans = QVirtualTreeView1GetCellSpans
+    HitTest = True
+    Position.X = 16.000000000000000000
+    Position.Y = 56.000000000000000000
+    Size.Width = 609.000000000000000000
+    Size.Height = 449.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+  end
+  object RadioButton1: TRadioButton
+    GroupName = 'Sex Group'
+    Position.X = 16.000000000000000000
+    Position.Y = 24.000000000000000000
+    Size.Width = 185.000000000000000000
+    Size.Height = 25.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 8
+    Text = #22899#65288#19982' Sex '#21015#25152#26377#20540#20114#26021#65289
+  end
+  object Label1: TLabel
+    Align = Top
+    Margins.Left = 5.000000000000000000
+    Margins.Top = 5.000000000000000000
+    Margins.Right = 5.000000000000000000
+    Margins.Bottom = 5.000000000000000000
+    Position.X = 5.000000000000000000
+    Position.Y = 5.000000000000000000
+    Size.Width = 638.000000000000000000
+    Size.Height = 25.000000000000000000
+    Size.PlatformDefault = False
+    Text = #31034#20363#20013#25152#26377#21015#21487#32534#36753#65292#20294#19981#20250#23384#36142#20540#65292'Sex '#21015#19982#22806#37096#30340#21333#36873#38062#20114#26021#12290
+    TabOrder = 15
+  end
+  object tcName: TQVTCustomTextCell
+    Enabled = True
+    Sides = [Top, Left, Bottom, Right]
+    DefaultText = 'Name'
+    OnGetText = tcNameGetText
+    Left = 304
+  end
+  object tcSeqNo: TQVTCustomTextCell
+    Enabled = True
+    Sides = [Top, Left, Bottom, Right]
+    DefaultText = 'SeqNo'
+    OnGetText = tcSeqNoGetText
+    Left = 48
+  end
+  object pcAge: TQVTCustomProgressCell
+    Enabled = True
+    Sides = [Top, Left, Bottom, Right]
+    DefaultText = '50%'
+    TextSettings.HorzAlign = Center
+    Progress = 20.000000000000000000
+    Left = 488
+  end
+  object rcSex: TQVTCustomRadioCell
+    Enabled = True
+    Sides = [Top, Left, Bottom, Right]
+    DefaultText = #30007
+    GroupName = 'Sex Group'
+    CheckStates = []
+    Left = 576
+  end
+  object teName: TQVTTextEditor
+    EnterAsTab = True
+    Left = 272
+  end
+  object deAge: TQVTDialogEditor
+    EnterAsTab = True
+    OnShowEditDialog = deAgeShowEditDialog
+    Left = 440
+  end
+end

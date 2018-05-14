@@ -176,6 +176,7 @@ type
 
   TQLogLevel = (llEmergency, llAlert, llFatal, llError, llWarning, llHint,
     llMessage, llDebug);
+  TQLogLevels = set of TQLogLevel;
   TQLog = class;
   TQLogCastor = class;
   TQLogWriter = class;
@@ -222,7 +223,9 @@ type
     FCS: TCriticalSection;
     FMode: TQLogMode;
     FSyncEvent: TEvent;
+    FAcceptLevels: TQLogLevels;
     FEnabled: Boolean;
+
     procedure SetMode(const Value: TQLogMode);
     procedure Lock;
     procedure Unlock;
@@ -241,6 +244,7 @@ type
     property Count: Integer read FCount;
     property Enabled: Boolean read FEnabled write FEnabled;
     property Flushed: Integer read FFlushed;
+    property AcceptLevels: TQLogLevels read FAcceptLevels write FAcceptLevels;
   end;
 
   // 日志写入对象
@@ -919,7 +923,7 @@ begin
                 end
                 else
                   ACreateMode := lcmReplace;
-                FLastTime := Now;
+                FLastTime := 0;
               end;
           end;
         except
@@ -991,13 +995,14 @@ function TQLogFileWriter.WriteItem(AItem: PQLogItem): Boolean;
         ADayChanged := true
       else
         ADayChanged := False;
-      FLastTime := AItem.TimeStamp;
       if ADayChanged then
       begin
-        if OneFilePerDay then
+        if OneFilePerDay and (FLastTime > 0) then
           RenameHistory;
-        FBuilder.Cat(FormatDateTime('[yyyy-mm-dd]', FLastTime)).Cat(SLineBreak);
+        FBuilder.Cat(FormatDateTime('[yyyy-mm-dd]', AItem.TimeStamp))
+          .Cat(SLineBreak);
       end;
+      FLastTime := AItem.TimeStamp;
     end;
     FLastTimeStamp := FormatDateTime('[hh:nn:ss.zzz]', FLastTime);
   end;
@@ -1237,7 +1242,7 @@ end;
 procedure TQLog.Post(ALevel: TQLogLevel; const AFormat: QStringW;
   Args: array of const);
 begin
-  if Enabled and (not FInFree) then
+  if Enabled and (not FInFree) and (ALevel in AcceptLevels) then
   begin
 {$IFDEF NEXTGEN}
     Post(ALevel, Format(AFormat, Args));
@@ -1261,26 +1266,27 @@ procedure TQLog.Post(ALevel: TQLogLevel; const AMsg: QStringW);
 var
   AItem: PQLogItem;
 begin
-  if FInFree or (not Enabled) then
-    Exit;
-  AItem := CreateItem(AMsg, ALevel);
-  AItem.Next := nil;
-  // 使用临界锁定版
-  Lock();
-  Inc(FCount);
-  if FList.FirstVal = 0 then
+  if Enabled and (not FInFree) and (ALevel in AcceptLevels) then
   begin
-    FList.First := AItem;
-    FList.Last := AItem;
-  end
-  else
-  begin
-    FList.Last.Next := AItem;
-    FList.Last := AItem;
+    AItem := CreateItem(AMsg, ALevel);
+    AItem.Next := nil;
+    // 使用临界锁定版
+    Lock();
+    Inc(FCount);
+    if FList.FirstVal = 0 then
+    begin
+      FList.First := AItem;
+      FList.Last := AItem;
+    end
+    else
+    begin
+      FList.Last.Next := AItem;
+      FList.Last := AItem;
+    end;
+    Unlock;
+    FCastor.LogAdded;
+    WaitLogWrote;
   end;
-  Unlock;
-  FCastor.LogAdded;
-  WaitLogWrote;
 end;
 
 constructor TQLog.Create;
@@ -1293,6 +1299,9 @@ begin
   FSyncEvent := TEvent.Create(nil, true, False, '');
   FMode := lmAsyn;
   FEnabled := true;
+  // 默认输出全部日志
+  FAcceptLevels := [llEmergency, llAlert, llFatal, llError, llWarning, llHint,
+    llMessage, llDebug];
 end;
 
 function TQLog.CreateCastor: TQLogCastor;

@@ -480,7 +480,7 @@ type
       : IQString; stdcall;
     function SubString(const AStart, ACount: Cardinal; const ACheckExt: Boolean)
       : IQString; stdcall;
-    function Replace(const old, new: PWideChar; AFlags: Integer): Cardinal;
+    function Replace(const oldpat, newpat: PWideChar; AFlags: Integer): Cardinal;
     // Todo:Add more function
   end;
 
@@ -1203,6 +1203,7 @@ type
     /// 要添加的响应者
     /// </param>
     function AddFirst(ANotify: IQNotify): Integer; stdcall;
+    function GetNotifyId:Integer;stdcall;
   end;
   //
   /// <summary>

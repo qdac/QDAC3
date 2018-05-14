@@ -188,6 +188,7 @@ type
     procedure DoNotify(AParams: IQParams);
     function EnumSubscribe(ACallback: TQSubscribeEnumCallback; AParam: Int64)
       : Integer; stdcall;
+    function GetNotifyId: Integer; stdcall;
   public
     constructor Create; override;
     constructor Create(AId: Cardinal); overload;
@@ -207,6 +208,18 @@ type
     function _AddRef: Integer; override; stdcall;
     function _Release: Integer; override; stdcall;
     property Name: QStringW read FName;
+  end;
+
+  TQNotifyProc = reference to procedure(const AId: Cardinal; AParams: IQParams;
+    var AFireNext: Boolean);
+
+  TQBaseSubscriber = class(TQInterfacedObject, IQNotify)
+  protected
+    FCallback: TQNotifyProc;
+    procedure Notify(const AId: Cardinal; AParams: IQParams;
+      var AFireNext: Boolean); stdcall;
+  public
+    constructor Create(ACallback: TQNotifyProc); overload;
   end;
 
   TQNotifyManager = class(TQInterfacedObject, IQNotifyManager)
@@ -2229,7 +2242,7 @@ begin
     if AId < Cardinal(FItems.Count) then
       Result := TQNotifyItem(FItems[AId]).GetCount > 0
     else
-      Result := False;
+      Result := false;
   finally
     Unlock;
   end;
@@ -2946,7 +2959,7 @@ begin
   begin
     ANotify._AddRef;
     Result := 0;
-    FItems.Insert(0,Pointer(ANotify));
+    FItems.Insert(0, Pointer(ANotify));
   end
   else
     Result := -1;
@@ -3031,13 +3044,13 @@ begin
   Result := 0;
   if Assigned(ACallback) then
   begin
-    AContinue := True;
+    AContinue := true;
     for I := 0 to FItems.Count - 1 do
     begin
       ACallback(IQNotify(FItems[I]), AParam, AContinue);
       Inc(Result);
       if not AContinue then
-        Break;
+        break;
     end;
   end;
 end;
@@ -3052,13 +3065,21 @@ begin
   Result := IQNotify(FItems[AIndex]);
 end;
 
+function TQNotifyBroadcast.GetNotifyId: Integer;
+begin
+  Result := Id;
+end;
+
 procedure TQNotifyBroadcast.HandlePost(AParams: IInterface);
 var
   ANotifyParams: IQParams;
   AEventParam: IQParam;
   AEvent: TEvent;
 begin
-  ANotifyParams := AParams as IQParams;
+  if Assigned(AParams) then
+    ANotifyParams := AParams as IQParams
+  else
+    ANotifyParams := NewParams;
   AEvent := nil;
   AEventParam := ANotifyParams.ByName('@EVT');
   if Assigned(AEventParam) then
@@ -3132,6 +3153,20 @@ end;
 
 exports HostPluginsManager;
 {$ENDIF}
+{ TQBaseSubscriber }
+
+constructor TQBaseSubscriber.Create(ACallback: TQNotifyProc);
+begin
+  inherited Create;
+  FCallback := ACallback;
+end;
+
+procedure TQBaseSubscriber.Notify(const AId: Cardinal; AParams: IQParams;
+  var AFireNext: Boolean);
+begin
+  if Assigned(FCallback) then
+    FCallback(AId, AParams, AFireNext);
+end;
 
 initialization
 

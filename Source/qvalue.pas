@@ -26,7 +26,8 @@ type
     vdtInterval, vdtString, vdtStream, vdtArray);
 
   PQValue = ^TQValue;
-  TQValueStream = TMemoryStream;
+  TQValueStream = class(TMemoryStream)
+  end;
   // C++ TQInterval 编译有错误，所以自己定义下
 {$NODEFINE TQValueData}
 {$NODEFINE TQValueStream}

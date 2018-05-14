@@ -25,6 +25,10 @@ interface
 }
 
 { 修订日志
+  2018.04.14
+  ===========
+  + 增加 DateTimeFromString 函数来转换字符串日期时间值到 TDateTime
+
   2017.1.23
   ==========
   * 修正了 UrlEncode编码时没有对特殊转义字符计算空间的问题
@@ -1029,9 +1033,9 @@ function CharInU(const c: PQCharA; const List: array of QCharA;
   ACharLen: PInteger = nil): Boolean;
 
 function StrInW(const S: QStringW; const Values: array of QStringW;
-  AIgnoreCase: Boolean = False): Integer; overload;
+  AIgnoreCase: Boolean = false): Integer; overload;
 function StrInW(const S: QStringW; Values: TStrings;
-  AIgnoreCase: Boolean = False): Integer; overload;
+  AIgnoreCase: Boolean = false): Integer; overload;
 // 检查是否是空白字符
 function IsSpaceA(const c: PQCharA; ASpaceSize: PInteger = nil): Boolean;
 function IsSpaceW(const c: PQCharW; ASpaceSize: PInteger = nil): Boolean;
@@ -1044,7 +1048,7 @@ function CNHalfToFull(const S: QStringW): QStringW;
 // 引号处理
 function QuotedStrA(const S: QStringA; const AQuoter: QCharA = $27): QStringA;
 function QuotedStrW(const S: QStringW; const AQuoter: QCharW = #$27): QStringW;
-function SQLQuoted(const S: QStringW): QStringW;
+function SQLQuoted(const S: QStringW; ADoEscape: Boolean = True): QStringW;
 function DequotedStrA(const S: QStringA; const AQuoter: QCharA = $27): QStringA;
 function DequotedStrW(const S: QStringW; const AQuoter: QCharW = #$27)
   : QStringW;
@@ -1377,8 +1381,8 @@ function BinaryCmp(const p1, p2: Pointer; len: Integer): Integer;
 {$IFNDEF WIN64}inline; {$ENDIF}
 // 下面的函数只能Unicode版本，没有Ansi和UTF-8版本，如果需要，再加入
 // 分解名称-值对
-function NameOfW(const S: QStringW; ASpliter: QCharW): QStringW;
-function ValueOfW(const S: QStringW; ASpliter: QCharW): QStringW;
+function NameOfW(const S: QStringW; ASpliter: QCharW;AEmptyIfMissed:Boolean=false): QStringW;
+function ValueOfW(const S: QStringW; ASpliter: QCharW;AEmptyIfMissed:Boolean=false): QStringW;
 function IndexOfNameW(AList: TStrings; const AName: QStringW;
   ASpliter: QCharW): Integer;
 function IndexOfValueW(AList: TStrings; const AValue: QStringW;
@@ -1398,11 +1402,11 @@ function JavaEscape(const S: QStringW; ADoEscape: Boolean): QStringW;
 function JavaUnescape(const S: QStringW; AStrictEscape: Boolean): QStringW;
 function HtmlTrimText(const S: QStringW): QStringW;
 function UrlEncode(const ABytes: PByte; l: Integer; ASpacesAsPlus: Boolean;
-  AEncodePercent: Boolean = False): QStringW; overload;
+  AEncodePercent: Boolean = false): QStringW; overload;
 function UrlEncode(const ABytes: TBytes; ASpacesAsPlus: Boolean;
-  AEncodePercent: Boolean = False): QStringW; overload;
+  AEncodePercent: Boolean = false): QStringW; overload;
 function UrlEncode(const S: QStringW; ASpacesAsPlus: Boolean;
-  AUtf8Encode: Boolean = True; AEncodePercent: Boolean = False)
+  AUtf8Encode: Boolean = True; AEncodePercent: Boolean = false)
   : QStringW; overload;
 function UrlDecode(const AUrl: QStringW;
   var AScheme, AHost, ADocument: QStringW; var APort: Word; AParams: TStrings;
@@ -1421,6 +1425,10 @@ function ParseNumeric(var S: PQCharW; var ANum: Extended; var AIsFloat: Boolean)
   : Boolean; overload;
 function ParseDateTime(S: PWideChar; var AResult: TDateTime): Boolean;
 function ParseWebTime(p: PWideChar; var AResult: TDateTime): Boolean;
+function DateTimeFromString(AStr: String; var AResult: TDateTime;
+  AFormat: String): Boolean; overload;
+function DateTimeFromString(Str: String; AFormat: String; ADef: TDateTime = 0)
+  : TDateTime; overload;
 function EncodeWebTime(ATime: TDateTime): String;
 function RollupSize(ASize: Int64): QStringW;
 function RollupTime(ASeconds: Int64; AHideZero: Boolean = True): QStringW;
@@ -1522,10 +1530,15 @@ function MethodEqual(const Left, Right: TMethod): Boolean; inline;
 /// 3.如果ARel是一个相对路径，则以ABase的路径为基准，加上ARel形成新路径
 /// </returns>
 function UrlMerge(const ABase, ARel: QStringW): QStringW;
-procedure Debugout(const AMsg: String); overload;
-procedure Debugout(const AFmt: String; const AParams: array of const); overload;
+procedure Debugout(const AMsg: QStringW); overload;
+procedure Debugout(const AFmt: QStringW;
+  const AParams: array of const); overload;
 function RandomString(ALen: Cardinal; ACharTypes: TRandCharTypes = [])
   : QStringW;
+function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW;
+  AIgnoreCase: Boolean; var ASwitchChar: QCharW): QStringW; overload;
+function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW = ':')
+  : QStringW; overload;
 
 var
   JavaFormatUtf8: Boolean;
@@ -2639,12 +2652,12 @@ begin
 end;
 
 function StrInW(const S: QStringW; Values: TStrings;
-  AIgnoreCase: Boolean = False): Integer;
+  AIgnoreCase: Boolean = false): Integer;
 var
   I: Integer;
 begin
   Result := -1;
-  for I := 0 to Values.Count - 1 do
+  for I := 0 to Values.count - 1 do
   begin
     if (Values[I] = S) or (AIgnoreCase and (CompareText(Values[I], S) = 0)) then
     begin
@@ -2821,9 +2834,13 @@ begin
     Result := S;
 end;
 
-function SQLQuoted(const S: QStringW): QStringW;
+function SQLQuoted(const S: QStringW; ADoEscape: Boolean): QStringW;
 begin
-  Result := QuotedStrW(S);
+  if ADoEscape then
+    Result := QuotedStrW(StringReplaceW(S, '\', '\\',
+      [rfReplaceAll]))
+  else
+    Result := QuotedStrW(S);
 end;
 
 function DequotedStrA(const S: QStringA; const AQuoter: QCharA): QStringA;
@@ -3876,16 +3893,16 @@ begin
   end;
 end;
 
-function StrStrX(s1, s2: PQCharW; l1, l2: Integer;
+function StrStrX(s1, s2: PQCharW; L1, L2: Integer;
   AIgnoreCase: Boolean): PQCharW;
 var
   p1, p2: PQCharW;
 begin
   Result := nil;
-  while (s1^ <> #0) and (l1 >= l2) do
+  while (s1^ <> #0) and (L1 >= L2) do
   begin
     if (s1^ = s2^) or
-      (AIgnoreCase and (QString.CharUpperW(s1^) = QString.CharUpperW(s2^))) then
+      (AIgnoreCase and (qstring.CharUpperW(s1^) = qstring.CharUpperW(s2^))) then
     begin
       p1 := s1;
       p2 := s2;
@@ -3898,7 +3915,7 @@ begin
           Exit;
         end
         else if (p1^ = p2^) or
-          (AIgnoreCase and (QString.CharUpperW(p1^) = QString.CharUpperW(p2^)))
+          (AIgnoreCase and (qstring.CharUpperW(p1^) = qstring.CharUpperW(p2^)))
         then
           continue
         else
@@ -3909,7 +3926,7 @@ begin
   end;
 end;
 
-function StrStrRX(s1, s2: PQCharW; l1, l2: Integer;
+function StrStrRX(s1, s2: PQCharW; L1, L2: Integer;
   AIgnoreCase: Boolean): PQCharW;
 var
   ps1, ps2, p1, p2: PQCharW;
@@ -3917,12 +3934,12 @@ begin
   Result := nil;
   ps1 := s1 - 1;
   ps2 := s2 - 1;
-  s1 := s1 - l1;
-  s2 := s2 - l2;
-  while (ps1 >= s1) and (l1 >= l2) do
+  s1 := s1 - L1;
+  s2 := s2 - L2;
+  while (ps1 >= s1) and (L1 >= L2) do
   begin
     if (ps1^ = ps2^) or
-      (AIgnoreCase and (QString.CharUpperW(ps1^) = QString.CharUpperW(ps2^)))
+      (AIgnoreCase and (qstring.CharUpperW(ps1^) = qstring.CharUpperW(ps2^)))
     then
     begin
       p1 := ps1;
@@ -3932,7 +3949,7 @@ begin
         Dec(p1);
         Dec(p2);
         if (p1^ = p2^) or
-          (AIgnoreCase and (QString.CharUpperW(p1^) = QString.CharUpperW(p2^)))
+          (AIgnoreCase and (qstring.CharUpperW(p1^) = qstring.CharUpperW(p2^)))
         then
           continue
         else
@@ -6765,7 +6782,7 @@ var
 
 begin
   ps := S;
-  AIsFloat := False;
+  AIsFloat := false;
   if (S^ = '$') or (S^ = '&') then
   begin
     Inc(S);
@@ -6791,15 +6808,17 @@ begin
   Result := ParseNumeric(S, ANum, AIsFloat);
 end;
 
-function NameOfW(const S: QStringW; ASpliter: QCharW): QStringW;
+function NameOfW(const S: QStringW; ASpliter: QCharW;AEmptyIfMissed:Boolean): QStringW;
 var
   p: PQCharW;
 begin
   p := PQCharW(S);
-  Result := DecodeTokenW(p, [ASpliter], WideChar(0), false);
+  Result := DecodeTokenW(p, [ASpliter], WideChar(0), false,false);
+  if (p^=#0) and AEmptyIfMissed then
+    Result:='';
 end;
 
-function ValueOfW(const S: QStringW; ASpliter: QCharW): QStringW;
+function ValueOfW(const S: QStringW; ASpliter: QCharW;AEmptyIfMissed:Boolean): QStringW;
 var
   p: PQCharW;
   l: Integer;
@@ -6818,6 +6837,8 @@ begin
     DecodeTokenW(p, [ASpliter], WideChar(0), false);
     if p^ <> #0 then
       Result := p
+    else if AEmptyIfMissed then
+      SetLength(Result,0)
     else
       Result := S;
   end;
@@ -7698,9 +7719,14 @@ begin
       Inc(ps, 3)
     else
     begin
-      if (ps^ < 32) or (ps^ > 127) or (SafeChars[ps^] = 0) then
-        Inc(c);
-      Inc(ps);
+      if (ps^ = 32) and ASpacesAsPlus then
+        Inc(ps)
+      else
+      begin
+        if (ps^ < 32) or (ps^ > 127) or (SafeChars[ps^] = 0) then
+          Inc(c);
+        Inc(ps);
+      end;
     end;
   end;
   SetLength(Result, l + (c shl 1));
@@ -7792,7 +7818,7 @@ var
     ADoUnescape := false;
     while ps^ <> #0 do
     begin
-      if ps^ = '%' then
+      if (ps^ = '%') or (ps^='+') then
       begin
         ADoUnescape := True;
         Break;
@@ -7831,6 +7857,11 @@ var
             Result := false;
             Break;
           end;
+        end
+        else if p^='+' then
+        begin
+          pd^:=32;
+          Inc(ps);
         end
         else
         begin
@@ -7923,7 +7954,216 @@ begin
   end;
 end;
 
-// 下面是一些辅助函数
+function DateTimeFromString(AStr: String; var AResult: TDateTime;
+  AFormat: String): Boolean; overload;
+// 日期时间格式
+  function DecodeTagValue(var pf, ps: PWideChar; cl, cu: WideChar;
+    var AValue, ACount: Integer; AMaxOnOne: Integer): Boolean;
+  begin
+    AValue := 0;
+    ACount := 0;
+    Result := True;
+    while (pf^ = cl) or (pf^ = cu) do
+    begin
+      if (ps^ >= '0') and (ps^ <= '9') then
+      begin
+        AValue := AValue * 10 + Ord(ps^) - Ord('0');
+        Inc(ps);
+        Inc(pf);
+        Inc(ACount);
+      end
+      else
+      begin
+        Result := false;
+        Exit;
+      end;
+    end;
+    if (ACount = 1) and (ACount < AMaxOnOne) then
+    begin
+      while (ACount < AMaxOnOne) and (ps^ >= '0') and (ps^ <= '9') do
+      begin
+        AValue := AValue * 10 + Ord(ps^) - Ord('0');
+        Inc(ACount);
+        Inc(ps);
+      end;
+    end;
+  end;
+  function DecodeAsFormat(fmt: String): Boolean;
+  var
+    pf, ps, pl: PWideChar;
+    c, Y, M, d, H, N, S, MS: Integer;
+    ADate, ATime: TDateTime;
+  begin
+    pf := PWideChar(fmt);
+    ps := PWideChar(AStr);
+    c := 0;
+    Y := 0;
+    M := 0;
+    H := 0;
+    N := 0;
+    S := 0;
+    MS := 0;
+    Result := True;
+    while (pf^ <> #0) and Result do
+    begin
+      if (pf^ = 'y') or (pf^ = 'Y') then // 到了年份的部分
+      begin
+        Result := DecodeTagValue(pf, ps, 'y', 'Y', Y, c, 4) and (c <> 3);
+        if Result then
+        begin
+          if c = 2 then // 两位年时
+          begin
+            if Y < 50 then
+              Y := 2000 + Y
+            else
+              Y := 1900 + Y;
+          end
+        end;
+      end
+      else if (pf^ = 'm') or (pf^ = 'M') then
+        Result := DecodeTagValue(pf, ps, 'm', 'M', M, c, 2)
+      else if (pf^ = 'd') or (pf^ = 'D') then
+        Result := DecodeTagValue(pf, ps, 'd', 'D', d, c, 2)
+      else if (pf^ = 'h') or (pf^ = 'H') then
+        Result := DecodeTagValue(pf, ps, 'h', 'H', H, c, 2)
+      else if (pf^ = 'n') or (pf^ = 'N') then
+        Result := DecodeTagValue(pf, ps, 'n', 'N', N, c, 2)
+      else if (pf^ = 's') or (pf^ = 'S') then
+        Result := DecodeTagValue(pf, ps, 's', 'S', S, c, 2)
+      else if (pf^ = 'z') or (pf^ = 'Z') then
+        Result := DecodeTagValue(pf, ps, 'z', 'Z', MS, c, 3)
+      else if (pf^ = '"') or (pf = '''') then
+      begin
+        pl := pf;
+        Inc(pf);
+        while ps^ = pf^ do
+        begin
+          Inc(pf);
+          Inc(ps);
+        end;
+        if pf^ = pl^ then
+          Inc(pf);
+      end
+      else if pf^ = ' ' then
+      begin
+        Inc(pf);
+        while ps^ = ' ' do
+          Inc(ps);
+      end
+      else if pf^ = ps^ then
+      begin
+        Inc(pf);
+        Inc(ps);
+      end
+      else
+        Result := false;
+    end;
+    Result := Result and (ps^ = #0);
+    if Result then
+    begin
+
+      if Y > 0 then
+        Result := TryEncodeDate(Y, M, d, ADate)
+      else
+        ADate := 0;
+      Result := Result and TryEncodeTime(H, N, S, MS, ATime);
+      if Result then
+        AResult := ADate + ATime;
+    end;
+  end;
+  procedure SmartDetect;
+  var
+    V: Int64;
+    l: Integer;
+    ps, p: PWideChar;
+    AFmt: String;
+    I: Integer;
+  const
+    KnownFormats: array [0 .. 15] of String = ('y-m-d h:n:s.z', 'y-m-d h:n:s',
+      'y-m-d', 'h:n:s.z', 'h:n:s', 'y-m-d"T"h:n:s.z', 'y-m-d"T"h:n:s',
+      'd/m/y h:n:s.z', 'd/m/y h:n:s', 'd/m/y', 'm/d/y h:n:s.z', 'm/d/y h:n:s',
+      'm/d/y', 'y/m/d h:n:s.z', 'y/m/d h:n:s', 'y/m/d');
+  begin
+    ps := PWideChar(AStr);
+    l := Length(AStr);
+    Result := True;
+    if (l = 5) and DecodeAsFormat('h:n:s') then
+      Exit
+    else if l = 6 then
+    begin
+      if TryStrToInt64(AStr, V) then
+      begin
+        if V > 235959 then // 大于这个的肯定不是时间，那么可能是yymmdd
+        begin
+          if not DecodeAsFormat('yymmdd') then
+            Result := false;
+        end
+        else if ((V mod 10000) > 1231) or ((V mod 100) > 31) then
+        // 月份+日期组合不可能大于1231
+        begin
+          if not DecodeAsFormat('hhnnss') then
+            Result := false;
+        end
+        else if not DecodeAsFormat('yymmdd') then
+          Result := false;
+      end;
+    end
+    // 检测连续的数字格式
+    else if (l = 8) and (DecodeAsFormat('hh:nn:ss') or
+      DecodeAsFormat('yy-mm-dd') or DecodeAsFormat('yyyymmdd')) then
+      Exit
+    else if (l = 9) and DecodeAsFormat('hhnnsszzz') then
+      Exit
+    else if l = 10 then // yyyy-mm-dd yyyy/mm/dd mm/dd/yyyy dd.mm.yyyy dd/mm/yy
+    begin
+      p := ps;
+      Inc(p, 2);
+      if (p^ < '0') or (p^ > '9') then // mm?dd?yyyy or dd?mm?yyyy
+      begin
+        // dd mm yyyy 的国家居多，优先识别为这种
+        if DecodeAsFormat('dd' + p^ + 'mm' + p^ + 'yyyy') or
+          DecodeAsFormat('mm' + p^ + 'dd' + p^ + 'yyyy') then
+          Exit;
+      end
+      else if DecodeAsFormat('yyyy-mm-dd') then // 其它格式都是100移动卡
+        Exit;
+    end
+    else if (l = 12) and (DecodeAsFormat('yymmddhhnnss') or
+      DecodeAsFormat('hh:nn:ss.zzz')) then
+      Exit
+    else if (l = 14) and DecodeAsFormat('yyyymmddhhnnss') then
+      Exit
+    else if (l = 17) and DecodeAsFormat('yyyymmddhhnnsszzz') then
+      Exit
+    else if (l = 20) and (DecodeAsFormat('yyyy-mm-dd hh:nn:ss') or
+      DecodeAsFormat('yyyy-mm-dd"T"hh:nn:ss')) then
+      Exit
+    else if (l = 23) and (DecodeAsFormat('yyyy-mm-dd hh:nn:ss.zzz') or
+      DecodeAsFormat('yyyy-mm-dd"T"hh:nn:ss.zzz')) then
+      Exit;
+    for I := Low(KnownFormats) to High(KnownFormats) do
+    begin
+      if DecodeAsFormat(KnownFormats[I]) then
+        Exit;
+    end;
+    if not ParseWebTime(ps, AResult) then
+      Result := false;
+  end;
+
+begin
+  if Length(AFormat) > 0 then
+    Result := DecodeAsFormat(AFormat)
+  else // 检测日期时间类型格式
+    SmartDetect;
+end;
+
+function DateTimeFromString(Str: String; AFormat: String; ADef: TDateTime)
+  : TDateTime; overload;
+begin
+  if not DateTimeFromString(Str, Result, AFormat) then
+    Result := ADef;
+end;
+
 function ParseDateTime(S: PWideChar; var AResult: TDateTime): Boolean;
 var
   Y, M, d, H, N, Sec, MS: Cardinal;
@@ -8146,7 +8386,7 @@ end;
 function ParseWebTime(p: PWideChar; var AResult: TDateTime): Boolean;
 var
   I: Integer;
-  Y, M, d, H, N, S: Integer;
+  Y, M, d, H, N, S, TZ: Integer;
   AFound: Boolean;
 const
   MonthNames: array [0 .. 11] of QStringW = ('Jan', 'Feb', 'Mar', 'Apr', 'May',
@@ -8162,7 +8402,7 @@ begin
   AFound := false;
   for I := 0 to High(WeekNames) do
   begin
-    if StartWithW(p, PQCharW(WeekNames[I]), true) then
+    if StartWithW(p, PQCharW(WeekNames[I]), True) then
     begin
       Inc(p, Length(WeekNames[I]));
       SkipSpaceW(p);
@@ -8170,12 +8410,13 @@ begin
       Break;
     end;
   end;
-  if (not AFound) or (p^ <> Comma) then
-  begin
-    Result := False;
-    Exit;
-  end;
-  Inc(p);
+  // if (not AFound) or (p^ <> Comma) then
+  // begin
+  // Result := false;
+  // Exit;
+  // end;
+  if p^ = Comma then
+    Inc(p);
   SkipSpaceW(p);
   d := 0;
   // 日期
@@ -8184,11 +8425,13 @@ begin
     d := d * 10 + Ord(p^) - Ord('0');
     Inc(p);
   end;
-  if (not IsSpaceW(p)) or (d < 1) or (d > 31) then
+  if (not(IsSpaceW(p) or (p^ = '-'))) or (d < 1) or (d > 31) then
   begin
     Result := false;
     Exit;
   end;
+  if p^ = '-' then
+    Inc(p);
   SkipSpaceW(p);
   M := 0;
   for I := 0 to 11 do
@@ -8200,11 +8443,13 @@ begin
       Break;
     end;
   end;
-  if (not IsSpaceW(p)) or (M < 1) or (M > 12) then
+  if (not(IsSpaceW(p) or (p^ = '-'))) or (M < 1) or (M > 12) then
   begin
     Result := false;
     Exit;
   end;
+  if p^ = '-' then
+    Inc(p);
   SkipSpaceW(p);
   Y := 0;
   while (p^ >= '0') and (p^ <= '9') do
@@ -8212,46 +8457,86 @@ begin
     Y := Y * 10 + Ord(p^) - Ord('0');
     Inc(p);
   end;
-  if not IsSpaceW(p) then
+  if not(IsSpaceW(p) or (p^ = '-')) then
   begin
-    Result := False;
+    Result := false;
     Exit;
   end;
   SkipSpaceW(p);
-  H := 0;
-  while (p^ >= '0') and (p^ <= '9') do
+  if p^ <> #0 then
   begin
-    H := H * 10 + Ord(p^) - Ord('0');
+    H := 0;
+    while (p^ >= '0') and (p^ <= '9') do
+    begin
+      H := H * 10 + Ord(p^) - Ord('0');
+      Inc(p);
+    end;
+    if p^ <> ':' then
+    begin
+      Result := false;
+      Exit;
+    end;
     Inc(p);
-  end;
-  if p^ <> ':' then
-  begin
-    Result := False;
-    Exit;
-  end;
-  Inc(p);
-  N := 0;
-  while (p^ >= '0') and (p^ <= '9') do
-  begin
-    N := N * 10 + Ord(p^) - Ord('0');
+    N := 0;
+    while (p^ >= '0') and (p^ <= '9') do
+    begin
+      N := N * 10 + Ord(p^) - Ord('0');
+      Inc(p);
+    end;
+    if p^ <> ':' then
+    begin
+      Result := false;
+      Exit;
+    end;
     Inc(p);
-  end;
-  if p^ <> ':' then
+    S := 0;
+    while (p^ >= '0') and (p^ <= '9') do
+    begin
+      S := S * 10 + Ord(p^) - Ord('0');
+      Inc(p);
+    end;
+    SkipSpaceW(p);
+    if StartWithW(p, 'GMT', True) then
+    begin
+      Inc(p, 3);
+      TZ := 0;
+      if p^ = '-' then
+      begin
+        Inc(p);
+        I := -1;
+      end
+      else
+      begin
+        if p^ = '+' then
+          Inc(p);
+        I := 1;
+      end;
+      SkipSpaceW(p);
+      while (p^ >= '0') and (p^ <= '9') do
+      begin
+        TZ := TZ * 10 + Ord(p^) - Ord('0');
+        Inc(p);
+      end;
+      TZ := TZ * 60;
+      if p^ = ':' then
+        Inc(p);
+      while (p^ >= '0') and (p^ <= '9') do
+      begin
+        TZ := TZ * 10 + Ord(p^) - Ord('0');
+        Inc(p);
+      end;
+    end;
+  end
+  else
   begin
-    Result := False;
-    Exit;
+    H := 0;
+    N := 0;
+    S := 0;
+    TZ := 0;
   end;
-  Inc(p);
-  S := 0;
-  while (p^ >= '0') and (p^ <= '9') do
-  begin
-    S := S * 10 + Ord(p^) - Ord('0');
-    Inc(p);
-  end;
-  SkipSpaceW(p);
-  if StartWithW(p, 'GMT', true) then
-    Inc(p, 3);
   Result := TryEncodeDateTime(Y, M, d, H, N, S, 0, AResult);
+  if Result and (TZ <> 0) then
+    AResult := IncMinute(AResult, -TZ);
 end;
 
 function EncodeWebTime(ATime: TDateTime): String;
@@ -8851,7 +9136,7 @@ begin
   if p >= FStart then
     Result := StrNCmpW(p, PQCharW(S), AIgnoreCase, Length(S)) = 0
   else
-    Result := False;
+    Result := false;
 end;
 
 constructor TQStringCatHelperW.Create;
@@ -9424,19 +9709,19 @@ function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Variant)
   : TQBytesCatHelper;
 begin
   // ??这是一个有问题的实现，临时先这样，回头抽空改
-  Result := Insert(AIndex, @V, sizeof(Variant));
+  Result := Insert(AIndex, @V, SizeOf(Variant));
 end;
 
 function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: TGuid)
   : TQBytesCatHelper;
 begin
-  Result := Insert(AIndex, @V, sizeof(V));
+  Result := Insert(AIndex, @V, SizeOf(V));
 end;
 
 function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Double)
   : TQBytesCatHelper;
 begin
-  Result := Insert(AIndex, @V, sizeof(V));
+  Result := Insert(AIndex, @V, SizeOf(V));
 end;
 
 function TQBytesCatHelper.Insert(AIndex: Cardinal; const S: QStringW)
@@ -12033,10 +12318,10 @@ begin
   end;
 end;
 
-procedure Debugout(const AMsg: String);
+procedure Debugout(const AMsg: QStringW);
 begin
 {$IFDEF MSWINDOWS}
-  OutputDebugString(PChar(AMsg));
+  OutputDebugStringW(PQCharW(AMsg));
 {$ENDIF}
 {$IFDEF ANDROID}
   __android_log_write(ANDROID_LOG_DEBUG, 'debug',
@@ -12050,7 +12335,7 @@ begin
 {$ENDIF}
 end;
 
-procedure Debugout(const AFmt: String; const AParams: array of const);
+procedure Debugout(const AFmt: QStringW; const AParams: array of const);
 begin
   Debugout(Format(AFmt, AParams));
 end;
@@ -12060,11 +12345,11 @@ var
   p: PQCharW;
   K: Integer;
   V: TRandCharType;
-  C: QCharW;
+  c: QCharW;
 const
   SpaceChars: array [0 .. 3] of QCharW = (#9, #10, #13, #32);
 begin
-  if ACharTypes = [] then//如果未设置，则默认为大小写字母
+  if ACharTypes = [] then // 如果未设置，则默认为大小写字母
     ACharTypes := [rctAlpha];
   SetLength(Result, ALen);
   p := PQCharW(Result);
@@ -12107,6 +12392,41 @@ begin
       Inc(p);
     end;
   end;
+end;
+
+function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW;
+  AIgnoreCase: Boolean; var ASwitchChar: QCharW): QStringW;
+var
+  I: Integer;
+  S, SW: QStringW;
+  ps, p: PQCharW;
+begin
+  SW := ASwitch + ANameValueSperator;
+  for I := 1 to ParamCount do
+  begin
+    S := ParamStr(I);
+    ps := PQCharW(S);
+    p := ps;
+    SkipCharW(p, '+-/');
+    if StartWithW(PQCharW(p), PQCharW(SW), AIgnoreCase) then
+    begin
+      if p <> ps then
+        ASwitchChar := ps^
+      else
+        ASwitchChar := #0;
+      Result := ValueOfW(S, ANameValueSperator);
+      Exit;
+    end
+  end;
+  Result := '';
+end;
+
+function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW)
+  : QStringW;
+var
+  c: QCharW;
+begin
+  Result := FindSwitchValue(ASwitch, ANameValueSperator, True, c);
 end;
 
 { TQSingleton<T> }

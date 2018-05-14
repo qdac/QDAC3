@@ -439,7 +439,7 @@ uses
 {$IFDEF MSWINDOWS}, Windows, Messages, TlHelp32, Activex{$ENDIF}
 {$ENDIF}
 {$IFDEF POSIX}, Posix.Base, Posix.Unistd, Posix.Signal, Posix.Pthread,
-  Posix.SysTypes{$ENDIF}
+  Posix.Sched, Posix.ErrNo, Posix.SysTypes{$ENDIF}
     , qstring, qrbtree, qtimetypes {$IFDEF ANDROID}, Androidapi.AppGlue,
   Androidapi.Looper, Androidapi.NativeActivity, fmx.Helpers.Android{$ENDIF};
 {$HPPEMIT '#pragma link "qworker"'}
@@ -977,6 +977,7 @@ type
     FThreadName: String;
 {$ENDIF}
     procedure Execute; override;
+    procedure AfterExecute;
     procedure FireInMainThread;
     procedure DoJob(AJob: PQJob);
     function GetExtObject: TQWorkerExt;
@@ -989,6 +990,7 @@ type
     constructor Create(AOwner: TQWorkers); overload;
     destructor Destroy; override;
     procedure ComNeeded(AInitFlags: Cardinal = 0);
+    procedure ForceQuit;
     /// <summary>判断当前是否处于长时间作业处理过程中</summary>
     property InLongtimeJob: Boolean index WORKER_PROCESSLONG read GetFlags;
     /// <summary>判断当前是否空闲</summary>
@@ -1097,6 +1099,7 @@ type
     FSignalQueue: TQSignalQueue; // 信号作业调度管理器
     FOnCustomFreeData: TQCustomFreeDataEvent; // 自定义的释放数据回调函数
     FWorkerExtClass: TQWorkerExtClass;
+    FTerminateEvent: TEvent; // 退出时等待工作者结束事件
 {$IFDEF MSWINDOWS}
     FMainWorker: HWND; // 用于接收主线程作业的窗口（目前仅调试模式下用）
     procedure DoMainThreadWork(var AMsg: TMessage); // FMainWorker 的消息处理函数
@@ -1634,7 +1637,7 @@ type
     FPosted: Integer; // 已经提交给QWorker执行的数量
     FTag: Pointer;
     FCanceled: Integer;
-    FWaitingCount:Integer;
+    FWaitingCount: Integer;
     FRunningWorkers, FMaxWorkers: Integer;
     FFreeAfterDone: Boolean;
     function GetCount: Integer;
@@ -1864,7 +1867,7 @@ function JobPoolCount: NativeInt;
 function JobPoolPrint: QStringW;
 /// <summary>清除指定作业状态的状态信息</summary>
 /// <param name="AState">作业状态</param>
-procedure ClearJobState(var AState: TQJobState); inline;
+procedure ClearJobState(var AState: TQJobState);  inline;
 /// <summary>清除指定作业状态数组的状态信息</summary>
 /// <param name="AStates">作业状态数组</param>
 procedure ClearJobStates(var AStates: TQJobStateArray);
@@ -1916,6 +1919,8 @@ type
   TGetTickCount64 = function: Int64;
   TGetSystemTimes = function(var lpIdleTime, lpKernelTime,
     lpUserTime: TFileTime): BOOL; stdcall;
+  TOpenThread = function(dwDesiredAccess: DWORD; bInheritHandle: Boolean;
+    dwThreadId: DWORD): THandle; stdcall;
 {$ENDIF MSWINDOWS}
 
   TJobPool = class
@@ -1964,6 +1969,7 @@ var
 {$IFDEF MSWINDOWS}
   GetTickCount64: TGetTickCount64;
   WinGetSystemTimes: TGetSystemTimes;
+  OpenThread: TOpenThread;
   _PerfFreq: Int64;
   _StartCounter: Int64;
 {$ELSE}
@@ -1987,69 +1993,36 @@ function ThreadExists(AThreadId: TThreadId; AProcessId: DWORD): Boolean;
 {$IFDEF MSWINDOWS}
   function WinThreadExists: Boolean;
   var
-    ASnapshot: THandle;
-    AEntry: TThreadEntry32;
+    AHandle: THandle;
+    AExitCode: DWORD;
+  const
+    THREAD_QUERY_INFORMATION = $0040;
+    THREAD_SUSPEND_RESUME = $0002;
   begin
-    Result := false;
-    ASnapshot := CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
-    if ASnapshot = INVALID_HANDLE_VALUE then
-      Exit;
-    try
-      AEntry.dwSize := SizeOf(TThreadEntry32);
-      if Thread32First(ASnapshot, AEntry) then
-      begin
-        if AProcessId = 0 then
-          AProcessId := GetCurrentProcessId;
-        repeat
-          if ((AEntry.th32OwnerProcessID = AProcessId) or
-            (AProcessId = $FFFFFFFF)) and (AEntry.th32ThreadID = AThreadId) then
-          begin
-            Result := True;
-            Break;
-          end;
-        until not Thread32Next(ASnapshot, AEntry);
-      end;
-    finally
-      CloseHandle(ASnapshot);
+    AHandle := OpenThread(THREAD_SUSPEND_RESUME, true, AThreadId);
+    Result := AHandle <> 0;
+    if Result then
+    begin
+      Result := SuspendThread(AHandle) <> Cardinal(-1); // 线程如果已经中止,则不能控制它暂停
+      if Result then // 如果存在,则恢复执行(具体则取决于计数)
+        ResumeThread(AHandle);
+      CloseHandle(AHandle);
     end;
   end;
 {$ENDIF}
 {$IFDEF POSIX}
-// Linux的进程与其线程之间的关系存在于/proc/进程ID/task目录下，每一个为一个线程
-  function IsChildThread: Boolean;
+  function PosixThreadExists: Boolean;
   var
-    sr: TSearchRec;
-    AId: Integer;
+    P: Integer;
+    J: sched_param;
   begin
-    Result := false;
-    if FindFirst('/proc/' + IntToStr(AProcessId) + '/task/*', faAnyFile, sr) = 0
-    then
-    begin
-      try
-        repeat
-          if TryStrToInt(sr.Name, AId) then
-          begin
-            if TThreadId(AId) = AThreadId then
-              Result := True;
-          end;
-        until FindNext(sr) <> 0;
-      finally
-        FindClose(sr);
-      end;
-    end;
+    Result := pthread_getschedparam(pthread_t(AThreadId), P, J) <> ESRCH;
   end;
 {$ENDIF}
 
 begin
 {$IFDEF POSIX}
-  Result := pthread_kill(pthread_t(AThreadId), 0) = 0;
-  if Result and (AProcessId <> $FFFFFFFF) then
-  begin
-    /// 目前未找到合适的方法得到真正的线程ID，pthread_self得到的是一个指针
-    { if AProcessId = 0 then
-      AProcessId := getpid;
-      Result :=IsChildThread; }
-  end;
+  Result := PosixThreadExists;
 {$ELSE}
   Result := WinThreadExists;
 {$ENDIF}
@@ -3241,6 +3214,52 @@ end;
 
 { TQWorker }
 
+procedure TQWorker.AfterExecute;
+begin
+  Inc(FProcessed);
+  FActiveJob.DoneTime := GetTimestamp;
+  if Assigned(FOwner.FAfterExecute) then
+  begin
+    try
+      FOwner.FAfterExecute(FActiveJob);
+    except
+
+    end;
+  end;
+  SetFlags(WORKER_CLEANING, True);
+{$IFDEF DEBUGOUT}
+  OutputDebugString(PChar(FThreadName + ':作业完成，执行清理过程'));
+{$ENDIF}
+  FActiveJob.Worker := nil;
+  if not FActiveJob.Runonce then
+  begin
+    if FActiveJob.IsByPlan then
+      FOwner.AfterPlanRun(FActiveJob, GetTimestamp - FActiveJob.StartTime)
+    else
+      FOwner.FRepeatJobs.AfterJobRun(FActiveJob,
+        GetTimestamp - FActiveJob.StartTime);
+    FActiveJob.Data := nil;
+  end
+  else
+  begin
+    if FActiveJob.IsSignalWakeup then
+      FOwner.SignalWorkDone(FActiveJob, GetTimestamp - FActiveJob.StartTime)
+    else if FActiveJob.IsLongtimeJob then
+      AtomicDecrement(FOwner.FLongTimeWorkers)
+    else if FActiveJob.IsGrouped then
+      FActiveJobGroup.DoJobExecuted(FActiveJob);
+  end;
+  if Assigned(FActiveJob) then
+    FOwner.FreeJob(FActiveJob);
+  FActiveJobProc.Code := nil;
+  FActiveJobProc.Data := nil;
+  FActiveJobSource := nil;
+  FActiveJobFlags := 0;
+  FActiveJobGroup := nil;
+  FTerminatingJob := nil;
+  FFlags := FFlags and (not WORKER_EXECUTING);
+end;
+
 procedure TQWorker.ComNeeded(AInitFlags: Cardinal);
 begin
 {$IFDEF MSWINDOWS}
@@ -3425,50 +3444,7 @@ begin
                 if Assigned(FOwner.FOnError) then
                   FOwner.FOnError(FActiveJob, E, jesExecute);
             end;
-            Inc(FProcessed);
-            FActiveJob.DoneTime := GetTimestamp;
-            if Assigned(FOwner.FAfterExecute) then
-            begin
-              try
-                FOwner.FAfterExecute(FActiveJob);
-              except
-
-              end;
-            end;
-            SetFlags(WORKER_CLEANING, True);
-{$IFDEF DEBUGOUT}
-            OutputDebugString(PChar(FThreadName + ':作业完成，执行清理过程'));
-{$ENDIF}
-            FActiveJob.Worker := nil;
-            if not FActiveJob.Runonce then
-            begin
-              if FActiveJob.IsByPlan then
-                FOwner.AfterPlanRun(FActiveJob,
-                  GetTimestamp - FActiveJob.StartTime)
-              else
-                FOwner.FRepeatJobs.AfterJobRun(FActiveJob,
-                  GetTimestamp - FActiveJob.StartTime);
-              FActiveJob.Data := nil;
-            end
-            else
-            begin
-              if FActiveJob.IsSignalWakeup then
-                FOwner.SignalWorkDone(FActiveJob,
-                  GetTimestamp - FActiveJob.StartTime)
-              else if FActiveJob.IsLongtimeJob then
-                AtomicDecrement(FOwner.FLongTimeWorkers)
-              else if FActiveJob.IsGrouped then
-                FActiveJobGroup.DoJobExecuted(FActiveJob);
-            end;
-            if Assigned(FActiveJob) then
-              FOwner.FreeJob(FActiveJob);
-            FActiveJobProc.Code := nil;
-            FActiveJobProc.Data := nil;
-            FActiveJobSource := nil;
-            FActiveJobFlags := 0;
-            FActiveJobGroup := nil;
-            FTerminatingJob := nil;
-            FFlags := FFlags and (not WORKER_EXECUTING);
+            AfterExecute;
           end
           else
             FFlags := FFlags and (not WORKER_LOOKUP);
@@ -3506,6 +3482,31 @@ end;
 procedure TQWorker.FireInMainThread;
 begin
   DoJob(FActiveJob);
+end;
+
+procedure TQWorker.ForceQuit;
+var
+  I: Integer;
+  AThread: TThread;
+begin
+  // 警告：此函数会强制结束当前工作者，当前工作者的作业实际上被强制停止，可能会产生内存泄露
+  AThread := Self;
+  if ThreadExists(AThread.ThreadId) then
+    AThread.Suspended := True;
+  AThread.Terminate;
+  TThread.Synchronize(nil, DoTerminate);
+{$IFDEF MSWINDOWS}
+  TerminateThread(Handle, $FFFFFFFF);
+{$ENDIF}
+  FOwner.WorkerTerminate(Self);
+  if Assigned(FActiveJob) then
+  begin
+    AtomicDecrement(FOwner.FBusyCount);
+    if not IsCleaning then
+      AfterExecute;
+  end;
+  if FreeOnTerminate then
+    FreeAndNil(AThread);
 end;
 
 function TQWorker.GetExtObject: TQWorkerExt;
@@ -3928,35 +3929,77 @@ var
   end;
   procedure SetEvents;
   var
-    I: Integer;
+    I, C: Integer;
   begin
+    C := 0;
     FLocker.Enter;
     try
       FRepeatJobs.FFirstFireTime := 0;
       for I := 0 to FWorkerCount - 1 do
-        FWorkers[I].FEvent.SetEvent;
+      begin
+        if ThreadExists(FWorkers[I].ThreadId) then
+        // 在 DLL 中，线程可能被 Windows 直接结束掉
+        begin
+          FWorkers[I].FEvent.SetEvent;
+          Inc(C);
+        end;
+      end;
     finally
       FLocker.Leave;
+      if C = 0 then
+        FTerminateEvent.SetEvent;
     end;
   end;
 
+{$IFDEF MSWINDOWS}
+  procedure ProcessMainThreadJobs;
+  var
+    AMsg: MSG;
+    ACopy: TMessage;
+  begin
+    while PeekMessage(AMsg, FMainWorker, WM_APP, WM_APP, PM_REMOVE) do
+    begin
+      ACopy.Msg := AMsg.message;
+      ACopy.WParam := AMsg.wParam;
+      ACopy.LParam := AMsg.lParam;
+      ACopy.Result := 0;
+      DoMainThreadWork(ACopy);
+    end;
+  end;
+{$ENDIF}
+
 begin
   FTerminating := True;
-  AInMainThread := GetCurrentThreadId = MainThreadId;
-  while (FWorkerCount > 0) and WorkerExists do
-  begin
+  if not Assigned(FTerminateEvent) then
+    FTerminateEvent := TEvent.Create(nil, True, false, '');
+  SetEvents;
+{$IFDEF MSWINDOWS}
+  repeat
+    ProcessMainThreadJobs;
+  until FTerminateEvent.WaitFor(10) = wrSignaled;
+{$ELSE}
+  FTerminateEvent.WaitFor(INFINITE);
+{$ENDIF}
+  FreeAndNil(FTerminateEvent);
+  while FWorkerCount > 0 do
+    FWorkers[0].ForceQuit;
+  {
+    AInMainThread := GetCurrentThreadId = MainThreadId;
+    while (FWorkerCount > 0) and WorkerExists do
+    begin
     SetEvents;
     if AInMainThread then
-      ProcessAppMessage
+    ProcessAppMessage
     else
-      Sleep(10);
-  end;
-  for I := 0 to FWorkerCount - 1 do
-  begin
+    Sleep(10);
+    end;
+    for I := 0 to FWorkerCount - 1 do
+    begin
     if FWorkers[I] <> nil then
-      FreeObject(FWorkers[I]);
-  end;
-  FWorkerCount := 0;
+    FreeObject(FWorkers[I]);
+    end;
+    FWorkerCount := 0;
+  }
 end;
 
 constructor TQWorkers.Create(AMinWorkers: Integer);
@@ -4073,8 +4116,6 @@ end;
 
 destructor TQWorkers.Destroy;
 var
-  AStaticThreadId: TThreadId;
-  AInMainThread: Boolean;
   I: Integer;
 begin
   ClearWorkers;
@@ -4098,17 +4139,18 @@ begin
 
 {$IFDEF MSWINDOWS}
   DeallocateHWnd(FMainWorker);
-{$ENDIF}
-  AStaticThreadId := FStaticThread.ThreadId;
-  FStaticThread.FreeOnTerminate := True;
-  FStaticThread.Terminate;
-  ThreadYield;
-  AInMainThread := GetCurrentThreadId = MainThreadId;
-  while ThreadExists(AStaticThreadId) and Assigned(FStaticThread) do
+  if IsLibrary or ModuleIsLib then
   begin
-    if AInMainThread then
-      ProcessAppMessage;
-    Sleep(200);
+    TerminateThread(FStaticThread.Handle, 1);
+    FreeAndNil(TStaticThread(FStaticThread).FEvent);
+    FreeAndNil(FStaticThread);
+  end
+  else
+{$ENDIF}
+  begin
+    FStaticThread.Terminate;
+    FStaticThread.WaitFor;
+    FreeAndNil(FStaticThread);
   end;
   inherited;
 end;
@@ -4317,13 +4359,18 @@ var
     FRepeatJobs.FLocker.Enter;
     try
       ANode := FRepeatJobs.FItems.First;
-      SetLength(ATemp, FRepeatJobs.Count);
+      if FRepeatJobs.Count < 4 then
+        SetLength(ATemp, 4)
+      else
+        SetLength(ATemp, FRepeatJobs.Count);
       while ANode <> nil do
       begin
         AJob := ANode.Data;
         while Assigned(AJob) do
         begin
           Assert(AJob.Handle <> 0);
+          if I = Length(ATemp) then
+            SetLength(ATemp, I shl 1);
           ATemp[I].Handle := AJob.Handle;
 {$IFDEF UNICODE}
           if AJob.IsAnonWorkerProc then
@@ -4345,6 +4392,7 @@ var
         end;
         ANode := ANode.Next;
       end;
+      SetLength(ATemp, I);
     finally
       FRepeatJobs.FLocker.Leave;
     end;
@@ -5369,7 +5417,11 @@ begin
       AtomicDecrement(FFiringWorkerCount);
     // 如果是当前忙碌的工作者被解雇
     if FWorkerCount = 0 then
-      FWorkers[0] := nil
+    begin
+      FWorkers[0] := nil;
+      if Assigned(FTerminateEvent) then
+        FTerminateEvent.SetEvent;
+    end
     else
     begin
       for I := 0 to FWorkerCount do
@@ -5635,6 +5687,7 @@ var
   var
     I: Integer;
     AJob: PQJob;
+    AFound: Boolean;
   begin
     Result := false;
     DisableWorkers;
@@ -5654,24 +5707,24 @@ var
             AJob := FWorkers[I].FActiveJob;
             case AParam.WaitType of
               0: // ByObject
-                Result := TMethod(FWorkers[I].FActiveJobProc)
+                AFound := TMethod(FWorkers[I].FActiveJobProc)
                   .Data = AParam.Bound;
               1:
                 // ByData
-                Result := (TMethod(FWorkers[I].FActiveJobProc)
+                AFound := (TMethod(FWorkers[I].FActiveJobProc)
                   .Code = TMethod(AParam.WorkerProc).Code) and
                   (TMethod(FWorkers[I].FActiveJobProc)
                   .Data = TMethod(AParam.WorkerProc).Data) and
                   ((AParam.Data = INVALID_JOB_DATA) or
                   (FWorkers[I].FActiveJobData = AParam.Data));
               2: // BySignalSource
-                Result := (FWorkers[I].FActiveJobSource = AParam.SourceJob);
+                AFound := (FWorkers[I].FActiveJobSource = AParam.SourceJob);
               3, 5: // ByGroup,ByPlan: Group/PlanSource是同一地址
-                Result := (FWorkers[I].FActiveJobGroup = AParam.Group);
+                AFound := (FWorkers[I].FActiveJobGroup = AParam.Group);
               4: // ByJob
-                Result := (AJob = AParam.SourceJob);
+                AFound := (AJob = AParam.SourceJob);
               $FF: // 所有
-                Result := True;
+                AFound := True;
             else
               begin
                 if Assigned(FOnError) then
@@ -5682,8 +5735,11 @@ var
                     [AParam.WaitType]);
               end;
             end;
-            if Result then
+            if AFound then
+            begin
               FWorkers[I].FTerminatingJob := AJob;
+              Result := True;
+            end;
           end
           else
             Result := True;
@@ -6392,7 +6448,7 @@ begin
   begin
     if FCanceled > 0 then
       FWaitResult := wrAbandoned;
-    if FWaitingCount>0 then
+    if FWaitingCount > 0 then
       FEvent.SetEvent;
   end;
 end;
@@ -6467,7 +6523,7 @@ begin
         begin
           AIsDone := True;
           FWaitResult := wrSignaled;
-          AtomicExchange(FPosted,0);
+          AtomicExchange(FPosted, 0);
         end
         else if ByOrder then
         begin
@@ -6482,7 +6538,7 @@ begin
         else if (FMaxWorkers > 0) and (FPosted <= FMaxWorkers) and
           (FPosted <= FItems.Count) then
         begin
-          if Workers.Post(FItems[FPosted-1]) = 0 then
+          if Workers.Post(FItems[FPosted - 1]) = 0 then
           begin
             AtomicDecrement(FPosted);
             FItems.Delete(0); // 投寄失败时，Post自动释放了作业
@@ -6511,10 +6567,10 @@ begin
       FLocker.Leave;
     end;
     if AIsDone then
-      begin
+    begin
       FEvent.SetEvent;
       DoAfterDone;
-      end;
+    end;
   end;
 end;
 
@@ -6753,11 +6809,11 @@ begin
       FLocker.Leave;
     end;
     if FWaitResult <> wrIOCompletion then
-      begin
+    begin
       DoAfterDone;
       FEvent.SetEvent;
-      end;
-//    DebugOut('Posted remain %d',[FPosted]);
+    end;
+    // DebugOut('Posted remain %d',[FPosted]);
   end;
 end;
 
@@ -7090,7 +7146,8 @@ begin
         end;
     end;
   end;
-  Workers.FStaticThread := nil;
+  if not Workers.Terminating then
+    Workers.FStaticThread := nil;
 end;
 
 { TQJobExtData }
@@ -7695,6 +7752,7 @@ AppTerminated := false;
 GetTickCount64 := GetProcAddress(GetModuleHandle(kernel32), 'GetTickCount64');
 WinGetSystemTimes := GetProcAddress(GetModuleHandle(kernel32),
   'GetSystemTimes');
+OpenThread := GetProcAddress(GetModuleHandle(kernel32), 'OpenThread');
 if not QueryPerformanceFrequency(_PerfFreq) then
 begin
   _PerfFreq := -1;

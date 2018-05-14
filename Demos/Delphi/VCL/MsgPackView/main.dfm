@@ -3,7 +3,7 @@ object frmMain: TfrmMain
   Top = 0
   Caption = 'MessagePack'#25991#20214#26597#30475#22120
   ClientHeight = 417
-  ClientWidth = 738
+  ClientWidth = 792
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,7 +18,7 @@ object frmMain: TfrmMain
   PixelsPerInch = 96
   TextHeight = 13
   object Splitter1: TSplitter
-    Left = 287
+    Left = 341
     Top = 65
     Height = 328
     Align = alRight
@@ -29,7 +29,7 @@ object frmMain: TfrmMain
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 738
+    Width = 792
     Height = 65
     Align = alTop
     BevelOuter = bvNone
@@ -37,11 +37,12 @@ object frmMain: TfrmMain
     object Bevel1: TBevel
       Left = 0
       Top = 63
-      Width = 738
+      Width = 792
       Height = 2
       Align = alBottom
       Shape = bsBottomLine
       ExplicitTop = 15
+      ExplicitWidth = 738
     end
     object Button1: TButton
       Left = 16
@@ -54,7 +55,7 @@ object frmMain: TfrmMain
     end
     object pnlCopyright: TPanel
       AlignWithMargins = True
-      Left = 292
+      Left = 346
       Top = 5
       Width = 441
       Height = 53
@@ -233,7 +234,7 @@ object frmMain: TfrmMain
       OnClick = Button2Click
     end
     object Button3: TButton
-      Left = 178
+      Left = 259
       Top = 10
       Width = 75
       Height = 25
@@ -252,12 +253,21 @@ object frmMain: TfrmMain
       TabOrder = 4
       OnClick = chkShowValueClick
     end
+    object Button4: TButton
+      Left = 178
+      Top = 10
+      Width = 75
+      Height = 25
+      Caption = #31896#36148
+      TabOrder = 5
+      OnClick = Button4Click
+    end
   end
   object vstItems: TVirtualStringTree
     AlignWithMargins = True
     Left = 3
     Top = 71
-    Width = 281
+    Width = 335
     Height = 318
     Hint = 'Ctrl+F'#25171#24320#26597#25214#23545#35805#26694
     Margins.Top = 6
@@ -294,7 +304,7 @@ object frmMain: TfrmMain
   object pnlHint: TPanel
     Left = 0
     Top = 393
-    Width = 738
+    Width = 792
     Height = 24
     Align = alBottom
     Alignment = taLeftJustify
@@ -323,7 +333,7 @@ object frmMain: TfrmMain
     object edtPath: TEdit
       Left = 105
       Top = 0
-      Width = 629
+      Width = 683
       Height = 20
       Align = alClient
       ImeName = #20013#25991' - QQ'#20116#31508#36755#20837#27861
@@ -335,7 +345,7 @@ object frmMain: TfrmMain
     end
   end
   object pnlSearched: TPanel
-    Left = 290
+    Left = 344
     Top = 65
     Width = 448
     Height = 328
@@ -402,7 +412,7 @@ object frmMain: TfrmMain
     Left = 400
     Top = 40
     Bitmap = {
-      494C01010B000D00140010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010B000D001C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -820,6 +830,34 @@ object frmMain: TfrmMain
     object miEditNode: TMenuItem
       Caption = #20462#25913'(&E)'
       OnClick = miEditNodeClick
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object N2: TMenuItem
+      Caption = #22797#21046
+      object N3: TMenuItem
+        Caption = #21517#31216
+        object miCopyChildNames: TMenuItem
+          Caption = #19968#32423#23376#32467#28857
+          OnClick = miCopyChildNamesClick
+        end
+        object N5: TMenuItem
+          Caption = #21516#32423#32467#28857
+          OnClick = N5Click
+        end
+      end
+      object N6: TMenuItem
+        Caption = #20540
+        object miCopyChildValues: TMenuItem
+          Caption = #19968#32423#23376#32467#28857
+          OnClick = miCopyChildValuesClick
+        end
+        object N8: TMenuItem
+          Caption = #21516#32423#32467#28857
+          OnClick = N8Click
+        end
+      end
     end
   end
 end

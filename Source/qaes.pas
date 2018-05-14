@@ -68,6 +68,14 @@ type
     emECB
     /// ECB加密模式
     );
+  // 补码方式
+  TQAESPaddingMode = (
+    // 后面全部补零对齐
+    pmZero,
+    // 填充需要补码的字节数(1-8)
+    pmPKCS5,
+    // 填充需要补码的字节数(1-255)
+    pmPKCS7);
   TQAESBuffer = array [0 .. 15] of byte;
   PQAESBuffer = ^TQAESBuffer;
   PQAES = ^TQAES;
@@ -122,6 +130,7 @@ type
     FInitVector: TQAESBuffer;
     { 进度提示 }
     FOnProgress: TQAESProgress;
+    FPaddingMode: TQAESPaddingMode;
   public
     { 采用ECB加密算法
 
@@ -160,21 +169,24 @@ type
     procedure Encrypt(const AData: QStringW; var AResult: TBytes); overload;
     { 加密指定的字符串
       <param name="AData">要加密的字符串（Unicode编码）</param>
+      <param name="AHexBeforeBase64">在进行Base64编码返回结果前，先转换为十六进制</param>
       <returns>返回加密后的字符串</returns>
     }
-    function Encrypt(const AData: QStringW): QStringW; overload;
+    function Encrypt(const AData: QStringW; AHexBeforeBase64: Boolean = true)
+      : QStringW; overload;
     { 加密指定的文件
 
 
       <param name="ASourceFile">要加密的原始文件名</param>
       <param name="ADestFile">加密后的目标文件名</param> }
     procedure Encrypt(const ASourceFile, ADestFile: QStringW); overload;
-    { 解密指定的流数据内容
-
-
+    { <summary>解密指定的流数据内容</summary>
       <param name="ASource">加密过的原始数据流</param>
-      <param name="ADest">用于存放解密结果的目标数据流</param> }
+      <param name="ADest">用于存放解密结果的目标数据流</param>
+      <remark>默认加密数据流算法会在数据头部加上64位的实际流长度</remark>
+    }
     procedure Decrypt(ASource, ADest: TStream); overload;
+
     { 解密指定的加密数据
 
 
@@ -193,7 +205,8 @@ type
       返回解密后的内容的字符串值，解密时自动检测内容编码格式
       </returns> }
     function Decrypt(const AData: TBytes): String; overload;
-    function Decrypt(const S: String): String; overload;
+    function Decrypt(const S: String; AHexBeforeBase64: Boolean = true)
+      : String; overload;
     { 对指定的加密文件进行解密
       <param name="ASourceFile">加密过的源文件</param>
       <param name="ADestFile">解密后的目标文件</param> }
@@ -205,6 +218,7 @@ type
     property Mode: TQAESEncryptMode read FMode;
     { 加密密钥强度 }
     property KeyType: TQAESKeyType read FKeyType write FKeyType;
+    property PaddingMode: TQAESPaddingMode read FPaddingMode write FPaddingMode;
   end;
 
   // 计算加密后的内容大小，由于AES属于对称加密算法，但约定尺寸必是16的整数倍
@@ -214,47 +228,56 @@ function AESEncryptSize(ASize: Int64): Int64;
 // 直接传AESEmptyBuffer就可以。在CBC模式下，加密和解决的初始化向量必需一致
 procedure AESEncrypt(ASource, ADest: TStream; AInitVector: TQAESBuffer;
   const AKey: TQAESKey; AMode: TQAESEncryptMode = emCBC;
+  APaddingMode: TQAESPaddingMode = pmPKCS5;
   AOnProgress: TQAESProgress = nil); overload;
 procedure AESEncrypt(ASource, ADest: TStream; AInitVector: TQAESBuffer;
   const AKey: QStringW; AKeyType: TQAESKeyType = kt256;
-  AMode: TQAESEncryptMode = emCBC; AKeyIsString: Boolean = True;
+  AMode: TQAESEncryptMode = emCBC; AKeyIsString: Boolean = true;
+  APaddingMode: TQAESPaddingMode = pmPKCS5;
   AOnProgress: TQAESProgress = nil); overload;
 procedure AESEncrypt(const p: Pointer; len: Integer; AInitVector: TQAESBuffer;
   var AResult: TBytes; const AKey: QStringW; AKeyType: TQAESKeyType = kt256;
-  AMode: TQAESEncryptMode = emCBC; AKeyIsString: Boolean = True;
+  AMode: TQAESEncryptMode = emCBC; AKeyIsString: Boolean = true;
+  APaddingMode: TQAESPaddingMode = pmPKCS5;
   AOnProgress: TQAESProgress = nil); overload;
 procedure AESEncrypt(const AData: TBytes; AInitVector: TQAESBuffer;
   var AResult: TBytes; const AKey: QStringW; AKeyType: TQAESKeyType = kt256;
-  AMode: TQAESEncryptMode = emCBC; AKeyIsString: Boolean = True;
+  AMode: TQAESEncryptMode = emCBC; AKeyIsString: Boolean = true;
+  APaddingMode: TQAESPaddingMode = pmPKCS5;
   AOnProgress: TQAESProgress = nil); overload;
 procedure AESEncrypt(const AData: QStringW; AInitVector: TQAESBuffer;
   var AResult: TBytes; const AKey: QStringW; AKeyType: TQAESKeyType = kt256;
-  AMode: TQAESEncryptMode = emCBC; AKeyIsString: Boolean = True;
+  AMode: TQAESEncryptMode = emCBC; AKeyIsString: Boolean = true;
+  APaddingMode: TQAESPaddingMode = pmPKCS5;
   AOnProgress: TQAESProgress = nil); overload;
 procedure AESEncrypt(const ASourceFile, ADestFile: QStringW;
   AInitVector: TQAESBuffer; const AKey: QStringW;
   AKeyType: TQAESKeyType = kt256; AMode: TQAESEncryptMode = emCBC;
-  AKeyIsString: Boolean = True; AOnProgress: TQAESProgress = nil); overload;
+  AKeyIsString: Boolean = true; APaddingMode: TQAESPaddingMode = pmPKCS5;
+  AOnProgress: TQAESProgress = nil); overload;
 // 解密函数
 procedure AESDecrypt(const AData: TBytes; AInitVector: TQAESBuffer;
-  var AResult: TBytes; const AKey: TQAESKey;
-  AMode: TQAESEncryptMode = emCBC); overload;
+  var AResult: TBytes; const AKey: TQAESKey; AMode: TQAESEncryptMode = emCBC;
+  APaddingMode: TQAESPaddingMode = pmPKCS5); overload;
 procedure AESDecrypt(ASource, ADest: TStream; AInitVector: TQAESBuffer;
   const AKey: QStringW; AKeyType: TQAESKeyType = kt256;
-  AMode: TQAESEncryptMode = emCBC; AKeyIsString: Boolean = True;
+  AMode: TQAESEncryptMode = emCBC; AKeyIsString: Boolean = true;
+  APaddingMode: TQAESPaddingMode = pmPKCS5;
   AOnProgress: TQAESProgress = nil); overload;
 procedure AESDecrypt(const AData: TBytes; AInitVector: TQAESBuffer;
   var AResult: TBytes; const AKey: QStringW; AKeyType: TQAESKeyType = kt256;
-  AMode: TQAESEncryptMode = emCBC; AKeyIsString: Boolean = True); overload;
+  AMode: TQAESEncryptMode = emCBC; AKeyIsString: Boolean = true;
+  APaddingMode: TQAESPaddingMode = pmPKCS5); overload;
 function AESDecrypt(const AData: TBytes; AInitVector: TQAESBuffer;
   const AKey: QStringW; AKeyType: TQAESKeyType = kt256;
-  AMode: TQAESEncryptMode = emCBC; ATrimZero: Boolean = True;
-  AKeyIsString: Boolean = True; AOnProgress: TQAESProgress = nil)
-  : String; overload;
+  AMode: TQAESEncryptMode = emCBC; ATrimZero: Boolean = true;
+  AKeyIsString: Boolean = true; APaddingMode: TQAESPaddingMode = pmPKCS5;
+  AOnProgress: TQAESProgress = nil): String; overload;
 procedure AESDecrypt(const ASourceFile, ADestFile: QStringW;
   AInitVector: TQAESBuffer; const AKey: QStringW;
   AKeyType: TQAESKeyType = kt256; AMode: TQAESEncryptMode = emCBC;
-  AKeyIsString: Boolean = True; AOnProgress: TQAESProgress = nil); overload;
+  AKeyIsString: Boolean = true; APaddingMode: TQAESPaddingMode = pmPKCS5;
+  AOnProgress: TQAESProgress = nil); overload;
 // 密钥转换函数
 procedure KeyFromBytes(const AKey: Pointer; const L: Integer;
   AKeyType: TQAESKeyType; var AResult: TQAESKey); overload;
@@ -2656,9 +2679,20 @@ begin
   PCardinal(@OutBuf[12])^ := T0[3];
 end;
 
+procedure FillPaddings(var ABuf: TQAESBuffer; len: Integer;
+  APaddingMode: TQAESPaddingMode); inline;
+begin
+  case APaddingMode of
+    pmZero:
+      FillChar(ABuf[len], SizeOf(TQAESBuffer) - len, 0);
+    pmPKCS5, pmPKCS7:
+      FillChar(ABuf[len], SizeOf(TQAESBuffer) - len, SizeOf(TQAESBuffer) - len);
+  end;
+end;
+
 procedure EncryptAESStreamECB(Source: TStream;
   const ExpandedKey: TQAESExpandedKey128; Dest: TStream;
-  AOnProgress: TQAESProgress); overload;
+  APaddingMode: TQAESPaddingMode; AOnProgress: TQAESProgress); overload;
 var
   TempIn, TempOut: TQAESBuffer;
   AProcessed, ALastProcessed, ATotal, ASize: Int64;
@@ -2668,7 +2702,7 @@ var
   begin
     ABlockSize := Source.Read(TempIn, SizeOf(TempIn));
     if ABlockSize < SizeOf(TempIn) then
-      FillChar(TempIn[ABlockSize], SizeOf(TempIn) - ABlockSize, 0);
+      FillPaddings(TempIn, ABlockSize, APaddingMode);
     EncryptAES(TempIn, ExpandedKey, TempOut);
     Dest.WriteBuffer(TempOut, SizeOf(TempOut));
     Dec(ASize, SizeOf(TempOut));
@@ -2698,7 +2732,7 @@ end;
 
 procedure EncryptAESStreamECB(Source: TStream;
   const ExpandedKey: TQAESExpandedKey192; Dest: TStream;
-  AOnProgress: TQAESProgress); overload;
+  APaddingMode: TQAESPaddingMode; AOnProgress: TQAESProgress); overload;
 var
   TempIn, TempOut: TQAESBuffer;
   AProcessed, ALastProcessed, ATotal, ASize: Int64;
@@ -2708,7 +2742,7 @@ var
   begin
     ABlockSize := Source.Read(TempIn, SizeOf(TempIn));
     if ABlockSize < SizeOf(TempIn) then
-      FillChar(TempIn[ABlockSize], SizeOf(TempIn) - ABlockSize, 0);
+      FillPaddings(TempIn, ABlockSize, APaddingMode);
     EncryptAES(TempIn, ExpandedKey, TempOut);
     Dest.WriteBuffer(TempOut, SizeOf(TempOut));
     Dec(ASize, SizeOf(TempOut));
@@ -2738,7 +2772,7 @@ end;
 
 procedure EncryptAESStreamECB(Source: TStream;
   const ExpandedKey: TQAESExpandedKey256; Dest: TStream;
-  AOnProgress: TQAESProgress); overload;
+  APaddingMode: TQAESPaddingMode; AOnProgress: TQAESProgress); overload;
 var
   TempIn, TempOut: TQAESBuffer;
   AProcessed, ALastProcessed, ATotal, ASize: Int64;
@@ -2748,7 +2782,7 @@ var
   begin
     ABlockSize := Source.Read(TempIn, SizeOf(TempIn));
     if ABlockSize < SizeOf(TempIn) then
-      FillChar(TempIn[ABlockSize], SizeOf(TempIn) - ABlockSize, 0);
+      FillPaddings(TempIn, ABlockSize, APaddingMode);
     EncryptAES(TempIn, ExpandedKey, TempOut);
     Dest.WriteBuffer(TempOut, SizeOf(TempOut));
     Dec(ASize, SizeOf(TempOut));
@@ -2777,35 +2811,38 @@ begin
 end;
 
 procedure EncryptAESStreamECB(Source: TStream; const Key: TQAESKey128;
-  Dest: TStream; AOnProgress: TQAESProgress); overload;
+  Dest: TStream; APaddingMode: TQAESPaddingMode;
+  AOnProgress: TQAESProgress); overload;
 var
   ExpandedKey: TQAESExpandedKey128;
 begin
   ExpandAESKeyForEncryption(Key, ExpandedKey);
-  EncryptAESStreamECB(Source, ExpandedKey, Dest, AOnProgress);
+  EncryptAESStreamECB(Source, ExpandedKey, Dest, APaddingMode, AOnProgress);
 end;
 
 procedure EncryptAESStreamECB(Source: TStream; const Key: TQAESKey192;
-  Dest: TStream; AOnProgress: TQAESProgress); overload;
+  Dest: TStream; APaddingMode: TQAESPaddingMode;
+  AOnProgress: TQAESProgress); overload;
 var
   ExpandedKey: TQAESExpandedKey192;
 begin
   ExpandAESKeyForEncryption(Key, ExpandedKey);
-  EncryptAESStreamECB(Source, ExpandedKey, Dest, AOnProgress);
+  EncryptAESStreamECB(Source, ExpandedKey, Dest, APaddingMode, AOnProgress);
 end;
 
 procedure EncryptAESStreamECB(Source: TStream; const Key: TQAESKey256;
-  Dest: TStream; AOnProgress: TQAESProgress); overload;
+  Dest: TStream; APaddingMode: TQAESPaddingMode;
+  AOnProgress: TQAESProgress); overload;
 var
   ExpandedKey: TQAESExpandedKey256;
 begin
   ExpandAESKeyForEncryption(Key, ExpandedKey);
-  EncryptAESStreamECB(Source, ExpandedKey, Dest, AOnProgress);
+  EncryptAESStreamECB(Source, ExpandedKey, Dest, APaddingMode, AOnProgress);
 end;
 
 procedure DecrypAESStreamECB(Source: TStream;
   const ExpandedKey: TQAESExpandedKey128; Dest: TStream;
-  AOnProgress: TQAESProgress); overload;
+  APaddingMode: TQAESPaddingMode; AOnProgress: TQAESProgress); overload;
 var
   TempIn, TempOut: TQAESBuffer;
   AProcessed, ALastProcessed, ATotal, ASize: Int64;
@@ -2839,7 +2876,7 @@ end;
 
 procedure DecrypAESStreamECB(Source: TStream;
   const ExpandedKey: TQAESExpandedKey192; Dest: TStream;
-  AOnProgress: TQAESProgress); overload;
+  APaddingMode: TQAESPaddingMode; AOnProgress: TQAESProgress); overload;
 var
   TempIn, TempOut: TQAESBuffer;
   AProcessed, ALastProcessed, ATotal, ASize: Int64;
@@ -2873,7 +2910,7 @@ end;
 
 procedure DecrypAESStreamECB(Source: TStream;
   const ExpandedKey: TQAESExpandedKey256; Dest: TStream;
-  AOnProgress: TQAESProgress); overload;
+  APaddingMode: TQAESPaddingMode; AOnProgress: TQAESProgress); overload;
 var
   TempIn, TempOut: TQAESBuffer;
   AProcessed, ALastProcessed, ATotal, ASize: Int64;
@@ -2906,30 +2943,33 @@ begin
 end;
 
 procedure DecrypAESStreamECB(Source: TStream; const Key: TQAESKey128;
-  Dest: TStream; AOnProgress: TQAESProgress); overload;
+  Dest: TStream; APaddingMode: TQAESPaddingMode;
+  AOnProgress: TQAESProgress); overload;
 var
   ExpandedKey: TQAESExpandedKey128;
 begin
   ExpandAESKeyForDecryption(Key, ExpandedKey);
-  DecrypAESStreamECB(Source, ExpandedKey, Dest, AOnProgress);
+  DecrypAESStreamECB(Source, ExpandedKey, Dest, APaddingMode, AOnProgress);
 end;
 
 procedure DecrypAESStreamECB(Source: TStream; const Key: TQAESKey192;
-  Dest: TStream; AOnProgress: TQAESProgress); overload;
+  Dest: TStream; APaddingMode: TQAESPaddingMode;
+  AOnProgress: TQAESProgress); overload;
 var
   ExpandedKey: TQAESExpandedKey192;
 begin
   ExpandAESKeyForDecryption(Key, ExpandedKey);
-  DecrypAESStreamECB(Source, ExpandedKey, Dest, AOnProgress);
+  DecrypAESStreamECB(Source, ExpandedKey, Dest, APaddingMode, AOnProgress);
 end;
 
 procedure DecrypAESStreamECB(Source: TStream; const Key: TQAESKey256;
-  Dest: TStream; AOnProgress: TQAESProgress); overload;
+  Dest: TStream; APaddingMode: TQAESPaddingMode;
+  AOnProgress: TQAESProgress); overload;
 var
   ExpandedKey: TQAESExpandedKey256;
 begin
   ExpandAESKeyForDecryption(Key, ExpandedKey);
-  DecrypAESStreamECB(Source, ExpandedKey, Dest, AOnProgress);
+  DecrypAESStreamECB(Source, ExpandedKey, Dest, APaddingMode, AOnProgress);
 end;
 
 
@@ -2937,7 +2977,8 @@ end;
 
 procedure EncryptAESStreamCBC(Source: TStream;
   const ExpandedKey: TQAESExpandedKey128; const InitVector: TQAESBuffer;
-  Dest: TStream; AOnProgress: TQAESProgress); overload;
+  Dest: TStream; APaddingMode: TQAESPaddingMode;
+  AOnProgress: TQAESProgress); overload;
 var
   TempIn, TempOut, Vector: TQAESBuffer;
   AProcessed, ALastProcessed, ATotal, ASize: Int64;
@@ -2947,7 +2988,7 @@ var
   begin
     ABlockSize := Source.Read(TempIn, SizeOf(TempIn));
     if ABlockSize < SizeOf(TempIn) then
-      FillChar(TempIn[ABlockSize], SizeOf(TempIn) - ABlockSize, 0);
+      FillPaddings(TempIn, ABlockSize, APaddingMode);
     PCardinal(@TempIn[0])^ := PCardinal(@TempIn[0])^ xor PCardinal(@Vector[0])^;
     PCardinal(@TempIn[4])^ := PCardinal(@TempIn[4])^ xor PCardinal(@Vector[4])^;
     PCardinal(@TempIn[8])^ := PCardinal(@TempIn[8])^ xor PCardinal(@Vector[8])^;
@@ -2986,7 +3027,8 @@ end;
 
 procedure EncryptAESStreamCBC(Source: TStream;
   const ExpandedKey: TQAESExpandedKey192; const InitVector: TQAESBuffer;
-  Dest: TStream; AOnProgress: TQAESProgress); overload;
+  Dest: TStream; APaddingMode: TQAESPaddingMode;
+  AOnProgress: TQAESProgress); overload;
 var
   TempIn, TempOut, Vector: TQAESBuffer;
   AProcessed, ALastProcessed, ATotal, ASize: Int64;
@@ -2996,7 +3038,7 @@ var
   begin
     ABlockSize := Source.Read(TempIn, SizeOf(TempIn));
     if ABlockSize < SizeOf(TempIn) then
-      FillChar(TempIn[ABlockSize], SizeOf(TempIn) - ABlockSize, 0);
+      FillPaddings(TempIn, ABlockSize, APaddingMode);
     PCardinal(@TempIn[0])^ := PCardinal(@TempIn[0])^ xor PCardinal(@Vector[0])^;
     PCardinal(@TempIn[4])^ := PCardinal(@TempIn[4])^ xor PCardinal(@Vector[4])^;
     PCardinal(@TempIn[8])^ := PCardinal(@TempIn[8])^ xor PCardinal(@Vector[8])^;
@@ -3035,7 +3077,8 @@ end;
 
 procedure EncryptAESStreamCBC(Source: TStream;
   const ExpandedKey: TQAESExpandedKey256; const InitVector: TQAESBuffer;
-  Dest: TStream; AOnProgress: TQAESProgress); overload;
+  Dest: TStream; APaddingMode: TQAESPaddingMode;
+  AOnProgress: TQAESProgress); overload;
 var
   TempIn, TempOut, Vector: TQAESBuffer;
   AProcessed, ALastProcessed, ATotal, ASize: Int64;
@@ -3045,7 +3088,7 @@ var
   begin
     ABlockSize := Source.Read(TempIn, SizeOf(TempIn));
     if ABlockSize < SizeOf(TempIn) then
-      FillChar(TempIn[ABlockSize], SizeOf(TempIn) - ABlockSize, 0);
+      FillPaddings(TempIn, ABlockSize, APaddingMode);
     PCardinal(@TempIn[0])^ := PCardinal(@TempIn[0])^ xor PCardinal(@Vector[0])^;
     PCardinal(@TempIn[4])^ := PCardinal(@TempIn[4])^ xor PCardinal(@Vector[4])^;
     PCardinal(@TempIn[8])^ := PCardinal(@TempIn[8])^ xor PCardinal(@Vector[8])^;
@@ -3083,40 +3126,44 @@ begin
 end;
 
 procedure EncryptAESStreamCBC(Source: TStream; const Key: TQAESKey128;
-  const InitVector: TQAESBuffer; Dest: TStream;
+  const InitVector: TQAESBuffer; Dest: TStream; APaddingMode: TQAESPaddingMode;
   AOnProgress: TQAESProgress); overload;
 var
   ExpandedKey: TQAESExpandedKey128;
 begin
   ExpandAESKeyForEncryption(Key, ExpandedKey);
-  EncryptAESStreamCBC(Source, ExpandedKey, InitVector, Dest, AOnProgress);
+  EncryptAESStreamCBC(Source, ExpandedKey, InitVector, Dest, APaddingMode,
+    AOnProgress);
 end;
 
 procedure EncryptAESStreamCBC(Source: TStream; const Key: TQAESKey192;
-  const InitVector: TQAESBuffer; Dest: TStream;
+  const InitVector: TQAESBuffer; Dest: TStream; APaddingMode: TQAESPaddingMode;
   AOnProgress: TQAESProgress); overload;
 var
   ExpandedKey: TQAESExpandedKey192;
 begin
   ExpandAESKeyForEncryption(Key, ExpandedKey);
-  EncryptAESStreamCBC(Source, ExpandedKey, InitVector, Dest, AOnProgress);
+  EncryptAESStreamCBC(Source, ExpandedKey, InitVector, Dest, APaddingMode,
+    AOnProgress);
 end;
 
 procedure EncryptAESStreamCBC(Source: TStream; const Key: TQAESKey256;
-  const InitVector: TQAESBuffer; Dest: TStream;
+  const InitVector: TQAESBuffer; Dest: TStream; APaddingMode: TQAESPaddingMode;
   AOnProgress: TQAESProgress); overload;
 var
   ExpandedKey: TQAESExpandedKey256;
 begin
   ExpandAESKeyForEncryption(Key, ExpandedKey);
-  EncryptAESStreamCBC(Source, ExpandedKey, InitVector, Dest, AOnProgress);
+  EncryptAESStreamCBC(Source, ExpandedKey, InitVector, Dest, APaddingMode,
+    AOnProgress);
 end;
 
 // Stream decryption routines (CBC mode)
 
 procedure DecrypAESStreamCBC(Source: TStream;
   const ExpandedKey: TQAESExpandedKey128; const InitVector: TQAESBuffer;
-  Dest: TStream; AOnProgress: TQAESProgress); overload;
+  Dest: TStream; APaddingMode: TQAESPaddingMode;
+  AOnProgress: TQAESProgress); overload;
 var
   TempIn, TempOut: TQAESBuffer;
   Vector1, Vector2: TQAESBuffer;
@@ -3167,7 +3214,8 @@ end;
 
 procedure DecrypAESStreamCBC(Source: TStream;
   const ExpandedKey: TQAESExpandedKey192; const InitVector: TQAESBuffer;
-  Dest: TStream; AOnProgress: TQAESProgress); overload;
+  Dest: TStream; APaddingMode: TQAESPaddingMode;
+  AOnProgress: TQAESProgress); overload;
 var
   TempIn, TempOut: TQAESBuffer;
   Vector1, Vector2: TQAESBuffer;
@@ -3218,7 +3266,8 @@ end;
 
 procedure DecrypAESStreamCBC(Source: TStream;
   const ExpandedKey: TQAESExpandedKey256; const InitVector: TQAESBuffer;
-  Dest: TStream; AOnProgress: TQAESProgress); overload;
+  Dest: TStream; APaddingMode: TQAESPaddingMode;
+  AOnProgress: TQAESProgress); overload;
 var
   TempIn, TempOut: TQAESBuffer;
   Vector1, Vector2: TQAESBuffer;
@@ -3268,33 +3317,36 @@ begin
 end;
 
 procedure DecrypAESStreamCBC(Source: TStream; const Key: TQAESKey128;
-  const InitVector: TQAESBuffer; Dest: TStream;
+  const InitVector: TQAESBuffer; Dest: TStream; APaddingMode: TQAESPaddingMode;
   AOnProgress: TQAESProgress); overload;
 var
   ExpandedKey: TQAESExpandedKey128;
 begin
   ExpandAESKeyForDecryption(Key, ExpandedKey);
-  DecrypAESStreamCBC(Source, ExpandedKey, InitVector, Dest, AOnProgress);
+  DecrypAESStreamCBC(Source, ExpandedKey, InitVector, Dest, APaddingMode,
+    AOnProgress);
 end;
 
 procedure DecrypAESStreamCBC(Source: TStream; const Key: TQAESKey192;
-  const InitVector: TQAESBuffer; Dest: TStream;
+  const InitVector: TQAESBuffer; Dest: TStream; APaddingMode: TQAESPaddingMode;
   AOnProgress: TQAESProgress); overload;
 var
   ExpandedKey: TQAESExpandedKey192;
 begin
   ExpandAESKeyForDecryption(Key, ExpandedKey);
-  DecrypAESStreamCBC(Source, ExpandedKey, InitVector, Dest, AOnProgress);
+  DecrypAESStreamCBC(Source, ExpandedKey, InitVector, Dest, APaddingMode,
+    AOnProgress);
 end;
 
 procedure DecrypAESStreamCBC(Source: TStream; const Key: TQAESKey256;
-  const InitVector: TQAESBuffer; Dest: TStream;
+  const InitVector: TQAESBuffer; Dest: TStream; APaddingMode: TQAESPaddingMode;
   AOnProgress: TQAESProgress); overload;
 var
   ExpandedKey: TQAESExpandedKey256;
 begin
   ExpandAESKeyForDecryption(Key, ExpandedKey);
-  DecrypAESStreamCBC(Source, ExpandedKey, InitVector, Dest, AOnProgress);
+  DecrypAESStreamCBC(Source, ExpandedKey, InitVector, Dest, APaddingMode,
+    AOnProgress);
 end;
 
 procedure KeyFromBytes(const AKey: Pointer; const L: Integer;
@@ -3352,39 +3404,44 @@ end;
 
 procedure AESEncrypt(ASource, ADest: TStream; AInitVector: TQAESBuffer;
   const AKey: TQAESKey; AMode: TQAESEncryptMode = emCBC;
+  APaddingMode: TQAESPaddingMode = pmPKCS5;
   AOnProgress: TQAESProgress = nil); overload;
 begin
   case AKey.KeyType of
     kt128:
       begin
         if AMode = emECB then
-          EncryptAESStreamECB(ASource, AKey.Key128, ADest, AOnProgress)
+          EncryptAESStreamECB(ASource, AKey.Key128, ADest, APaddingMode,
+            AOnProgress)
         else
           EncryptAESStreamCBC(ASource, AKey.Key128, AInitVector, ADest,
-            AOnProgress);
+            APaddingMode, AOnProgress);
       end;
     kt192:
       begin
         if AMode = emECB then
-          EncryptAESStreamECB(ASource, AKey.Key192, ADest, AOnProgress)
+          EncryptAESStreamECB(ASource, AKey.Key192, ADest, APaddingMode,
+            AOnProgress)
         else
           EncryptAESStreamCBC(ASource, AKey.Key192, AInitVector, ADest,
-            AOnProgress);
+            APaddingMode, AOnProgress);
       end;
     kt256:
       begin
         if AMode = emECB then
-          EncryptAESStreamECB(ASource, AKey.Key256, ADest, AOnProgress)
+          EncryptAESStreamECB(ASource, AKey.Key256, ADest, APaddingMode,
+            AOnProgress)
         else
           EncryptAESStreamCBC(ASource, AKey.Key256, AInitVector, ADest,
-            AOnProgress);
+            APaddingMode, AOnProgress);
       end;
   end;
 end;
 
 procedure AESEncrypt(ASource, ADest: TStream; AInitVector: TQAESBuffer;
   const AKey: QStringW; AKeyType: TQAESKeyType; AMode: TQAESEncryptMode;
-  AKeyIsString: Boolean; AOnProgress: TQAESProgress);
+  AKeyIsString: Boolean; APaddingMode: TQAESPaddingMode;
+  AOnProgress: TQAESProgress);
 var
   AESKey: TQAESKey;
 begin
@@ -3396,26 +3453,29 @@ begin
     kt128:
       begin
         if AMode = emECB then
-          EncryptAESStreamECB(ASource, AESKey.Key128, ADest, AOnProgress)
+          EncryptAESStreamECB(ASource, AESKey.Key128, ADest, APaddingMode,
+            AOnProgress)
         else
           EncryptAESStreamCBC(ASource, AESKey.Key128, AInitVector, ADest,
-            AOnProgress);
+            APaddingMode, AOnProgress);
       end;
     kt192:
       begin
         if AMode = emECB then
-          EncryptAESStreamECB(ASource, AESKey.Key192, ADest, AOnProgress)
+          EncryptAESStreamECB(ASource, AESKey.Key192, ADest, APaddingMode,
+            AOnProgress)
         else
           EncryptAESStreamCBC(ASource, AESKey.Key192, AInitVector, ADest,
-            AOnProgress);
+            APaddingMode, AOnProgress);
       end;
     kt256:
       begin
         if AMode = emECB then
-          EncryptAESStreamECB(ASource, AESKey.Key256, ADest, AOnProgress)
+          EncryptAESStreamECB(ASource, AESKey.Key256, ADest, APaddingMode,
+            AOnProgress)
         else
           EncryptAESStreamCBC(ASource, AESKey.Key256, AInitVector, ADest,
-            AOnProgress);
+            APaddingMode, AOnProgress);
       end;
   end;
 end;
@@ -3423,7 +3483,7 @@ end;
 procedure AESEncrypt(const p: Pointer; len: Integer; AInitVector: TQAESBuffer;
   var AResult: TBytes; const AKey: QStringW; AKeyType: TQAESKeyType;
   AMode: TQAESEncryptMode; AKeyIsString: Boolean;
-  AOnProgress: TQAESProgress); overload;
+  APaddingMode: TQAESPaddingMode; AOnProgress: TQAESProgress); overload;
 var
   pIn, pOut: PQAESBuffer;
   ABuf: TQAESBuffer;
@@ -3443,7 +3503,7 @@ var
     if len <> 0 then
     begin
       Move(pIn^, ABuf[0], len);
-      FillChar(ABuf[len], SizeOf(TQAESBuffer) - len, 0);
+      FillPaddings(ABuf, len, APaddingMode);
       EncryptAES(ABuf, AExpendedKey.Key128, pOut^);
     end;
   end;
@@ -3461,7 +3521,7 @@ var
     if len <> 0 then
     begin
       Move(pIn^, ABuf[0], len);
-      FillChar(ABuf[len], SizeOf(TQAESBuffer) - len, 0);
+      FillPaddings(ABuf, len, APaddingMode);
       EncryptAES(ABuf, AExpendedKey.Key192, pOut^);
     end;
   end;
@@ -3479,7 +3539,7 @@ var
     if len <> 0 then
     begin
       Move(pIn^, ABuf[0], len);
-      FillChar(ABuf[len], SizeOf(TQAESBuffer) - len, 0);
+      FillPaddings(ABuf, len, APaddingMode);
       EncryptAES(ABuf, AExpendedKey.Key256, pOut^);
     end;
   end;
@@ -3506,7 +3566,7 @@ var
     if len <> 0 then
     begin
       Move(pIn^, ABuf[0], len);
-      FillChar(ABuf[len], SizeOf(TQAESBuffer) - len, 0);
+      FillPaddings(ABuf, len, APaddingMode);
       XorVector;
       EncryptAES(ABuf, AExpendedKey.Key128, pOut^);
     end;
@@ -3528,7 +3588,7 @@ var
     if len <> 0 then
     begin
       Move(pIn^, ABuf[0], len);
-      FillChar(ABuf[len], SizeOf(TQAESBuffer) - len, 0);
+      FillPaddings(ABuf, len, APaddingMode);
       XorVector;
       EncryptAES(ABuf, AExpendedKey.Key192, pOut^);
     end;
@@ -3550,7 +3610,7 @@ var
     if len <> 0 then
     begin
       Move(pIn^, ABuf[0], len);
-      FillChar(ABuf[len], SizeOf(TQAESBuffer) - len, 0);
+      FillPaddings(ABuf, len, APaddingMode);
       XorVector;
       EncryptAES(ABuf, AExpendedKey.Key256, pOut^);
     end;
@@ -3595,26 +3655,29 @@ end;
 
 procedure AESEncrypt(const AData: TBytes; AInitVector: TQAESBuffer;
   var AResult: TBytes; const AKey: QStringW; AKeyType: TQAESKeyType;
-  AMode: TQAESEncryptMode; AKeyIsString: Boolean; AOnProgress: TQAESProgress);
+  AMode: TQAESEncryptMode; AKeyIsString: Boolean;
+  APaddingMode: TQAESPaddingMode; AOnProgress: TQAESProgress);
 begin
   AESEncrypt(@AData[0], Length(AData), AInitVector, AResult, AKey, AKeyType,
-    AMode, AKeyIsString, AOnProgress);
+    AMode, AKeyIsString, APaddingMode, AOnProgress);
 end;
 
 procedure AESEncrypt(const AData: QStringW; AInitVector: TQAESBuffer;
   var AResult: TBytes; const AKey: QStringW; AKeyType: TQAESKeyType;
-  AMode: TQAESEncryptMode; AKeyIsString: Boolean; AOnProgress: TQAESProgress);
+  AMode: TQAESEncryptMode; AKeyIsString: Boolean;
+  APaddingMode: TQAESPaddingMode; AOnProgress: TQAESProgress);
 var
   ATemp: QStringA;
 begin
   ATemp := qstring.Utf8Encode(AData);
   AESEncrypt(PQCharA(ATemp), ATemp.Length, AInitVector, AResult, AKey, AKeyType,
-    AMode, AKeyIsString, AOnProgress);
+    AMode, AKeyIsString, APaddingMode, AOnProgress);
 end;
 
 procedure AESEncrypt(const ASourceFile, ADestFile: QStringW;
   AInitVector: TQAESBuffer; const AKey: QStringW; AKeyType: TQAESKeyType;
-  AMode: TQAESEncryptMode; AKeyIsString: Boolean; AOnProgress: TQAESProgress);
+  AMode: TQAESEncryptMode; AKeyIsString: Boolean;
+  APaddingMode: TQAESPaddingMode; AOnProgress: TQAESProgress);
 var
   ASourceStream, ADestStream: TFileStream;
 begin
@@ -3625,7 +3688,7 @@ begin
       fmShareDenyWrite);
     ADestStream := TFileStream.Create(ADestFile, fmCreate);
     AESEncrypt(ASourceStream, ADestStream, AInitVector, AKey, AKeyType, AMode,
-      AKeyIsString, AOnProgress);
+      AKeyIsString, APaddingMode, AOnProgress);
   finally
     if ASourceStream <> nil then
       FreeObject(ASourceStream);
@@ -3636,7 +3699,8 @@ end;
 
 procedure AESDecrypt(ASource, ADest: TStream; AInitVector: TQAESBuffer;
   const AKey: QStringW; AKeyType: TQAESKeyType; AMode: TQAESEncryptMode;
-  AKeyIsString: Boolean; AOnProgress: TQAESProgress);
+  AKeyIsString: Boolean; APaddingMode: TQAESPaddingMode;
+  AOnProgress: TQAESProgress);
 var
   AESKey: TQAESKey;
 begin
@@ -3648,32 +3712,37 @@ begin
     kt128:
       begin
         if AMode = emECB then
-          DecrypAESStreamECB(ASource, AESKey.Key128, ADest, AOnProgress)
+          DecrypAESStreamECB(ASource, AESKey.Key128, ADest, APaddingMode,
+            AOnProgress)
         else
           DecrypAESStreamCBC(ASource, AESKey.Key128, AInitVector, ADest,
-            AOnProgress);
+            APaddingMode, AOnProgress);
       end;
     kt192:
       begin
         if AMode = emECB then
-          DecrypAESStreamECB(ASource, AESKey.Key192, ADest, AOnProgress)
+          DecrypAESStreamECB(ASource, AESKey.Key192, ADest, APaddingMode,
+            AOnProgress)
         else
           DecrypAESStreamCBC(ASource, AESKey.Key192, AInitVector, ADest,
-            AOnProgress);
+            APaddingMode, AOnProgress);
       end;
     kt256:
       begin
         if AMode = emECB then
-          DecrypAESStreamECB(ASource, AESKey.Key256, ADest, AOnProgress)
+          DecrypAESStreamECB(ASource, AESKey.Key256, ADest, APaddingMode,
+            AOnProgress)
         else
           DecrypAESStreamCBC(ASource, AESKey.Key256, AInitVector, ADest,
-            AOnProgress);
+            APaddingMode, AOnProgress);
       end;
   end;
+
 end;
 
 procedure AESDecrypt(const p: Pointer; len: Integer; AInitVector: TQAESBuffer;
-  var AResult: TBytes; const AKey: TQAESKey; AMode: TQAESEncryptMode); overload;
+  var AResult: TBytes; const AKey: TQAESKey; AMode: TQAESEncryptMode;
+  APaddingMode: TQAESPaddingMode); overload;
 var
   pIn, pOut: PQAESBuffer;
   AExpendedKey: TQAESExpandedKey;
@@ -3768,6 +3837,22 @@ var
       Inc(pOut);
     end;
   end;
+  procedure RemovePaddings;
+  var
+    B: byte;
+    L: Integer;
+  begin
+    if APaddingMode in [pmPKCS5, pmPKCS7] then
+    begin
+      L := Length(AResult);
+      if L > 0 then
+      begin
+        B := AResult[L - 1];
+        if L > B then
+          SetLength(AResult, L - B);
+      end;
+    end;
+  end;
 
 begin
   if len <= 0 then
@@ -3800,20 +3885,24 @@ begin
         Decrypt256CBC;
     end;
   end;
+  RemovePaddings;
 end;
 
 procedure AESDecrypt(const AData: TBytes; AInitVector: TQAESBuffer;
-  var AResult: TBytes; const AKey: TQAESKey; AMode: TQAESEncryptMode); overload;
+  var AResult: TBytes; const AKey: TQAESKey; AMode: TQAESEncryptMode;
+  APaddingMode: TQAESPaddingMode); overload;
 begin
   if Length(AData) > 0 then
-    AESDecrypt(@AData[0], Length(AData), AInitVector, AResult, AKey, AMode)
+    AESDecrypt(@AData[0], Length(AData), AInitVector, AResult, AKey, AMode,
+      APaddingMode)
   else
     SetLength(AResult, 0);
 end;
 
 procedure AESDecrypt(const AData: TBytes; AInitVector: TQAESBuffer;
   var AResult: TBytes; const AKey: QStringW; AKeyType: TQAESKeyType;
-  AMode: TQAESEncryptMode; AKeyIsString: Boolean);
+  AMode: TQAESEncryptMode; AKeyIsString: Boolean;
+  APaddingMode: TQAESPaddingMode); overload;
 var
   AKeyData: TQAESKey;
 begin
@@ -3823,7 +3912,8 @@ begin
       AKeyData := KeyFromString(AKey, AKeyType)
     else
       KeyFromBytes(PQCharW(AKey), Length(AKey) shl 1, AKeyType, AKeyData);
-    AESDecrypt(@AData[0], Length(AData), AInitVector, AResult, AKeyData, AMode)
+    AESDecrypt(@AData[0], Length(AData), AInitVector, AResult, AKeyData, AMode,
+      APaddingMode)
   end
   else
     SetLength(AResult, 0);
@@ -3831,74 +3921,74 @@ end;
 
 function AESDecrypt(const AData: TBytes; AInitVector: TQAESBuffer;
   const AKey: QStringW; AKeyType: TQAESKeyType; AMode: TQAESEncryptMode;
-  ATrimZero: Boolean; AKeyIsString: Boolean;
-  AOnProgress: TQAESProgress): String;
+  ATrimZero: Boolean; AKeyIsString: Boolean; APaddingMode: TQAESPaddingMode;
+  AOnProgress: TQAESProgress): String; overload;
 var
   AResult: TBytes;
   L: Integer;
   ABOM: Boolean;
   AEncoding: TTextEncoding;
 begin
-  AESDecrypt(AData, AInitVector, AResult, AKey, AKeyType, AMode, AKeyIsString);
+  AESDecrypt(AData, AInitVector, AResult, AKey, AKeyType, AMode, AKeyIsString,
+    APaddingMode);
   L := Length(AResult);
-  if L >= SizeOf(TQAESBuffer) then // 最少也是一个数据块的大小
+  SetLength(Result, 0);
+  if APaddingMode = pmZero then
   begin
-    if ATrimZero then
+    if L >= SizeOf(TQAESBuffer) then // 最少也是一个数据块的大小
     begin
-      while (AResult[L - 1] = 0) and (AResult[L - 2] = 0) do
-        Dec(L, 2);
+      if ATrimZero then
+      begin
+        while (AResult[L - 1] = 0) and (AResult[L - 2] = 0) do
+          Dec(L, 2);
+      end;
     end;
-    if L > 1 then
-    begin
-      if AResult[L - 1] = 0 then
-        AEncoding := DetectTextEncoding(@AResult[0], L - 1, ABOM)
-      else
-        AEncoding := DetectTextEncoding(@AResult[0], L, ABOM);
-      case AEncoding of
-        teAnsi:
-          begin
-            if AResult[L - 1] = 0 then
-              Dec(L);
-            Result := qstring.AnsiDecode(PQCharA(@AResult[0]), L);
-          end;
-        teUnicode16LE:
+  end;
+  if L > 1 then
+  begin
+    if AResult[L - 1] = 0 then
+      AEncoding := DetectTextEncoding(@AResult[0], L - 1, ABOM)
+    else
+      AEncoding := DetectTextEncoding(@AResult[0], L, ABOM);
+    case AEncoding of
+      teAnsi:
+        begin
+          if AResult[L - 1] = 0 then
+            Dec(L);
+          Result := qstring.AnsiDecode(PQCharA(@AResult[0]), L);
+        end;
+      teUnicode16LE:
+        if ABOM then
+          Result := qstring.StrDupX(PQCharW(@AResult[1]), (L shr 1) - 1)
+        else
+          Result := qstring.StrDupX(PQCharW(@AResult[0]), L shr 1);
+      teUnicode16BE:
+        begin
           if ABOM then
-            Result := qstring.StrDupX(PQCharW(@AResult[1]), (L shr 1) - 1)
+            Result := qstring.StrDupX(PQCharW(@AResult[0]), (L shr 1) - 1)
           else
             Result := qstring.StrDupX(PQCharW(@AResult[0]), L shr 1);
-        teUnicode16BE:
-          begin
-            if ABOM then
-              Result := qstring.StrDupX(PQCharW(@AResult[0]), (L shr 1) - 1)
-            else
-              Result := qstring.StrDupX(PQCharW(@AResult[0]), L shr 1);
-            { Unicode BE 编码 }
-            ExchangeByteOrder(PQCharA(Result), Length(Result) shl 1);
-          end;
-        teUTF8:
-          { UTF8编码 }
-          begin
-            if AResult[L - 1] = 0 then
-              Dec(L);
-            if ABOM then
-              Result := qstring.Utf8Decode(PQCharA(@AResult[3]), L)
-            else
-              Result := qstring.Utf8Decode(PQCharA(@AResult[0]), L);
-          end
-      else
-        SetLength(Result, 0);
-      end;
-    end
-    else
-      SetLength(Result, 0);
+          { Unicode BE 编码 }
+          ExchangeByteOrder(PQCharA(Result), Length(Result) shl 1);
+        end;
+      teUTF8:
+        { UTF8编码 }
+        begin
+          if AResult[L - 1] = 0 then
+            Dec(L);
+          if ABOM then
+            Result := qstring.Utf8Decode(PQCharA(@AResult[3]), L)
+          else
+            Result := qstring.Utf8Decode(PQCharA(@AResult[0]), L);
+        end;
+    end;
   end
-  else
-    SetLength(Result, 0);
 end;
 
 procedure AESDecrypt(const ASourceFile, ADestFile: QStringW;
   AInitVector: TQAESBuffer; const AKey: QStringW; AKeyType: TQAESKeyType;
-  AMode: TQAESEncryptMode; AKeyIsString: Boolean; AOnProgress: TQAESProgress);
+  AMode: TQAESEncryptMode; AKeyIsString: Boolean;
+  APaddingMode: TQAESPaddingMode; AOnProgress: TQAESProgress);
 var
   ASourceStream, ADestStream: TFileStream;
 begin
@@ -3909,7 +3999,7 @@ begin
       fmShareDenyWrite);
     ADestStream := TFileStream.Create(ADestFile, fmCreate);
     AESDecrypt(ASourceStream, ADestStream, AInitVector, AKey, AKeyType, AMode,
-      AKeyIsString);
+      AKeyIsString, APaddingMode);
   finally
     if ASourceStream <> nil then
       FreeObject(ASourceStream);
@@ -3938,22 +4028,24 @@ end;
 function TQAES.AsCBC(AInitVector: TQAESBuffer; const AKey: QStringW;
   AKeyType: TQAESKeyType): PQAES;
 begin
-  FKeyIsString := True;
+  FKeyIsString := true;
   FKey := AKey;
   FMode := emCBC;
   FKeyType := AKeyType;
   FInitVector := AInitVector;
+  FPaddingMode := pmPKCS5;
   FOnProgress := nil;
   Result := @Self;
 end;
 
 function TQAES.AsECB(const AKey: QStringW; AKeyType: TQAESKeyType): PQAES;
 begin
-  FKeyIsString := True;
+  FKeyIsString := true;
   FKey := AKey;
   FMode := emECB;
   FKeyType := AKeyType;
   FInitVector := AESEmptyBuffer;
+  FPaddingMode := pmPKCS5;
   FOnProgress := nil;
   Result := @Self;
 end;
@@ -3983,6 +4075,7 @@ begin
   FInitVector := AInitVector;
   FOnProgress := nil;
   FKeyType := AKeyType;
+  FPaddingMode := pmPKCS5;
   Result := @Self;
 end;
 
@@ -4004,6 +4097,7 @@ begin
     SetLength(FKey, 0);
   FInitVector := AESEmptyBuffer;
   FOnProgress := nil;
+  FPaddingMode := pmPKCS5;
   FKeyType := AKeyType;
   Result := @Self;
 end;
@@ -4024,20 +4118,21 @@ begin
       AKeyData := KeyFromString(FKey, FKeyType)
     else
       KeyFromBytes(PQCharW(FKey), Length(FKey) shl 1, FKeyType, AKeyData);
-    AESDecrypt(AData, ALen, FInitVector, AResult, AKeyData, FMode);
+    AESDecrypt(AData, ALen, FInitVector, AResult, AKeyData, FMode, PaddingMode);
   end
   else
     SetLength(AResult, 0);
 end;
 
-function TQAES.Decrypt(const S: String): String;
+function TQAES.Decrypt(const S: String; AHexBeforeBase64: Boolean): String;
 var
   ABytes: TBytes;
 begin
   if Length(S) > 0 then
   begin
-    Result := DecodeString(S);
-    HexToBin(Result, ABytes);
+    ABytes := DecodeBase64(S);
+    if AHexBeforeBase64 then
+      ABytes := HexToBin(AnsiDecode(PQCharA(ABytes), Length(ABytes)));
     if Length(ABytes) <> 0 then
       Result := Decrypt(ABytes)
     else
@@ -4049,30 +4144,32 @@ end;
 
 function TQAES.Decrypt(const AData: TBytes): String;
 begin
-  Result := AESDecrypt(AData, FInitVector, FKey, FKeyType, FMode, FKeyIsString);
+  Result := AESDecrypt(AData, FInitVector, FKey, FKeyType, FMode, true,
+    FKeyIsString, PaddingMode);
 end;
 
 procedure TQAES.Decrypt(const AData: TBytes; var AResult: TBytes);
 begin
-  AESDecrypt(AData, FInitVector, AResult, FKey, FKeyType, FMode, FKeyIsString);
+  AESDecrypt(AData, FInitVector, AResult, FKey, FKeyType, FMode, FKeyIsString,
+    PaddingMode);
 end;
 
 procedure TQAES.Encrypt(ASource, ADest: TStream);
 begin
   AESEncrypt(ASource, ADest, FInitVector, FKey, FKeyType, FMode, FKeyIsString,
-    FOnProgress);
+    PaddingMode, FOnProgress);
 end;
 
 procedure TQAES.Encrypt(const p: Pointer; len: Integer; var AResult: TBytes);
 begin
   AESEncrypt(p, len, FInitVector, AResult, FKey, FKeyType, FMode, FKeyIsString,
-    FOnProgress);
+    PaddingMode, FOnProgress);
 end;
 
 procedure TQAES.Encrypt(const ASourceFile, ADestFile: QStringW);
 begin
   AESEncrypt(ASourceFile, ADestFile, FInitVector, FKey, FKeyType, FMode,
-    FKeyIsString, FOnProgress);
+    FKeyIsString, PaddingMode, FOnProgress);
 end;
 
 procedure TQAES.SetProgressCallback(ACallback: TQAESProgress);
@@ -4080,22 +4177,28 @@ begin
   FOnProgress := ACallback;
 end;
 
-function TQAES.Encrypt(const AData: QStringW): QStringW;
+function TQAES.Encrypt(const AData: QStringW; AHexBeforeBase64: Boolean)
+  : QStringW;
 var
   AResult: TBytes;
 begin
   Encrypt(AData, AResult);
-  Result := EncodeString(BinToHex(AResult));
+  if AHexBeforeBase64 then
+    Result := EncodeString(BinToHex(AResult))
+  else
+    Result := EncodeBase64(@AResult[0], Length(AResult));
 end;
 
 procedure TQAES.Encrypt(const AData: QStringW; var AResult: TBytes);
 begin
-  AESEncrypt(AData, FInitVector, AResult, FKey, FKeyType, FMode, FKeyIsString);
+  AESEncrypt(AData, FInitVector, AResult, FKey, FKeyType, FMode, FKeyIsString,
+    PaddingMode);
 end;
 
 procedure TQAES.Encrypt(const AData: TBytes; var AResult: TBytes);
 begin
-  AESEncrypt(AData, FInitVector, AResult, FKey, FKeyType, FMode, FKeyIsString);
+  AESEncrypt(AData, FInitVector, AResult, FKey, FKeyType, FMode, FKeyIsString,
+    PaddingMode);
 end;
 
 initialization

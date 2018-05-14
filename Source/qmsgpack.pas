@@ -313,6 +313,12 @@ type
     property Current: TQMsgPack read GetCurrent;
   end;
 
+  // 时间戳
+  TQMsgPackTimeStamp = record
+    Seconds: Int64;
+    NanoSeconds: Cardinal;
+  end;
+
   TQMsgPack = class
   private
     FKey: TBytes; // 名称
@@ -397,7 +403,8 @@ type
     procedure Replace(AIndex: Integer; ANewItem: TQMsgPack); virtual;
     procedure DoNodeNameChanged(ANode: TQMsgPack); virtual;
     procedure DoNodeMoved(ANode: TQMsgPack); virtual;
-    procedure InternalEncode(ANode: TQMsgPack; AStream: TStream);
+    procedure InternalEncode(ANode: TQMsgPack; AStream: TStream;
+      ADateTimeAsTimeStamp: Boolean);
     procedure DoParsed; virtual;
     function InternalAdd(const AKey: TBytes; AKeyType, ADataType: TQMsgPackType)
       : TQMsgPack;
@@ -697,7 +704,8 @@ type
     /// <summary>保存当前对象内容到流中</summary>
     /// <param name="AStream">目标流对象</param>
     /// <remarks>注意当前结点的名称不会被写入</remarks>
-    procedure SaveToStream(AStream: TStream);
+    procedure SaveToStream(AStream: TStream;
+      ADateTimeAsTimeStamp: Boolean = False);
     /// <summary>从流的当前位置开始加载MsgPack对象</summary>
     /// <param name="AStream">源数据流</param>
     /// <remarks>流的当前位置到结束的长度必需大于2字节，否则无意义</remarks>
@@ -705,7 +713,8 @@ type
     /// <summary>保存当前对象内容到文件中</summary>
     /// <param name="AFileName">文件名</param>
     /// <remarks>注意当前结点的名称不会被写入</remarks>
-    procedure SaveToFile(AFileName: String);
+    procedure SaveToFile(AFileName: String;
+      ADateTimeAsTimeStamp: Boolean = False);
     /// <summary>从指定的文件中加载当前对象</summary>
     /// <param name="AFileName">要加载的文件名</param>
     procedure LoadFromFile(AFileName: String);
@@ -878,7 +887,8 @@ type
     class procedure WriteSingle(AStream: TStream; AValue: Single);
     class procedure WriteBool(AStream: TStream; AValue: Boolean);
     class procedure WriteString(AStream: TStream; AValue: QStringW);
-    class procedure WriteDateTime(AStream: TStream; AValue: TDateTime);
+    class procedure WriteDateTime(AStream: TStream; AValue: TDateTime;
+      ADateTimeAsTimeStamp: Boolean);
     class procedure WriteBytes(AStream: TStream; const ABytes: TBytes);
       overload;
     class procedure WriteBytes(AStream: TStream; const p: PByte;
@@ -1819,7 +1829,7 @@ begin
   AStream := TMemoryStream.Create;
   AStream.Size := 16384;
   try
-    InternalEncode(Self, AStream);
+    InternalEncode(Self, AStream, False);
     SetLength(Result, AStream.Position);
     if Length(Result) > 0 then
       Move(PByte(AStream.Memory)^, Result[0], Length(Result));
@@ -2624,6 +2634,20 @@ begin
 end;
 
 function TQMsgPack.GetAsDateTime: TDateTime;
+  procedure FromTimeStamp;
+  var
+    T: Int64;
+  begin
+    if Length(FValue) = 4 then // 32位秒数
+      Result := ExchangeByteOrder(PCardinal(@FValue[0])^) / 86400 +
+        UnixDateDelta
+    else if Length(FValue) = 8 then // 64位,30纳秒+34位秒数
+    begin
+      T := ExchangeByteOrder(PInt64(@FValue[0])^);
+      Result := (T and Int64($3FFFFFFFF)) / 86400 + (T shr 34) / 10000000000;
+    end;
+  end;
+
 begin
   if DataType in [mptDateTime, mptFloat] then
     Result := PDouble(FValue)^
@@ -2638,6 +2662,8 @@ begin
   end
   else if DataType in [mptInteger, mptNull, mptUnknown] then
     Result := AsInt64
+  else if (DataType = mptExtended) and (ExtType = $FF) then
+    FromTimeStamp
   else
     raise Exception.Create(Format(SBadConvert,
       [MsgPackTypeName[Integer(DataType)], 'DateTime']));
@@ -3071,7 +3097,8 @@ begin
       else
       begin
         AItemName := AItem.Name;
-        if Length(AItemName) > 0 then // 命名的元素
+        if Length(AItemName) > 0 then
+          // 命名的元素
           Result := APathDelimiter + AItemName + Result
         else
           Result := '[' + IntToStr(AItem.ItemIndex) + ']' + Result;
@@ -3204,7 +3231,8 @@ begin
   FItems.Add(Result);
 end;
 
-procedure TQMsgPack.InternalEncode(ANode: TQMsgPack; AStream: TStream);
+procedure TQMsgPack.InternalEncode(ANode: TQMsgPack; AStream: TStream;
+  ADateTimeAsTimeStamp: Boolean);
 var
   I, C: Integer;
   AChild: TQMsgPack;
@@ -3223,7 +3251,9 @@ begin
       WriteInt(AStream, ANode.AsInt64);
     mptBoolean:
       WriteBool(AStream, ANode.AsBoolean);
-    mptDateTime, mptFloat:
+    mptDateTime:
+      WriteDateTime(AStream, ANode.AsDateTime, ADateTimeAsTimeStamp);
+    mptFloat:
       WriteFloat(AStream, ANode.AsFloat);
     mptSingle:
       WriteSingle(AStream, ANode.AsSingle);
@@ -3236,7 +3266,7 @@ begin
         C := ANode.Count;
         WriteArray(AStream, C);
         for I := 0 to C - 1 do
-          InternalEncode(ANode[I], AStream);
+          InternalEncode(ANode[I], AStream, ADateTimeAsTimeStamp);
       end;
     mptMap:
       begin
@@ -3263,9 +3293,9 @@ begin
             mptBinary:
               WriteBytes(AStream, @AChild.FKey[0], Length(AChild.FKey));
             mptDateTime:
-              WriteFloat(AStream, AChild.KeyAsDateTime);
+              WriteDateTime(AStream, ANode.KeyAsDateTime, ADateTimeAsTimeStamp);
           end;
-          InternalEncode(AChild, AStream);
+          InternalEncode(AChild, AStream, ADateTimeAsTimeStamp);
         end;
       end;
     mptExtended:
@@ -3283,7 +3313,8 @@ begin
   ps := p;
   while IntPtr(p) - IntPtr(ps) < l do
   begin
-    if p^ in [$0 .. $7F] then // 0-127的整数
+    if p^ in [$0 .. $7F] then
+    // 0-127的整数
     begin
       if AToKey then
         KeyAsInt64 := p^
@@ -3354,7 +3385,8 @@ begin
               DataType := mptNull;
             Inc(p);
           end;
-        $C1: // 保留
+        $C1:
+          // 保留
           raise Exception.Create('保留的类型');
         $C2: // False
           begin
@@ -3392,7 +3424,8 @@ begin
             end;
             Inc(p, ACount);
           end;
-        $C5: // 二进制，16位，最长65535B
+        $C5:
+          // 二进制，16位，最长65535B
           begin
             Inc(p);
             ACount := ExchangeByteOrder(PWord(p)^);
@@ -3475,7 +3508,8 @@ begin
               AsSingle := ExchangeByteOrder(PSingle(p)^);
             Inc(p, 4);
           end;
-        $CB: // Float 64
+        $CB:
+          // Float 64
           begin
             Inc(p);
             if AToKey then
@@ -3484,7 +3518,8 @@ begin
               AsFloat := ExchangeByteOrder(PDouble(p)^);
             Inc(p, 8);
           end;
-        $CC: // UInt8
+        $CC:
+          // UInt8
           begin
             Inc(p);
             if AToKey then
@@ -3502,7 +3537,8 @@ begin
               AsInt64 := ExchangeByteOrder(PWord(p)^);
             Inc(p, 2);
           end;
-        $CE: // UInt32
+        $CE:
+          // UInt32
           begin
             Inc(p);
             if AToKey then
@@ -3520,7 +3556,8 @@ begin
               AsInt64 := ExchangeByteOrder(PInt64(p)^);
             Inc(p, 8);
           end;
-        $D0: // Int8
+        $D0:
+          // Int8
           begin
             Inc(p);
             if AToKey then
@@ -3547,7 +3584,8 @@ begin
               AsInt64 := ExchangeByteOrder(PInteger(p)^);
             Inc(p, 4);
           end;
-        $D3: // Int64
+        $D3:
+          // Int64
           begin
             Inc(p);
             if AToKey then
@@ -3556,7 +3594,8 @@ begin
               AsInt64 := ExchangeByteOrder(PInt64(p)^);
             Inc(p, 8);
           end;
-        $D4: // Fixed ext8,1B
+        $D4:
+          // Fixed ext8,1B
           begin
             Inc(p);
             DataType := mptExtended;
@@ -3566,7 +3605,8 @@ begin
             FValue[0] := p^;
             Inc(p);
           end;
-        $D5: // Fixed Ext16,2B
+        $D5:
+          // Fixed Ext16,2B
           begin
             Inc(p);
             DataType := mptExtended;
@@ -3863,7 +3903,8 @@ begin
       if (pn[l - 1] = ']') then
       begin
         ws := pn;
-        if pn^ = '[' then // 如果是直接的数组，则直接取当前的parent为数组的根
+        if pn^ = '[' then
+          // 如果是直接的数组，则直接取当前的parent为数组的根
           Result := AParent
         else
         begin
@@ -4114,22 +4155,24 @@ begin
   end;
 end;
 
-procedure TQMsgPack.SaveToFile(AFileName: String);
+procedure TQMsgPack.SaveToFile(AFileName: String;
+  ADateTimeAsTimeStamp: Boolean = False);
 var
   AStream: TMemoryStream;
 begin
   AStream := TMemoryStream.Create;
   try
-    SaveToStream(AStream);
+    SaveToStream(AStream, ADateTimeAsTimeStamp);
     AStream.SaveToFile(AFileName);
   finally
     FreeObject(AStream);
   end;
 end;
 
-procedure TQMsgPack.SaveToStream(AStream: TStream);
+procedure TQMsgPack.SaveToStream(AStream: TStream;
+  ADateTimeAsTimeStamp: Boolean = False);
 begin
-  InternalEncode(Self, AStream);
+  InternalEncode(Self, AStream, ADateTimeAsTimeStamp);
   AStream.Size := AStream.Position;
 end;
 
@@ -4896,6 +4939,7 @@ procedure TQMsgPack.ToRtti(ADest: Pointer; AType: PTypeInfo;
       end;
     end;
   end;
+
   function ArrayItemTypeName(ATypeName: QStringW): QStringW;
   var
     p, ps: PQCharW;
@@ -4920,6 +4964,7 @@ procedure TQMsgPack.ToRtti(ADest: Pointer; AType: PTypeInfo;
     else
       Result := '';
   end;
+
   procedure SetDynArrayLen(arr: Pointer; AType: PTypeInfo; ALen: NativeInt);
   var
     pmem: Pointer;
@@ -5114,6 +5159,7 @@ procedure TQMsgPack.ToRtti(ADest: Pointer; AType: PTypeInfo;
     else
       raise Exception.CreateFmt(SMissRttiTypeDefine, [AType.Name]);
   end;
+
   function GetFixedArrayItemType: PTypeInfo;
   var
     pType: PPTypeInfo;
@@ -5124,6 +5170,7 @@ procedure TQMsgPack.ToRtti(ADest: Pointer; AType: PTypeInfo;
     else
       Result := pType^;
   end;
+
   procedure ToFixedArray;
   var
     I, C, ASize: Integer;
@@ -5512,9 +5559,45 @@ begin
     WriteBytes(AStream, @ABytes, 0);
 end;
 
-class procedure TQMsgPack.WriteDateTime(AStream: TStream; AValue: TDateTime);
+class procedure TQMsgPack.WriteDateTime(AStream: TStream; AValue: TDateTime;
+  ADateTimeAsTimeStamp: Boolean);
+var
+  ts: TQMsgPackTimeStamp;
+  V: Double;
+  ABuf: array [0 .. 15] of Byte;
+  ABuf32: array [0 .. 3] of Cardinal absolute ABuf;
+  ABuf64: array [0 .. 1] of Int64 absolute ABuf;
 begin
-  WriteFloat(AStream, AValue);
+  if ADateTimeAsTimeStamp then
+  begin
+    V := AValue * 86400;
+    ts.Seconds := Trunc(V - UnixDateDelta * Int64(86400));
+    V := V * 10;
+    ts.NanoSeconds := Trunc((V - Trunc(V)) * 1000000000);
+    if ts.NanoSeconds = 0 then
+    begin
+      if ts.Seconds <= $FFFFFFFF then
+      begin
+        ABuf32[0] := ExchangeByteOrder(Cardinal(ts.Seconds));
+        WriteExt(AStream, $FF, @ABuf[0], SizeOf(Cardinal));
+        Exit;
+      end
+    end;
+    if ts.Seconds <= Int64($3FFFFFFFF) then // 64位:30位纳秒,34位秒数
+    begin
+      ABuf64[0] := ExchangeByteOrder(Int64(ts.NanoSeconds) shl 34 + ts.Seconds);
+      WriteExt(AStream, $FF, @ABuf[0], SizeOf(Int64));
+    end
+    else
+    // 64位秒，32位纳秒
+    begin
+      ABuf64[1] := ExchangeByteOrder(ts.Seconds);
+      ABuf32[1] := ExchangeByteOrder(ts.NanoSeconds);
+      WriteExt(AStream, $FF, @ABuf[4], SizeOf(Int64) + SizeOf(Cardinal));
+    end;
+  end
+  else
+    WriteFloat(AStream, AValue);
 end;
 
 class procedure TQMsgPack.WriteExt(AStream: TStream; AType: Byte;
@@ -5609,7 +5692,8 @@ begin
       ABuf[0] := AValue;
       AStream.WriteBuffer(ABuf[0], 1);
     end
-    else if AValue <= 255 then // UInt8
+    else if AValue <= 255 then
+    // UInt8
     begin
       ABuf[0] := $CC;
       ABuf[1] := Byte(AValue);
@@ -5645,7 +5729,8 @@ begin
       AStream.WriteBuffer(ABuf, 9);
     end;
   end
-  else // <0
+  else
+  // <0
   begin
     if AValue <= -2147483648 then // 64位
     begin
@@ -5907,13 +5992,12 @@ procedure TQHashedMsgPack.DoNodeNameChanged(ANode: TQMsgPack);
   end;
 
 begin
-  if ANode.Parent.DataType = mptMap then
+  if Assigned(ANode.Parent) and (ANode.Parent.DataType = mptMap) then
   begin
     if ANode.FKeyHash = 0 then
     begin
       ANode.FKeyHash := HashName(ANode.Name);
-      if Assigned(ANode.Parent) then
-        TQHashedMsgPack(ANode.Parent).HashTable.Add(ANode, ANode.FKeyHash);
+      TQHashedMsgPack(ANode.Parent).HashTable.Add(ANode, ANode.FKeyHash);
     end
     else
       Rehash;

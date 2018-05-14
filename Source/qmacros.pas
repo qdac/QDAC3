@@ -1331,6 +1331,7 @@ begin
   ALast.SavePoint := FSavePoint;
   ALast.Volatile := AStable;
   ALast.Tag := ATag;
+  ALast.ReplaceId:=FReplaceId;
   if Assigned(AMacro.FValue) then
     AMacro.FValue.Next := ALast;
   AMacro.FValue := ALast;

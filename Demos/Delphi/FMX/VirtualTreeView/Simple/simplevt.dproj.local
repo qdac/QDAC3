@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899-12-30 00:00:00.000.779,C:\Users\swish\Documents\Embarcadero\Studio\Projects\Project2.dproj=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Project2.dproj</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.855,H:\User\QDAC\Demos\Delphi\FMX\VirtualTreeView\Simple\simplevt.dproj=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Project2.dproj</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.299,H:\User\QDAC\Demos\Delphi\FMX\VirtualTreeView\Simple\Unit2.fmx=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit2.fmx</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.281,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.299,H:\User\QDAC\Demos\Delphi\FMX\VirtualTreeView\Simple\Unit2.pas=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.461,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.740,=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+  </Transactions>
+	<ActiveMobileDevice>
+		<POSX iOSSimulator="iPhone5"/>
+	</ActiveMobileDevice>
+</BorlandProject>

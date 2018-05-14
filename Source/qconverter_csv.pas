@@ -198,11 +198,11 @@ var
     ASize := MaxInt;
     if Assigned(OnGetFieldType) then
       OnGetFieldType(Self, AName, AType, ASize);
-    ADef := AFieldDefs.AddFieldDef as TQFieldDef;
-    ADef.Name := AName;
-    ADef.DBType := SQLTypeMap[AType];
-    if ADef.Size = 0 then
-      ADef.Size := ASize;
+      ADef := AFieldDefs.AddFieldDef as TQFieldDef;
+      ADef.Name := AName;
+      ADef.DBType := SQLTypeMap[AType];
+    if (ASize<>ADef.Size) and (ASize>0) then
+      ADef.Size:=ASize;
   end;
 
 begin

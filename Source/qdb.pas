@@ -1224,7 +1224,7 @@ type
     function GetFieldClass(FieldType: TFieldType): TFieldClass; override;
     function RealRecord(ARec: TQRecord): TQRecord;
     function GetAggregateValue(Field: TField): Variant; override;
-    function CreateFieldsByUser: Boolean;
+
     procedure Notification(AComponent: TComponent;
       Operation: TOperation); override;
     property ChangedRecords: TQRecords read GetChangedRecords;
@@ -1233,6 +1233,7 @@ type
     destructor Destroy; override;
     procedure CreateDataSet; // 创建一个纯内存数据集
     procedure RecreateDataSet; // 清除所有的数据，重建空的数据集
+    function CreateFieldsByUser: Boolean;
     function CreateBlobStream(Field: TField; Mode: TBlobStreamMode)
       : TStream; override;
     function GetBlobFieldData(FieldNo: Integer; var Buffer: TBlobByteData)
@@ -1736,7 +1737,6 @@ type
       : Boolean; overload;
     function OpenDataSet(ACmdText: QStringW; AParams: array of const)
       : TQDataSet; overload;
-
     // ExecuteCmd函数
     /// <summary>执行一个脚本并返回影响的行数</summary>
     /// <param name="ACmdText">要执行的SQL脚本</param>
@@ -2655,7 +2655,7 @@ end;
 
 function TQFieldDef.GetValueType: TQValueDataType;
 begin
-  if FValueType = vdtNull then
+  if FValueType in [vdtNull,vdtUnset] then
     LookupValueType;
   Result := FValueType;
 end;
@@ -8672,6 +8672,7 @@ end;
 procedure TQProvider.AddResultRecord(var ARecord: TQRecord);
 begin
   FActiveRecords.Add(ARecord);
+  ARecord.Release;
 end;
 
 function TQProvider.AllocRecord: TQRecord;
@@ -8999,15 +9000,15 @@ begin
     ARequest.Result.Statics.ExecuteDoneTime := GetTimeStamp;
     if ARequest.Result.ErrorCode = 0 then
     begin
-      if (FActiveRequest.Command.Action = caFetchRecords) then
+      if (ARequest.Command.Action = caFetchRecords) then
         DoOpenDataSet
-      else if FActiveRequest.Command.Action = caFetchStream then
+      else if ARequest.Command.Action = caFetchStream then
         DoExportStream;
     end
     else
       SetError(ARequest.Result.ErrorCode, ARequest.Result.ErrorMsg);
   finally
-    if FActiveRequest.Command.Action = caFetchRecords then
+    if ARequest.Command.Action = caFetchRecords then
       ADataSet.EnableControls;
     EmptyResultSets;
     if Assigned(FAfterExecute) then
@@ -9697,6 +9698,7 @@ end;
 
 class procedure TQProvider.ReleaseDataSet(ADataSet: TQDataSet);
 begin
+  ADataSet.Close;
   ADataSet.Provider := nil;
   if ADataSet.Owner = nil then // 有所有者的，由所隶属的所有者负责释放
   begin

@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899-12-30 00:00:00.000.928,C:\Users\swish\Documents\Embarcadero\Studio\Projects\Unit3.fmx=H:\User\QDAC\Demos\Delphi\FMX\VirtualTreeView\areatree\main.fmx</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.160,C:\Users\swish\Documents\Embarcadero\Studio\Projects\Project3.dproj=H:\User\QDAC\Demos\Delphi\FMX\VirtualTreeView\areatree\areatree.dproj</Transaction>
+  </Transactions>
+	<ActiveMobileDevice>
+		<POSX iOSSimulator="iPhone5"/>  <NoProfile Android="CJL5T15B18044567"/>
+  </ActiveMobileDevice>
+</BorlandProject>

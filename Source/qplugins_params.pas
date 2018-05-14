@@ -56,11 +56,8 @@ type
   end;
 
   // 重新实现 TInterfacedObject，以便子类能够重载 QueryInterface 方法
-  TQInterfacedObject = class(TObject, IInterface)
+  TQInterfacedObject = class(TInterfacedObject, IInterface)
   protected
-    {$IFNDEF AUTOREFCOUNT}
-    FRefCount: Integer;
-    {$ENDIF}
     FDisableRefCount: Integer;
   public
     constructor Create; overload; virtual;
@@ -531,21 +528,23 @@ end;
 
 function TQInterfacedObject.QueryInterface(const IID: TGuid; out Obj): HRESULT;
 begin
-  if GetInterface(IID, Obj) then
-    Result := 0
-  else if SameId(IID, ObjCastGUID) then
+  Result := inherited;
+  if Result <> 0 then
   begin
-    Pointer(Obj) := Self;
-    Result := 0;
-  end
-  else
-    Result := E_NOINTERFACE;
+    if SameId(IID, ObjCastGUID) then
+    begin
+      Pointer(Obj) := Self;
+      Result := 0;
+    end
+    else
+      Result := E_NOINTERFACE;
+  end;
 end;
 
 function TQInterfacedObject._AddRef: Integer;
 begin
   if FDisableRefCount = 0 then
-    Result := AtomicIncrement(FRefCount)
+    Result := inherited
   else
     Result := -1;
 end;
@@ -553,11 +552,7 @@ end;
 function TQInterfacedObject._Release: Integer;
 begin
   if FDisableRefCount = 0 then
-  begin
-    Result := AtomicDecrement(FRefCount);
-    if Result = 0 then
-      FreeObject(Self);
-  end
+    Result := inherited
   else
     Result := -1;
 end;
@@ -737,7 +732,7 @@ end;
 
 function NewString(const S: QStringW): IQString;
 begin
-  Result:=TQUnicodeString.Create(S);
+  Result := TQUnicodeString.Create(S);
 end;
 
 { TQParam }

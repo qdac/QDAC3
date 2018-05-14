@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Types,
   Controls, Forms, Dialogs, StdCtrls, ExtCtrls, VirtualTrees,
   Grids, ValEdit, ComCtrls, Vcl.Buttons, Vcl.Imaging.jpeg, QString, qmsgpack,
-  Vcl.ImgList, ActiveX,
+  Vcl.ImgList, ActiveX, clipbrd,
   Vcl.Imaging.pngimage, Vcl.Menus, System.ImageList;
 
 type
@@ -38,14 +38,20 @@ type
     miAddNode: TMenuItem;
     miDeleteNode: TMenuItem;
     miEditNode: TMenuItem;
+    Button4: TButton;
+    N1: TMenuItem;
+    N2: TMenuItem;
+    N3: TMenuItem;
+    miCopyChildNames: TMenuItem;
+    N5: TMenuItem;
+    N6: TMenuItem;
+    miCopyChildValues: TMenuItem;
+    N8: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure vstItemsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText:
 {$IFDEF UNICODE}string{$ELSE}WideString{$ENDIF});
-    procedure vstItemsGetImageIndex(Sender: TBaseVirtualTree;
-      Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
-      var Ghosted: Boolean; var ImageIndex: Integer);
     procedure vstItemsInitNode(Sender: TBaseVirtualTree;
       ParentNode, Node: PVirtualNode;
       var InitialStates: TVirtualNodeInitStates);
@@ -74,6 +80,14 @@ type
     procedure vstItemsDragDrop(Sender: TBaseVirtualTree; Source: TObject;
       DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
       Pt: TPoint; var Effect: Integer; Mode: TDropMode);
+    procedure Button4Click(Sender: TObject);
+    procedure vstItemsGetImageIndex(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
+      var Ghosted: Boolean; var ImageIndex: TImageIndex);
+    procedure miCopyChildNamesClick(Sender: TObject);
+    procedure N5Click(Sender: TObject);
+    procedure miCopyChildValuesClick(Sender: TObject);
+    procedure N8Click(Sender: TObject);
   private
     { Private declarations }
     FMsgPack: TQMsgPack;
@@ -297,6 +311,29 @@ begin
   end;
 end;
 
+procedure TfrmMain.Button4Click(Sender: TObject);
+var
+  S: String;
+  AJson: TQJson;
+begin
+  if Clipboard.HasFormat(CF_TEXT) then
+  begin
+    AJson := TQJson.Create;
+    try
+      if AJson.TryParse(Clipboard.AsText) then
+        JsonToMsgPack(AJson, FMsgPack);
+    finally
+      FreeObject(AJson);
+      cbxPathDelimiter.Visible := True;
+      lbxSearched.Clear;
+      pnlSearched.Visible := False;
+      edtPath.Visible := True;
+      vstItems.RootNodeCount := 0;
+      vstItems.RootNodeCount := FMsgPack.Count;
+    end;
+  end;
+end;
+
 procedure TfrmMain.cbxPathDelimiterChange(Sender: TObject);
 begin
   case cbxPathDelimiter.ItemIndex of
@@ -378,16 +415,16 @@ begin
   else
     FMsgPack.LoadFromFile(AFileName);
   T := GetTickCount - T;
-  FFileName:=AFileName;
+  FFileName := AFileName;
   AFileSize := GetFileSize(AFileName);
   if T > 0 then
     Speed := AFileSize * 1000 div T
   else
     Speed := 0;
-  cbxPathDelimiter.Visible := False;
+  cbxPathDelimiter.Visible := True;
   lbxSearched.Clear;
   pnlSearched.Visible := False;
-  edtPath.Visible := False;
+  edtPath.Visible := True;
   pnlHint.Caption := AFileName + ' - 大小' + RollupSize(AFileSize) + ', 用时:' +
     IntToStr(T) + 'ms，速度：' + RollupSize(Speed) + '/s';
 end;
@@ -415,8 +452,8 @@ begin
         ASpeed := AFileSize * 1000 div T
       else
         ASpeed := 0;
-      cbxPathDelimiter.Visible := False;
-      edtPath.Visible := False;
+      cbxPathDelimiter.Visible := True;
+      edtPath.Visible := True;
       pnlHint.Caption := Action.URL + ' - 大小' + RollupSize(AFileSize) + ', 用时:'
         + IntToStr(T) + 'ms，速度：' + RollupSize(ASpeed) + '/s';
       vstItems.RootNodeCount := 0;
@@ -506,10 +543,93 @@ begin
   vstItems.OnDblClick(Sender);
 end;
 
+procedure TfrmMain.miCopyChildNamesClick(Sender: TObject);
+var
+  AMsgPack: PQMsgPack;
+  S: String;
+  I: Integer;
+begin
+  if Assigned(vstItems.FocusedNode) then
+  begin
+    AMsgPack := vstItems.GetNodeData(vstItems.FocusedNode);
+    S := '';
+    for I := 0 to AMsgPack.Count - 1 do
+      S := S + AMsgPack^[I].KeyAsString + ',';
+    if Length(S) > 0 then
+      SetLength(S, Length(S) - 1);
+    Clipboard.AsText := S;
+  end;
+end;
+
+procedure TfrmMain.N5Click(Sender: TObject);
+var
+  AMsgPack: TQMsgPack;
+  S: String;
+  I: Integer;
+begin
+  if Assigned(vstItems.FocusedNode) then
+  begin
+    AMsgPack := PQMsgPack(vstItems.GetNodeData(vstItems.FocusedNode))^;
+    AMsgPack := AMsgPack.Parent;
+    S := '';
+    if Assigned(AMsgPack) then
+    begin
+      for I := 0 to AMsgPack.Count - 1 do
+        S := S + AMsgPack[I].KeyAsString + ',';
+      if Length(S) > 0 then
+        SetLength(S, Length(S) - 1);
+    end;
+    Clipboard.AsText := S;
+  end;
+end;
+
+procedure TfrmMain.miCopyChildValuesClick(Sender: TObject);
+var
+  AMsgPack: PQMsgPack;
+  S: String;
+  I: Integer;
+begin
+  if Assigned(vstItems.FocusedNode) then
+  begin
+    AMsgPack := vstItems.GetNodeData(vstItems.FocusedNode);
+    S := '';
+    for I := 0 to AMsgPack.Count - 1 do
+      S := S + AMsgPack^[I].AsString + ',';
+    if Length(S) > 0 then
+      SetLength(S, Length(S) - 1);
+    Clipboard.AsText := S;
+  end;
+end;
+
+procedure TfrmMain.N8Click(Sender: TObject);
+var
+  AMsgPack: TQMsgPack;
+  S: String;
+  I: Integer;
+begin
+  if Assigned(vstItems.FocusedNode) then
+  begin
+    AMsgPack := PPointer(vstItems.GetNodeData(vstItems.FocusedNode))^;
+    AMsgPack := AMsgPack.Parent;
+    S := '';
+    if Assigned(AMsgPack) then
+    begin
+      for I := 0 to AMsgPack.Count - 1 do
+        S := S + AMsgPack[I].AsString + ',';
+      if Length(S) > 0 then
+        SetLength(S, Length(S) - 1);
+    end;
+    Clipboard.AsText := S;
+  end;
+end;
+
 procedure TfrmMain.pmActionsPopup(Sender: TObject);
 begin
   miDeleteNode.Enabled := vstItems.FocusedNode <> nil;
   miEditNode.Enabled := miDeleteNode.Enabled;
+  miCopyChildNames.Enabled := Assigned(vstItems.FocusedNode) and
+    (vstItems.HasChildren[vstItems.FocusedNode]);
+  miCopyChildValues.Enabled := miCopyChildNames.Enabled;
 end;
 
 procedure TfrmMain.SaveLastFile(const AFileName: QStringW; IsUrl: Boolean;
@@ -597,7 +717,8 @@ begin
   if Node <> nil then
   begin
     AMsgPack := vstItems.GetNodeData(Node);
-    edtPath.Text := AMsgPack.Path;
+    edtPath.Text := DeleteLeftW(AMsgPack.GetRelPath(nil, QMsgPackPathDelimiter),
+      '.', false, 1);
   end
   else
     edtPath.Text := '';
@@ -605,7 +726,7 @@ end;
 
 procedure TfrmMain.vstItemsGetImageIndex(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
-  var Ghosted: Boolean; var ImageIndex: Integer);
+  var Ghosted: Boolean; var ImageIndex: TImageIndex);
 var
   AMsgPack: PQMsgPack;
 begin

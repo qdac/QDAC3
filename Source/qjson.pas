@@ -24,6 +24,12 @@ interface
 }
 
 { 修订日志
+  2017.3.27
+  ==========
+  + 增加 ForEach 函数和 Sort 函数的重载
+  2017.2.26
+  ==========
+  * 修正了 Replace 未处理父结点的问题（cntlis报告）
   2017.4.10
   ==========
   + 修正了大浮点数判断时出错的问题（SeMain报告）
@@ -403,6 +409,7 @@ type
   /// <param name="ATag">用户附加的数据项</param>
   TQJsonFilterEvent = procedure(ASender, AItem: TQJson; var Accept: Boolean;
     ATag: Pointer) of object;
+  TListSortCompareEvent = function(Item1, Item2: Pointer): Integer of object;
   PQJson = ^TQJson;
 {$IF RTLVersion>=21}
   TQJsonItemList = TList<TQJson>;
@@ -477,6 +484,12 @@ type
   TQJson = class
   private
     function GetRoot: TQJson;
+    function DoCompareName(Item1, Item2: Pointer): Integer;
+    function DoCompareValueBoolean(Item1, Item2: Pointer): Integer;
+    function DoCompareValueDateTime(Item1, Item2: Pointer): Integer;
+    function DoCompareValueFloat(Item1, Item2: Pointer): Integer;
+    function DoCompareValueInt(Item1, Item2: Pointer): Integer;
+    function DoCompareValueString(Item1, Item2: Pointer): Integer;
   protected
     FName: QStringW;
     FNameHash: Cardinal;
@@ -877,8 +890,19 @@ type
     /// <returns>返回索引值，未找到返回-1</returns>
     function IndexOfValue(const AValue: Variant;
       AStrict: Boolean = False): Integer;
-
+    /// <summary>遍历所有的子结点</summary>
+    /// <param name="ACallback">遍历回调函数</param>
+    /// <param name="ANest">是否嵌套调用，如果为false，则只对当前子结点过滤</param>
+    /// <param name="ATag">用户自定义的附加额外标记</param>
+    procedure ForEach(ACallback: TQJsonFilterEvent; ANest: Boolean;
+      const ATag: Pointer); overload;
 {$IF RTLVersion>=21}
+    /// <summary>遍历所有的子结点</summary>
+    /// <param name="ACallback">遍历回调函数</param>
+    /// <param name="ANest">是否嵌套调用，如果为false，则只对当前子结点过滤</param>
+    /// <param name="ATag">用户自定义的附加额外标记</param>
+    procedure ForEach(ACallback: TQJsonFilterEventA; ANest: Boolean;
+      const ATag: Pointer); overload;
     /// <summary>遍历结点查找符合条件的结点</summary>
     /// <param name="ATag">用户自定义的附加额外标记</param>
     /// <param name="ANest">是否嵌套调用，如果为false，则只对当前子结点过滤</param>
@@ -1033,7 +1057,25 @@ type
     /// <param name="AOnCompare">排序比较方法，如果不指定，则按默认规则排序，否则根据它来排序</param>
     /// <remarks>AByType如果不为jdtUnknown，则你必需保证子结点的值能够转换为目标类型</remarks>
     procedure Sort(AByName, ANest: Boolean; AByType: TQJsonDataType;
-      AOnCompare: TListSortCompare);
+      AOnCompare: TListSortCompareEvent); overload;
+    /// <summary>排序子结点</summary>
+    /// <param name="AByName">是否按名称排序</param>
+    /// <param name="ANest">是否排序子结点</param>
+    /// <param name="AByType">子结点排序的类型依据，如果为jdtUnknown，则自动检测，否则按指定的类型排序</param>
+    /// <param name="AOnCompare">排序比较方法，如果不指定，则按默认规则排序，否则根据它来排序</param>
+    /// <remarks>AByType如果不为jdtUnknown，则你必需保证子结点的值能够转换为目标类型</remarks>
+    procedure Sort(AByName, ANest: Boolean; AByType: TQJsonDataType;
+      AOnCompare: TListSortCompare); overload;
+{$IF RTLVersion>=21}
+    /// <summary>排序子结点</summary>
+    /// <param name="AByName">是否按名称排序</param>
+    /// <param name="ANest">是否排序子结点</param>
+    /// <param name="AByType">子结点排序的类型依据，如果为jdtUnknown，则自动检测，否则按指定的类型排序</param>
+    /// <param name="AOnCompare">排序比较方法，如果不指定，则按默认规则排序，否则根据它来排序</param>
+    /// <remarks>AByType如果不为jdtUnknown，则你必需保证子结点的值能够转换为目标类型</remarks>
+    procedure Sort(AByName, ANest: Boolean; AByType: TQJsonDataType;
+      AOnCompare: TListSortCompareFunc); overload;
+{$IFEND}
     /// <summary>逆转结点顺序</summary>
     /// <param name="ANest">是否嵌套逆转</param>
     procedure RevertOrder(ANest: Boolean = False);
@@ -1332,7 +1374,7 @@ resourcestring
   SBadJsonArray = '%s 不是一个有效的JSON数组定义。';
   SBadJsonObject = '%s 不是一个有效的JSON对象定义。';
   SBadJsonEncoding = '无效的编码，编码只能是UTF-8，ANSI，Unicode 16 LE，Unicode 16 BE。';
-  SJsonParseError = '第%d行第%d列:%s '#13#10'行:%s';
+  SJsonParseError = '第%d行第%d列:%s '#13#10'%s';
   SBadJsonName = '%s 不是一个有效的JSON对象名称。';
   SObjectChildNeedName = '对象 %s 的第 %d 个子结点名称未赋值，编码输出前必需赋值。';
   SReplaceTypeNeed = '替换结点的类型要求是 %s 或其子类。';
@@ -1365,7 +1407,7 @@ const
   EParse_BadNameEnd = 7;
   EParse_NameNotFound = 8;
 
-function DoCompareName(Item1, Item2: Pointer): Integer;
+function TQJson.DoCompareName(Item1, Item2: Pointer): Integer;
 var
   AIgnoreCase: Boolean;
   AItem1, AItem2: TQJson;
@@ -1379,7 +1421,7 @@ begin
     AIgnoreCase);
 end;
 
-function DoCompareValueBoolean(Item1, Item2: Pointer): Integer;
+function TQJson.DoCompareValueBoolean(Item1, Item2: Pointer): Integer;
 var
   AItem1, AItem2: TQJson;
 begin
@@ -1401,7 +1443,7 @@ begin
   end;
 end;
 
-function DoCompareValueDateTime(Item1, Item2: Pointer): Integer;
+function TQJson.DoCompareValueDateTime(Item1, Item2: Pointer): Integer;
 var
   AItem1, AItem2: TQJson;
 begin
@@ -1423,7 +1465,7 @@ begin
   end;
 end;
 
-function DoCompareValueFloat(Item1, Item2: Pointer): Integer;
+function TQJson.DoCompareValueFloat(Item1, Item2: Pointer): Integer;
 var
   AItem1, AItem2: TQJson;
 begin
@@ -1445,7 +1487,7 @@ begin
   end;
 end;
 
-function DoCompareValueInt(Item1, Item2: Pointer): Integer;
+function TQJson.DoCompareValueInt(Item1, Item2: Pointer): Integer;
 var
   AItem1, AItem2: TQJson;
 begin
@@ -1467,7 +1509,7 @@ begin
   end;
 end;
 
-function DoCompareValueString(Item1, Item2: Pointer): Integer;
+function TQJson.DoCompareValueString(Item1, Item2: Pointer): Integer;
 var
   AIgnoreCase: Boolean;
   AItem1, AItem2: TQJson;
@@ -2386,11 +2428,8 @@ begin
   AChild := ItemByName(AName);
   if Assigned(AChild) then
   begin
-    try
-      Result := AChild.AsDateTime;
-    except
+    if not AChild.TryGetAsDateTime(Result) then
       Result := ADefVal;
-    end;
   end
   else
     Result := ADefVal;
@@ -2798,7 +2837,7 @@ begin
           if Length(AName) > 0 then
           begin
             Result := AParent.ItemByName(AName);
-            if EndWithW(AName, ']', false) then
+            if EndWithW(AName, ']', False) then
             begin
               Result := AParent.ForcePath(AName);
               Result.DataType := jdtArray;
@@ -2832,6 +2871,64 @@ begin
   end;
 end;
 
+procedure TQJson.ForEach(ACallback: TQJsonFilterEvent; ANest: Boolean;
+  const ATag: Pointer);
+var
+  AContinue: Boolean;
+  procedure DoEnum(AParent: TQJson);
+  var
+    I: Integer;
+    AChild: TQJson;
+  begin
+    I := 0;
+    while (I < AParent.Count) and AContinue do
+    begin
+      AChild := AParent[I];
+      ACallback(Self, AChild, AContinue, ATag);
+      if AContinue and ANest then
+        DoEnum(AChild);
+      Inc(I);
+    end;
+  end;
+
+begin
+  if Assigned(ACallback) then
+  begin
+    AContinue := True;
+    DoEnum(Self);
+  end;
+end;
+{$IF RTLVersion>=21}
+
+procedure TQJson.ForEach(ACallback: TQJsonFilterEventA; ANest: Boolean;
+  const ATag: Pointer);
+var
+  AContinue: Boolean;
+  procedure DoEnum(AParent: TQJson);
+  var
+    I: Integer;
+    AChild: TQJson;
+  begin
+    I := 0;
+    while (I < AParent.Count) and AContinue do
+    begin
+      AChild := AParent[I];
+      ACallback(Self, AChild, AContinue, ATag);
+      if AContinue and ANest then
+        DoEnum(AChild);
+      Inc(I);
+    end;
+  end;
+
+begin
+  if Assigned(ACallback) then
+  begin
+    AContinue := True;
+    DoEnum(Self);
+  end;
+end;
+{$IFEND}
+
 function TQJson.FormatParseError(ACode: Integer; AMsg: QStringW; ps, p: PQCharW)
   : QStringW;
 var
@@ -2845,11 +2942,16 @@ var
     pl := PQCharW(ALine);
     pls := pl;
     Inc(pl, ACol);
-    pe := pl;
-    while (pl >= pls) and (IntPtr(pe) - IntPtr(pl) < 100) do
-      Dec(pl);
-    ALine := StrDupX(pl, 50) + SLineBreak + StringReplicateW('0',
-      (IntPtr(pl) - IntPtr(pls)) shr 1) + '^';
+    pe:=pls+Length(ALine);
+    if IntPtr(pe)-IntPtr(pl)>50 then
+      begin
+      pls:=pl-25;
+      pe:=pl+25;
+      end
+    else if Length(ALine)>=50 then
+      pls:=pe-50;
+    ALine := StrDupX(pls,pe-pls ) + SLineBreak + StringReplicateW('0',
+      (IntPtr(pl) - IntPtr(pls)) shr 1-1) + '^';
   end;
 
 begin
@@ -3275,14 +3377,29 @@ var
     if Length(Result) = 0 then
       raise Exception.CreateFmt(SConvertError, ['jdtString', 'Bytes']);
   end;
+  function StrToBytes: TBytes;
+  var
+    V: String;
+    U: QStringA;
+  begin
+    V := AsString;
+    if Assigned(OnQJsonDecodeBytes) then
+      OnQJsonDecodeBytes(V, Result)
+    else
+      Result := HexToBin(V);
+    // 上面两种转换方式都失败了，按UTF-8编码字符串处理
+    if (Length(Result) = 0) and (Length(V) > 0) then
+    begin
+      U:=QString.Utf8Encode(V);
+      SetLength(Result,U.Length);
+      Move(PQCharA(U)^,Result[0],U.Length);
+    end;
+  end;
 
 begin
   if DataType = jdtString then // 字符串
   begin
-    if Assigned(OnQJsonDecodeBytes) then
-      OnQJsonDecodeBytes(AsString, Result)
-    else
-      Result := HexToBin(AsString);
+    Result := StrToBytes
   end
   else if DataType = jdtArray then
   begin
@@ -3835,15 +3952,15 @@ function TQJson.InternalEncode(ABuilder: TQStringCatHelperW; ADoFormat: Boolean;
   begin
     MS := Trunc((ATime - UnixDelta) * 86400000);
     ABuilder.Cat(JsonTimeStart, 6);
-    if (JsonTimeZone >= -12) and (JsonTimeZone <= 12) then
+    if (JsonTimezone >= -12) and (JsonTimezone <= 12) then
     begin
-      Dec(MS, 3600000 * JsonTimeZone);
+      Dec(MS, 3600000 * JsonTimezone);
       if JsonDatePrecision = jdpSecond then
         MS := MS div 1000;
       ABuilder.Cat(IntToStr(MS));
-      if JsonTimeZone >= 0 then
+      if JsonTimezone >= 0 then
         ABuilder.Cat('+');
-      ABuilder.Cat(JsonTimeZone);
+      ABuilder.Cat(JsonTimezone);
     end
     else
       ABuilder.Cat(IntToStr(MS));
@@ -4876,6 +4993,9 @@ end;
 procedure TQJson.Replace(AIndex: Integer; ANewItem: TQJson);
 begin
   FreeObject(Items[AIndex]);
+  if Assigned(ANewItem.FParent) then
+    ANewItem.FParent.Remove(ANewItem.ItemIndex);
+  ANewItem.FParent := Self;
   FItems[AIndex] := ANewItem;
 end;
 
@@ -5309,8 +5429,19 @@ begin
 end;
 
 procedure TQJson.Sort(AByName, ANest: Boolean; AByType: TQJsonDataType;
-  AOnCompare: TListSortCompare);
-  procedure QuickSort(l, R: Integer; AOnCompare: TListSortCompare);
+  AOnCompare: TListSortCompareEvent);
+  function DoCompare(Item1, Item2: Pointer): Integer;
+  var
+    AMethod: TMethod absolute AOnCompare;
+  begin
+    if AMethod.Data = nil then
+      Result := TListSortCompare(AMethod.Code)(Item1, Item2)
+    else if AMethod.Data = Pointer(-1) then
+      Result := TListSortCompareFunc(AMethod.Code)(Item1, Item2)
+    else
+      Result := AOnCompare(Item1, Item2);
+  end;
+  procedure QuickSort(l, R: Integer);
   var
     I, J, p: Integer;
   begin
@@ -5319,9 +5450,9 @@ procedure TQJson.Sort(AByName, ANest: Boolean; AByType: TQJsonDataType;
       J := R;
       p := (l + R) shr 1;
       repeat
-        while AOnCompare(Items[I], Items[p]) < 0 do
+        while DoCompare(Items[I], Items[p]) < 0 do
           Inc(I);
-        while AOnCompare(Items[J], Items[p]) > 0 do
+        while DoCompare(Items[J], Items[p]) > 0 do
           Dec(J);
         if I <= J then
         begin
@@ -5336,7 +5467,7 @@ procedure TQJson.Sort(AByName, ANest: Boolean; AByType: TQJsonDataType;
         end;
       until I > J;
       if l < J then
-        QuickSort(l, J, AOnCompare);
+        QuickSort(l, J);
       l := I;
     until I >= R;
   end;
@@ -5389,18 +5520,19 @@ procedure TQJson.Sort(AByName, ANest: Boolean; AByType: TQJsonDataType;
   begin
     case ADataType of
       jdtString:
-        QuickSort(0, Count - 1, DoCompareValueString);
+        AOnCompare := DoCompareValueString;
       jdtInteger:
-        QuickSort(0, Count - 1, DoCompareValueInt);
+        AOnCompare := DoCompareValueInt;
       jdtFloat:
-        QuickSort(0, Count - 1, DoCompareValueFloat);
+        AOnCompare := DoCompareValueFloat;
       jdtBoolean:
-        QuickSort(0, Count - 1, DoCompareValueBoolean);
+        AOnCompare := DoCompareValueBoolean;
       jdtDateTime:
-        QuickSort(0, Count - 1, DoCompareValueDateTime)
+        AOnCompare := DoCompareValueDateTime
     else
       Exit;
     end;
+    QuickSort(0, Count - 1);
   end;
   procedure SortChildrens;
   var
@@ -5424,18 +5556,46 @@ begin
     if not Assigned(AOnCompare) then
     begin
       if AByName then
-        QuickSort(0, Count - 1, DoCompareName)
+      begin
+        AOnCompare := DoCompareName;
+        QuickSort(0, Count - 1);
+      end
       else if AByType = jdtUnknown then
         DoSort(DetectCompareType)
       else
         DoSort(AByType);
     end
     else
-      QuickSort(0, Count - 1, AOnCompare);
+      QuickSort(0, Count - 1);
     if ANest then
       SortChildrens;
   end;
 end;
+
+procedure TQJson.Sort(AByName, ANest: Boolean; AByType: TQJsonDataType;
+  AOnCompare: TListSortCompare);
+var
+  AEvent: TListSortCompareEvent;
+  AMethod: TMethod absolute AEvent;
+begin
+  AEvent := nil;
+  TListSortCompare(AMethod.Code) := AOnCompare;
+  Sort(AByName, ANest, AByType, AEvent);
+end;
+{$IF RTLVersion>=21)}
+
+procedure TQJson.Sort(AByName, ANest: Boolean; AByType: TQJsonDataType;
+  AOnCompare: TListSortCompareFunc);
+var
+  AEvent: TListSortCompareEvent;
+  AMethod: TMethod absolute AEvent;
+begin
+  AEvent := nil;
+  AMethod.Data := Pointer(-1);
+  TListSortCompareFunc(AMethod.Code) := AOnCompare;
+  Sort(AByName, ANest, AByType, AEvent);
+end;
+{$IFEND}
 
 procedure TQJson.StreamFromValue(AStream: TStream);
 var
@@ -5775,37 +5935,37 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
                           [AChild.AsString, JsonTypeName[jdtDateTime]]);
                       tsSecondsFrom1970: // Unix
                         begin
-                          if (JsonTimeZone >= -12) and (JsonTimeZone <= 12) then
+                          if (JsonTimezone >= -12) and (JsonTimezone <= 12) then
                             AFields[J].SetValue(ABaseAddr,
                               IncHour(UnixToDateTime(AChild.AsInt64),
-                              JsonTimeZone))
+                              JsonTimezone))
                           else
                             AFields[J].SetValue(ABaseAddr,
                               UnixToDateTime(AChild.AsInt64));
                         end;
                       tsSecondsFrom1899:
                         begin
-                          if (JsonTimeZone >= -12) and (JsonTimeZone <= 12) then
+                          if (JsonTimezone >= -12) and (JsonTimezone <= 12) then
                             AFields[J].SetValue(ABaseAddr,
-                              IncHour(AChild.AsInt64 / 86400, JsonTimeZone))
+                              IncHour(AChild.AsInt64 / 86400, JsonTimezone))
                           else
                             AFields[J].SetValue(ABaseAddr,
                               AChild.AsInt64 / 86400);
                         end;
                       tsMsFrom1970:
                         begin
-                          if (JsonTimeZone >= -12) and (JsonTimeZone <= 12) then
+                          if (JsonTimezone >= -12) and (JsonTimezone <= 12) then
                             AFields[J].SetValue(ABaseAddr,
                               IncHour(IncMilliSecond(UnixDateDelta,
-                              AChild.AsInt64), JsonTimeZone))
+                              AChild.AsInt64), JsonTimezone))
                           else
                             AFields[J].SetValue(ABaseAddr,
                               IncMilliSecond(UnixDateDelta, AChild.AsInt64));
                         end;
                       tsMsFrom1899:
-                        if (JsonTimeZone >= -12) and (JsonTimeZone <= 12) then
+                        if (JsonTimezone >= -12) and (JsonTimezone <= 12) then
                           AFields[J].SetValue(ABaseAddr,
-                            IncHour(AChild.AsInt64 / 86400000, JsonTimeZone))
+                            IncHour(AChild.AsInt64 / 86400000, JsonTimezone))
                         else
                           AFields[J].SetValue(ABaseAddr,
                             AChild.AsInt64 / 86400000);
@@ -6473,9 +6633,11 @@ begin
     AValue := PExtended(FValue)^
   else if DataType = jdtString then
   begin
-    if not(ParseDateTime(PWideChar(FValue), AValue) or
-      ParseJsonTime(PWideChar(FValue), AValue) or ParseWebTime(PQCharW(FValue),
-      AValue)) then
+    if Length(FValue) > 0 then
+      Result := ParseDateTime(PWideChar(FValue), AValue) or
+        ParseJsonTime(PWideChar(FValue), AValue) or
+        ParseWebTime(PQCharW(FValue), AValue)
+    else
       Result := False;
   end
   else if DataType = jdtInteger then
@@ -6571,8 +6733,7 @@ begin
       FComment := AComment;
     if (p^ = #0) or CharInW(p, JsonEndChars) then
     begin
-      if (ANum >= MinInt64) and (ANum <= MaxInt64) and
-        (not AIsFloat) then
+      if (ANum >= MinInt64) and (ANum <= MaxInt64) and (not AIsFloat) then
         AsInt64 := Trunc(ANum)
       else
         AsFloat := ANum;
@@ -7179,15 +7340,15 @@ procedure TQJsonStreamHelper.WriteDateTime(const V: TDateTime);
   begin
     MS := Trunc((V - UnixDelta) * 86400000);
     Result := JsonTimeStart;
-    if (JsonTimeZone >= -12) and (JsonTimeZone <= 12) then
+    if (JsonTimezone >= -12) and (JsonTimezone <= 12) then
     begin
-      Dec(MS, 3600000 * JsonTimeZone);
+      Dec(MS, 3600000 * JsonTimezone);
       if JsonDatePrecision = jdpSecond then
         MS := MS div 1000;
       Result := Result + IntToStr(MS);
-      if JsonTimeZone >= 0 then
+      if JsonTimezone >= 0 then
         Result := Result + '+';
-      Result := Result + IntToStr(JsonTimeZone);
+      Result := Result + IntToStr(JsonTimezone);
     end
     else
       Result := Result + IntToStr(MS);
