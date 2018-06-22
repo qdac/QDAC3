@@ -451,7 +451,7 @@ type
     function BackIf(const S: PQCharW): TQStringCatHelperW;
     procedure TrimRight;
     procedure Reset;
-    function EndWith(const S: String; AIgnoreCase: Boolean): Boolean;
+    function EndWith(const S: QStringW; AIgnoreCase: Boolean): Boolean;
     property Value: QStringW read GetValue;
     property Chars[AIndex: Integer]: QCharW read GetChars;
     property Start: PQCharW read FStart;
@@ -1381,8 +1381,10 @@ function BinaryCmp(const p1, p2: Pointer; len: Integer): Integer;
 {$IFNDEF WIN64}inline; {$ENDIF}
 // 下面的函数只能Unicode版本，没有Ansi和UTF-8版本，如果需要，再加入
 // 分解名称-值对
-function NameOfW(const S: QStringW; ASpliter: QCharW;AEmptyIfMissed:Boolean=false): QStringW;
-function ValueOfW(const S: QStringW; ASpliter: QCharW;AEmptyIfMissed:Boolean=false): QStringW;
+function NameOfW(const S: QStringW; ASpliter: QCharW;
+  AEmptyIfMissed: Boolean = false): QStringW;
+function ValueOfW(const S: QStringW; ASpliter: QCharW;
+  AEmptyIfMissed: Boolean = false): QStringW;
 function IndexOfNameW(AList: TStrings; const AName: QStringW;
   ASpliter: QCharW): Integer;
 function IndexOfValueW(AList: TStrings; const AValue: QStringW;
@@ -1426,9 +1428,9 @@ function ParseNumeric(var S: PQCharW; var ANum: Extended; var AIsFloat: Boolean)
 function ParseDateTime(S: PWideChar; var AResult: TDateTime): Boolean;
 function ParseWebTime(p: PWideChar; var AResult: TDateTime): Boolean;
 function DateTimeFromString(AStr: String; var AResult: TDateTime;
-  AFormat: String): Boolean; overload;
-function DateTimeFromString(Str: String; AFormat: String; ADef: TDateTime = 0)
-  : TDateTime; overload;
+  AFormat: String = ''): Boolean; overload;
+function DateTimeFromString(Str: String; AFormat: String = '';
+  ADef: TDateTime = 0): TDateTime; overload;
 function EncodeWebTime(ATime: TDateTime): String;
 function RollupSize(ASize: Int64): QStringW;
 function RollupTime(ASeconds: Int64; AHideZero: Boolean = True): QStringW;
@@ -1635,38 +1637,41 @@ var
 {$ENDIF}
 
 const
-  HtmlEscapeChars: array [0 .. 185] of QStringW = (QCharW(32), '&nbsp;',
-    QCharW(34), '&quot;', QCharW(38), '&amp;', QCharW(39), '&apos;', QCharW(60),
-    '&lt;', QCharW(62), '&gt;', QCharW(161), '&iexcl;', QCharW(162), '&cent;',
-    QCharW(163), '&pound;', QCharW(164), '&curren;', QCharW(165), '&yen;',
-    QCharW(166), '&brvbar;', QCharW(167), '&sect;', QCharW(168), '&uml;',
-    QCharW(169), '&copy;', QCharW(170), '&ordf;', QCharW(171), '&laquo;',
-    QCharW(172), '&not;', QCharW(173), '&shy;', QCharW(174), '&reg;',
-    QCharW(175), '&macr;', QCharW(176), '&deg;', QCharW(177), '&plusmn;',
-    QCharW(180), '&acute;', QCharW(181), '&micro;', QCharW(182), '&para;',
-    QCharW(183), '&middot;', QCharW(184), '&cedil;', QCharW(186), '&ordm;',
-    QCharW(187), '&raquo;', QCharW(191), '&iquest;', QCharW(192), '&Agrave;',
-    QCharW(193), '&Aacute;', QCharW(194), '&circ;', QCharW(195), '&Atilde;',
-    QCharW(197), '&ring;', QCharW(198), '&AElig;', QCharW(199), '&Ccedil;',
-    QCharW(200), '&Egrave;', QCharW(201), '&Eacute;', QCharW(202), '&Ecirc;',
-    QCharW(203), '&Euml;', QCharW(204), '&Igrave;', QCharW(205), '&Iacute;',
-    QCharW(206), '&Icirc;', QCharW(207), '&Iuml;', QCharW(208), '&ETH;',
-    QCharW(209), '&Ntilde;', QCharW(210), '&Ograve;', QCharW(211), '&Oacute;',
-    QCharW(212), '&Ocirc;', QCharW(213), '&Otilde;', QCharW(214), '&Ouml;',
-    QCharW(215), '&times;', QCharW(216), '&Oslash;', QCharW(217), '&Ugrave;',
-    QCharW(218), '&Uacute;', QCharW(219), '&Ucirc;', QCharW(220), '&Uuml;',
-    QCharW(221), '&Yacute;', QCharW(222), '&THORN;', QCharW(223), '&szlig;',
-    QCharW(224), '&agrave;', QCharW(225), '&aacute;', QCharW(227), '&atilde;',
-    QCharW(228), '&auml;', QCharW(229), '&aring;', QCharW(230), '&aelig;',
-    QCharW(231), '&ccedil;', QCharW(232), '&egrave;', QCharW(233), '&eacute;',
-    QCharW(234), '&ecirc;', QCharW(235), '&euml;', QCharW(236), '&igrave;',
-    QCharW(237), '&iacute;', QCharW(238), '&icirc;', QCharW(239), '&iuml;',
-    QCharW(240), '&ieth;', QCharW(241), '&ntilde;', QCharW(242), '&ograve;',
-    QCharW(243), '&oacute;', QCharW(244), '&ocirc;', QCharW(245), '&otilde;',
-    QCharW(246), '&ouml;', QCharW(247), '&divide;', QCharW(248), '&oslash;',
-    QCharW(249), '&ugrave;', QCharW(250), '&uacute;', QCharW(251), '&ucirc;',
-    QCharW(252), '&uuml;', QCharW(253), '&yacute;', QCharW(254), '&thorn;',
-    QCharW(255), '&yuml;');
+  // HTML转义表
+
+  HtmlEscapeChars: array [32 .. 255] of String = ('&nbsp', #33, '&quot;', #35,
+    #36, #37, '&amp;', '&apos;', #40, #41, //
+    #42, #43, #44, #45, #46, #47, #48, #49, #50, #51, //
+    #52, #53, #54, #55, #56, #57, #58, #59, '&lt;', #61, //
+    '&gt;', #63, #64, #65, #66, #67, #68, #69, #70, #71, //
+    #72, #73, #74, #75, #76, #77, #78, #79, #80, #81, //
+    #82, #83, #84, #85, #86, #87, #88, #89, #90, #91, //
+    #92, #93, #94, #95, #96, #97, #98, #99, #100, #101, //
+    #102, #103, #104, #105, #106, #107, #108, #109, #110, #111, //
+    #112, #113, #114, #115, #116, #117, #118, #119, #120, #121, //
+    #122, #123, #124, #125, #126, #127, #128, #129, #130, #131, //
+    #132, #133, #134, #135, #136, #137, #138, #139, #140, #141, //
+    #142, #143, #144, #145, #146, #147, #148, #149, #150, #151, //
+    #152, #153, #154, #155, #156, #157, #158, #159, #160, '&iexcl;', //
+    '&cent;', '&pound;', '&curren;', '&yen;', '&brvbar;', '&sect;', '&uml;',
+    '&copy;', '&ordf;', '&laquo;', //
+    '&not;', '&shy;', '&reg;', '&macr;', '&deg;', '&plusmn;', #178, #179,
+    '&acute;', '&micro;', //
+    '&para;', '&middot;', '&cedil;', #185, '&ordm;', '&raquo;', #188, #189,
+    #190, '&iquest;', //
+    '&Agrave;', '&Aacute;', '&circ;', '&Atilde;', #196, '&ring;', '&AElig;',
+    '&Ccedil;', '&Egrave;', '&Eacute;', //
+    '&Ecirc;', '&Euml;', '&Igrave;', '&Iacute;', '&Icirc;', '&Iuml;', '&ETH;',
+    '&Ntilde;', '&Ograve;', '&Oacute;', //
+    '&Ocirc;', '&Otilde;', '&Ouml;', '&times;', '&Oslash;', '&Ugrave;',
+    '&Uacute;', '&Ucirc;', '&Uuml;', '&Yacute;', //
+    '&THORN;', '&szlig;', '&agrave;', '&aacute;', #226, '&atilde;', '&auml;',
+    '&aring;', '&aelig;', '&ccedil;', //
+    '&egrave;', '&eacute;', '&ecirc;', '&euml;', '&igrave;', '&iacute;',
+    '&icirc;', '&iuml;', '&ieth;', '&ntilde;', '&ograve;', '&oacute;',
+    '&ocirc;', '&otilde;', '&ouml;', '&divide;', '&oslash;', '&ugrave;',
+    '&uacute;', '&ucirc;', //
+    '&uuml;', '&yacute;', '&thorn;', '&yuml;');
   // QString函数
 
 function Utf8Decode(const p: QStringA): QStringW;
@@ -2837,8 +2842,7 @@ end;
 function SQLQuoted(const S: QStringW; ADoEscape: Boolean): QStringW;
 begin
   if ADoEscape then
-    Result := QuotedStrW(StringReplaceW(S, '\', '\\',
-      [rfReplaceAll]))
+    Result := QuotedStrW(StringReplaceW(S, '\', '\\', [rfReplaceAll]))
   else
     Result := QuotedStrW(S);
 end;
@@ -3969,7 +3973,7 @@ function StrBetweenTimes(const S, ADelimiter: QStringW; AIgnoreCase: Boolean;
   AStartTimes: Integer = 0; AStopTimes: Integer = 1): QStringW;
 var
   p, ps, pl, pd: PQCharW;
-  AStep, L1, L2, ATimes: Integer;
+  L1, L2, ATimes: Integer;
 begin
   ps := PQCharW(S);
   pd := PQCharW(ADelimiter);
@@ -6808,17 +6812,19 @@ begin
   Result := ParseNumeric(S, ANum, AIsFloat);
 end;
 
-function NameOfW(const S: QStringW; ASpliter: QCharW;AEmptyIfMissed:Boolean): QStringW;
+function NameOfW(const S: QStringW; ASpliter: QCharW; AEmptyIfMissed: Boolean)
+  : QStringW;
 var
   p: PQCharW;
 begin
   p := PQCharW(S);
-  Result := DecodeTokenW(p, [ASpliter], WideChar(0), false,false);
-  if (p^=#0) and AEmptyIfMissed then
-    Result:='';
+  Result := DecodeTokenW(p, [ASpliter], WideChar(0), false, false);
+  if (p^ = #0) and AEmptyIfMissed then
+    Result := '';
 end;
 
-function ValueOfW(const S: QStringW; ASpliter: QCharW;AEmptyIfMissed:Boolean): QStringW;
+function ValueOfW(const S: QStringW; ASpliter: QCharW; AEmptyIfMissed: Boolean)
+  : QStringW;
 var
   p: PQCharW;
   l: Integer;
@@ -6838,7 +6844,7 @@ begin
     if p^ <> #0 then
       Result := p
     else if AEmptyIfMissed then
-      SetLength(Result,0)
+      SetLength(Result, 0)
     else
       Result := S;
   end;
@@ -7404,7 +7410,8 @@ function HtmlEscape(const S: QStringW): QStringW;
 var
   p, pd: PQCharW;
   AFound: Boolean;
-  I: Integer;
+  I, L, H: Integer;
+  pw: PWord;
 begin
   if Length(S) > 0 then
   begin
@@ -7414,17 +7421,12 @@ begin
     while p^ <> #0 do
     begin
       AFound := false;
-      for I := 0 to 92 do
+      if (pw^ >= 32) and (pw^ <= 255) then
       begin
-        if HtmlEscapeChars[I shl 1] = p^ then
-        begin
-          AFound := True;
-          StrCpyW(pd, PQCharW(HtmlEscapeChars[(I shl 1) + 1]));
-          Inc(pd, Length(HtmlEscapeChars[(I shl 1) + 1]));
-          Break;
-        end;
+        AFound := True;
+        StrCpyW(pd, PQCharW(HtmlEscapeChars[pw^]));
+        Inc(pd, Length(HtmlEscapeChars[pw^]));
       end;
-      // end for
       if not AFound then
       begin
         pd^ := p^;
@@ -7818,7 +7820,7 @@ var
     ADoUnescape := false;
     while ps^ <> #0 do
     begin
-      if (ps^ = '%') or (ps^='+') then
+      if (ps^ = '%') or (ps^ = '+') then
       begin
         ADoUnescape := True;
         Break;
@@ -7858,9 +7860,9 @@ var
             Break;
           end;
         end
-        else if p^='+' then
+        else if p^ = '+' then
         begin
-          pd^:=32;
+          pd^ := 32;
           Inc(ps);
         end
         else
@@ -7881,9 +7883,37 @@ var
     else
       AResult := S;
   end;
+  procedure DecodePort;
+  var
+    ph, pp, pl: PQCharW;
+  begin
+    // 从Host里解析出端口号
+    ph := PQCharW(AHost);
+    pp := ph + Length(AHost);
+    APort := 0;
+    while pp > ph do
+    begin
+      if pp^ = ':' then
+      begin
+        pl := pp;
+        Inc(pp);
+        if ParseInt(pp, iV) <> 0 then
+        begin
+          APort := Word(iV);
+          SetLength(AHost, pl - ph);
+          Break;
+        end
+        else
+          Break;
+      end
+      else
+        APort := 0;
+      Dec(pp);
+    end
+  end;
 
 const
-  HostEnd: PQCharW = ':/';
+  HostEnd: PQCharW = '/';
   DocEnd: PQCharW = '?';
   ParamDelimiter: PQCharW = '&';
 begin
@@ -7903,23 +7933,7 @@ begin
   p := ps;
   SkipUntilW(p, HostEnd);
   AHost := StrDupX(ps, p - ps);
-  if p^ = ':' then
-  begin
-    if ParseInt(p, iV) <> 0 then
-    begin
-      APort := Word(iV);
-      if p^ = '/' then
-        Inc(p);
-    end
-    else
-      APort := 0;
-  end
-  else // 未指定端口
-  begin
-    APort := 0;
-    if p^ = '/' then
-      Inc(p);
-  end;
+  DecodePort;
   if Assigned(AParams) then
   begin
     ps := p;
@@ -8032,7 +8046,7 @@ function DateTimeFromString(AStr: String; var AResult: TDateTime;
         Result := DecodeTagValue(pf, ps, 's', 'S', S, c, 2)
       else if (pf^ = 'z') or (pf^ = 'Z') then
         Result := DecodeTagValue(pf, ps, 'z', 'Z', MS, c, 3)
-      else if (pf^ = '"') or (pf = '''') then
+      else if (pf^ = '"') or (pf^ = '''') then
       begin
         pl := pf;
         Inc(pf);
@@ -8076,7 +8090,6 @@ function DateTimeFromString(AStr: String; var AResult: TDateTime;
     V: Int64;
     l: Integer;
     ps, p: PWideChar;
-    AFmt: String;
     I: Integer;
   const
     KnownFormats: array [0 .. 15] of String = ('y-m-d h:n:s.z', 'y-m-d h:n:s',
@@ -8387,7 +8400,6 @@ function ParseWebTime(p: PWideChar; var AResult: TDateTime): Boolean;
 var
   I: Integer;
   Y, M, d, H, N, S, TZ: Integer;
-  AFound: Boolean;
 const
   MonthNames: array [0 .. 11] of QStringW = ('Jan', 'Feb', 'Mar', 'Apr', 'May',
     'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
@@ -8399,22 +8411,15 @@ const
 begin
   // 跳过星期，这个可以直接通过日期计算出来，不需要
   SkipSpaceW(p);
-  AFound := false;
   for I := 0 to High(WeekNames) do
   begin
     if StartWithW(p, PQCharW(WeekNames[I]), True) then
     begin
       Inc(p, Length(WeekNames[I]));
       SkipSpaceW(p);
-      AFound := True;
       Break;
     end;
   end;
-  // if (not AFound) or (p^ <> Comma) then
-  // begin
-  // Result := false;
-  // Exit;
-  // end;
   if p^ = Comma then
     Inc(p);
   SkipSpaceW(p);
@@ -8496,10 +8501,10 @@ begin
       Inc(p);
     end;
     SkipSpaceW(p);
+    TZ := 0;
     if StartWithW(p, 'GMT', True) then
     begin
       Inc(p, 3);
-      TZ := 0;
       if p^ = '-' then
       begin
         Inc(p);
@@ -8525,6 +8530,7 @@ begin
         TZ := TZ * 10 + Ord(p^) - Ord('0');
         Inc(p);
       end;
+      TZ := TZ * I;
     end;
   end
   else
@@ -9126,7 +9132,7 @@ begin
   NeedSize(FBlockSize);
 end;
 
-function TQStringCatHelperW.EndWith(const S: String;
+function TQStringCatHelperW.EndWith(const S: QStringW;
   AIgnoreCase: Boolean): Boolean;
 var
   p: PQCharW;
@@ -12345,7 +12351,6 @@ var
   p: PQCharW;
   K: Integer;
   V: TRandCharType;
-  c: QCharW;
 const
   SpaceChars: array [0 .. 3] of QCharW = (#9, #10, #13, #32);
 begin
@@ -12400,6 +12405,8 @@ var
   I: Integer;
   S, SW: QStringW;
   ps, p: PQCharW;
+const
+  SwitchChars: PWideChar = '+-/';
 begin
   SW := ASwitch + ANameValueSperator;
   for I := 1 to ParamCount do
@@ -12407,7 +12414,7 @@ begin
     S := ParamStr(I);
     ps := PQCharW(S);
     p := ps;
-    SkipCharW(p, '+-/');
+    SkipCharW(p, SwitchChars);
     if StartWithW(PQCharW(p), PQCharW(SW), AIgnoreCase) then
     begin
       if p <> ps then

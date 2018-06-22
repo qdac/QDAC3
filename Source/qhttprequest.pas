@@ -266,6 +266,8 @@ type
     procedure DoEventReqDone(ASender: TObject);
     procedure Lock; inline;
     procedure Unlock; inline;
+    procedure DoNewHttpClient(ASender: TQSimplePool; var AData: Pointer);
+    procedure DoFreeHttpClient(ASender: TQSimplePool; AData: Pointer);
   public
     constructor Create; overload;
     destructor Destroy; override;
@@ -951,7 +953,13 @@ var
     if FRequest.RequestHeaders.HeaderIndex('accept-encoding') = -1 then
       FRequest.RequestHeaders.Add('Accept-Encoding:gzip, deflate');
     if FRequest.RequestHeaders.HeaderIndex('host') = -1 then
-      FRequest.RequestHeaders.Add('Host:' + FRequest.ResultUrl.Host);
+    begin
+      if FRequest.ResultUrl.Port <> 80 then
+        FRequest.RequestHeaders.Add('Host:' + FRequest.ResultUrl.Host + ':' +
+          IntToStr(FRequest.ResultUrl.Port))
+      else
+        FRequest.RequestHeaders.Add('Host:' + FRequest.ResultUrl.Host);
+    end;
     if FRequest.RequestHeaders.HeaderIndex('user-agent') = -1 then
       FRequest.RequestHeaders.Add('User-Agent:' + DefaultUserAgent);
     if FRequest.RequestHeaders.HeaderIndex('connection') = -1 then
@@ -1371,7 +1379,6 @@ end;
 constructor TQUrl.Create;
 begin
   inherited;
-  FSpaceAsPlus := True;
 end;
 
 procedure TQUrl.Assign(ASource: TQUrl);
@@ -1393,7 +1400,6 @@ end;
 constructor TQUrl.Create(AUrl: QStringW);
 begin
   inherited Create;
-  FSpaceAsPlus := True;
   Url := AUrl;
 end;
 
@@ -1588,7 +1594,7 @@ function TQUrl.GetUrl: QStringW;
     begin
       FUrl := FUrl + UrlEncode(FUserName, True);
       if Length(FPassword) > 0 then
-        FUrl := FUrl + ':' + UrlEncode(FPassword, True);
+        FUrl := FUrl + ':' + UrlEncode(FPassword, SpaceAsPlus);
       FUrl := FUrl + '@';
     end;
     FUrl := FUrl + RequestHost;
@@ -1678,6 +1684,34 @@ const
 var
   AParams: TStringList;
   ADoc: QStringW;
+  procedure DecodeNamePassword;
+  var
+    p,ps, pl: PQCharW;
+  begin
+    p := PQCharW(FHost);
+    ps:=p;
+    pl := nil;
+    while p^ <> #0 do
+    begin
+      if p^ = '@' then
+        pl := p;
+      Inc(p);
+    end;
+    if Assigned(pl) then
+      begin
+        Inc(pl);
+        FHost:=pl;
+        FPassword:=StrDupX(ps,pl-ps-1);
+        FUserName:=DecodeTokenW(FPassword, NamePasswordDelimiter,
+            NullQuoter, True, True);
+      end
+    else
+      begin
+      SetLength(FPassword,0);
+      SetLength(FUserName,0);
+      end;
+  end;
+
 begin
   if FUrl <> Value then
   begin
@@ -1698,19 +1732,7 @@ begin
         else
           FBookmark := '';
         // UrlDecode 解析的主机名中可能包含用户名，我们需要进行额外的处理，将UserName:Password@解析出来
-        FPassword := DecodeTokenW(FHost, NameHostDelimiter, NullQuoter,
-          True, True);
-        if Length(FHost) > 0 then
-        begin
-          FUserName := DecodeTokenW(FPassword, NamePasswordDelimiter,
-            NullQuoter, True, True);
-        end
-        else
-        begin
-          FHost := FPassword;
-          FUserName := '';
-          FPassword := '';
-        end;
+        DecodeNamePassword;
       end
       else
       begin
@@ -2464,16 +2486,9 @@ begin
   FCS := TCriticalSection.Create;
   FRequests := TQRequestList.Create;
   FMaxClients := 1; // 默认只有一个工作
-  FHttpClients := TQSimplePool.Create(FMaxClients,
-    procedure(ASender: TQSimplePool; var AData: Pointer)
-    begin
-      AData := THttpClientClass.Create;
-    end,
-    procedure(ASender: TQSimplePool; AData: Pointer)
-    begin
-      FreeAndNil(AData);
-    end, nil);
-
+  FHttpClients := TQSimplePool.Create(FMaxClients, SizeOf(Pointer));
+  FHttpClients.OnNewItem := DoNewHttpClient;
+  FHttpClients.OnFree := DoFreeHttpClient;
   FDefaultHeaders := THeadersHelper.Create;
   FDefaultHeaders.Values['User-Agent'] := DefaultUserAgent;
 end;
@@ -2494,6 +2509,18 @@ begin
   AReq := ASender as TQHttpRequestItem;
   if Assigned(AReq.FSyncEvent) then
     AReq.FSyncEvent.SetEvent;
+end;
+
+procedure TQHttpRequests.DoFreeHttpClient(ASender: TQSimplePool;
+AData: Pointer);
+begin
+  FreeAndNil(AData);
+end;
+
+procedure TQHttpRequests.DoNewHttpClient(ASender: TQSimplePool;
+var AData: Pointer);
+begin
+  AData := THttpClientClass.Create;
 end;
 
 function TQHttpRequests.Get(const AUrl: QStringW; var AResult: QStringW;
@@ -2681,6 +2708,7 @@ AReplyStream: TStream; AContentType: QStringW; AfterDone: TNotifyEvent;
 AHeaders: IQHttpHeaders): Integer;
 var
   AReq: TQHttpRequestItem;
+  AName, AValue: QStringW;
 begin
   AReq := TQHttpRequestItem.Create(Self, not Assigned(AfterDone));
   try
@@ -2697,7 +2725,8 @@ begin
     begin
       AReq.Action := reqPost;
       AReq.RequestHeaders.Values['Content-Type'] := AContentType;
-      SaveTextU(AReq.NeedRequestStream, AContent.Text, False);
+
+      SaveTextU(AReq.NeedRequestStream, AContent.DelimitedText, False);
       AReq.RequestStream.Position := 0;
     end;
     if Assigned(AReplyStream) then

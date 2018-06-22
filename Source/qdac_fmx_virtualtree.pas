@@ -9,6 +9,7 @@ uses System.Classes, System.Sysutils, System.Types, System.UITypes,
   System.Math.Vectors,
   System.Generics.Collections, System.RTLConsts, System.Messaging,
   Math, FMX.TextLayout, FMX.Layouts, FMX.StdCtrls, FMX.Edit, FMX.ListBox,
+  FMX.ComboEdit,
   FMX.Memo, FMX.InertialMovement, FMX.Colors, Data.DB, FMX.Forms,
   FMX.Types, FMX.Controls, FMX.Graphics, FMX.Dialogs, FMX.Objects, FMX.Platform;
 
@@ -76,6 +77,7 @@ type
     // 列号
     function GetColumn: Integer;
     procedure SetColumn(const AColumn: Integer);
+    function GetColumnId: Integer;
     // 关联的结点
     function GetNode: TQVTNode;
     procedure SetNode(ANode: TQVTNode);
@@ -87,6 +89,7 @@ type
     function GetSides: TSides;
     property Enabled: Boolean read GetEnabled;
     property Column: Integer read GetColumn write SetColumn;
+    property ColumnId: Integer read GetColumnId;
     property Node: TQVTNode read GetNode write SetNode;
     property Sides: TSides read GetSides;
     property TreeView: TQVirtualTreeView read GetTreeView;
@@ -362,6 +365,7 @@ type
     function GetColIndex: Integer;
     function GetColumn: Integer;
     procedure SetColumn(const AColumn: Integer);
+    function GetColumnId: Integer;
     function GetNode: TQVTNode;
     procedure SetNode(ANode: TQVTNode);
     function GetTreeView: TQVirtualTreeView;
@@ -520,6 +524,8 @@ type
   end;
 
   TQVTNode = class(TInterfacedObject, IVirtualNode, IQVTNodeData, IInterface)
+  private
+    FTag: NativeInt;
   protected
     FStates: TQVTNodeStates; // 结点的状态
     [unsafe]
@@ -640,6 +646,7 @@ type
     property FirstChild: TQVTNode read GetFirstChild;
     property LastChild: TQVTNode read GetLastChild;
     property IsExpanded: Boolean read GetIsExpanded write SetIsExpanded;
+    property Tag:NativeInt read FTag write FTag;
   end;
 
   // 默认的绘制器类定义
@@ -838,6 +845,7 @@ type
     FColumn: Integer;
     function GetColumn: Integer; virtual;
     procedure SetColumn(const AColumn: Integer);
+    function GetColumnId: Integer;
     function GetNode: TQVTNode; virtual;
     procedure SetNode(ANode: TQVTNode); virtual;
     function GetTreeView: TQVirtualTreeView; virtual;
@@ -861,6 +869,8 @@ type
     var Accept: Boolean) of object;
 
   TQVTCustomCell = class(TComponent, IQVTCellData)
+  private
+
   protected
     [unsafe]
     FNode: TQVTNode;
@@ -874,10 +884,12 @@ type
     function GetTreeView: TQVirtualTreeView; virtual;
     function GetEnabled: Boolean; virtual;
     function GetSides: TSides; virtual;
+    function GetColumnId: Integer;
   public
     constructor Create(AOwner: TComponent); override;
     procedure BeforeDestruction; override;
     property Column: Integer read FColumn write FColumn;
+    property ColumnId: Integer read GetColumnId;
     property Node: TQVTNode read FNode write FNode;
   published
     property Enabled: Boolean read FEnabled write FEnabled;
@@ -1027,6 +1039,7 @@ type
     FCheckStates: TQVTCheckStates;
     FCheckBounds: TRectF;
     FFollowStates: Boolean;
+    FUpdateSender: TQVTNode;
     FUpdating: Boolean;
     FOnGetStates: TQVTGetCellCheckStates;
     FOnValidStates: TQVTGetCellCheckStates;
@@ -1225,15 +1238,19 @@ type
   TQVTListEditor = class(TQVTBaseEditor)
   private
     FNextValueOnDoubleClick: Boolean;
+    FTextEditable: Boolean;
+    procedure SetTextEditable(const Value: Boolean);
   protected
     function BeginEdit(ANode: TQVTNode; ACol: Integer): Boolean; override;
     function EndEdit: Boolean; override;
     procedure DoDoubleClick(ASender: TObject);
+    procedure DialogKey(var Key: Word; Shift: TShiftState); override;
   public
     constructor Create(AOwner: TComponent); override;
   published
     property NextValueOnDoubleClick: Boolean read FNextValueOnDoubleClick
       write FNextValueOnDoubleClick;
+    property TextEditable: Boolean read FTextEditable write SetTextEditable;
   end;
 
   [ComponentPlatformsAttribute(AllCurrentPlatforms)]
@@ -1291,6 +1308,7 @@ type
   TQVirtualTreeView = class(TPresentedTextControl, IQVTDrawable)
   private
     class var DefaultDrawers: array [TQVTDrawerType] of IQVTDrawer;
+    function GetIsEditing: Boolean;
   protected
     // Vars
     FRootNode: TQVTNode;
@@ -1575,7 +1593,7 @@ type
     property SortColumns: TQVTSortColumns read GetSortColumns;
     property MouseDownPosition: TQVTHitTestResult read FMouseDownPosition;
     property Space: TPointF read FSpace write SetSpace;
-
+    property IsEditing: Boolean read GetIsEditing;
   end;
 
   // 最简单的对象封装，用于将简单类型转换为对象
@@ -1934,6 +1952,11 @@ end;
 function TQVTColumnTitle.GetColumn: Integer;
 begin
   Result := FColumn.Index;
+end;
+
+function TQVTColumnTitle.GetColumnId: Integer;
+begin
+  Result := FColumn.ID;
 end;
 
 function TQVTColumnTitle.GetDrawer: IQVTDrawer;
@@ -2538,12 +2561,7 @@ end;
 function TQVirtualTreeView.EndEdit: Boolean;
 begin
   if Assigned(FInplaceEditor) then
-  begin
-    Result := FInplaceEditor.EndEdit;
-    FInplaceEditor := nil;
-    FEditingNode := nil;
-    FEditingColumn := 0;
-  end
+    Result := FInplaceEditor.EndEdit
   else if Assigned(FMouseEditor) then
   begin
     Result := True;
@@ -2555,6 +2573,7 @@ begin
   begin
     if Assigned(FAfterEdit) then
       FAfterEdit(Self, FEditingNode, FEditingColumn);
+    InvalidateNode(FEditingNode);
     FInplaceEditor := nil;
     FEditingNode := nil;
     FEditingColumn := 0;
@@ -2708,6 +2727,11 @@ end;
 function TQVirtualTreeView.GetFill: TBrush;
 begin
   Result := FFill;
+end;
+
+function TQVirtualTreeView.GetIsEditing: Boolean;
+begin
+  Result := Assigned(FInplaceEditor);
 end;
 
 function TQVirtualTreeView.GetNext(ANode: TQVTNode): TQVTNode;
@@ -3641,8 +3665,8 @@ var
             if (J <> FFocusColumn) or (not ADrawColSelection) then
               Canvas.ClearRect(ACellRect, FHoverColor);
           end;
-          if not(Assigned(FInplaceEditor) and AColFocused and
-            (ANode = FFocusNode)) then
+          if not(Assigned(FInplaceEditor) and (J = FEditingColumn) and
+            (ANode = FEditingNode)) then
           begin
             if AColFocused and
               (ADrawColSelection or (ADrawCellSelection and
@@ -4126,7 +4150,10 @@ begin
         Break;
       end
       else
+      begin
         FFirstDirtyChild := FFirstDirtyChild.Next;;
+        Inc(AIndex);
+      end;
     end;
   end;
 end;
@@ -4650,6 +4677,7 @@ begin
   begin
     if FParent.FFirstDirtyChild = Self then
       FParent.FFirstDirtyChild := FNext;
+    FParent.Dirty(Next);
     if not Assigned(FNext) then
       GetNext;
     if Assigned(FPrior) then
@@ -4662,7 +4690,10 @@ begin
       FParent.FLastChild := FPrior;
     Dec(FParent.FCreatedCount);
     Dec(FParent.FCount);
+    if FParent.FCount = 0 then
+      FParent.FStates := FParent.FStates - [TQVTNodeState.nsHasChildren];
   end;
+  FLevel := -1;
   // 第二步：摘干净后挪到新目标位置
   case AMode of
     ipBefore:
@@ -4796,6 +4827,7 @@ begin
           ALastInitChildReserved := True;
         AChild.FIndex := I;
         AChild := AChild.Next;
+        Inc(I);
       end;
       if Assigned(AChild) then
       begin
@@ -5200,21 +5232,18 @@ var
   const
     ButtonSize = 4.5;
   begin
-    if ((ANode = ATreeView.FHoverNode) or (AData.Column = ATreeView.HoverColumn)
-      ) and (TQVTPaintOption.poHover in ATreeView.PaintOptions) then
+    AColor := ATreeView.Fill.Color;
+    if (ANode = ATreeView.HoverNode) and (AData.Column = ATreeView.FocusColumn)
+      and (TQVTPaintOption.poHover in ATreeView.PaintOptions) then
       AColor := ATreeView.HoverColor;
-    if (ANode = ATreeView.FocusNode) and
-      (TQVTPaintOption.poRowSelection in ATreeView.PaintOptions) then
-      AColor := ATreeView.SelectionColor
-    else if (AData.Column = ATreeView.FocusColumn) and
-      (TQVTPaintOption.poColSelection in ATreeView.PaintOptions) then
-      AColor := ATreeView.SelectionColor
-    else if (ANode = ATreeView.FocusNode) and
-      (AData.Column = ATreeView.FocusColumn) and
-      (TQVTPaintOption.poCellSelection in ATreeView.PaintOptions) then
-      AColor := ATreeView.SelectionColor
-    else
-      AColor := ATreeView.Fill.Color;
+    if ANode = ATreeView.FocusNode then
+    begin
+      if (TQVTPaintOption.poRowSelection in ATreeView.PaintOptions) or
+        (([TQVTPaintOption.poColSelection, TQVTPaintOption.poCellSelection] *
+        ATreeView.PaintOptions <> []) and (AData.Column = ATreeView.FocusColumn))
+      then
+        AColor := ATreeView.SelectionColor
+    end;
     SetLength(APolygon, 3);
     pt := ct.SnapToPixel(ACanvas.Scale);
     if TQVTNodeState.nsExpanded in ANode.FStates then // 展开
@@ -5377,6 +5406,14 @@ end;
 function TQVTDefaultCellData.GetColumn: Integer;
 begin
   Result := FColumn;
+end;
+
+function TQVTDefaultCellData.GetColumnId: Integer;
+begin
+  if Assigned(FNode) then
+    Result := FNode.TreeView.Header.Columns[Column].ID
+  else
+    Result := -1;
 end;
 
 function TQVTDefaultCellData.GetEnabled: Boolean;
@@ -6551,6 +6588,14 @@ begin
   Result := FColumn;
 end;
 
+function TQVTCustomCell.GetColumnId: Integer;
+begin
+  if Assigned(FNode) then
+    Result := FNode.TreeView.Header.Columns[Column].ID
+  else
+    Result := -1;
+end;
+
 function TQVTCustomCell.GetEnabled: Boolean;
 begin
   Result := FEnabled;
@@ -6594,6 +6639,7 @@ end;
 function TQVTCustomCheckCell.GetCheckStates: TQVTCheckStates;
 begin
   Result := FCheckStates;
+  Node.NeedInitialized;
   if Assigned(OnGetStates) then
     OnGetStates(Self, Result);
 end;
@@ -6609,12 +6655,14 @@ var
   AStates: TQVTCheckStates;
   ADrawer: IQVTStateDrawer;
   R: TRectF;
+  AIndent: Single;
 begin
   if Supports(Node.CellDrawer[Column], IQVTStateDrawer, ADrawer) then
   begin
     R := ADrawer.CalcStateRect(Node.DisplayRect, Node.CellData[Column]);
-    R.Left := FCheckBounds.Left;
-    R.Right := FCheckBounds.Right;
+    AIndent := (Node.Level - 1) * Node.TreeView.NodeIndent;
+    R.Left := FCheckBounds.Left + AIndent;
+    R.Right := FCheckBounds.Right + AIndent;
     if R.Contains(APos) then
     begin
       AStates := CheckStates;
@@ -6666,7 +6714,7 @@ end;
 
 procedure TQVTCustomCheckCell.SetCheckStates(AStates: TQVTCheckStates);
 begin
-  if not FUpdating then
+  if FUpdateSender <> Node then
   begin
     if CheckStates <> AStates then
     begin
@@ -6689,7 +6737,9 @@ begin
   begin
     FFollowStates := Value;
     if Value then
+    begin
       UpdateStates;
+    end;
   end;
 end;
 
@@ -6732,6 +6782,8 @@ procedure TQVTCustomCheckCell.UpdateStates;
       else
         AParentData.CheckStates := AParentData.CheckStates +
           [TQVTCheckState.csChecked, TQVTCheckState.csSomeChecked];
+      if not AParent.IsRoot then
+        UpdateParent(AParent.Parent);
     end;
   end;
   procedure UpdateChildren;
@@ -6739,10 +6791,9 @@ procedure TQVTCustomCheckCell.UpdateStates;
     AChild: TQVTNode;
     AChildData: IQVTCheckCellData;
   begin
-    if (Node.ChildCount > 0) and ((not(TQVTCheckState.csChecked in FCheckStates)
-      ) or (not(TQVTCheckState.csSomeChecked in FCheckStates))) then
+    if (FUpdateSender.ChildCount > 0) then
     begin
-      AChild := Node.GetFirstChild;
+      AChild := FUpdateSender.GetFirstChild;
       while Assigned(AChild) do
       begin
         if Supports(AChild.CellData[Column], IQVTCheckCellData, AChildData) then
@@ -6760,14 +6811,16 @@ procedure TQVTCustomCheckCell.UpdateStates;
   end;
 
 begin
-  if FUpdating then
+  if FUpdating or (not Assigned(Node)) then
     Exit;
   FUpdating := True;
   try
+    FUpdateSender := Node;
     UpdateParent(Node.Parent);
     UpdateChildren;
   finally
     FUpdating := False;
+    FUpdateSender := nil;
   end;
 end;
 
@@ -6995,11 +7048,21 @@ begin
 end;
 
 function TQVTBaseEditor.BeginEdit(ANode: TQVTNode; ACol: Integer): Boolean;
+var
+  AData: IQVTCellData;
 begin
   FNode := ANode;
   FColumn := ACol;
-  Result := True;
-  Control.Parent := ANode.TreeView;
+  if Assigned(ANode) and
+    ((ACol >= 0) and (ACol < FNode.TreeView.Header.Columns.Count)) then
+  begin
+    AData := FNode.CellData[ACol];
+    Result := AData.Enabled;
+  end
+  else
+    Result := False;
+  if Result then
+    Control.Parent := ANode.TreeView;
 end;
 
 procedure TQVTBaseEditor.CancelEdit;
@@ -7095,10 +7158,8 @@ end;
 procedure TQVTBaseEditor.Show;
 begin
   if not Control.Visible then
-  begin
     Control.Visible := True;
-    Control.SetFocus;
-  end;
+  Control.SetFocus;
 end;
 
 { TQVTTextEditor }
@@ -7109,9 +7170,9 @@ var
 begin
   if Supports(ANode.CellData[ACol], IQVTTextCellData, AData) then
   begin
-    inherited;
-    (Control as TCustomEdit).Text := AData.Text;
-    Result := True;
+    Result := inherited;
+    if Result then
+      (Control as TCustomEdit).Text := AData.Text;
   end
   else
     Result := false;
@@ -7160,7 +7221,7 @@ begin
   begin
     Result := AList.Count;
     FOnGetItems(Self, AList);
-    Dec(Result, AList.Count);
+    Result := AList.Count - Result;
   end
   else
   begin
@@ -7179,23 +7240,51 @@ end;
 function TQVTListEditor.BeginEdit(ANode: TQVTNode; ACol: Integer): Boolean;
 var
   AData: IQVTPickListCellData;
+  AList: TStrings;
+  AIdx: Integer;
 begin
   if Supports(ANode.CellData[ACol], IQVTPickListCellData, AData) then
   begin
-    inherited;
-    with Control as TComboBox do
+    Result := inherited;
+    if Result then
     begin
-      OnDblClick := DoDoubleClick;
-      Items.BeginUpdate;
+      if TextEditable then
+      begin
+        AList := TComboEdit(Control).Items;
+        TComboEdit(Control).OnDblClick := DoDoubleClick;
+      end
+      else
+      begin
+        AList := TComboBox(Control).Items;
+        TComboBox(Control).OnDblClick := DoDoubleClick;
+      end;
+      AList.BeginUpdate;
       try
-        Items.Clear;
-        if AData.GetItems(Items) > 0 then
-          ItemIndex := Items.IndexOf(AData.Text);
+        AList.Clear;
+        if AData.GetItems(AList) > 0 then
+        begin
+          if TextEditable then
+          begin
+            AIdx := AList.IndexOf(AData.Text);
+            if AIdx = -1 then
+              TComboEdit(Control).Text := AData.Text
+            else
+              TComboEdit(Control).ItemIndex := AIdx;
+          end
+          else
+            TComboBox(Control).ItemIndex := AList.IndexOf(AData.Text);
+        end
+        else
+        begin
+          if TextEditable then
+            TComboEdit(Control).Text := AData.Text
+          else
+            TComboBox(Control).ItemIndex := -1;
+        end;
       finally
-        Items.EndUpdate;
+        AList.EndUpdate;
       end;
     end;
-    Result := True;
   end
   else
     Result := false;
@@ -7207,16 +7296,57 @@ begin
   ControlClass := TComboBox;
 end;
 
+procedure TQVTListEditor.DialogKey(var Key: Word; Shift: TShiftState);
+begin
+  inherited;
+  if not TextEditable then
+  begin
+    with Control as TComboBox do
+    begin
+      if Key = vkSpace then
+      begin
+        if ItemIndex + 1 < Items.Count then
+          ItemIndex := ItemIndex + 1
+        else if Items.Count > 0 then
+          ItemIndex := 0;
+      end
+      else if Key = vkUp then
+      begin
+        if ItemIndex > 0 then
+          ItemIndex := ItemIndex - 1;
+      end
+      else if Key = vkDown then
+      begin
+        if ItemIndex < Items.Count - 1 then
+          ItemIndex := ItemIndex + 1;
+      end;
+    end;
+  end;
+end;
+
 procedure TQVTListEditor.DoDoubleClick(ASender: TObject);
 begin
   if NextValueOnDoubleClick then
   begin
-    with ASender as TComboBox do
+    if TextEditable then
     begin
-      if ItemIndex + 1 < Items.Count then
-        ItemIndex := ItemIndex + 1
-      else if Items.Count > 0 then
-        ItemIndex := 0;
+      with ASender as TComboEdit do
+      begin
+        if ItemIndex + 1 < Items.Count then
+          ItemIndex := ItemIndex + 1
+        else if Items.Count > 0 then
+          ItemIndex := 0;
+      end;
+    end
+    else
+    begin
+      with ASender as TComboBox do
+      begin
+        if ItemIndex + 1 < Items.Count then
+          ItemIndex := ItemIndex + 1
+        else if Items.Count > 0 then
+          ItemIndex := 0;
+      end;
     end;
   end;
 end;
@@ -7228,12 +7358,31 @@ begin
   Result := True;
   if Supports(Node.CellData[Column], IQVTEditableTextCellData, AData) then
   begin
-    with Control as TComboBox do
+    if TextEditable then
+      AData.Text := TComboEdit(Control).Text
+    else
     begin
-      if ItemIndex <> -1 then
-        AData.Text := Items[ItemIndex];
+      with Control as TComboBox do
+      begin
+        if ItemIndex <> -1 then
+          AData.Text := Items[ItemIndex];
+      end;
     end;
     Hide;
+  end;
+end;
+
+procedure TQVTListEditor.SetTextEditable(const Value: Boolean);
+begin
+  if FTextEditable <> Value then
+  begin
+    FTextEditable := Value;
+    if Assigned(FControl) then
+      FreeAndNil(FControl);
+    if Value then
+      FControlClass := TComboEdit
+    else
+      FControlClass := TComboBox;
   end;
 end;
 
@@ -7245,10 +7394,12 @@ var
 begin
   if Supports(ANode.CellData[ACol], IQVTTextCellData, AData) then
   begin
-    inherited;
-    with Control as TColorComboBox do
-      ItemIndex := Items.IndexOf(AData.Text);
-    Result := True;
+    Result := inherited;
+    if Result then
+    begin
+      with Control as TColorComboBox do
+        ItemIndex := Items.IndexOf(AData.Text);
+    end;
   end
   else
     Result := false;

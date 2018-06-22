@@ -198,11 +198,11 @@ var
     ASize := MaxInt;
     if Assigned(OnGetFieldType) then
       OnGetFieldType(Self, AName, AType, ASize);
-      ADef := AFieldDefs.AddFieldDef as TQFieldDef;
-      ADef.Name := AName;
-      ADef.DBType := SQLTypeMap[AType];
-    if (ASize<>ADef.Size) and (ASize>0) then
-      ADef.Size:=ASize;
+    ADef := AFieldDefs.AddFieldDef as TQFieldDef;
+    ADef.Name := AName;
+    ADef.DBType := SQLTypeMap[AType];
+    if (ASize <> ADef.Size) and (ASize > 0) then
+      ADef.Size := ASize;
   end;
 
 begin
@@ -334,18 +334,19 @@ var
     else if AFieldVal.ValueType = vdtStream then // 如果是字符串类型的流，则转换为字符串，否则使用二进制串
     begin
       case ARec.Fields[I].DataType of
-        ftMemo,ftFmtMemo:
+        ftMemo, ftFmtMemo:
           begin
-            AFieldVal.AsStream.Position:=0;
-            AValue:=QuotedStrW(LoadTextW(AFieldVal.AsStream,teAnsi), Quoter);
+            AFieldVal.AsStream.Position := 0;
+            AValue := QuotedStrW(LoadTextW(AFieldVal.AsStream, teAnsi), Quoter);
           end;
         ftWideMemo:
           begin
-            AFieldVal.AsStream.Position:=0;
-            AValue:=QuotedStrW(LoadTextW(AFieldVal.AsStream,teUnicode16LE), Quoter);
+            AFieldVal.AsStream.Position := 0;
+            AValue := QuotedStrW(LoadTextW(AFieldVal.AsStream,
+              teUnicode16LE), Quoter);
           end
-        else
-          AValue := QuotedStrW(ARec.Values[I].CurrentValue.AsString, Quoter);
+      else
+        AValue := QuotedStrW(ARec.Values[I].CurrentValue.AsString, Quoter);
       end;
     end
     else

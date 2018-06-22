@@ -2,6 +2,7 @@ unit qrbtree;
 
 interface
 
+{.$DEFINE PRINT_TREE }
 {
   本单元红黑树改编自Linux 3.14.4内核红黑树实现，基本上是照抄，但我不保证抄袭就100%
   正确:)。有觉得不对的时候，可以找linux内核的rbtree.h/rbtree_augmented.h/rbtree.c
@@ -35,10 +36,10 @@ interface
   QQ邮箱:109867294@qq.com
 }
 {$I 'qdac.inc'}
-{.$DEFINE DEBUG_EXISTS}//Enable duplicate push test
+{ .$DEFINE DEBUG_EXISTS }// Enable duplicate push test
 
 uses
-  Classes, sysutils, qstring;
+  Classes, sysutils, qstring{$IFDEF PRINT_TREE}, qlog, windows{$ENDIF};
 {$HPPEMIT '#pragma link "qrbtree"'}
 
 type
@@ -141,6 +142,9 @@ type
     procedure InsertColor(AChild: TQRBNode); inline;
     procedure DoRotate(AOld, ANew: TQRBNode); inline;
     procedure LinkNode(node, Parent: TQRBNode; var rb_link: TQRBNode); inline;
+{$IFDEF PRINT_TREE}
+    procedure PrintTree(AHint: String);
+{$ENDIF}
   public
     /// <summary>构造函数，传递一个大小比较函数进去，以便在插入和查找时能够正确的区分</summary>
     constructor Create(AOnCompare: TQRBCompare); overload;
@@ -366,6 +370,8 @@ var
 
 implementation
 
+uses qworker;
+
 const
   RB_RED = 0;
   RB_BLACK = 1;
@@ -435,6 +441,7 @@ function TQRBTree.Delete(AChild: TQRBNode): Pointer;
 var
   rebalance: TQRBNode;
 begin
+  // Todo:Remove debug
   Result := AChild.Data;
   rebalance := EraseAugmented(AChild);
   if rebalance <> nil then
@@ -445,6 +452,8 @@ begin
   if Assigned(FOnDelete) then
     FOnDelete(Self, AChild);
   FreeObject(AChild);
+{$IFDEF PRINT_TREE}PrintTree('After delete ' + IntToHex(IntPtr(AChild), 8));
+  {$ENDIF}
 end;
 
 function TQRBTree.EraseAugmented(node: TQRBNode): TQRBNode;
@@ -605,6 +614,7 @@ begin
 {$REGION 'Case 1 - right rotate at AParent'}
         AParent.Left := sibling.Right;
         tmp1 := sibling.Right;
+        sibling.Right := AParent;
         tmp1.SetParentColor(AParent, RB_BLACK);
         RotateSetParents(AParent, sibling, RB_RED);
         DoRotate(AParent, sibling);
@@ -817,6 +827,9 @@ begin
       Break;
     end;
   end;
+  {$IFDEF PRINT_TREE}
+  PrintTree('After insert ' + IntToHex(IntPtr(node), 8));
+  {$ENDIF}
 end;
 
 function TQRBTree.Last: TQRBNode;
@@ -836,6 +849,57 @@ begin
   node.FRight := nil;
   rb_link := node;
 end;
+{$IFDEF PRINT_TREE}
+
+procedure TQRBTree.PrintTree(AHint: String);
+var
+  AFirst, ANode: TQRBNode;
+  S: String;
+  C, I: Integer;
+  AStacks: array [0 .. 49] of Pointer;
+  AErrorFound: Boolean;
+begin
+  ANode := First;
+  AFirst := ANode;
+  S := AHint + '==>' + SLineBreak;
+  C := 0;
+  AErrorFound := False;
+  S := S + Format('Node %X Left=%X Right=%X Parent=%X Color:%X',
+    [IntPtr(FRoot), IntPtr(FRoot.Left), IntPtr(FRoot.Right),
+    IntPtr(FRoot.Parent), FRoot.FParent_Color]) + SLineBreak;
+  while Assigned(ANode) do
+  begin
+    AStacks[C] := ANode;
+    S := S + Format('Node %X Left=%X Right=%X Parent=%X Data:%X',
+      [IntPtr(ANode), IntPtr(ANode.Left), IntPtr(ANode.Right),
+      IntPtr(ANode.Parent), ANode.FParent_Color]) + SLineBreak;
+    ANode := ANode.Next;
+    for I := 0 to C do
+    begin
+      if AStacks[I] = ANode then
+      begin
+        AErrorFound := true;
+        Break;
+      end;
+    end;
+    Inc(C);
+    if (ANode = AFirst) or (C > 50) then
+    begin
+      AErrorFound := True;
+      Break;
+    end;
+  end;
+  if AErrorFound then
+    S := S + '!!!!!Tree node errors!!!!' + SLineBreak;
+  PostLog(llDebug, S);
+  if AErrorFound then
+  begin
+    while Logs.Flushed < Logs.Count do
+      Sleep(100);
+    DebugBreak;
+  end;
+end;
+{$ENDIF}
 
 procedure TQRBTree.Replace(victim, ANew: TQRBNode);
 var
@@ -1580,6 +1644,7 @@ begin
   else
     Result := 0;
 end;
+
 
 initialization
 

@@ -5585,7 +5585,8 @@ begin
     end;
     if ts.Seconds <= Int64($3FFFFFFFF) then // 64位:30位纳秒,34位秒数
     begin
-      ABuf64[0] := ExchangeByteOrder(Int64(ts.NanoSeconds) shl 34 + ts.Seconds);
+      ABuf64[0] := ts.NanoSeconds;
+      ABuf64[0] := ExchangeByteOrder(ABuf64[0] shl 34 + ts.Seconds);
       WriteExt(AStream, $FF, @ABuf[0], SizeOf(Int64));
     end
     else
