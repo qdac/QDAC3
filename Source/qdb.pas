@@ -102,7 +102,7 @@ uses classes, sysutils, types, RTLConsts, qstring, qrbtree, qdigest, qworker,
   Posix.Systime
 {$ENDIF}
 {$IFDEF LINUX}
-  ,Linuxapi.KernelIoctl
+    , Linuxapi.KernelIoctl
 {$ENDIF}
 {$IFDEF UNICODE}
     , Generics.Collections
@@ -1239,7 +1239,7 @@ type
     function GetBlobFieldData(FieldNo: Integer; var Buffer: TBlobByteData)
       : Integer; override;
     function GetFieldData(Field: TField; Buffer: Pointer): Boolean; overload;
-    function BookmarkValid(Bookmark: TBookmark): Boolean;
+    function BookmarkValid(Bookmark: TBookmark): Boolean; override;
     function GetBookmark: TBookmark;
 {$IFNDEF NEXTGEN}override; {$ENDIF}
     procedure MoveTo(const AIndex: Cardinal); // 移动到指定的记录
@@ -2655,7 +2655,7 @@ end;
 
 function TQFieldDef.GetValueType: TQValueDataType;
 begin
-  if FValueType in [vdtNull,vdtUnset] then
+  if FValueType in [vdtNull, vdtUnset] then
     LookupValueType;
   Result := FValueType;
 end;
@@ -2879,15 +2879,19 @@ begin
 end;
 
 function TQDataSet.BookmarkValid(Bookmark: TBookmark): Boolean;
+var
+  pBookmark: PPointer;
 begin
   Result := False;
-  if Assigned(Bookmark) and (PPointer(Bookmark)^ <> nil) then
-    try
-      InternalGotoBookmark(Bookmark);
-      CursorPosChanged;
-      Result := True;
-    except
+  if Length(Bookmark) = BookmarkSize then
+  begin
+    pBookmark := PPointer(@Bookmark[0]);
+    if pBookmark <> nil then
+    begin
+      Inc(pBookmark);
+      Result := pBookmark^ = Self;
     end;
+  end;
 end;
 
 function TQDataSet.BufferOfRecNo(ARecNo: Integer): TQRecord;
@@ -4137,7 +4141,7 @@ begin
   Result := False;
   AExp := TQFilterExp.Create(Self);
   try
-    AExp.Parse(AFilterExp, foCaseInsensitive in AFilterOptions, false);
+    AExp.Parse(AFilterExp, foCaseInsensitive in AFilterOptions, False);
     for I := 0 to FOriginRecords.Count - 1 do
     begin
       if AExp.Accept(FOriginRecords[I], AFilterOptions) then
@@ -4275,10 +4279,10 @@ var
       if not Assigned(FFilterExp) then
       begin
         FFilterExp := TQFilterExp.Create(Self);
-        FFilterExp.Parse(Filter, foCaseInsensitive in FilterOptions, false);
+        FFilterExp.Parse(Filter, foCaseInsensitive in FilterOptions, False);
       end
       else if AParseNeeded then
-        FFilterExp.Parse(Filter, foCaseInsensitive in FilterOptions, false);
+        FFilterExp.Parse(Filter, foCaseInsensitive in FilterOptions, False);
       if MultiThreadNeeded(C) then
       begin
         Workers.&For(C, AFilterSource.Count - 1, DoThreadFilterJob, False, nil);
@@ -4317,7 +4321,7 @@ begin
     if not Assigned(FFilterExp) then
       FFilterExp := TQFilterExp.Create(Self);
     if (FFilterExp.Count = 0) then
-      FFilterExp.Parse(Filter, false, false);
+      FFilterExp.Parse(Filter, False, False);
   end;
   if Restart then
   begin
@@ -4451,7 +4455,10 @@ begin
   if Assigned(AProc) then
   begin
     while Result < FActiveRecords.Count do
+      begin
       AProc(Self, Result, FActiveRecords[Result]);
+      Inc(Result);
+      end;
   end;
 end;
 {$ENDIF}
@@ -4546,7 +4553,8 @@ end;
 
 function TQDataSet.GetBookmark: TBookmark;
 begin
-
+  SetLength(Result, BookmarkSize);
+  GetBookmarkData(TRecordBuffer(ActiveBuffer), @Result[0]);
 end;
 
 {$IFNDEF NEXTGEN}
@@ -4568,15 +4576,20 @@ end;
 {$IF RTLVersion>19}
 
 procedure TQDataSet.GetBookmarkData(Buffer: TRecordBuffer; Data: Pointer);
+var
+  pBookmark: PPointer;
 begin
-  PPointer(Data)^ := TQRecord(Buffer).Bookmark;
+  pBookmark := PPointer(Data);
+  pBookmark^ := TQRecord(Buffer).Bookmark;
+  Inc(pBookmark);
+  pBookmark^ := Self;
 end;
 
 procedure TQDataSet.GetBookmarkData(Buffer: TRecordBuffer; Data: TBookmark);
 begin
   // >=XE3 TBookmark=TArray<Byte> <XE3 TBookmark=TBytes
-  SetLength(Data, SizeOf(Pointer));
-  PPointer(@Data[0])^ := TQRecord(Buffer).Bookmark;
+  SetLength(Data, BookmarkSize);
+  GetBookmarkData(Buffer, PByte(@Data[0]));
 end;
 
 function TQDataSet.GetBookmarkFlag(Buffer: TRecordBuffer): TBookmarkFlag;
@@ -4592,8 +4605,8 @@ end;
 
 procedure TQDataSet.GetBookmarkData(Buffer: TRecBuf; Data: TBookmark);
 begin
-  SetLength(Data, SizeOf(Pointer));
-  PPointer(@Data[0])^ := TQRecord(Buffer).Bookmark;
+  SetLength(Data, BookmarkSize);
+  GetBookmarkData(TRecordBuffer(Buffer), @Data[0]);
 end;
 
 function TQDataSet.GetBookmarkFlag(Buffer: TRecBuf): TBookmarkFlag;
@@ -5744,7 +5757,7 @@ begin
         DoDefaultCreate;
     end;
     FRecordNo := -1;
-    BookmarkSize := SizeOf(Pointer);
+    BookmarkSize := SizeOf(Pointer) * 2;
     FCursorOpened := True;
     DefsCheck;
     if Filtered then
@@ -6682,7 +6695,7 @@ begin
     SetLength(AFilter, Length(AFilter) - 5);
   if not Assigned(FFilterExp) then
     FFilterExp := TQFilterExp.Create(Self);
-  FFilterExp.Parse(AFilter, false, false);
+  FFilterExp.Parse(AFilter, False, False);
   if not Filtered then
     Filtered := True
   else
@@ -8557,7 +8570,11 @@ end;
 class function TQProvider.AcquireDataSet: TQDataSet;
 begin
   if Assigned(QDataSetPool) then
-    Result := QDataSetPool.Pop
+  begin
+    Result := QDataSetPool.Pop;
+    while Result.ControlsDisabled do
+      Result.EnableControls;
+  end
   else
     Result := TQDataSet.Create(nil);
 end;
@@ -10698,7 +10715,56 @@ end;
 
 procedure DoResetDataSetItem(ASender: TQSimplePool; AData: Pointer);
 begin
-  TQDataSet(AData).Close;
+  with TQDataSet(AData) do
+  begin
+    Close;
+    FAnsiNulls := True;
+    FProvider := nil;
+    FCommandText := '';
+    FPageSize := 0;
+    FBatchMode := True;
+    FOpenBy := dsomByCreate;
+    FPageIndex := 0;
+    FReadOnly := False;
+    FSort := '';
+    FChecks.Clear;
+    FAllowEditActions := [];
+    FNaturalFilter := False;
+    AutoCalcFields := True;
+    DataSetField := nil;
+    FActiveRecordset := 0;
+    OnCustomSort := nil;
+    FMasterLink.DataSource := nil;
+    FMasterDetailFields := '';
+    FOnMasterChanged := nil;
+    Filter := '';
+    Filtered := False;
+    FilterOptions := [];
+    BeforeOpen := nil;
+    AfterOpen := nil;
+    BeforeClose := nil;
+    AfterClose := nil;
+    BeforeInsert := nil;
+    AfterInsert := nil;
+    BeforeEdit := nil;
+    AfterEdit := nil;
+    BeforePost := nil;
+    AfterPost := nil;
+    BeforeCancel := nil;
+    AfterCancel := nil;
+    BeforeDelete := nil;
+    AfterDelete := nil;
+    BeforeScroll := nil;
+    AfterScroll := nil;
+    BeforeRefresh := nil;
+    AfterRefresh := nil;
+    OnCalcFields := nil;
+    OnDeleteError := nil;
+    OnEditError := nil;
+    OnFilterRecord := nil;
+    OnNewRecord := nil;
+    OnPostError := nil;
+  end;
 end;
 
 { TQSchemas }

@@ -459,7 +459,7 @@ type
 
   EJsonError = class(Exception)
   private
-    FRow,FCol: Integer;
+    FRow, FCol: Integer;
   public
     property Row: Integer read FRow;
     property Col: Integer read FCol;
@@ -608,7 +608,8 @@ type
     procedure ParseValue(ABuilder: TQStringCatHelperW; var p: PQCharW);
     function FormatParseError(ACode: Integer; AMsg: QStringW; ps, p: PQCharW)
       : QStringW;
-    function FormatParseErrorEx(ACode: Integer; AMsg: QStringW; ps, p: PQCharW): EJsonError;
+    function FormatParseErrorEx(ACode: Integer; AMsg: QStringW; ps, p: PQCharW)
+      : EJsonError;
     procedure RaiseParseException(ACode: Integer; ps, p: PQCharW);
     function TryParseValue(ABuilder: TQStringCatHelperW;
       var p: PQCharW): Integer;
@@ -645,8 +646,8 @@ type
     function GetIsBool: Boolean;
     function GetAsBytes: TBytes;
     procedure SetAsBytes(const Value: TBytes);
-    class function SkipSpaceAndComment(var p: PQCharW;
-      var AComment: QStringW;lastvalidchar: Char=#0): Integer;
+    class function SkipSpaceAndComment(var p: PQCharW; var AComment: QStringW;
+      lastvalidchar: Char = #0): Integer;
     procedure DoParsed; virtual;
     procedure SetIgnoreCase(const Value: Boolean);
     function HashName(const S: QStringW): TQHashType;
@@ -1307,7 +1308,7 @@ type
     /// <summary>注释内容</summary>
     property Comment: QStringW read FComment write FComment;
     // Super Object 兼容访问模式
-    {$IFDEF SUPER_OBJECT_STYLE}
+{$IFDEF SUPER_OBJECT_STYLE}
     property S[const APath: String]: String read GetS write SetS;
     property B[const APath: String]: Boolean read GetB write SetB;
     property F[const APath: String]: Double read GetF write SetF;
@@ -1316,7 +1317,7 @@ type
     property V[const APath: String]: Variant read GetV write SetV;
     property T[const APath: String]: TDateTime read GetT write SetT;
     property I[const APath: String]: Int64 read GetI write SetI;
-    {$ENDIF}
+{$ENDIF}
   end;
 
   TQJsonEnumerator = class
@@ -3079,8 +3080,8 @@ begin
     SetLength(Result, 0);
 end;
 
-function TQJson.FormatParseErrorEx(ACode: Integer; AMsg: QStringW; ps,
-  p: PQCharW): EJsonError;
+function TQJson.FormatParseErrorEx(ACode: Integer; AMsg: QStringW;
+  ps, p: PQCharW): EJsonError;
 var
   ACol, ARow: Integer;
   ALine: QStringW;
@@ -3113,11 +3114,13 @@ begin
     begin
       ErrorLine;
     end;
-    Result := EJsonError.Create(Format(SJsonParseError, [ARow, ACol, AMsg, ALine]));
+    Result := EJsonError.Create(Format(SJsonParseError,
+      [ARow, ACol, AMsg, ALine]));
     Result.FRow := ARow;
     Result.FCol := ACol;
   end
-  else Result := nil;
+  else
+    Result := nil;
 end;
 
 procedure TQJson.FreeJson(AJson: TQJson);
@@ -4802,7 +4805,7 @@ begin
     Clear;
   if (l > 0) and (p[l] <> #0) then
     ParseCopy
-  else if p^<>#0 then
+  else if p^ <> #0 then
     ParseObject(p);
 end;
 
@@ -4944,7 +4947,7 @@ const
   JsonComplexEnd: PWideChar = '}]';
 var
   AChild: TQJson;
-  AObjEnd,lastP: QCharW;
+  AObjEnd, lastP: QCharW;
   AComment: QStringW;
 begin
   Result := SkipSpaceAndComment(p, AComment);
@@ -4982,10 +4985,10 @@ begin
           if Result <> 0 then
             Exit;
           if p^ = ',' then
-         begin
+          begin
             lastP := p^;
             Inc(p);
-            Result := SkipSpaceAndComment(p, AComment,lastP);
+            Result := SkipSpaceAndComment(p, AComment, lastP);
             if Result <> 0 then
               Exit;
           end;
@@ -5133,10 +5136,10 @@ begin
           raise
         else
         begin
-          raise FormatParseErrorEx(EParse_Unknown,e.Message,ps,p);
+          raise FormatParseErrorEx(EParse_Unknown, e.Message, ps, p);
 
-          {raise Exception.Create(Self.FormatParseError(EParse_Unknown,
-            E.Message, ps, p));}
+          { raise Exception.Create(Self.FormatParseError(EParse_Unknown,
+            E.Message, ps, p)); }
         end;
       end;
     end;
@@ -5160,36 +5163,35 @@ begin
   begin
     case ACode of
       EParse_BadStringStart:
-        {raise EJsonError.Create(FormatParseError(ACode,
-          SBadStringStart, ps, p));}
-        raise FormatParseErrorEx(ACode,
-          SBadStringStart, ps, p);
+        { raise EJsonError.Create(FormatParseError(ACode,
+          SBadStringStart, ps, p)); }
+        raise FormatParseErrorEx(ACode, SBadStringStart, ps, p);
       EParse_BadJson:
-        //raise EJsonError.Create(FormatParseError(ACode, SBadJson, ps, p));
+        // raise EJsonError.Create(FormatParseError(ACode, SBadJson, ps, p));
         raise FormatParseErrorEx(ACode, SBadJson, ps, p);
       EParse_CommentNotSupport:
-        {raise EJsonError.Create(FormatParseError(ACode,
-          SCommentNotSupport, ps, p));}
-        raise  FormatParseErrorEx(ACode,SCommentNotSupport, ps, p);
+        { raise EJsonError.Create(FormatParseError(ACode,
+          SCommentNotSupport, ps, p)); }
+        raise FormatParseErrorEx(ACode, SCommentNotSupport, ps, p);
       EParse_UnknownToken:
-        {raise EJsonError.Create(FormatParseError(ACode,
-          SCommentNotSupport, ps, p));}
-         raise FormatParseErrorEx(ACode,SCommentNotSupport, ps, p);
+        { raise EJsonError.Create(FormatParseError(ACode,
+          SCommentNotSupport, ps, p)); }
+        raise FormatParseErrorEx(ACode, SCommentNotSupport, ps, p);
       EParse_EndCharNeeded:
-        //raise EJsonError.Create(FormatParseError(ACode, SEndCharNeeded, ps, p));
+        // raise EJsonError.Create(FormatParseError(ACode, SEndCharNeeded, ps, p));
         raise FormatParseErrorEx(ACode, SEndCharNeeded, ps, p);
       EParse_BadNameStart:
-        //raise EJsonError.Create(FormatParseError(ACode, SBadNameStart, ps, p));
+        // raise EJsonError.Create(FormatParseError(ACode, SBadNameStart, ps, p));
         raise FormatParseErrorEx(ACode, SBadNameStart, ps, p);
       EParse_BadNameEnd:
-        //raise EJsonError.Create(FormatParseError(ACode, SBadNameEnd, ps, p));
+        // raise EJsonError.Create(FormatParseError(ACode, SBadNameEnd, ps, p));
         raise FormatParseErrorEx(ACode, SBadNameEnd, ps, p);
       EParse_NameNotFound:
-        //raise EJsonError.Create(FormatParseError(ACode, SNameNotFound, ps, p))
+        // raise EJsonError.Create(FormatParseError(ACode, SNameNotFound, ps, p))
         raise FormatParseErrorEx(ACode, SNameNotFound, ps, p);
     else
-       raise FormatParseErrorEx(ACode, SUnknownError, ps, p);
-      //raise EJsonError.Create(FormatParseError(ACode, SUnknownError, ps, p));
+      raise FormatParseErrorEx(ACode, SUnknownError, ps, p);
+      // raise EJsonError.Create(FormatParseError(ACode, SUnknownError, ps, p));
     end;
   end;
 end;
@@ -5583,13 +5585,18 @@ var
   procedure ParseNum;
   var
     ANum: Extended;
+    AInt: Int64;
+  const
+    JsonEndChars: PWideChar = ',]}';
   begin
-    if ParseNumeric(p, ANum) then
+    if ParseInt(p, AInt) <> 0 then
     begin
-      if SameValue(ANum, Trunc(ANum), 5E-324) then
-        AsInt64 := Trunc(ANum)
+      if CharInW(p, JsonEndChars) then
+        AsInt64 := AInt
+      else if ParseNumeric(p, ANum) then
+        AsFloat := ANum
       else
-        AsFloat := ANum;
+        raise Exception.Create(Format(SBadNumeric, [Value]));
     end
     else
       raise Exception.Create(Format(SBadNumeric, [Value]));
@@ -5643,7 +5650,7 @@ begin
 end;
 
 class function TQJson.SkipSpaceAndComment(var p: PQCharW;
-  var AComment: QStringW;lastvalidchar: Char=#0): Integer;
+  var AComment: QStringW; lastvalidchar: Char = #0): Integer;
 var
   ps: PQCharW;
 begin
@@ -5690,7 +5697,8 @@ begin
       end;
     end;
   end
-  else if ((p^ = CharObjectEnd) or (p^ = CharArrayEnd)) and (lastvalidchar = CharComma) then
+  else if ((p^ = CharObjectEnd) or (p^ = CharArrayEnd)) and
+    (lastvalidchar = CharComma) then
   begin
     Result := EParse_EndCharNeeded;
     Exit;
@@ -6979,14 +6987,17 @@ function TQJson.TryParseValue(ABuilder: TQStringCatHelperW;
   var p: PQCharW): Integer;
 var
   ANum: Extended;
+  AInt64: Int64;
   AComment: QStringW;
   AIsFloat: Boolean;
+  pl: PQCharW;
 const
   JsonEndChars: PWideChar = ',]}';
   MaxInt64: Int64 = 9223372036854775807;
   MinInt64: Int64 = -9223372036854775808;
 begin
   Result := 0;
+  pl := p;
   if p^ = '"' then
   begin
     BuildJsonString(ABuilder, p);
@@ -6999,20 +7010,20 @@ begin
     BuildJsonString(ABuilder, p);
     AsString := ABuilder.Value;
   end
-  else if ParseNumeric(p, ANum, AIsFloat) then // 数字？
+  else if ParseInt(pl, AInt64) <> 0 then
   begin
+    if CharInW(pl, JsonEndChars) then
+    begin
+      AsInt64 := AInt64;
+      p := pl;
+    end
+    else if ParseNumeric(p, ANum, AIsFloat) then // 数字？
+      ASFloat := ANum
+    else
+      Result := EParse_BadJson;
     SkipSpaceAndComment(p, AComment);
     if Length(AComment) > 0 then
       FComment := AComment;
-    if (p^ = #0) or CharInW(p, JsonEndChars) then
-    begin
-      if (ANum >= MinInt64) and (ANum <= MaxInt64) and (not AIsFloat) then
-        AsInt64 := Trunc(ANum)
-      else
-        AsFloat := ANum;
-    end
-    else
-      Result := EParse_BadJson;
   end
   else if StartWithW(p, 'False', True) then // False
   begin
@@ -7725,7 +7736,7 @@ function TQJsonContainer.ForEach(ACallback: TQJsonForEachCallback;
 var
   I: Integer;
 begin
-  Result:=Self;
+  Result := Self;
   if Assigned(ACallback) then
   begin
     for I := 0 to FItems.Count - 1 do
@@ -7759,7 +7770,7 @@ function TQJsonContainer.ForEach(ACallback: TQJsonForEachCallbackA)
 var
   I: Integer;
 begin
-  Result:=Self;
+  Result := Self;
   if Assigned(ACallback) then
   begin
     for I := 0 to FItems.Count - 1 do

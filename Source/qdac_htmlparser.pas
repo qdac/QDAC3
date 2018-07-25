@@ -1,4 +1,4 @@
-unit qdac_htmlparser;
+ï»¿unit qdac_htmlparser;
 
 interface
 
@@ -6,9 +6,9 @@ uses classes, sysutils, qstring, windows {$IFDEF UNICODE},
   Generics.Collections{$ENDIF};
 {$I QDAC.INC}
 
-{ ±¾µ¥ÔªÊÇÒ»¸ö¼òµ¥µÄHTML½âÎöµ¥Ôª£¬²»Ö§³Ö¸´ÔÓµÄ°üº¬½Å±¾µÄÄÚÈÝµÄ½âÎö£¬Ö»ÊÇ¼òµ¥µÄ½âÎö
-  HTML µÄ±êÇ©ºÍÊôÐÔ
-  //ÒÑÖªÔÚ½âÎö²¿·ÖÍøÒ³ÊÇÓÐÎÊÌâ
+{ ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½Ò»ï¿½ï¿½ï¿½òµ¥µï¿½HTMLï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½Ö§ï¿½Ö¸ï¿½ï¿½ÓµÄ°ï¿½ï¿½ï¿½ï¿½Å±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÝµÄ½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½Ç¼òµ¥µÄ½ï¿½ï¿½ï¿½
+  HTML ï¿½Ä±ï¿½Ç©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+  //ï¿½ï¿½Öªï¿½Ú½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 }
 type
   TQHTMLTag = class;
@@ -105,7 +105,7 @@ type
 implementation
 
 resourcestring
-  SBadHtmlText = '²»ÊÜÖ§³ÖµÄ HTML ÎÄ±¾¸ñÊ½';
+  SBadHtmlText = 'ï¿½ï¿½ï¿½ï¿½Ö§ï¿½Öµï¿½ HTML ï¿½Ä±ï¿½ï¿½ï¿½Ê½';
   { TQTagAttribute }
 
 constructor TQTagAttr.Create;
@@ -154,7 +154,7 @@ begin
   FItems := TStringList.Create;
   FItems.Sorted := True;
   FItems.Duplicates := dupIgnore;
-  FItems.CaseSensitive := False; // HTML ²»Çø·Ö´óÐ¡Ð´
+  FItems.CaseSensitive := False; // HTML ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ð¡Ð´
 end;
 
 procedure TQTagAttributes.Delete(AIndex: Integer);
@@ -334,6 +334,7 @@ var
     DblQuoter: QCharW = '"';
   var
     I: Integer;
+    ATagName:QStringW;
   begin
     if Length(ATag.Name) > 0 then
     begin
@@ -347,7 +348,11 @@ var
       end;
       if (ATag.Count = 0) and (Length(ATag.FInnerHtml) = 0) then
       begin
-        AHelper.Cat(HtmlTagEndClose).Cat(SLineBreak);
+        ATagName:=UpperCase(ATag.Name);
+        if (ATagName='LINK') or (ATagName='META') then
+          AHelper.Cat(HtmlTagEnd).Cat(SLineBreak)
+        else
+          AHelper.Cat(HtmlTagEndClose).Cat(SLineBreak);
         Exit;
       end
       else
@@ -556,8 +561,7 @@ const
             Inc(s);
         end;
       end
-      else if StartWithW(s, '<!', False) or StartWithW(s, '<meta', True) then
-      // ×¢ÊÍ»òmetaÐÐ£¬ºöÂÔµô
+      else if StartWithW(s, '<!', False) {or StartWithW(s, '<meta', True)} then
       begin
         SkipUntilW(s, '>');
         if s^ = '>' then
@@ -616,11 +620,15 @@ begin
       begin
         Inc(s);
         SkipSpaceW(s);
-        if StrCmpW(PQCharW(AChild.Name), 'img', True) = 0 then // img ¿ÉÒÔºöÂÔ
+        if StrCmpW(PQCharW(AChild.Name), 'img', True) = 0 then // img ï¿½ï¿½ï¿½Ôºï¿½ï¿½ï¿½
           continue;
-        if StrCmpW(PQCharW(AChild.Name), 'input', True) = 0 then // img ¿ÉÒÔºöÂÔ
+        if StrCmpW(PQCharW(AChild.Name), 'input', True) = 0 then // img ï¿½ï¿½ï¿½Ôºï¿½ï¿½ï¿½
           continue;
-        if StrCmpW(PQCharW(AChild.Name), 'p', True) = 0 then // p ¿ÉÄÜÓÐ/p£¬Ò²¿ÉÄÜÃ»ÓÐ
+        if StrCmpW(PQCharW(AChild.Name),'link',True)=0 then
+          continue;
+        if StrCmpW(PQCharW(AChild.Name),'meta',True)=0 then
+          continue;
+        if StrCmpW(PQCharW(AChild.Name), 'p', True) = 0 then // p ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½/pï¿½ï¿½Ò²ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½
         begin
           pl := s;
           if not AChild.TryParse(s, l - ((IntPtr(s) - IntPtr(ps)) shr 1)) then

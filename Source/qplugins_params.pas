@@ -2,7 +2,7 @@ unit qplugins_params;
 
 interface
 
-uses classes, sysutils, types, qstring, qvalue, qplugins_base,
+uses classes, sysutils, types, qstring, qvalue, qplugins_base, qjson,
   variants{$IFDEF UNICODE},
   Generics.collections, Rtti{$ENDIF};
 {$HPPEMIT '#pragma link "qplugins_params"'}
@@ -53,6 +53,7 @@ type
     procedure LoadFromStream(AStream: TStream);
     procedure SaveToFile(const AFileName: QStringW);
     procedure SaveToStream(AStream: TStream);
+    procedure ToJson(AJson: TQJson);
   end;
 
   // 重新实现 TInterfacedObject，以便子类能够重载 QueryInterface 方法
@@ -293,7 +294,7 @@ type
     function _Add(const AName: PWideChar; AChildren: IQParams)
       : StandInterfaceResult; overload; stdcall;
     function _GetAsString: StandInterfaceResult; stdcall;
-
+    procedure ToJson(AJson: TQJson);
     property Items[AIndex: Integer]: TQParam read GetDItems
       write SetDItems; default;
     property count: Integer read GetCount;
@@ -447,6 +448,7 @@ type
     function _GetAsString: StandInterfaceResult; stdcall;
   public
     constructor Create(AIntf: IQParams);
+    procedure ToJson(AJson: TQJson);
   end;
 
 function PointerOf(AIntf: IInterface): Pointer; inline;
@@ -499,6 +501,48 @@ begin
   else
     Result := nil;
 end;
+
+procedure ParamsToJson(AParams: IQParams; AParent: TQJson);
+var
+  I: Integer;
+  AParam: IQParam;
+  ABytes: TBytes;
+begin
+  for I := 0 to AParams.Count - 1 do
+  begin
+    AParam := AParams[I];
+    case AParam.ParamType of
+      ptInt8, ptUInt8, ptInt16, ptUInt16, ptInt32, ptUInt32, ptInt64, ptUInt64:
+        AParent.Add(AParam.Name).AsInt64 := AParam.AsInt64;
+      ptFloat4, ptFloat8:
+        AParent.Add(AParam.Name).AsFloat := AParam.AsFloat;
+      ptDateTime:
+        AParent.Add(AParam.Name).AsDateTime := AParam.AsFloat;
+      ptInterval, ptAnsiString, ptUtf8String, ptUnicodeString:
+        AParent.Add(AParam.Name).AsString := AParam.AsString.Value;
+      ptBoolean:
+        AParent.Add(AParam.Name).AsBoolean := AParam.AsBoolean;
+      ptGuid:
+        AParent.Add(AParam.Name).AsString := GuidToString(AParam.AsGuid);
+      ptBytes:
+        begin
+          SetLength(ABytes, AParam.GetAsBytes(nil, 0));
+          if Length(ABytes) > 0 then
+          begin
+            AParam.GetAsBytes(@ABytes[0], Length(ABytes));
+            AParent.Add(AParam.Name).AsBytes := ABytes;
+          end;
+        end;
+      ptStream:
+        AParent.Add(AParam.Name).ValueFromStream(NewStream(AParam.AsStream), 0);
+      ptArray:
+        ParamsToJson(AParam as IQParams, AParent.Add(AParam.Name));
+      ptInterface: // Unsupport
+        ;
+    end;
+  end;
+end;
+
 { TQInterfacedObject }
 
 constructor TQInterfacedObject.Create;
@@ -1796,6 +1840,11 @@ begin
   end;
 end;
 
+procedure TQParams.ToJson(AJson: TQJson);
+begin
+  ParamsToJson(Self,AJson);
+end;
+
 function TQParams._Add(const AName: PWideChar; AChildren: IQParams)
   : StandInterfaceResult;
 begin
@@ -2546,6 +2595,11 @@ end;
 procedure TQParamsHelper.SaveToStream(AStream: TStream);
 begin
   FInterface.SaveToStream(NewStream(AStream, False));
+end;
+
+procedure TQParamsHelper.ToJson(AJson: TQJson);
+begin
+  ParamsToJson(FInterface, AJson);
 end;
 
 function TQParamsHelper._Add(const AName: PWideChar; AChildren: IQParams)
