@@ -2662,7 +2662,7 @@ begin
   end
   else if DataType in [mptInteger, mptNull, mptUnknown] then
     Result := AsInt64
-  else if (DataType = mptExtended) and (ExtType = $FF) then
+  else if (DataType = mptExtended) and (Byte(ExtType) = $FF) then
     FromTimeStamp
   else
     raise Exception.Create(Format(SBadConvert,
@@ -5585,8 +5585,9 @@ begin
     end;
     if ts.Seconds <= Int64($3FFFFFFFF) then // 64位:30位纳秒,34位秒数
     begin
-      ABuf64[0] := ts.NanoSeconds;
-      ABuf64[0] := ExchangeByteOrder(ABuf64[0] shl 34 + ts.Seconds);
+      ABuf64[0] := Int64(ts.NanoSeconds) shl 34;
+      ABuf64[0]:=ABuf64[0]+ts.Seconds;
+      ABuf64[0] := ExchangeByteOrder(ABuf64[0]);
       WriteExt(AStream, $FF, @ABuf[0], SizeOf(Int64));
     end
     else

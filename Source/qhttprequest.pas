@@ -295,7 +295,10 @@ type
       : Integer; overload;
     function Rest(const AUrl: QStringW; ASource, AResult: TQJson;
       AHeaders: IQHttpHeaders = nil; AfterDone: TNotifyEvent = nil;
-      Action: TQHttpClientAction = reqUnknown): Integer; virtual;
+      Action: TQHttpClientAction = reqUnknown): Integer; overload; virtual;
+    function Rest(const AUrl: QStringW; AContent: QStringW; AResult: TQJson;
+      AHeaders: IQHttpHeaders = nil; AfterDone: TNotifyEvent = nil;
+      Action: TQHttpClientAction = reqUnknown): Integer; overload; virtual;
     property MaxClients: Integer read FMaxClients write FMaxClients;
     property DefaultHeaders: IQHttpHeaders read FDefaultHeaders;
   end;
@@ -1702,8 +1705,8 @@ var
         Inc(pl);
         FHost:=pl;
         FPassword:=StrDupX(ps,pl-ps-1);
-        FUserName:=DecodeTokenW(FPassword, NamePasswordDelimiter,
-            NullQuoter, True, True);
+      FUserName := DecodeTokenW(FPassword, NamePasswordDelimiter, NullQuoter,
+        True, True);
       end
     else
       begin
@@ -2830,6 +2833,54 @@ begin
   end;
 end;
 
+function TQHttpRequests.Rest(const AUrl: QStringW; AContent: QStringW;
+AResult: TQJson; AHeaders: IQHttpHeaders; AfterDone: TNotifyEvent;
+Action: TQHttpClientAction): Integer;
+var
+  AReq: TQHttpRequestItem;
+  I: Integer;
+begin
+  AReq := TQHttpRequestItem.Create(Self, not Assigned(AfterDone));
+  try
+    AReq._AddRef;
+    if not Assigned(AfterDone) then
+      AReq.AfterDone := DoEventReqDone
+    else
+    begin
+      AReq.AfterDone := AfterDone;
+    end;
+    AReq.Url := AUrl;
+    if Length(AContent)>0 then
+    begin
+      AReq.Action := reqPost;
+      AReq.RequestHeaders.Values['Content-Type'] :=
+        'application/x-www-form-urlencoded;charset=UTF-8';
+      SaveTextU(AReq.NeedRequestStream, AContent, false);
+      AReq.RequestStream.Position := 0;
+    end
+    else if Action = reqUnknown then
+      AReq.Action := reqGet
+    else
+      AReq.Action := Action;
+    if Assigned(AHeaders) then
+      AReq.RequestHeaders.Replace(AHeaders);
+    Push(AReq);
+    if Assigned(AfterDone) then
+      Result := 200
+    else
+    begin
+      AReq.WaitFor(INFINITE);
+      Result := AReq.StatusCode;
+      if Assigned(AResult) and (Result = 200) then
+      begin
+        if not AResult.TryParse(AReq.ContentAsString) then
+          raise Exception.CreateFmt(SContnetIsNotJson, [AReq.ContentAsString]);
+      end;
+    end;
+  finally
+    AReq._Release;
+  end;
+end;
 function TQHttpRequests.Rest(const AUrl: QStringW; ASource, AResult: TQJson;
 AHeaders: IQHttpHeaders; AfterDone: TNotifyEvent;
 Action: TQHttpClientAction): Integer;

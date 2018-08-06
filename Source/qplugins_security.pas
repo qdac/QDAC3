@@ -178,6 +178,19 @@ type
     /// </summary>
     arAllow);
 
+  IQDependencyList = interface
+    ['{2E5ACC3C-EA93-4E82-B703-AC141823698F}']
+    function Add(const AId: TGuid): Integer; stdcall;
+    procedure Delete(const AId: TGuid); overload; stdcall;
+    procedure Delete(const AIndex: Integer); overload; stdcall;
+    procedure Clear; stdcall;
+    function GetCount: Integer; stdcall;
+    function GetItems(const AIndex: Integer): Pointer; overload; stdcall;
+    function GetItems(const AIndex: Integer; var AId: TGuid): Boolean;
+      overload; stdcall;
+    function Contains(const AId:TGuid):Boolean;stdcall;
+    property Count: Integer read GetCount;
+  end;
   /// <summary>
   /// 权限对象接口定义
   /// </summary>

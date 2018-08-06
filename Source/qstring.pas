@@ -1639,7 +1639,7 @@ var
 const
   // HTML×ªÒå±í
 
-  HtmlEscapeChars: array [32 .. 255] of String = ('&nbsp', #33, '&quot;', #35,
+  HtmlEscapeChars: array [32 .. 255] of String = ('&nbsp;', #33, '&quot;', #35,
     #36, #37, '&amp;', '&apos;', #40, #41, //
     #42, #43, #44, #45, #46, #47, #48, #49, #50, #51, //
     #52, #53, #54, #55, #56, #57, #58, #59, '&lt;', #61, //
@@ -7411,7 +7411,7 @@ var
   p, pd: PQCharW;
   AFound: Boolean;
   I, L, H: Integer;
-  pw: PWord;
+  pw: PWord absolute p;
 begin
   if Length(S) > 0 then
   begin

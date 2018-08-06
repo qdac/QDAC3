@@ -476,8 +476,8 @@ type
   /// </item>
   TQJsonCommentStyle = (jcsIgnore, jcsInherited, jcsBeforeName, jcsAfterValue);
   TQJsonMergeMethod = (jmmIgnore, jmmAsSource, jmmAppend, jmmReplace);
-  TQJsonForEachCallback = procedure(AItem: TQJson; ATag: Pointer) of object;
-  TQJsonMatchFilterCallback = procedure(AItem: TQJson; ATag: Pointer;
+  TQJsonForEachCallback = procedure(AItem: TQJson; ATag: IntPtr) of object;
+  TQJsonMatchFilterCallback = procedure(AItem: TQJson; ATag: IntPtr;
     var Accept: Boolean) of object;
 {$IFDEF UNICODE}
   TQJsonForEachCallbackA = reference to procedure(AItem: TQJson);
@@ -488,26 +488,29 @@ type
     jmsMatchValue);
   TQJsonMatchSettings = set of TQJsonMatchSetting;
   TQJsonContainerEnumerator = class;
+  TQJsonIndexArray = array of Integer;
 
   IQJsonContainer = interface
     ['{C9FF8471-19FC-435A-B1A7-21F0D5206720}']
     function GetCount: Integer;
     function GetItems(const AIndex: Integer): TQJson;
-    function ForEach(ACallback: TQJsonForEachCallback; ATag: Pointer = nil)
+    function ForEach(ACallback: TQJsonForEachCallback; ATag: IntPtr)
       : IQJsonContainer; overload;
 {$IFDEF UNICODE}
     function ForEach(ACallback: TQJsonForEachCallbackA)
       : IQJsonContainer; overload;
-    function Match(const AFilter: TQJsonMatchFilterCallbackA;
-      ATag: Pointer = nil): IQJsonContainer; overload;
+    function Match(const AFilter: TQJsonMatchFilterCallbackA; ATag: IntPtr)
+      : IQJsonContainer; overload;
 {$ENDIF}
+{$IFDEF ENABLE_REGEX}
     function Match(const ARegex: QStringW; ASettings: TQJsonMatchSettings)
       : IQJsonContainer; overload;
-    function Match(const AIndexes: array of integer): IQJsonContainer; overload;
+{$ENDIF}
+    function Match(const AIndexes: TQJsonIndexArray): IQJsonContainer; overload;
     function Match(const AStart, AStop, AStep: Integer)
       : IQJsonContainer; overload;
-    function Match(const AFilter: TQJsonMatchFilterCallback;
-      ATag: Pointer = nil): IQJsonContainer; overload;
+    function Match(const AFilter: TQJsonMatchFilterCallback; ATag: IntPtr)
+      : IQJsonContainer; overload;
     function GetEnumerator: TQJsonContainerEnumerator;
     function GetIsEmpty: Boolean;
     property Items[const AIndex: Integer]: TQJson read GetItems; default;
@@ -521,7 +524,7 @@ type
     FList: IQJsonContainer;
   public
     constructor Create(AList: IQJsonContainer);
-    function GetCurrent: TQJson; inline;
+    function GetCurrent: TQJson;
     function MoveNext: Boolean;
     property Current: TQJson read GetCurrent;
   end;
@@ -531,20 +534,22 @@ type
     FItems: TQJsonItemList;
     function GetCount: Integer;
     function GetItems(const AIndex: Integer): TQJson;
-    function ForEach(ACallback: TQJsonForEachCallback; ATag: Pointer = nil)
+    function ForEach(ACallback: TQJsonForEachCallback; ATag: IntPtr)
       : IQJsonContainer; overload;
 {$IFDEF UNICODE}
     function ForEach(ACallback: TQJsonForEachCallbackA)
       : IQJsonContainer; overload;
-    function Match(const AFilter: TQJsonMatchFilterCallbackA;
-      ATag: Pointer = nil): IQJsonContainer; overload;
+    function Match(const AFilter: TQJsonMatchFilterCallbackA; ATag: IntPtr)
+      : IQJsonContainer; overload;
 {$ENDIF}
+{$IFDEF ENABLE_REGEX}
     function Match(const ARegex: QStringW; ASettings: TQJsonMatchSettings)
       : IQJsonContainer; overload;
-    function Match(const AIndexes: array of integer): IQJsonContainer; overload;
+{$ENDIF}
+    function Match(const AIndexes: TQJsonIndexArray): IQJsonContainer; overload;
     function Match(const AStart, AStop, AStep: Integer)
       : IQJsonContainer; overload;
-    function Match(const AFilter: TQJsonMatchFilterCallback; ATag: Pointer)
+    function Match(const AFilter: TQJsonMatchFilterCallback; ATag: IntPtr)
       : IQJsonContainer; overload;
     function GetIsEmpty: Boolean;
     function GetEnumerator: TQJsonContainerEnumerator;
@@ -647,12 +652,12 @@ type
     function GetAsBytes: TBytes;
     procedure SetAsBytes(const Value: TBytes);
     class function SkipSpaceAndComment(var p: PQCharW; var AComment: QStringW;
-      lastvalidchar: Char = #0): Integer;
+      lastvalidchar: WideChar = #0): Integer;
     procedure DoParsed; virtual;
     procedure SetIgnoreCase(const Value: Boolean);
     function HashName(const S: QStringW): TQHashType;
     procedure HashNeeded; inline;
-    procedure FromType(const AValue: String; AType: TQJsonDataType);
+    procedure FromType(const AValue: QStringW; AType: TQJsonDataType);
     function GetRoot: TQJson;
     function DoCompareName(Item1, Item2: Pointer): Integer;
     function DoCompareValueBoolean(Item1, Item2: Pointer): Integer;
@@ -660,22 +665,22 @@ type
     function DoCompareValueFloat(Item1, Item2: Pointer): Integer;
     function DoCompareValueInt(Item1, Item2: Pointer): Integer;
     function DoCompareValueString(Item1, Item2: Pointer): Integer;
-    function GetA(const APath: String): TQJson;
-    function GetB(const APath: String): Boolean;
-    function GetF(const APath: String): Double;
-    function GetI(const APath: String): Int64;
-    function GetO(const APath: String): TQJson;
-    function GetS(const APath: String): String;
-    function GetT(const APath: String): TDateTime;
-    function GetV(const APath: String): Variant;
-    procedure SetA(const APath: String; const Value: TQJson);
-    procedure SetB(const APath: String; const Value: Boolean);
-    procedure SetF(const APath: String; const Value: Double);
-    procedure SetI(const APath: String; const Value: Int64);
-    procedure SetO(const APath: String; const Value: TQJson);
-    procedure SetS(const APath, Value: String);
-    procedure SetT(const APath: String; const Value: TDateTime);
-    procedure SetV(const APath: String; const Value: Variant);
+    function GetA(const APath: QStringW): TQJson;
+    function GetB(const APath: QStringW): Boolean;
+    function GetF(const APath: QStringW): Double;
+    function GetI(const APath: QStringW): Int64;
+    function GetO(const APath: QStringW): TQJson;
+    function GetS(const APath: QStringW): QStringW;
+    function GetT(const APath: QStringW): TDateTime;
+    function GetV(const APath: QStringW): Variant;
+    procedure SetA(const APath: QStringW; const Value: TQJson);
+    procedure SetB(const APath: QStringW; const Value: Boolean);
+    procedure SetF(const APath: QStringW; const Value: Double);
+    procedure SetI(const APath: QStringW; const Value: Int64);
+    procedure SetO(const APath: QStringW; const Value: TQJson);
+    procedure SetS(const APath, Value: QStringW);
+    procedure SetT(const APath: QStringW; const Value: TDateTime);
+    procedure SetV(const APath: QStringW; const Value: Variant);
   public
     /// <summary>¹¹Ôìº¯Êý</summary>
     constructor Create; overload;
@@ -3134,7 +3139,7 @@ begin
     FreeObject(AJson);
 end;
 
-procedure TQJson.FromType(const AValue: String; AType: TQJsonDataType);
+procedure TQJson.FromType(const AValue: QStringW; AType: TQJsonDataType);
 var
   p: PQCharW;
   ABuilder: TQStringCatHelperW;
@@ -3503,7 +3508,7 @@ begin
 end;
 {$IFEND >=2010}
 
-function TQJson.GetA(const APath: String): TQJson;
+function TQJson.GetA(const APath: QStringW): TQJson;
 begin
   Result := ItemByPath(APath);
 end;
@@ -3657,7 +3662,7 @@ begin
   end;
 end;
 
-function TQJson.GetB(const APath: String): Boolean;
+function TQJson.GetB(const APath: QStringW): Boolean;
 begin
   Result := BoolByPath(APath, false);
 end;
@@ -3675,12 +3680,12 @@ begin
   Result := TQJsonEnumerator.Create(Self);
 end;
 
-function TQJson.GetF(const APath: String): Double;
+function TQJson.GetF(const APath: QStringW): Double;
 begin
   Result := FloatByPath(APath, 0);
 end;
 
-function TQJson.GetI(const APath: String): Int64;
+function TQJson.GetI(const APath: QStringW): Int64;
 begin
   Result := IntByPath(APath, 0);
 end;
@@ -3764,7 +3769,7 @@ begin
   Result := FItems[AIndex];
 end;
 
-function TQJson.GetO(const APath: String): TQJson;
+function TQJson.GetO(const APath: QStringW): TQJson;
 begin
   Result := ItemByPath(APath);
 end;
@@ -3812,17 +3817,17 @@ begin
     Result := Result.FParent;
 end;
 
-function TQJson.GetS(const APath: String): String;
+function TQJson.GetS(const APath: QStringW): QStringW;
 begin
   Result := ValueByPath(APath, '');
 end;
 
-function TQJson.GetT(const APath: String): TDateTime;
+function TQJson.GetT(const APath: QStringW): TDateTime;
 begin
   Result := DateTimeByPath(APath, 0);
 end;
 
-function TQJson.GetV(const APath: String): Variant;
+function TQJson.GetV(const APath: QStringW): Variant;
 var
   AItem: TQJson;
 begin
@@ -5315,7 +5320,7 @@ begin
     SaveTextWBE(AStream, S, AWriteBOM);
 end;
 
-procedure TQJson.SetA(const APath: String; const Value: TQJson);
+procedure TQJson.SetA(const APath: QStringW; const Value: TQJson);
 begin
   ForcePath(APath).Assign(Value);
 end;
@@ -5469,7 +5474,7 @@ begin
   end;
 end;
 
-procedure TQJson.SetB(const APath: String; const Value: Boolean);
+procedure TQJson.SetB(const APath: QStringW; const Value: Boolean);
 begin
   ForcePath(APath).AsBoolean := Value;
 end;
@@ -5512,12 +5517,12 @@ begin
   end;
 end;
 
-procedure TQJson.SetF(const APath: String; const Value: Double);
+procedure TQJson.SetF(const APath: QStringW; const Value: Double);
 begin
   ForcePath(APath).AsFloat := Value;
 end;
 
-procedure TQJson.SetI(const APath: String; const Value: Int64);
+procedure TQJson.SetI(const APath: QStringW; const Value: Int64);
 begin
   ForcePath(APath).AsInt64 := Value;
 end;
@@ -5559,22 +5564,22 @@ begin
   end;
 end;
 
-procedure TQJson.SetO(const APath: String; const Value: TQJson);
+procedure TQJson.SetO(const APath: QStringW; const Value: TQJson);
 begin
   ForcePath(APath).Assign(Value);
 end;
 
-procedure TQJson.SetS(const APath, Value: String);
+procedure TQJson.SetS(const APath, Value: QStringW);
 begin
   ForcePath(APath).AsString := Value;
 end;
 
-procedure TQJson.SetT(const APath: String; const Value: TDateTime);
+procedure TQJson.SetT(const APath: QStringW; const Value: TDateTime);
 begin
   ForcePath(APath).AsDateTime := Value;
 end;
 
-procedure TQJson.SetV(const APath: String; const Value: Variant);
+procedure TQJson.SetV(const APath: QStringW; const Value: Variant);
 begin
   ForcePath(APath).AsVariant := Value;
 end;
@@ -5650,7 +5655,7 @@ begin
 end;
 
 class function TQJson.SkipSpaceAndComment(var p: PQCharW;
-  var AComment: QStringW; lastvalidchar: Char = #0): Integer;
+  var AComment: QStringW; lastvalidchar: WideChar = #0): Integer;
 var
   ps: PQCharW;
 begin
@@ -7731,8 +7736,8 @@ end;
 
 { TQJsonContainer }
 
-function TQJsonContainer.ForEach(ACallback: TQJsonForEachCallback;
-  ATag: Pointer): IQJsonContainer;
+function TQJsonContainer.ForEach(ACallback: TQJsonForEachCallback; ATag: IntPtr)
+  : IQJsonContainer;
 var
   I: Integer;
 begin
@@ -7779,7 +7784,7 @@ begin
 end;
 
 function TQJsonContainer.Match(const AFilter: TQJsonMatchFilterCallbackA;
-  ATag: Pointer): IQJsonContainer;
+  ATag: IntPtr): IQJsonContainer;
 var
   I: Integer;
   T: TQJsonContainer;
@@ -7823,7 +7828,7 @@ begin
 end;
 
 function TQJsonContainer.Match(const AFilter: TQJsonMatchFilterCallback;
-  ATag: Pointer): IQJsonContainer;
+  ATag: IntPtr): IQJsonContainer;
 var
   I: Integer;
   T: TQJsonContainer;
@@ -7878,13 +7883,12 @@ begin
   end;
 end;
 
-function TQJsonContainer.Match(const AIndexes: array of integer)
+function TQJsonContainer.Match(const AIndexes: TQJsonIndexArray)
   : IQJsonContainer;
 var
   I, C: Integer;
   T: TQJsonContainer;
 begin
-  I := 0;
   T := TQJsonContainer.Create;
   Result := T;
   C := FItems.Count;
@@ -7894,6 +7898,7 @@ begin
       T.FItems.Add(FItems[AIndexes[I]]);
   end;
 end;
+{$IFDEF ENABLE_REGEX}
 
 function TQJsonContainer.Match(const ARegex: QStringW;
   ASettings: TQJsonMatchSettings): IQJsonContainer;
@@ -7956,7 +7961,7 @@ begin
     FreeAndNil(AReg);
   end;
 end;
-
+{$ENDIF}
 { TQJsonContainerEnumerator }
 
 constructor TQJsonContainerEnumerator.Create(AList: IQJsonContainer);

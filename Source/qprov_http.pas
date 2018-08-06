@@ -44,6 +44,7 @@ type
     function CheckError(AJson: TQJson; ARaiseError: Boolean): Boolean;
     procedure Json2DataSet(ASource: TQJson; ADataSet: TQDataSet);
     procedure CloseHandle(AHandle: THandle); override;
+    procedure KeepAliveNeeded; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -92,7 +93,7 @@ begin
     }
     上面的结构中，code 是始终存在的，如果成功，返回0，失败，返回错误代码
   *)
-  ACode := AJson.IntByName('code', -1);
+  ACode := AJson.IntByName('code', MaxInt);
   Result := ACode = 0;
   if (not Result) then
   begin
@@ -189,9 +190,17 @@ var
     Json2DataSet(AResult.ItemByName('result'), ARequest.Command.DataObject);
   end;
 
+  procedure DoExecuteSQL;
+  begin
+    AResult := Rest('ExecSQL', nil, AReqJson, true);
+    CheckError(AResult, true);
+    ARequest.Result.Statics.AffectRows := AResult.IntByName('result', 0);
+  end;
 begin
   Result := false;
   AResult := nil;
+  if AccessToken.ExpireTime < Now then
+    KeepAliveNeeded;
   AReqJson := TQJson.Create;
   try
     AReqJson.Add('id').AsString := ARequest.Command.Id;
@@ -218,9 +227,7 @@ begin
         end;
       caExecute:
         begin
-          AResult := Rest('ExecSQL', nil, AReqJson, true);
-          CheckError(AResult, true);
-          ARequest.Result.Statics.AffectRows := AResult.IntByName('result', 0);
+          DoExecuteSQL;
           Result := true;
         end;
       caUnprepare:
@@ -237,6 +244,7 @@ procedure TQHttpProvider.InternalOpen;
 var
   AResult, ATokens: TQJson;
   ATime: TDateTime;
+  AExpire: Integer;
 begin
   inherited;
   AResult := Rest('Open', Params, nil, false);
@@ -248,9 +256,10 @@ begin
       ATime := Now;
       FAccessToken.Value := ATokens.ValueByName('access_token', '');
       // 默认会话有效期为2小时（7200秒）
-      FAccessToken.ExpireTime :=
-        IncSecond(ATime, ATokens.IntByName('access_expire', 7200));
-
+      AExpire := ATokens.IntByName('access_expire', 7200);
+      FAccessToken.ExpireTime := IncSecond(ATime, AExpire);
+      if AExpire > 15 then // 提前15秒刷新会话
+        PeekInterval := AExpire - 15;
       FRefreshToken.Value := ATokens.ValueByName('refresh_token', '');
       // 刷新会话有效期，默认为30天
       FRefreshToken.ExpireTime :=
@@ -447,6 +456,38 @@ begin
     DatabaseError(SUnknownJsonFormat);
 end;
 
+procedure TQHttpProvider.KeepAliveNeeded;
+var
+  AParams: TStringList;
+  AResult, ATokens: TQJson;
+  ATime: TDateTime;
+begin
+  AParams := TStringList.Create;
+  AResult := nil;
+  try
+    AParams.Add('refreshtoken=' + RefreshToken.Value);
+    AResult := Rest('RefreshToken', AParams, nil, true);
+    CheckError(AResult, true);
+    if AResult.HasChild('result', ATokens) then
+    begin
+      ATime := Now;
+      FAccessToken.Value := ATokens.ValueByName('access_token', '');
+      FAccessToken.ExpireTime :=
+        IncSecond(ATime, ATokens.IntByName('access_expire', 7200));
+      FRefreshToken.Value := ATokens.ValueByName('refresh_token', '');
+      FRefreshToken.ExpireTime :=
+        IncSecond(ATime, ATokens.IntByName('refresh_expire', 2592000));
+      FHandle := IntPtr(Self);
+      FServerExtParams.Assign(ATokens);
+    end
+    else
+      raise EQDBHttpException.Create(AResult);
+  finally
+    FreeAndNil(AParams);
+    if Assigned(AResult) then
+      FreeAndNil(AResult);
+  end;
+end;
 function TQHttpProvider.Rest(Action: QStringW; Params: TStrings; AData: TQJson;
   AUseToken: Boolean): TQJson;
 var
@@ -475,8 +516,10 @@ begin
       DigestToString(MD5Hash(AUrl.OriginParams + '&' + AppSalt), true);
     // 参数乱序化
     AUrl.RandSortParams;
+    repeat
     AStatus := FRequests.Rest(AUrl.Url, AData, Result, CustomHeaders,
       nil, reqPost);
+    until AStatus<>12030;//12030- HTTP接收数据时，连接异外中止
     if AStatus <> 200 then
     begin
       Result.Add('code').AsInteger := -1000 - AStatus;

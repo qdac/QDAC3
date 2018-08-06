@@ -1238,7 +1238,7 @@ type
       : TStream; override;
     function GetBlobFieldData(FieldNo: Integer; var Buffer: TBlobByteData)
       : Integer; override;
-    function GetFieldData(Field: TField; Buffer: Pointer): Boolean; overload;
+    function GetFieldData(Field: TField; Buffer: Pointer): Boolean; override;
     function BookmarkValid(Bookmark: TBookmark): Boolean; override;
     function GetBookmark: TBookmark;
 {$IFNDEF NEXTGEN}override; {$ENDIF}
@@ -2669,6 +2669,7 @@ function TQFieldDef.LookupCompareProc(AIgnoreCase: Boolean): TQValueCompare;
 begin
   FOnCompare := qvalue.LookupCompareProc(FValueType, FValueType,
     AIgnoreCase, False);
+  Result := FOnCompare;
 end;
 
 procedure TQFieldDef.LookupValueType;
@@ -2883,9 +2884,11 @@ var
   pBookmark: PPointer;
 begin
   Result := False;
+{$IFDEF UNICODE}
   if Length(Bookmark) = BookmarkSize then
+{$ENDIF}
   begin
-    pBookmark := PPointer(@Bookmark[0]);
+    pBookmark := PPointer({$IFDEF UNICODE}@Bookmark[0]{$ELSE}Bookmark{$ENDIF});
     if pBookmark <> nil then
     begin
       Inc(pBookmark);
@@ -4455,10 +4458,10 @@ begin
   if Assigned(AProc) then
   begin
     while Result < FActiveRecords.Count do
-      begin
+    begin
       AProc(Self, Result, FActiveRecords[Result]);
       Inc(Result);
-      end;
+    end;
   end;
 end;
 {$ENDIF}
@@ -4553,8 +4556,13 @@ end;
 
 function TQDataSet.GetBookmark: TBookmark;
 begin
+{$IFDEF UNICODE}
   SetLength(Result, BookmarkSize);
   GetBookmarkData(TRecordBuffer(ActiveBuffer), @Result[0]);
+{$ELSE}
+  GetMem(Result, BookmarkSize);
+  GetBookmarkData(PChar(ActiveBuffer), Result);
+{$ENDIF}
 end;
 
 {$IFNDEF NEXTGEN}
