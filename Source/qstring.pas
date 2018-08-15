@@ -969,6 +969,10 @@ type
     rctChinese,
     /// <summary>大小写英文字母</summary>
     rctAlpha,
+    /// <summary>仅小写英文字母，rctAlpha同时包含</summary>
+    rctLowerCase,
+    /// <summary>仅大写英文字母</summary>
+    rctUpperCase,
     /// <summary>数字</summary>
     rctNum,
     /// <summary>英文符号</summary>
@@ -1060,7 +1064,7 @@ function SkipCharW(var p: PQCharW; const List: array of QCharA)
   : Integer; overload;
 function SkipCharW(var p: PQCharW; const List: PQCharW): Integer; overload;
 
-// 跳过空白字符，对于 Ansi编码，跳过的是#9#10#13#161#161，对于UCS编码，跳过的是#9#10#13#$3000
+// 跳过空白字符，对于 Ansi编码，跳过的是#9#10#13#161#161，对于UCS编码，跳过的是#9#10#13#$A0#$3000
 function SkipSpaceA(var p: PQCharA): Integer;
 function SkipSpaceU(var p: PQCharA): Integer;
 function SkipSpaceW(var p: PQCharW): Integer;
@@ -1481,7 +1485,13 @@ function SameId(const V1, V2: TGuid): Boolean;
 /// <summary>计算指定内容的密码强度</summary>
 /// <param name="S">密码</param>
 /// <returns>返回一个>=0的密码强度值</returns>
-function PasswordScale(const S: QStringW): Integer;
+function PasswordScale(const S: QStringW): Integer;overload;
+/// <summary>计算指定内容的密码强度</summary>
+/// <param name="S">密码</param>
+/// <param name="ARules">检测到的密码规则项目</param>
+/// <returns>返回一个>=0的密码强度值</returns>
+function PasswordScale(const S: QStringW; var ARules: TPasswordRules)
+  : Integer;overload;
 /// <summary>将指定的密码强度系数转换为强度等级</summary>
 /// <param name="AScale">通过PasswordScale得到的强度等级</param>
 /// <returns>返回转换后的强度等级</returns>
@@ -1490,6 +1500,14 @@ function CheckPassword(const AScale: Integer): TPasswordStrongLevel; overload;
 /// <param name="S">密码</param>
 /// <returns>返回计算得到的强度等级</returns>
 function CheckPassword(const S: QStringW): TPasswordStrongLevel; overload;
+/// <summary>计算密码中包含的字符类型</summary>
+/// <param name="S">字符串</param>
+/// <returns>返回包含的字符类型集合</returns>
+function PasswordCharTypes(const S: QStringW): TRandCharTypes;
+/// <summary>计算密码匹配的规则类型</summary>
+/// <param name="S">字符串</param>
+/// <returns>返回匹配的规则类型集合</returns>
+function PasswordRules(const S: QStringW): TPasswordRules;
 /// <summary>检查指定的中国身份证号的有效性</summary>
 /// <param name="CardNo">身份证号</param>
 /// <returns>号码符合规则，返回true，否则，返回false</returns>
@@ -1535,8 +1553,9 @@ function UrlMerge(const ABase, ARel: QStringW): QStringW;
 procedure Debugout(const AMsg: QStringW); overload;
 procedure Debugout(const AFmt: QStringW;
   const AParams: array of const); overload;
-function RandomString(ALen: Cardinal; ACharTypes: TRandCharTypes = [])
-  : QStringW;
+function RandomString(ALen: Cardinal; ACharTypes: TRandCharTypes = [];
+  AllTypesNeeded: Boolean = false): QStringW;
+
 function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW;
   AIgnoreCase: Boolean; var ASwitchChar: QCharW): QStringW; overload;
 function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW = ':')
@@ -2674,7 +2693,7 @@ end;
 
 function IsSpaceA(const c: PQCharA; ASpaceSize: PInteger): Boolean;
 begin
-  if c^ in [9, 10, 13, 32] then
+  if c^ in [9, 10, 13, 32, $A0] then
   begin
     Result := True;
     if Assigned(ASpaceSize) then
@@ -2692,8 +2711,8 @@ end;
 
 function IsSpaceW(const c: PQCharW; ASpaceSize: PInteger): Boolean;
 begin
-  Result := (c^ = #9) or (c^ = #10) or (c^ = #13) or (c^ = #32) or
-    (c^ = #$3000);
+  Result := (c^ = #9) or (c^ = #10) or (c^ = #13) or (c^ = #32) or (c^ = #$A0)
+    or (c^ = #$3000);
   if Result and Assigned(ASpaceSize) then
     ASpaceSize^ := 1;
 end;
@@ -2701,7 +2720,7 @@ end;
 function IsSpaceU(const c: PQCharA; ASpaceSize: PInteger): Boolean;
 begin
   // 全角空格$3000的UTF-8编码是227,128,128
-  if c^ in [9, 10, 13, 32] then
+  if c^ in [9, 10, 13, 32, $A0] then
   begin
     Result := True;
     if Assigned(ASpaceSize) then
@@ -11563,10 +11582,10 @@ const
   PR_CHART = 20; // 包含非数字和字母的控制字符时，额外增加的权值
   PR_UNICODE = 40; // 包含Unicode字符时，额外增加的权值
 
-function PasswordScale(const S: QStringW): Integer;
+function PasswordScale(const S: QStringW; var ARules: TPasswordRules)
+  : Integer;
 var
   p: PQCharW;
-  ARules: TPasswordRules;
   AMaxOrder, AMaxRepeat, ACharTypes: Integer;
   function RepeatCount: Integer;
   var
@@ -11660,6 +11679,13 @@ begin
   end;
 end;
 
+function PasswordScale(const S: QStringW): Integer;
+var
+  ARules: TPasswordRules;
+begin
+  Result := PasswordScale(S, ARules);
+end;
+
 function CheckPassword(const AScale: Integer): TPasswordStrongLevel; overload;
 begin
   if AScale < 60 then
@@ -11677,6 +11703,40 @@ end;
 function CheckPassword(const S: QStringW): TPasswordStrongLevel; overload;
 begin
   Result := CheckPassword(PasswordScale(S));
+end;
+
+function PasswordCharTypes(const S: QStringW): TRandCharTypes;
+var
+  p: PQCharW;
+begin
+  Result := [];
+  p := PQCharW(S);
+  while p^ <> #0 do
+  begin
+    if ((p^ >= '0') and (p^ <= '9')) or ((p^ >= '０') and (p^ <= '９')) then
+      Result := Result + [rctNum]
+    else if ((p^ >= 'a') and (p^ <= 'z')) or ((p^ >= 'ａ') and (p^ <= 'ｚ')) then
+      Result := Result + [rctAlpha, rctLowerCase]
+    else if ((p^ >= 'A') and (p^ <= 'Z')) or ((p^ >= 'Ａ') and (p^ <= 'Ｚ')) then
+      Result := Result + [rctAlpha, rctUpperCase]
+    else if (p^ >= #$4E00) and (p^ <= #$9FA5) then
+      Result := Result + [rctChinese]
+    else if (p^ = ' ') or (p^ = #9) or (p^ = #10) or (p^ = #13) or (p^ = #$A0)
+      or (p^ = #$3000) then
+      Result := Result + [rctSpace]
+    else
+      Result := Result + [rctSymbol];
+    if Result = [rctChinese, rctAlpha, rctLowerCase, rctUpperCase, rctNum,
+      rctSymbol, rctSpace] then
+      break;
+    Inc(p);
+  end;
+end;
+
+function PasswordRules(const S: QStringW): TPasswordRules;
+begin
+  Result := [];
+  PasswordScale(S, Result);
 end;
 
 function SimpleChineseToTraditional(S: QStringW): QStringW;
@@ -12346,11 +12406,13 @@ begin
   Debugout(Format(AFmt, AParams));
 end;
 
-function RandomString(ALen: Cardinal; ACharTypes: TRandCharTypes): QStringW;
+function RandomString(ALen: Cardinal; ACharTypes: TRandCharTypes;
+  AllTypesNeeded: Boolean): QStringW;
 var
   p: PQCharW;
-  K: Integer;
+  K, M: Integer;
   V: TRandCharType;
+  ARemainTypes: TRandCharTypes;
 const
   SpaceChars: array [0 .. 3] of QCharW = (#9, #10, #13, #32);
 begin
@@ -12358,9 +12420,17 @@ begin
     ACharTypes := [rctAlpha];
   SetLength(Result, ALen);
   p := PQCharW(Result);
+  ARemainTypes := ACharTypes;
+  M := Ord(High(TRandCharType)) + 1;
   while ALen > 0 do
   begin
-    V := TRandCharType(Random(5));
+    V := TRandCharType(random(M));
+    if AllTypesNeeded and (ARemainTypes <> []) then
+    begin
+      while not(V in ARemainTypes) do
+        V := TRandCharType(random(M));
+      ARemainTypes := ARemainTypes - [V];
+    end;
     if V in ACharTypes then
     begin
       case V of
@@ -12374,6 +12444,10 @@ begin
             else
               p^ := QCharW(Ord('a') + K - 26);
           end;
+        rctLowerCase:
+          p^ := QCharW(Ord('a') + random(26));
+        rctUpperCase:
+          p^ := QCharW(Ord('A') + random(26));
         rctNum:
           p^ := QCharW(Ord('0') + Random(10));
         rctSymbol: // 只管英文符号
