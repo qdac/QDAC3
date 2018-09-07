@@ -507,7 +507,24 @@ var
   I: Integer;
   AParam: IQParam;
   ABytes: TBytes;
+  function IsArray: Boolean;
+  var
+    J: Integer;
+  begin
+    Result := True;
+    for J := 0 to AParams.Count - 1 do
+    begin
+      if Assigned(AParams[J].Name) and (AParams[J].Name^<>#0) then
+      begin
+        Result := false;
+        Break;
+      end;
+    end;
+  end;
+
 begin
+  if IsArray then
+    AParent.DataType := jdtArray;
   for I := 0 to AParams.Count - 1 do
   begin
     AParam := AParams[I];
@@ -536,7 +553,7 @@ begin
       ptStream:
         AParent.Add(AParam.Name).ValueFromStream(NewStream(AParam.AsStream), 0);
       ptArray:
-        ParamsToJson(AParam as IQParams, AParent.Add(AParam.Name));
+        ParamsToJson(AParam.AsArray, AParent.Add(AParam.Name));
       ptInterface: // Unsupport
         ;
     end;
@@ -1842,7 +1859,7 @@ end;
 
 procedure TQParams.ToJson(AJson: TQJson);
 begin
-  ParamsToJson(Self,AJson);
+  ParamsToJson(Self, AJson);
 end;
 
 function TQParams._Add(const AName: PWideChar; AChildren: IQParams)

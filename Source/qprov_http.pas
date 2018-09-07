@@ -22,7 +22,6 @@ type
   end;
 
   TQHttpProvider = class(TQProvider)
-  private
   protected
     FAccessToken, FRefreshToken: TQHttpToken;
     FRequests: TQHttpRequests;
@@ -42,6 +41,7 @@ type
     function Rest(Action: QStringW; Params: TStrings; AData: TQJson;
       AUseToken: Boolean): TQJson;
     function CheckError(AJson: TQJson; ARaiseError: Boolean): Boolean;
+    procedure RaiseError(AJson: TQJson);
     procedure Json2DataSet(ASource: TQJson; ADataSet: TQDataSet);
     procedure CloseHandle(AHandle: THandle); override;
     procedure KeepAliveNeeded; override;
@@ -68,10 +68,10 @@ resourcestring
   { TQHttpProvider }
 const
   ERROR_SUCCESS = 0;
-  ERROR_TOKEN_TIMEOUT = -1;
-  ERROR_BAD_VALUE = -2;
-  ERROR_MISSED = -3;
-  ERROR_UNSUPPORT = -4;
+  ERROR_TOKEN_TIMEOUT = Cardinal(-1);
+  ERROR_BAD_VALUE = Cardinal(-2);
+  ERROR_MISSED = Cardinal(-3);
+  ERROR_UNSUPPORT = Cardinal(-4);
 
 type
   TPDONativeType = record
@@ -97,10 +97,12 @@ begin
   Result := ACode = 0;
   if (not Result) then
   begin
-    SetError(ACode, AJson.ValueByName('hint', ''));
+    SetError(Cardinal(ACode), AJson.ValueByName('hint', ''));
     if ARaiseError then
-      raise EQDBHttpException.Create(AJson);
-  end;
+      RaiseError(AJson);
+  end
+  else
+    SetError(0,'');
 end;
 
 procedure TQHttpProvider.CloseHandle(AHandle: THandle);
@@ -166,6 +168,7 @@ function TQHttpProvider.InternalExecute(var ARequest: TQSQLRequest): Boolean;
 var
   AReqJson, AResult: TQJson;
   I: Integer;
+  ATokenTimeout: Boolean;
   procedure FetchAsStream;
   var
     ATemp: TQDataSet;
@@ -186,21 +189,41 @@ var
     ADataSet: TQDataSet;
   begin
     AResult := Rest('OpenDataSet', nil, AReqJson, true);
-    CheckError(AResult, true);
-    Json2DataSet(AResult.ItemByName('result'), ARequest.Command.DataObject);
+    CheckError(AResult, false);
+    if FErrorCode = ERROR_TOKEN_TIMEOUT then
+    begin
+      KeepAliveNeeded;
+      FreeAndNil(AResult);
+      FetchDataSet;
+    end
+    else if FErrorCode <> 0 then
+      RaiseError(AResult)
+    else
+    begin
+      Json2DataSet(AResult.ItemByName('result'), ARequest.Command.DataObject);
+    end;
   end;
 
   procedure DoExecuteSQL;
   begin
     AResult := Rest('ExecSQL', nil, AReqJson, true);
-    CheckError(AResult, true);
-    ARequest.Result.Statics.AffectRows := AResult.IntByName('result', 0);
+    CheckError(AResult, false);
+    if FErrorCode = ERROR_TOKEN_TIMEOUT then
+    begin
+      KeepAliveNeeded;
+      FreeAndNil(AResult);
+      DoExecuteSQL;
+    end
+    else if FErrorCode <> 0 then
+      RaiseError(AResult)
+    else
+      ARequest.Result.Statics.AffectRows := AResult.IntByName('result', 0);
   end;
+
 begin
   Result := false;
   AResult := nil;
-  if AccessToken.ExpireTime < Now then
-    KeepAliveNeeded;
+  ATokenTimeout := false;
   AReqJson := TQJson.Create;
   try
     AReqJson.Add('id').AsString := ARequest.Command.Id;
@@ -258,8 +281,8 @@ begin
       // 默认会话有效期为2小时（7200秒）
       AExpire := ATokens.IntByName('access_expire', 7200);
       FAccessToken.ExpireTime := IncSecond(ATime, AExpire);
-      if AExpire > 15 then // 提前15秒刷新会话
-        PeekInterval := AExpire - 15;
+      if AExpire > 30 then // 提前30秒刷新会话
+        PeekInterval := AExpire - 30;
       FRefreshToken.Value := ATokens.ValueByName('refresh_token', '');
       // 刷新会话有效期，默认为30天
       FRefreshToken.ExpireTime :=
@@ -267,9 +290,7 @@ begin
       // 连接句柄
       FHandle := IntPtr(Self);
       FServerExtParams.Assign(ATokens);
-    end
-    else
-      raise EQDBHttpException.Create(AResult);
+    end;
   finally
     FreeAndNil(AResult);
   end;
@@ -479,15 +500,19 @@ begin
         IncSecond(ATime, ATokens.IntByName('refresh_expire', 2592000));
       FHandle := IntPtr(Self);
       FServerExtParams.Assign(ATokens);
-    end
-    else
-      raise EQDBHttpException.Create(AResult);
+    end;
   finally
     FreeAndNil(AParams);
     if Assigned(AResult) then
       FreeAndNil(AResult);
   end;
 end;
+
+procedure TQHttpProvider.RaiseError(AJson: TQJson);
+begin
+  raise EQDBHttpException.Create(AJson);
+end;
+
 function TQHttpProvider.Rest(Action: QStringW; Params: TStrings; AData: TQJson;
   AUseToken: Boolean): TQJson;
 var
@@ -517,9 +542,9 @@ begin
     // 参数乱序化
     AUrl.RandSortParams;
     repeat
-    AStatus := FRequests.Rest(AUrl.Url, AData, Result, CustomHeaders,
-      nil, reqPost);
-    until AStatus<>12030;//12030- HTTP接收数据时，连接异外中止
+      AStatus := FRequests.Rest(AUrl.Url, AData, Result, CustomHeaders,
+        nil, reqPost);
+    until AStatus <> 12030; // 12030- HTTP接收数据时，连接异外中止
     if AStatus <> 200 then
     begin
       Result.Add('code').AsInteger := -1000 - AStatus;

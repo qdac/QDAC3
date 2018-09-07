@@ -684,6 +684,15 @@ type
     property AsInterval: TQInterval read GetAsInterval write SetAsInterval;
   end;
 
+  TQBlobField = class(TBlobField)
+  private
+    FTextEncoding: TTextEncoding;
+  protected
+    function GetAsString: String; override;
+  public
+    property TextEncoding: TTextEncoding read FTextEncoding write FTextEncoding;
+  end;
+
   TQRecordCheckEvent = procedure(ADataSet: TQDataSet; ACheck: TQLocalCheck;
     var Accept: Boolean) of object;
   TQRecordCheckConflictEvent = procedure(ADataSet: TQDataSet;
@@ -1551,6 +1560,8 @@ type
   TQAfterExecuteEvent = procedure(ASender: TQProvider;
     const ACommand: TQCommand; const AResult: TQExecuteResult) of object;
 
+  PQSQLRequest = ^TQSQLRequest;
+
   // 内部记录执行参数的相关记录
   TQSQLRequest = record
     Command: TQCommand; // 命令
@@ -1559,7 +1570,6 @@ type
     AfterOpen: TQAfterExecuteEvent; // 执行完成回调事件
   end;
 
-  PQSQLRequest = ^TQSQLRequest;
   /// <summary>通知信息级别</summary>
   TQNoticeLevel = (nlLog, nlInfo, nlDebug, nlNotice, nlWarning, nlError,
     nlPanic, nlFatal);
@@ -1576,6 +1586,7 @@ type
   end;
 
   PQSQLResultSet = ^TQSQLResultset;
+  TQResultSets = array of TQSQLResultset;
 
   TQProvider = class(TComponent)
   private
@@ -1609,7 +1620,7 @@ type
     FIdentStartChar, FIdentStopChar: QCharW;
     FLastOID: Cardinal;
     FActiveRequest: PQSQLRequest;
-    FResultSets: array of TQSQLResultset;
+    FResultSets: TQResultSets;
     FActiveResultset: Integer;
     FActiveRecords: TQRecords;
     FActiveRecord: TQRecord;
@@ -4646,6 +4657,8 @@ function TQDataSet.GetFieldClass(FieldType: TFieldType): TFieldClass;
 begin
   if FieldType = ftOraInterval then
     Result := TQIntervalField
+  else if FieldType = ftBlob then
+    Result := TQBlobField
   else
     Result := inherited GetFieldClass(FieldType);
 end;
@@ -8875,7 +8888,7 @@ procedure TQProvider.DisablePeek;
 begin
   if FPeekJobHandle <> 0 then
   begin
-    Workers.ClearSingleJob(FPeekJobHandle);
+    Workers.ClearSingleJob(FPeekJobHandle,false);
     FPeekJobHandle := 0;
   end;
 end;
@@ -8906,7 +8919,11 @@ end;
 function TQProvider.Execute(var ARequest: TQSQLRequest): Boolean;
 var
   ADataSet: TQDataSet;
-  I: Integer;
+  I, ALastActiveResultset: Integer;
+  ALastRequest: PQSQLRequest;
+  ALastActiveFieldDefs: TQFieldDefs;
+  FLastActiveRecords: TQRecords;
+  ALastResultSets: TQResultSets;
   procedure DoOpenDataSet;
   begin
     ADataSet.Provider := Self;
@@ -8981,7 +8998,12 @@ var
   end;
 
 begin
+  ALastRequest := FActiveRequest;
+  ALastActiveResultset := FActiveResultset;
   FActiveRequest := @ARequest;
+  ALastActiveFieldDefs := FActiveFieldDefs;
+  FLastActiveRecords := FActiveRecords;
+  ALastResultSets := Copy(FResultSets, 0, Length(FResultSets));
   if Assigned(FBeforeExecute) then
     FBeforeExecute(Self, ARequest.Command);
   DisablePeek;
@@ -9036,10 +9058,13 @@ begin
     if ARequest.Command.Action = caFetchRecords then
       ADataSet.EnableControls;
     EmptyResultSets;
+    FActiveRequest := ALastRequest;
+    FActiveResultset := ALastActiveResultset;
+    FActiveFieldDefs := ALastActiveFieldDefs;
+    FActiveRecords := FLastActiveRecords;
+    FResultSets := ALastResultSets;
     if Assigned(FAfterExecute) then
       FAfterExecute(Self, ARequest.Command, ARequest.Result);
-    FActiveRequest := nil;
-    FActiveFieldDefs := nil;
     ARequest.Result.Statics.StopTime := GetTimeStamp;
     EnablePeek;
     Result := ARequest.Result.ErrorCode = 0;
@@ -11557,6 +11582,20 @@ begin
 {$IFDEF MSWINDOWS}
   WSACleanup;
 {$ENDIF}
+end;
+
+{ TQBlobField }
+
+function TQBlobField.GetAsString: String;
+var
+  AStream: TStream;
+begin
+  AStream := DataSet.CreateBlobStream(Self, bmRead);
+  try
+    Result := LoadTextW(AStream, FTextEncoding);
+  finally
+    FreeAndNil(AStream);
+  end;
 end;
 
 initialization

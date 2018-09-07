@@ -299,6 +299,9 @@ type
     function Rest(const AUrl: QStringW; AContent: QStringW; AResult: TQJson;
       AHeaders: IQHttpHeaders = nil; AfterDone: TNotifyEvent = nil;
       Action: TQHttpClientAction = reqUnknown): Integer; overload; virtual;
+    function Rest(const AUrl: QStringW; AParams: TStrings; AResult: TQJson;
+      AHeaders: IQHttpHeaders = nil; AfterDone: TNotifyEvent = nil;
+      Action: TQHttpClientAction = reqUnknown): Integer; overload; virtual;
     property MaxClients: Integer read FMaxClients write FMaxClients;
     property DefaultHeaders: IQHttpHeaders read FDefaultHeaders;
   end;
@@ -1689,10 +1692,10 @@ var
   ADoc: QStringW;
   procedure DecodeNamePassword;
   var
-    p,ps, pl: PQCharW;
+    p, ps, pl: PQCharW;
   begin
     p := PQCharW(FHost);
-    ps:=p;
+    ps := p;
     pl := nil;
     while p^ <> #0 do
     begin
@@ -1701,18 +1704,18 @@ var
       Inc(p);
     end;
     if Assigned(pl) then
-      begin
-        Inc(pl);
-        FHost:=pl;
-        FPassword:=StrDupX(ps,pl-ps-1);
+    begin
+      Inc(pl);
+      FHost := pl;
+      FPassword := StrDupX(ps, pl - ps - 1);
       FUserName := DecodeTokenW(FPassword, NamePasswordDelimiter, NullQuoter,
         True, True);
-      end
+    end
     else
-      begin
-      SetLength(FPassword,0);
-      SetLength(FUserName,0);
-      end;
+    begin
+      SetLength(FPassword, 0);
+      SetLength(FUserName, 0);
+    end;
   end;
 
 begin
@@ -2648,7 +2651,7 @@ begin
         AParams := AParams + UrlEncode(AFormParams.Names[I], True) + '=' +
           UrlEncode(AFormParams.ValueFromIndex[I], True) + '&';
       SetLength(AParams, Length(AParams) - 1);
-      SaveTextU(AReq.NeedRequestStream, AParams, False);
+      SaveTextU(AReq.NeedRequestStream, AParams, false);
       AReq.RequestStream.Position := 0;
     end;
     if Assigned(AReplyStream) then
@@ -2691,7 +2694,7 @@ begin
         AParams := AParams + UrlEncode(AFormParams.Names[I], True) + '=' +
           UrlEncode(AFormParams.ValueFromIndex[I], True) + '&';
       SetLength(AParams, Length(AParams) - 1);
-      SaveTextU(AReq.NeedRequestStream, AParams, False);
+      SaveTextU(AReq.NeedRequestStream, AParams, false);
       AReq.RequestStream.Position := 0;
     end;
     Push(AReq);
@@ -2729,7 +2732,7 @@ begin
       AReq.Action := reqPost;
       AReq.RequestHeaders.Values['Content-Type'] := AContentType;
 
-      SaveTextU(AReq.NeedRequestStream, AContent.DelimitedText, False);
+      SaveTextU(AReq.NeedRequestStream, AContent.DelimitedText, false);
       AReq.RequestStream.Position := 0;
     end;
     if Assigned(AReplyStream) then
@@ -2764,7 +2767,7 @@ begin
     begin
       AReq.Action := reqPost;
       AReq.RequestHeaders.Values['Content-Type'] := AContentType;
-      SaveTextU(AReq.NeedRequestStream, AContent, False);
+      SaveTextU(AReq.NeedRequestStream, AContent, false);
       AReq.RequestStream.Position := 0;
     end;
     Push(AReq);
@@ -2850,7 +2853,7 @@ begin
       AReq.AfterDone := AfterDone;
     end;
     AReq.Url := AUrl;
-    if Length(AContent)>0 then
+    if Length(AContent) > 0 then
     begin
       AReq.Action := reqPost;
       AReq.RequestHeaders.Values['Content-Type'] :=
@@ -2881,6 +2884,7 @@ begin
     AReq._Release;
   end;
 end;
+
 function TQHttpRequests.Rest(const AUrl: QStringW; ASource, AResult: TQJson;
 AHeaders: IQHttpHeaders; AfterDone: TNotifyEvent;
 Action: TQHttpClientAction): Integer;
@@ -2927,6 +2931,21 @@ begin
   finally
     AReq._Release;
   end;
+end;
+
+function TQHttpRequests.Rest(const AUrl: QStringW; AParams: TStrings;
+AResult: TQJson; AHeaders: IQHttpHeaders; AfterDone: TNotifyEvent;
+Action: TQHttpClientAction): Integer;
+var
+  AContent: QStringW;
+  I: Integer;
+begin
+  AContent := '';
+  for I := 0 to AParams.Count - 1 do
+    AContent := AContent + UrlEncode(AParams.Names[I], True) + '=' +
+      UrlEncode(AParams.ValueFromIndex[I], True) + '&';
+  SetLength(AContent, Length(AContent) - 1);
+  Result := Rest(AUrl, AContent, AResult, AHeaders, AfterDone, Action);
 end;
 
 procedure TQHttpRequests.Start(ARequest: TQHttpRequestItem);

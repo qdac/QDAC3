@@ -3514,7 +3514,7 @@ var
     for I := 0 to FVisibleNodes.Count do
     begin
       pt2.Y := pt1.Y;
-      if ADrawHorz then
+      if ADrawVert then
         Canvas.DrawLine(pt1.SnapToPixel(Canvas.Scale),
           pt2.SnapToPixel(Canvas.Scale), Opacity, FStroke);
       if I < FVisibleNodes.Count then
@@ -3524,7 +3524,7 @@ var
           pt1.Y := pt1.Y + FSpace.Y;
       end;
     end;
-    if ADrawVert then
+    if ADrawHorz then
     begin
       pt1 := AClientRect.TopLeft;
       pt1.X := pt1.X - FPaintOffset.X;

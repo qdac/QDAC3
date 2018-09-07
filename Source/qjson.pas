@@ -709,7 +709,8 @@ type
     procedure SetAsBase64Bytes(const Value: TBytes);
     function GetAsHexBytes: TBytes;
     procedure SetAsHexBytes(const Value: TBytes);
-    function InternalGetAsBytes(AConverter: TQJsonDecodeBytesEvent): TBytes;
+    function InternalGetAsBytes(AConverter: TQJsonDecodeBytesEvent;
+      AEncoding: TTextEncoding; AWriteBom: Boolean): TBytes;
     procedure InternalSetAsBytes(AConverter: TQJsonEncodeBytesEvent;
       ABytes: TBytes);
   public
@@ -1063,7 +1064,7 @@ type
     /// <param name="ADoFormat">是否格式化Json结果</param>
     /// <remarks>注意当前结点的名称不会被写入</remarks>
     procedure SaveToStream(AStream: TStream; AEncoding: TTextEncoding = teUtf8;
-      AWriteBOM: Boolean = True; ADoFormat: Boolean = True);
+      AWriteBom: Boolean = True; ADoFormat: Boolean = True);
     /// <summary>从流的当前位置开始加载JSON对象</summary>
     /// <param name="AStream">源数据流</param>
     /// <param name="AEncoding">源文件编码，如果为teUnknown，则自动判断</param>
@@ -1077,7 +1078,7 @@ type
     /// <param name="ADoFormat">是否格式化Json结果</param>
     /// <remarks>注意当前结点的名称不会被写入</remarks>
     procedure SaveToFile(const AFileName: String;
-      AEncoding: TTextEncoding = teUtf8; AWriteBOM: Boolean = True;
+      AEncoding: TTextEncoding = teUtf8; AWriteBom: Boolean = True;
       ADoFormat: Boolean = True);
     /// <summary>从指定的文件中加载当前对象</summary>
     /// <param name="AFileName">要加载的文件名</param>
@@ -1409,7 +1410,7 @@ type
     procedure Pop;
   public
     procedure BeginWrite(AStream: TStream; AEncoding: TTextEncoding;
-      ADoEscape: Boolean = False; AWriteBOM: Boolean = True);
+      ADoEscape: Boolean = False; AWriteBom: Boolean = True);
     procedure EndWrite;
     procedure BeginObject; overload;
     procedure BeginObject(const AName: QStringW); overload;
@@ -3651,7 +3652,7 @@ end;
 
 function TQJson.GetAsBase64Bytes: TBytes;
 begin
-  Result := InternalGetAsBytes(DoDecodeAsBase64);
+  Result := InternalGetAsBytes(DoDecodeAsBase64, teUtf8, False);
 end;
 
 function TQJson.GetAsBoolean: Boolean;
@@ -3663,7 +3664,10 @@ end;
 
 function TQJson.GetAsBytes: TBytes;
 begin
-  Result := InternalGetAsBytes(OnQJsonDecodeBytes);
+  if Assigned(OnQJsonDecodeBytes) then
+    Result := InternalGetAsBytes(OnQJsonDecodeBytes, teUnicode16LE, True)
+  else
+    Result := InternalGetAsBytes(DoDecodeAsHex, teUnicode16LE, True);
 end;
 
 function TQJson.GetAsDateTime: TDateTime;
@@ -3682,7 +3686,7 @@ end;
 
 function TQJson.GetAsHexBytes: TBytes;
 begin
-  Result := InternalGetAsBytes(DoDecodeAsHex);
+  Result := InternalGetAsBytes(DoDecodeAsHex, teUtf8, False);
 end;
 
 function TQJson.GetAsInt64: Int64;
@@ -4436,32 +4440,60 @@ begin
   DoEncode(Self, 0);
 end;
 
-function TQJson.InternalGetAsBytes(AConverter: TQJsonDecodeBytesEvent): TBytes;
+function TQJson.InternalGetAsBytes(AConverter: TQJsonDecodeBytesEvent;
+  AEncoding: TTextEncoding; AWriteBom: Boolean): TBytes;
 var
-  I: Integer;
+  I, c: Integer;
   AItem: TQJson;
-  procedure StrToBin;
-  var
-    S: QStringW;
-  begin
-    S := AsString;
-    Result := HexToBin(S);
-    if Length(Result) = 0 then
-      raise Exception.CreateFmt(SConvertError, ['jdtString', 'Bytes']);
-  end;
   function StrToBytes: TBytes;
   var
-    V: String;
+    V: QStringW;
     U: QStringA;
   begin
     V := AsString;
-    AConverter(V, Result);
-    // 上面两种转换方式都失败了，按UTF-8编码字符串处理
+    SetLength(Result, 0);
+    try
+      AConverter(V, Result)
+    except
+    end;
     if (Length(Result) = 0) and (Length(V) > 0) then
     begin
-      U := qstring.Utf8Encode(V);
-      SetLength(Result, U.Length);
-      Move(PQCharA(U)^, Result[0], U.Length);
+      if AEncoding = teUtf8 then
+      begin
+        U := qstring.Utf8Encode(V);
+        c := U.Length;
+        if AWriteBom then
+        begin
+          SetLength(Result, c + 3);
+          // 前面加上UTF8的BOM
+          Result[0] := $EF;
+          Result[1] := $BB;
+          Result[2] := $BF;
+          Move(PQCharA(U)^, Result[3], c);
+        end
+        else
+          Result := U;
+      end
+      else if AEncoding = teAnsi then // ANSI没有 BOM 头，所以忽略
+        Result := AnsiEncode(V)
+      else
+      begin
+        C:=Length(V) shl 1;
+        if AWriteBom then
+        begin
+          SetLength(Result, C + 2);
+          Move(PWideChar(V)^, Result[2], C);
+          Result[0] := $FF;
+          Result[1] := $FE;
+        end
+        else
+        begin
+          SetLength(Result, C);
+          Move(PWideChar(V)^, Result[0], C);
+        end;
+        if AEncoding = teUnicode16BE then
+          ExchangeByteOrder(PQCharA(@Result[0]), Length(Result));
+      end;
     end;
   end;
 
@@ -5455,13 +5487,13 @@ begin
 end;
 
 procedure TQJson.SaveToFile(const AFileName: String; AEncoding: TTextEncoding;
-  AWriteBOM, ADoFormat: Boolean);
+  AWriteBom, ADoFormat: Boolean);
 var
   AStream: TMemoryStream;
 begin
   AStream := TMemoryStream.Create;
   try
-    SaveToStream(AStream, AEncoding, AWriteBOM, ADoFormat);
+    SaveToStream(AStream, AEncoding, AWriteBom, ADoFormat);
     AStream.SaveToFile(AFileName);
   finally
     FreeObject(AStream);
@@ -5469,7 +5501,7 @@ begin
 end;
 
 procedure TQJson.SaveToStream(AStream: TStream; AEncoding: TTextEncoding;
-  AWriteBOM, ADoFormat: Boolean);
+  AWriteBom, ADoFormat: Boolean);
 var
   S: QStringW;
 begin
@@ -5493,13 +5525,13 @@ begin
     end;
   end;
   if AEncoding = teUtf8 then
-    SaveTextU(AStream, qstring.Utf8Encode(S), AWriteBOM)
+    SaveTextU(AStream, qstring.Utf8Encode(S), AWriteBom)
   else if AEncoding = teAnsi then
     SaveTextA(AStream, qstring.AnsiEncode(S))
   else if AEncoding = teUnicode16LE then
-    SaveTextW(AStream, S, AWriteBOM)
+    SaveTextW(AStream, S, AWriteBom)
   else
-    SaveTextWBE(AStream, S, AWriteBOM);
+    SaveTextWBE(AStream, S, AWriteBom);
 end;
 
 procedure TQJson.SetA(const APath: String; const Value: TQJson);
@@ -5530,7 +5562,10 @@ end;
 
 procedure TQJson.SetAsBytes(const Value: TBytes);
 begin
-  InternalSetAsBytes(OnQJsonEncodeBytes, Value);
+  if Assigned(OnQJsonEncodeBytes) then
+    InternalSetAsBytes(OnQJsonEncodeBytes, Value)
+  else
+    InternalSetAsBytes(DoEncodeAsHex, Value);
 end;
 
 procedure TQJson.SetAsDateTime(const Value: TDateTime);
@@ -7560,12 +7595,12 @@ begin
 end;
 
 procedure TQJsonStreamHelper.BeginWrite(AStream: TStream;
-  AEncoding: TTextEncoding; ADoEscape, AWriteBOM: Boolean);
+  AEncoding: TTextEncoding; ADoEscape, AWriteBom: Boolean);
 begin
   FStream := AStream;
   FEncoding := AEncoding;
   FDoEscape := ADoEscape;
-  FWriteBom := AWriteBOM;
+  FWriteBom := AWriteBom;
   FLast := nil;
   FStringHelper := TQStringCatHelperW.Create;
   Push;
