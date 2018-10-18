@@ -54,6 +54,7 @@ type
     procedure Button5Click(Sender: TObject);
     procedure Button6Click(Sender: TObject);
     procedure GroupBox1Click(Sender: TObject);
+    procedure GroupBox2Click(Sender: TObject);
   private
     { Private declarations }
     FDataSet: TQDataSet;
@@ -300,7 +301,7 @@ begin
     7:
       Result := TQTextConverter.Create(nil);
     8:
-      Result := TQADOXMLConverter.Create(nil);
+      Result := TQMSSQLConverter.Create(nil);
     9:
       Result := TQPgSQLConverter.Create(nil);
     10:
@@ -354,6 +355,21 @@ begin
       TQADOXMLConverter);
   finally
     FreeObject(ADataSet);
+  end;
+end;
+
+procedure TForm1.GroupBox2Click(Sender: TObject);
+var
+  AConverter:TQJsonConverter;
+begin
+  AConverter:=TQJsonConverter.Create(nil);
+  try
+    AConverter.DataSet:=FDataSet;
+    AConverter.ExportRanges:=[merMeta];//
+
+    ShowMessage(AConverter.AsJson);
+  finally
+    FreeAndNil(AConverter);
   end;
 end;
 

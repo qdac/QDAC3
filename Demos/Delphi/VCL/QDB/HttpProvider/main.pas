@@ -153,13 +153,14 @@ procedure TForm2.FormCreate(Sender: TObject);
 begin
   FProvider := TQHttpProvider.Create(Self);
   // 服务 URL
-  FProvider.ServiceUrl :=
-  // 'http://192.168.199.236/httpprovider/qdb_httpprov.php';
-    'https://blog.qdac.cc/qdb/qdb_httppov.php';
+  FProvider.ServiceUrl :='http://www.kinsys.cn/qdb/qdb_httpprov.php';
+//    'http://192.168.199.236/httpprovider/qdb_httpprov.php';
+  // 'https://blog.qdac.cc/qdb/qdb_httpprov.php';
   // 服务器端通过 AppId 来对应一个 AppSalt 及相关设置，以避免非授权访问，只有知道相应的盐值才能访问
   FProvider.AppId := 'Demos.HttpProvider';
   // 用来计算签名使用的盐值
   FProvider.AppSalt := 'Demos.HttpProvider.Key';
+  FProvider.KeepAlive := True;
   ReportMemoryLeaksOnShutdown := False;
 end;
 

@@ -47,6 +47,7 @@ type
     procedure chkEndBySpaceClick(Sender: TObject);
     procedure Button8Click(Sender: TObject);
     procedure Button9Click(Sender: TObject);
+    procedure Panel1Click(Sender: TObject);
   private
     { Private declarations }
     FMacroMgr: TQMacroManager;
@@ -324,6 +325,13 @@ end;
 procedure TForm6.GetNow(AMacro: TQMacroItem; const AQuoter: QCharW);
 begin
   AMacro.Value.Value := FormatDateTime('yyyy-mm-dd hh:nn:ss', Now);
+end;
+
+procedure TForm6.Panel1Click(Sender: TObject);
+begin
+  FMacroMgr.Push('UnitName','TestUnit');
+  FMacroMgr.Push('ClassName','TAccountEx');
+  Memo1.Lines.Add(FMacroMgr.Replace(LoadTextW('H:\User\QDAC\temp\qmacrotest\Ä£°å.txt'),'[',']'));
 end;
 
 function TForm6.ReplaceFlags: Integer;

@@ -41,7 +41,6 @@ object Form2: TForm2
       Caption = 'GET'
       TabOrder = 0
       OnClick = Button1Click
-      ExplicitLeft = 771
     end
     object Edit1: TEdit
       AlignWithMargins = True
@@ -54,7 +53,6 @@ object Form2: TForm2
       Align = alClient
       TabOrder = 1
       Text = 'http://115.159.146.113/qdac.tar.gz'
-      ExplicitWidth = 600
       ExplicitHeight = 21
     end
     object Button2: TButton
@@ -67,7 +65,6 @@ object Form2: TForm2
       Caption = 'HEAD'
       TabOrder = 2
       OnClick = Button2Click
-      ExplicitLeft = 690
     end
     object Button3: TButton
       AlignWithMargins = True
@@ -79,7 +76,6 @@ object Form2: TForm2
       Caption = 'DOWLOAD'
       TabOrder = 3
       OnClick = Button3Click
-      ExplicitLeft = 609
     end
     object Button4: TButton
       AlignWithMargins = True
@@ -91,7 +87,6 @@ object Form2: TForm2
       Caption = 'GET Text'
       TabOrder = 4
       OnClick = Button4Click
-      ExplicitLeft = 810
     end
     object Button5: TButton
       AlignWithMargins = True
@@ -103,8 +98,6 @@ object Form2: TForm2
       Caption = 'REST'
       TabOrder = 5
       OnClick = Button5Click
-      ExplicitLeft = 794
-      ExplicitTop = 0
     end
   end
 end

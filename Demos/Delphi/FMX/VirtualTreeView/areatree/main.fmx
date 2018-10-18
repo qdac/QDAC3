@@ -66,7 +66,7 @@ object Form3: TForm3
     Header.AutoSizeColumn = 0
     Header.Height = 20.000000000000000000
     DefaultRowHeight = 20.000000000000000000
-    Options = []
+    Options = [toClickToExpand]
     PaintOptions = [poTreeLine, poRowSelection, poNodeButton]
     RootNodeCount = 0
     ColSpace = 1.000000000000000000
@@ -79,6 +79,7 @@ object Form3: TForm3
     Size.Height = 439.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
+    OnPaint = QVirtualTreeView1Paint
   end
   object Label1: TLabel
     Align = Top
@@ -88,6 +89,11 @@ object Form3: TForm3
     TextSettings.WordWrap = False
     Text = 'Label1'
     TabOrder = 2
+  end
+  object Timer1: TTimer
+    OnTimer = Timer1Timer
+    Left = 320
+    Top = 136
   end
   object QVTCustomTextCell1: TQVTCustomTextCell
     Enabled = True

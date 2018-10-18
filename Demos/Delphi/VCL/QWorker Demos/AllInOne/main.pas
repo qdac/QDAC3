@@ -103,6 +103,7 @@ type
     procedure Button38Click(Sender: TObject);
     procedure Button39Click(Sender: TObject);
     procedure btnHandleTestClick(Sender: TObject);
+    procedure Button40Click(Sender: TObject);
   private
     { Private declarations }
     FSignalId: Integer;
@@ -901,6 +902,21 @@ begin
   end;
   btnHandleTest.Caption := '句柄测试';
   btnHandleTest.Enabled := True;
+end;
+
+procedure TForm1.Button40Click(Sender: TObject);
+var
+  AGroup:TQJobGroup;
+begin
+AGroup:=TQJobGroup.Create();
+AGroup.MaxWorkers:=1;//实际成为顺序执行
+AGroup.Prepare;
+AGroup.Add(DoLongtimeWork,nil);
+AGroup.Add(DoLongtimeWork,nil);
+AGroup.Add(DoLongtimeWork,nil);
+AGroup.Run();
+AGroup.MsgWaitFor();
+FreeAndNil(AGroup);
 end;
 
 procedure TForm1.Button4Click(Sender: TObject);

@@ -35,7 +35,7 @@ object frmMain: TfrmMain
     end
     object chkShowHeader: TCheckBox
       Position.X = 8.000000000000000000
-      Position.Y = 224.000000000000000000
+      Position.Y = 223.000000000000000000
       TabOrder = 8
       Text = #26174#31034#26631#39064
       OnChange = chkShowHeaderChange
@@ -106,7 +106,7 @@ object frmMain: TfrmMain
     object chkRowSelection: TCheckBox
       IsChecked = True
       Position.X = 8.000000000000000000
-      Position.Y = 142.000000000000000000
+      Position.Y = 141.000000000000000000
       TabOrder = 5
       Text = #32472#21046#34892#36873#29366#24577
       OnChange = chkTreeLineChange
@@ -121,14 +121,14 @@ object frmMain: TfrmMain
     object chkColSizable: TCheckBox
       IsChecked = True
       Position.X = 8.000000000000000000
-      Position.Y = 203.000000000000000000
+      Position.Y = 202.000000000000000000
       TabOrder = 2
       Text = #20801#35768#35843#25972#21015#23485
       OnChange = chkRowSizableChange
     end
     object chkRowSizable: TCheckBox
       Position.X = 8.000000000000000000
-      Position.Y = 183.000000000000000000
+      Position.Y = 182.000000000000000000
       TabOrder = 3
       Text = #20801#35768#35843#25972#34892#39640
       OnChange = chkRowSizableChange
@@ -149,7 +149,7 @@ object frmMain: TfrmMain
     end
     object chkMultiSort: TCheckBox
       Position.X = 8.000000000000000000
-      Position.Y = 248.000000000000000000
+      Position.Y = 243.000000000000000000
       TabOrder = 7
       Text = #22810#21015#25490#24207
       OnChange = chkShowHeaderChange
@@ -161,14 +161,22 @@ object frmMain: TfrmMain
       Text = #23545#35937#35266#23519#22120
       OnClick = btnEditorClick
     end
-    object Edit1: TEdit
-      Touch.InteractiveGestures = [LongTap, DoubleTap]
+    object chkAutoCascade: TCheckBox
+      Position.X = 8.000000000000000000
+      Position.Y = 264.000000000000000000
+      Size.Width = 145.000000000000000000
+      Size.Height = 19.000000000000000000
+      Size.PlatformDefault = False
       TabOrder = 18
+      Text = #21452#20987#34892#33258#21160#25910#32553'/'#23637#24320
+      OnChange = chkRowSizableChange
+    end
+    object btnMultiDrawer: TButton
       Position.X = 16.000000000000000000
       Position.Y = 384.000000000000000000
-      Size.Width = 129.000000000000000000
-      Size.Height = 22.000000000000000000
-      Size.PlatformDefault = False
+      TabOrder = 19
+      Text = #22797#21512#32472#21046
+      OnClick = btnMultiDrawerClick
     end
   end
   object Label1: TLabel
@@ -184,6 +192,29 @@ object frmMain: TfrmMain
     Size.PlatformDefault = False
     Text = #40736#26631#28378#21160#26102#25353#19979'Ctrl'#27700#24179#28378#21160
     TabOrder = 1
+  end
+  object vtGrid: TQVirtualTreeView
+    SelectionColor = claLightblue
+    HoverColor = claLightpink
+    TintColor = claBlack
+    NodeIndent = 16.000000000000000000
+    Header.Columns = <>
+    Header.Options = [hoResizable]
+    Header.MasterColumn = 0
+    Header.AutoSizeColumn = -1
+    Header.Height = 20.000000000000000000
+    DefaultRowHeight = 20.000000000000000000
+    Options = []
+    PaintOptions = [poTreeLine, poRowSelection, poNodeButton]
+    RootNodeCount = 0
+    ColSpace = 1.000000000000000000
+    RowSpace = 1.000000000000000000
+    Align = Client
+    HitTest = True
+    Size.Width = 480.000000000000000000
+    Size.Height = 453.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 3
   end
   object adsData: TClientDataSet
     Aggregates = <>

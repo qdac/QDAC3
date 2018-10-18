@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes,
-  System.Variants, System.Generics.Defaults,
+  System.Variants, System.Generics.Defaults,FMX.Layouts,
   System.Generics.Collections, FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics,
   FMX.Dialogs, qjson,
   qdac_fmx_virtualtree, FMX.Controls.Presentation, FMX.StdCtrls;
@@ -43,6 +43,7 @@ type
     QVirtualTreeView1: TQVirtualTreeView;
     QVTCustomTextCell1: TQVTCustomTextCell;
     Label1: TLabel;
+    Timer1: TTimer;
     procedure QVTCustomTextCell1GetText(ASender: TObject; var AText: string);
     procedure QVirtualTreeView1InitNode(Sender: TQVirtualTreeView;
       ANode: TQVTNode);
@@ -50,9 +51,13 @@ type
     procedure QVirtualTreeView1FocusChanged(Sender: TQVirtualTreeView;
       ANode: TQVTNode; ACol: Integer);
     procedure FormDestroy(Sender: TObject);
+    procedure QVirtualTreeView1Paint(Sender: TObject; Canvas: TCanvas;
+      const ARect: TRectF);
+    procedure Timer1Timer(Sender: TObject);
   private
     { Private declarations }
     FRootArea: TAreaItem;
+    FFps:Integer;
   public
     { Public declarations }
   end;
@@ -126,6 +131,12 @@ begin
   // 如果这里不能确定有多少个子结点，则可以设置States包含 nsHasChildren状态，然后在 OnInitChildren 中再计算实际的ChildCount进行赋值
 end;
 
+procedure TForm3.QVirtualTreeView1Paint(Sender: TObject; Canvas: TCanvas;
+  const ARect: TRectF);
+begin
+Inc(FFps);
+end;
+
 procedure TForm3.QVTCustomTextCell1GetText(ASender: TObject; var AText: string);
 var
   AData: TAreaItem;
@@ -154,6 +165,12 @@ begin
         end;
     end;
   end;
+end;
+
+procedure TForm3.Timer1Timer(Sender: TObject);
+begin
+Label1.Text:='FPS:'+IntToStr(FFps);
+FFps:=0;
 end;
 
 { TAreaItem }

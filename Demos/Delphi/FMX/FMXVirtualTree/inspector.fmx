@@ -32,5 +32,90 @@ object frmObjInspector: TfrmObjInspector
     Size.Height = 480.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 1
+    object vtProps: TQVirtualTreeView
+      SelectionColor = claLightblue
+      HoverColor = claLightpink
+      TintColor = claBlack
+      NodeIndent = 16.000000000000000000
+      Header.Columns = <
+        item
+          Title.Text = 'Name'
+          Title.DrawerType = dtHeader
+          Title.Clickable = False
+          Title.SortOnClick = False
+          Title.SortMarker = smNone
+          Frozen = False
+          Visible = True
+          ReadOnly = False
+          Enabled = True
+          DrawerType = dtDefault
+          Width = 120.000000000000000000
+          Tag = 0
+        end
+        item
+          Title.Text = 'Value'
+          Title.DrawerType = dtHeader
+          Title.Clickable = False
+          Title.SortOnClick = False
+          Title.SortMarker = smNone
+          Frozen = False
+          Visible = True
+          ReadOnly = False
+          Enabled = True
+          DrawerType = dtDefault
+          Width = 179.000000000000000000
+          Tag = 0
+        end>
+      Header.Options = [hoVisible, hoResizable]
+      Header.MasterColumn = 0
+      Header.AutoSizeColumn = 1
+      Header.Height = 20.000000000000000000
+      DefaultRowHeight = 20.000000000000000000
+      Options = [toEditable]
+      PaintOptions = [poVertLine, poTreeLine, poRowSelection, poNodeButton]
+      RootNodeCount = 0
+      ColSpace = 1.000000000000000000
+      RowSpace = 1.000000000000000000
+      OnInitNode = vtPropsInitNode
+      Align = Client
+      HitTest = True
+      Size.Width = 300.000000000000000000
+      Size.Height = 480.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+    end
+  end
+  object cdText: TQVTCustomTextCell
+    Enabled = True
+    Sides = [Top, Left, Bottom, Right]
+    OnGetText = cdTextGetText
+    Left = 48
+    Top = 56
+  end
+  object cdCheck: TQVTCustomCheckCell
+    Enabled = True
+    Sides = [Top, Left, Bottom, Right]
+    CheckStates = []
+    FollowStates = False
+    Left = 192
+    Top = 40
+  end
+  object cdList: TQVTPickListCell
+    Enabled = True
+    Sides = [Top, Left, Bottom, Right]
+    OnGetItems = cdListGetItems
+    Left = 192
+    Top = 96
+  end
+  object ceText: TQVTTextEditor
+    EnterAsTab = False
+    Left = 192
+    Top = 160
+  end
+  object ceList: TQVTListEditor
+    EnterAsTab = False
+    NextValueOnDoubleClick = False
+    Left = 192
+    Top = 224
   end
 end

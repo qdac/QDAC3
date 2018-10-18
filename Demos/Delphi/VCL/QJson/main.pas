@@ -42,6 +42,7 @@ type
     Button25: TButton;
     Button26: TButton;
     Button27: TButton;
+    Button28: TButton;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -70,6 +71,7 @@ type
     procedure Button25Click(Sender: TObject);
     procedure Button26Click(Sender: TObject);
     procedure Button27Click(Sender: TObject);
+    procedure Button28Click(Sender: TObject);
   private
     { Private declarations }
     procedure DoCopyIf(ASender, AItem: TQJson; var Accept: Boolean;
@@ -78,10 +80,11 @@ type
       ATag: Pointer);
     procedure DoFindIf(ASender, AChild: TQJson; var Accept: Boolean;
       ATag: Pointer);
-
+    procedure PrintRegexMatchResult(AItem: TQJson; ATag: Pointer);
   public
     { Public declarations }
     function Add(X, Y: Integer): Integer;
+    function ObjectCall(AObject: TObject): String;
     procedure CharCall(s: PAnsiChar);
   end;
 
@@ -186,6 +189,31 @@ type
     // 酒店客房里的场景信息，一个场景对应多条命令
     Sences: TArray<TSence>;
     // procedure Clear;
+  end;
+
+type
+  TUserInfo = record
+    openid: string;
+    nickname: string; // 用户的昵称
+    subscribe: Integer; // 用户是否订阅该公众号标识，值为0时，代表此用户没有关注该公众号，拉取不到其余信息。
+    sex: Integer; // 用户的性别，值为1时是男性，值为2时是女性，值为0时是未知
+    city: string; // 用户所在城市
+    country: string; // 用户所在国家
+    province: string; // 用户所在省份
+    language: string; // 用户的语言，简体中文为zh_CN
+    { 用户头像，最后一个数值代表正方形头像大小（有0、46、64、96、132数值可选，
+      0代表640*640正方形头像），用户没有头像时该项为空。
+      若用户更换头像，原有头像URL将失效。 }
+    headimgurl: string;
+    subscribe_time: TDateTime; // 用户关注时间，为时间戳。如果用户曾多次关注，则取最后关注时间
+    unionid: string; // 只有在用户将公众号绑定到微信开放平台帐号后，才会出现该字段。
+    remark: string; // 公众号运营者对粉丝的备注，公众号运营者可在微信公众平台用户管理界面对粉丝添加备注
+    groupid: string; // 用户所在的分组ID（兼容旧的用户分组接口）
+    tagid_list: string; // 用户被打上的标签ID列表
+  end;
+
+  TUserInfos = record
+    user_info_list: TArray<TUserInfo>;
   end;
 
 type
@@ -628,6 +656,39 @@ begin
   end;
 end;
 
+procedure TForm1.Button28Click(Sender: TObject);
+var
+  AJson, AItem: TQJson;
+begin
+  AJson := TQJson.Create;
+  try
+    AJson.Parse
+      ('[{"code":"GTO","name":"国通"},{"code":"STO","name":"申通"},{"code":"YTO","name":"韵达"}]');
+    mmResult.Lines.Add(AJson.AsJson);
+    mmResult.Lines.Add('查找符合要求的结点:');
+{$IFDEF UNICODE}
+    mmResult.Lines.Add('ForEach 模式');
+    AJson.Match('.+通', [jmsMatchValue, jmsNest]).ForEach(
+      procedure(AItem: TQJson)
+      begin
+        mmResult.Lines.Add(AItem.Path + '=>' + AItem.AsString);
+      end);
+    mmResult.Lines.Add('For..In 模式');
+    for AItem in AJson.Match('.+通', [jmsMatchValue, jmsNest]) do
+    begin
+      mmResult.Lines.Add(AItem.Path + '=>' + AItem.AsString);
+    end
+
+{$ELSE}
+    AJson.Match('.+通', [jmsMatchValue, jmsNest])
+      .ForEach(PrintRegexMatchResult, nil);
+{$ENDIF}
+  finally
+    FreeAndNil(AJson);
+  end;
+
+end;
+
 procedure TForm1.Button2Click(Sender: TObject);
 var
   AJson: TQJson;
@@ -662,7 +723,7 @@ begin
     TestRecord.SubRecord.ArrayVal[0] := 100;
     TestRecord.SubRecord.ArrayVal[1] := 101;
     TestRecord.SubRecord.ArrayVal[2] := 102;
-    AJson.Add('IP', '192.168.1.1');
+    AJson.Add('IP', '192.168.1.1', jdtString);
     with AJson.Add('FixedTypes') do
     begin
       AddDateTime('DateTime', Now);
@@ -677,10 +738,11 @@ begin
     end;
     with AJson.Add('AutoTypes') do
     begin
-      Add('Integer', '-100');
-      Add('Float', '-12.3');
-      Add('Array', '[2,''goods'',true,4.5]');
-      Add('Object', '{"Name":"Object_Name","Value":"Object_Value"}');
+      Add('Integer', '-100', jdtUnknown);
+      Add('Float', '-12.3', jdtUnknown);
+      Add('Array', '[2,''goods'',true,4.5]', jdtUnknown);
+      Add('Object', '{"Name":"Object_Name","Value":"Object_Value"}',
+        jdtUnknown);
       Add('ForceArrayAsString', '[2,''goods'',true,4.5]', jdtString);
       Add('ForceObjectAsString',
         '{"Name":"Object_Name","Value":"Object_Value"}', jdtString);
@@ -746,7 +808,7 @@ end;
 procedure TForm1.Button4Click(Sender: TObject);
 var
   AJson: TQJson;
-  I: Integer;
+  J: Integer;
   T1, T2: Cardinal;
   Speed: Cardinal;
 begin
@@ -758,8 +820,8 @@ begin
       T1 := GetTickCount;
       with AJson.Add('Integers', jdtObject) do
       begin
-        for I := 0 to 2000000 do
-          Add('Node' + IntToStr(I)).AsInteger := I;
+        for J := 0 to 2000000 do
+          Add('Node' + IntToStr(J)).AsInteger := J;
       end;
       T1 := GetTickCount - T1;
       T2 := GetTickCount;
@@ -945,7 +1007,7 @@ end;
 procedure TForm1.Button8Click(Sender: TObject);
 var
   AJson, AItem: TQJson;
-  I: Integer;
+  J: Integer;
   DynArray: array of Integer;
   RecordArray: array of TRttiUnionRecord;
 begin
@@ -974,8 +1036,8 @@ begin
     RecordArray[1].iVal := 2;
     with AJson.Add('RecordArray', jdtArray) do
     begin
-      for I := 0 to High(RecordArray) do
-        Add.FromRecord(RecordArray[I]);
+      for J := 0 to High(RecordArray) do
+        Add.FromRecord(RecordArray[J]);
     end;
 {$ENDIF}
     // AJson.Add('RecordArray').AsVariant:=RecordArray;
@@ -998,16 +1060,16 @@ begin
     mmResult.Lines.Add(AJson.AsJson);
     // 访问数组中的元素
     mmResult.Lines.Add('使用for in枚举数组Manul的元素值');
-    I := 0;
+    J := 0;
     for AItem in AJson.ItemByName('Manul') do
     begin
-      mmResult.Lines.Add('Manul[' + IntToStr(I) + ']=' + AItem.AsString);
-      Inc(I);
+      mmResult.Lines.Add('Manul[' + IntToStr(J) + ']=' + AItem.AsString);
+      Inc(J);
     end;
     mmResult.Lines.Add('使用普通for循环枚举数组Manul的元素值');
     AItem := AJson.ItemByName('Manul');
-    for I := 0 to AItem.Count - 1 do
-      mmResult.Lines.Add('Manul[' + IntToStr(I) + ']=' + AItem[I].AsString);
+    for J := 0 to AItem.Count - 1 do
+      mmResult.Lines.Add('Manul[' + IntToStr(J) + ']=' + AItem[J].AsString);
   finally
     FreeObject(AJson);
   end;
@@ -1088,15 +1150,28 @@ begin
   ReportMemoryLeaksOnShutdown := true;
 end;
 
+function TForm1.ObjectCall(AObject: TObject): String;
+begin
+  Result := AObject.ToString;
+end;
+
 procedure TForm1.Panel1Click(Sender: TObject);
 var
   AJson: TQJson;
 begin
+  // StrictJson:=True;
   AJson := TQJson.Create;
-  AJson.Parse('{"a":"3-4级"});');
-  if AJson.Items[0].IsDateTime then
-    ShowMessage('IsDateTime');
-  FreeObject(AJson);
+  try
+    AJson.Parse('{"value":1.0}');
+    ShowMessage(AJson.IntByName('value', 0).toString);
+  finally
+    AJson.Free;
+  end;
+end;
+
+procedure TForm1.PrintRegexMatchResult(AItem: TQJson; ATag: Pointer);
+begin
+  mmResult.Lines.Add(AItem.Path + '=>' + AItem.AsString);
 end;
 
 end.

@@ -231,10 +231,12 @@ object frmSftpBrowser: TfrmSftpBrowser
       OnDblClick = lvFilesDblClick
     end
   end
-  object sftpClient: TclSFtp
-    SshAgent = 'LargeLogViewer/1.0'
-    OnProgress = sftpClientProgress
-    Left = 416
-    Top = 16
+  object sftpClient: TScSFTPClient
+    Left = 456
+    Top = 96
+  end
+  object sshClient: TScSSHClient
+    Left = 520
+    Top = 96
   end
 end

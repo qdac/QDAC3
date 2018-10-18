@@ -65,8 +65,8 @@ object frmNodeValueEditor: TfrmNodeValueEditor
     Width = 97
     Height = 25
     Caption = #20174#25991#20214#20013#21152#36733'...'
+    Enabled = False
     TabOrder = 1
-    Visible = False
     OnClick = btnLoadFromFileClick
   end
   object Button2: TButton

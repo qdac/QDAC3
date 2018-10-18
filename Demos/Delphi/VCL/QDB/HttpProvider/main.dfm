@@ -25,7 +25,6 @@ object Form2: TForm2
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 921
     object Button1: TButton
       Left = 16
       Top = 10
@@ -75,7 +74,6 @@ object Form2: TForm2
     Align = alTop
     BevelOuter = bvLowered
     TabOrder = 1
-    ExplicitWidth = 921
     object mmSQL: TMemo
       Left = 1
       Top = 1
@@ -86,8 +84,6 @@ object Form2: TForm2
         'Information_Schema.Columns')
       ScrollBars = ssBoth
       TabOrder = 0
-      ExplicitWidth = 919
-      ExplicitHeight = 262
     end
     object Panel3: TPanel
       Left = 1
@@ -107,7 +103,6 @@ object Form2: TForm2
       Font.Style = [fsBold]
       ParentFont = False
       TabOrder = 1
-      ExplicitWidth = 919
     end
   end
   object PageControl1: TPageControl
@@ -118,11 +113,8 @@ object Form2: TForm2
     ActivePage = TabSheet1
     Align = alClient
     TabOrder = 2
-    ExplicitWidth = 921
     object TabSheet1: TTabSheet
       Caption = 'Result'
-      ExplicitWidth = 281
-      ExplicitHeight = 165
       object DBGrid1: TDBGrid
         Left = 0
         Top = 0
@@ -141,8 +133,6 @@ object Form2: TForm2
     object TabSheet2: TTabSheet
       Caption = 'Statics'
       ImageIndex = 1
-      ExplicitWidth = 281
-      ExplicitHeight = 165
       object mmLogs: TMemo
         Left = 0
         Top = 0
@@ -150,10 +140,6 @@ object Form2: TForm2
         Height = 294
         Align = alClient
         TabOrder = 0
-        ExplicitLeft = 368
-        ExplicitTop = 104
-        ExplicitWidth = 185
-        ExplicitHeight = 89
       end
     end
   end

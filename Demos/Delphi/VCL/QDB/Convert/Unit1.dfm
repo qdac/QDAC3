@@ -95,6 +95,7 @@ object Form1: TForm1
       Height = 228
       Caption = #27969#22788#29702#36873#39033
       TabOrder = 1
+      OnClick = GroupBox2Click
       object Label1: TLabel
         Left = 16
         Top = 83

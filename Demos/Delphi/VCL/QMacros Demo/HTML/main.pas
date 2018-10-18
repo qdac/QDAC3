@@ -176,7 +176,7 @@ var
   AList: TStringList;
   AMacros: TQMacroManager;
   AHtmlFile: String;
-  AIterator: IQIterator;
+  AIterator: IQMacroIterator ;
 begin
   AList := TStringList.Create;
   AList.Text := 'Joson'#13#10'Mikelin';

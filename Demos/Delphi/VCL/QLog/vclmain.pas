@@ -44,6 +44,7 @@ procedure TForm2.FormCreate(Sender: TObject);
 begin
   SetDefaultLogFile(ExtractFilePath(Application.ExeName) + 'test.log',
     1024 * 1024, False, true).MaxLogHistories := 1; // 最大保留两个历史日志+1个当前日志文件
+  Logs.AcceptLevels := [llDebug];
 end;
 
 end.

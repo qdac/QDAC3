@@ -33,7 +33,7 @@ var
 
 implementation
 
-uses qstring, qlog, ioutils{$IFDEF MSWINDOWS}, windows{$ENDIF}{$IFDEF ANDROID},
+uses qstring, qlog,qcndate,ioutils{$IFDEF MSWINDOWS}, windows{$ENDIF}{$IFDEF ANDROID},
   Androidapi.ioutils{$ENDIF};
 {$R *.fmx}
 
@@ -126,10 +126,11 @@ begin
 {$ELSE}
   SetDefaultLogFile;
 {$ENDIF}
-  //输出日志到控制台
+  // 输出日志到控制台
   Logs.Castor.AddWriter(TQLogConsoleWriter.Create);
-  //输出日志到文件
-  SetDefaultLogFile({$IFDEF ANDROID}GetExtSDDir+'/'+Application.Title+'.log'{$ELSE}''{$ENDIF},2*1024*1024,false);
+  // 输出日志到文件
+//  SetDefaultLogFile({$IFDEF ANDROID}GetExtSDDir + '/' + Application.Title +
+//    '.log'{$ELSE}''{$ENDIF}, 2 * 1024 * 1024, false);
   PostLog(llHint, 'Application Started.');
   ReportMemoryLeaksOnShutdown := True;
 end;

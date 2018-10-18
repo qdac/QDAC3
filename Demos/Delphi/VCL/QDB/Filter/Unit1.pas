@@ -171,34 +171,7 @@ procedure TForm1.Button3Click(Sender: TObject);
 var
   dt: TQDataSet;
 begin
-  dt := TQDataSet.Create(nil);
-  try
-    dt.Clone(FDataSet);
-    with dt do
-    begin
-      Filtered := false;
-      OnFilterRecord := nil;
-      Filter := ComboBox1.Text;
-      Filtered := Length(Filter) > 0;
-    end;
-    FDataSet.DisableControls;
-    dt.DisableControls;
-    with dt do
-    begin
-      First;
-      while not Eof do
-      begin
-        edit;
-        FieldByName('Name').AsString := '’≈¿œ∂˛';
-        Post;
-        next;
-      end;
-    end;
-  finally
-    FDataSet.EnableControls;
-    dt.EnableControls;
-    dt.Free;
-  end;
+FDataSet.FilterOptions:=[foCaseInsensitive];
 
 end;
 

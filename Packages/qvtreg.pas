@@ -20,6 +20,6 @@ initialization
 RegisterFmxClasses([TQVirtualTreeView, TQVTCustomTextCell, TQVTCustomCheckCell,
   TQVTCustomRadioCell, TQVTCustomProgressCell, TQVTImageCell, TQVTImageCell,
   TQVTPickListCell, TQVTTextEditor, TQVTListEditor, TQVTColorEditor,
-  TQVTDialogEditor,TQVTDBAdapter,TQVTCustomDrawer,TQVTCustomDrawer]);
+  TQVTDialogEditor,TQVTDBAdapter,TQVTCustomDrawer]);
 
 end.

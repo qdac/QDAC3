@@ -1485,13 +1485,13 @@ function SameId(const V1, V2: TGuid): Boolean;
 /// <summary>计算指定内容的密码强度</summary>
 /// <param name="S">密码</param>
 /// <returns>返回一个>=0的密码强度值</returns>
-function PasswordScale(const S: QStringW): Integer;overload;
+function PasswordScale(const S: QStringW): Integer; overload;
 /// <summary>计算指定内容的密码强度</summary>
 /// <param name="S">密码</param>
 /// <param name="ARules">检测到的密码规则项目</param>
 /// <returns>返回一个>=0的密码强度值</returns>
 function PasswordScale(const S: QStringW; var ARules: TPasswordRules)
-  : Integer;overload;
+  : Integer; overload;
 /// <summary>将指定的密码强度系数转换为强度等级</summary>
 /// <param name="AScale">通过PasswordScale得到的强度等级</param>
 /// <returns>返回转换后的强度等级</returns>
@@ -7429,7 +7429,7 @@ function HtmlEscape(const S: QStringW): QStringW;
 var
   p, pd: PQCharW;
   AFound: Boolean;
-  I, L, H: Integer;
+  I, l, H: Integer;
   pw: PWord absolute p;
 begin
   if Length(S) > 0 then
@@ -7959,7 +7959,8 @@ begin
     SkipUntilW(p, DocEnd);
     if p^ = '?' then
     begin
-      ADocument := StrDupX(ps, p - ps);
+      if not DecodeUrlStr(StrDupX(ps, p - ps), ADocument) then
+        ADocument := StrDupX(ps, p - ps);
       Inc(p);
       AParams.BeginUpdate;
       try
@@ -7981,7 +7982,8 @@ begin
     end
     else
     begin
-      ADocument := ps;
+      if not DecodeUrlStr(ps,ADocument) then
+        ADocument := ps;
       AParams.Clear;
     end;
   end;
@@ -11582,8 +11584,7 @@ const
   PR_CHART = 20; // 包含非数字和字母的控制字符时，额外增加的权值
   PR_UNICODE = 40; // 包含Unicode字符时，额外增加的权值
 
-function PasswordScale(const S: QStringW; var ARules: TPasswordRules)
-  : Integer;
+function PasswordScale(const S: QStringW; var ARules: TPasswordRules): Integer;
 var
   p: PQCharW;
   AMaxOrder, AMaxRepeat, ACharTypes: Integer;
@@ -11728,7 +11729,7 @@ begin
       Result := Result + [rctSymbol];
     if Result = [rctChinese, rctAlpha, rctLowerCase, rctUpperCase, rctNum,
       rctSymbol, rctSpace] then
-      break;
+      Break;
     Inc(p);
   end;
 end;
@@ -12435,10 +12436,10 @@ begin
     begin
       case V of
         rctChinese:
-          p^ := QCharW($4E00 + Random($9FA5 - $4E00));
+          p^ := QCharW($4E00 + random($9FA5 - $4E00));
         rctAlpha:
           begin
-            K := Random(52);
+            K := random(52);
             if K < 26 then
               p^ := QCharW(Ord('A') + K)
             else
@@ -12449,23 +12450,23 @@ begin
         rctUpperCase:
           p^ := QCharW(Ord('A') + random(26));
         rctNum:
-          p^ := QCharW(Ord('0') + Random(10));
+          p^ := QCharW(Ord('0') + random(10));
         rctSymbol: // 只管英文符号
           begin
             // $21~$2F,$3A~$40,$5B-$60,$7B~$7E
-            case Random(4) of
+            case random(4) of
               0: // !->/
-                p^ := QCharW($21 + Random(16));
+                p^ := QCharW($21 + random(16));
               1: // :->@
-                p^ := QCharW($3A + Random(7));
+                p^ := QCharW($3A + random(7));
               2: // [->`
-                p^ := QCharW($5B + Random(6));
+                p^ := QCharW($5B + random(6));
               3: // {->~
-                p^ := QCharW($7B + Random(4));
+                p^ := QCharW($7B + random(4));
             end;
           end;
         rctSpace:
-          p^ := SpaceChars[Random(4)];
+          p^ := SpaceChars[random(4)];
       end;
       Dec(ALen);
       Inc(p);

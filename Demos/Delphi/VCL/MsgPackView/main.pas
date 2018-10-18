@@ -320,8 +320,8 @@ begin
   begin
     AJson := TQJson.Create;
     try
-      if AJson.TryParse(Clipboard.AsText) then
-        JsonToMsgPack(AJson, FMsgPack);
+      AJson.Parse(Clipboard.AsText);
+      JsonToMsgPack(AJson, FMsgPack);
     finally
       FreeObject(AJson);
       cbxPathDelimiter.Visible := True;

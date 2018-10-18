@@ -8,8 +8,13 @@ interface
   每个添加到 TQHttpRequests 中的请求，完成后会自动释放，请不要手工释放，否则重复释放
   会出AV时请自理
 }
-uses Classes, Sysutils, Types, SyncObjs, QString, QDigest, QJson, QSimplePool,
-  QWorker
+{$IF RTLVersion>=28}
+{$DEFINE SYSHTTP }
+{$IFEND}
+
+uses Classes, Sysutils, Types, SyncObjs, QString, QDigest, QJson, QXML,
+  QSimplePool, QWorker{$IFDEF SYSHTTP}, System.Net.HttpClient,
+  System.Net.UrlClient{$ENDIF}
 {$IFDEF UNICODE}, System.Generics.Collections{$ELSE}, Contnrs{$ENDIF};
 {$I 'qdac.inc'}
 
@@ -31,6 +36,7 @@ type
   private
     function GetOriginNames: QStringW;
     function GetOriginValues: QStringW;
+    function GetUrlWithoutParams: QStringW;
 
   protected
     FUrl: QStringW;
@@ -82,6 +88,7 @@ type
     property OriginNames: QStringW read GetOriginNames;
     property OriginValues: QStringW read GetOriginValues;
     property Url: QStringW read GetUrl write SetUrl;
+    property UrlWithoutParams: QStringW read GetUrlWithoutParams;
     property SpaceAsPlus: Boolean read FSpaceAsPlus write FSpaceAsPlus;
     property HostAddr: QStringW read GetHostAddr;
     property IPAddr: Cardinal read GetIPAddr;
@@ -261,6 +268,7 @@ type
     FMaxClients, FBusyClients: Integer;
     FDefaultHeaders: IQHttpHeaders;
     FCS: TCriticalSection;
+    FCookieManager: TCookieManager;
     procedure Start(ARequest: TQHttpRequestItem);
     procedure RequestDone(ARequest: TQHttpRequestItem);
     procedure DoEventReqDone(ASender: TObject);
@@ -302,6 +310,9 @@ type
     function Rest(const AUrl: QStringW; AParams: TStrings; AResult: TQJson;
       AHeaders: IQHttpHeaders = nil; AfterDone: TNotifyEvent = nil;
       Action: TQHttpClientAction = reqUnknown): Integer; overload; virtual;
+    function Soap(const AUrl, Action, ARequestBody: QStringW;
+      var AResult: QStringW): Integer; virtual;
+    function NewHeaders: IQHttpHeaders;
     property MaxClients: Integer read FMaxClients write FMaxClients;
     property DefaultHeaders: IQHttpHeaders read FDefaultHeaders;
   end;
@@ -456,12 +467,7 @@ function DNSLookupV4(const AHost: QStringW; var Addr: QStringW)
 
 implementation
 
-{$IF RTLVersion>=28}
-{$DEFINE SYSHTTP }
-{$IFEND}
-
-uses zlib{$IFDEF SYSHTTP}, System.Net.HttpClient,
-  System.Net.UrlClient{$ENDIF}
+uses zlib
 {$IFDEF MSWINDOWS} , windows, messages, winsock{$ENDIF}
 {$IFDEF POSIX}, System.Net.Socket, Posix.Base, Posix.Stdio, Posix.Pthread,
   Posix.UniStd, IOUtils, Posix.NetDB, Posix.SysSocket, Posix.Fcntl,
@@ -1614,6 +1620,32 @@ begin
   Result := FUrl;
 end;
 
+function TQUrl.GetUrlWithoutParams: QStringW;
+  procedure DoEncode;
+  begin
+    if Length(FScheme) = 0 then
+      FUrl := 'http'
+    else
+      FUrl := LowerCase(FScheme);
+    FUrl := FUrl + '://';
+    if Length(FUserName) > 0 then
+    begin
+      FUrl := FUrl + UrlEncode(FUserName, True);
+      if Length(FPassword) > 0 then
+        FUrl := FUrl + ':' + UrlEncode(FPassword, SpaceAsPlus);
+      FUrl := FUrl + '@';
+    end;
+    FUrl := FUrl + RequestHost;
+    FUrl := FUrl + Document;
+    FChanged := false;
+  end;
+
+begin
+  if FChanged then
+    DoEncode;
+  Result := FUrl;
+end;
+
 procedure TQUrl.RandSortParams;
 // 此函数将参数的顺序打乱随机化,以避免用户从参数顺序推测签名一类的规律
 var
@@ -2491,6 +2523,7 @@ begin
   inherited Create;
   FCS := TCriticalSection.Create;
   FRequests := TQRequestList.Create;
+  FCookieManager := TCookieManager.Create;
   FMaxClients := 1; // 默认只有一个工作
   FHttpClients := TQSimplePool.Create(FMaxClients, SizeOf(Pointer));
   FHttpClients.OnNewItem := DoNewHttpClient;
@@ -2504,6 +2537,7 @@ begin
   Clear;
   FreeAndNil(FHttpClients);
   FreeAndNil(FRequests);
+  FreeAndNil(FCookieManager);
   FreeAndNil(FCS);
   inherited;
 end;
@@ -2576,6 +2610,11 @@ end;
 procedure TQHttpRequests.Lock;
 begin
   FCS.Enter;
+end;
+
+function TQHttpRequests.NewHeaders: IQHttpHeaders;
+begin
+  Result := THeadersHelper.Create;
 end;
 
 function TQHttpRequests.Post(const AUrl: QStringW; var AResult: QStringW;
@@ -2912,7 +2951,9 @@ begin
     else if Action = reqUnknown then
       AReq.Action := reqGet
     else
+    begin
       AReq.Action := Action;
+    end;
     if Assigned(AHeaders) then
       AReq.RequestHeaders.Replace(AHeaders);
     Push(AReq);
@@ -2948,6 +2989,64 @@ begin
   Result := Rest(AUrl, AContent, AResult, AHeaders, AfterDone, Action);
 end;
 
+function TQHttpRequests.Soap(const AUrl, Action, ARequestBody: QStringW;
+var AResult: QStringW): Integer;
+var
+  AReq: TQHttpRequestItem;
+  AXML: TQXML;
+  p: PQCharW;
+begin
+  AXML := nil;
+  AReq := TQHttpRequestItem.Create(Self, True);
+  try
+    AReq._AddRef;
+    AReq.AfterDone := DoEventReqDone;
+    AReq.Url := AUrl;
+    AReq.Action := reqGet;
+    Push(AReq);
+    AReq.WaitFor(INFINITE);
+    if AReq.StatusCode = 200 then
+    begin
+      AXML := TQXML.Create;
+      AXML.Parse(AReq.ContentAsString);
+
+      p := PQCharW(AUrl);
+      AReq.Url := DecodeTokenW(p, '?', #0, false, false);
+      AReq.Action := reqPost;
+      if Length(Action) = 0 then
+        AReq.RequestHeaders.Values['SOAPAction'] := '""'
+      else
+        AReq.RequestHeaders.Values['SOAPAction'] := Action;
+      if Length(ARequestBody) > 0 then
+      begin
+        AReq.Action := reqPost;
+        if not StartWithW(PQCharW(ARequestBody), '<?xml', false) then
+          SaveTextU(AReq.NeedRequestStream, '<?xml verision="1.0"?>'#13#10 +
+            ARequestBody, false)
+        else
+          SaveTextU(AReq.NeedRequestStream, ARequestBody, false);
+        AReq.RequestStream.Position := 0;
+        AReq.RequestHeaders.Values['Content-Type'] := 'text/xml; charset=utf-8';
+        AReq.RequestHeaders.Values['Content-Length'] :=
+          IntToStr(AReq.NeedRequestStream.Size);
+      end;
+      Push(AReq);
+      AReq.WaitFor(INFINITE);
+      Result := AReq.StatusCode;
+      if Result = 200 then
+        AResult := AReq.ContentAsString
+      else
+        SetLength(AResult, 0);
+    end
+    else
+      Result := AReq.StatusCode;
+  finally
+    AReq._Release;
+    if Assigned(AXML) then
+      FreeAndNil(AXML);
+  end;
+end;
+
 procedure TQHttpRequests.Start(ARequest: TQHttpRequestItem);
 var
   AClient: THttpClientClass;
@@ -2957,6 +3056,9 @@ begin
     if (FBusyClients < FMaxClients) or (FBusyClients = 0) then
     begin
       AClient := FHttpClients.Pop;
+{$IFDEF SYSHTTP}
+      AClient.CookieManager := FCookieManager;
+{$ENDIF}
       if ARequest.StartWith(AClient) then
         Inc(FBusyClients);
     end

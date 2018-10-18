@@ -32,6 +32,7 @@ object Form6: TForm6
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
+    OnClick = Panel1Click
     object Label1: TLabel
       Left = 24
       Top = 65

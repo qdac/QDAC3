@@ -98,14 +98,10 @@ begin
   ReportMemoryLeaksOnShutdown := True;
   APath := ExtractFilePath(Application.ExeName);
   PluginsManager.Loaders.Add(TQDLLLoader.Create(APath, '.dll'));
- // PluginsManager.Loaders.Add(TQBPLLoader.Create(APath, '.bpl'));
   PluginsManager.Start;
-
   FChangeNotifyId := (PluginsManager as IQNotifyManager)
     .IdByName('Tracker.Changed');
-
- //
- FL := TInterfaceList.Create ;
+  FL := TInterfaceList.Create ;
 
 end;
 

@@ -3,7 +3,7 @@ unit main;
 interface
 
 uses
-  Windows, Messages, SysUtils, types,Variants, Classes, Graphics,
+  Windows, Messages, SysUtils, types, Variants, Classes, Graphics,
   Controls, Forms, Dialogs, StdCtrls, ExtCtrls, qstring, qxml, rest.client;
 
 type
@@ -262,19 +262,23 @@ end;
 
 procedure TForm2.Button15Click(Sender: TObject);
 var
-  AXML,ANode: TQXMLNode;
+  AXML, ANode: TQXMLNode;
   I: Integer;
   T: Cardinal;
-  AStream:TStringStream;
+  AStream: TStringStream;
 begin
   AXML := TQXML.Create;
   try
-    with AXML.AddNode('xml') do
-      begin
-      AddText('  Hello , world  ');
-      Attrs.Add('Value',' %1 %2 ');
-      end;
-//    AXML.Parse('<xml><aa>44</aa><bb/></xml>');
+    AXML.AddComment('Hello,world');
+    AXML.Add('Attrs').Attrs.Add('Type', 'test'' type');
+    AXML.Add('Tag').AddText('Values');
+    AXML.Add('Name').AddText('swish''s name');
+    // with AXML.AddNode('xml') do
+    // begin
+    // AddText('  Hello , world  ');
+    // Attrs.Add('Value',' %1 %2 ');
+    // end;
+    // AXML.Parse('<xml><aa>44</aa><bb/></xml>');
     ShowMessage(AXML.AsXML);
   finally
     FreeObject(AXML);
@@ -420,9 +424,9 @@ begin
   AXML := TQXMLNode.Create;
   try
     AXML.Parse(mmResult.Text);
-//    AXML.Parse('<DATASET NAME="TM_ASC_BASICINFO">'#13#10 +
-//      '<META IS_INDEPENDENT_LAW="INTEGER" ADDRESS="上海申银汽车服务有限公司上海普陀区中山北路2500号" SALES_LINE=""/>'#13#10
-//      + '</DATASET>');
+    // AXML.Parse('<DATASET NAME="TM_ASC_BASICINFO">'#13#10 +
+    // '<META IS_INDEPENDENT_LAW="INTEGER" ADDRESS="上海申银汽车服务有限公司上海普陀区中山北路2500号" SALES_LINE=""/>'#13#10
+    // + '</DATASET>');
     mmResult.Lines.Add(AXML.Encode(true, '  '));
   finally
     AXML.Free;
@@ -469,7 +473,7 @@ begin
   ARec.CurrVal := 8.9;
   ARec.EnumVal := {$IFDEF UNICODE}TAlign.{$ENDIF}alTop;
   ARec.CharVal := 'A';
-  ARec.VarVal :=1;// VarArrayOf(['VariantArray', 1, 2.5, true, false]);
+  ARec.VarVal := 1; // VarArrayOf(['VariantArray', 1, 2.5, true, false]);
   SetLength(ARec.ArrayVal, 3);
   ARec.ArrayVal[0] := 100;
   ARec.ArrayVal[1] := 101;
@@ -478,12 +482,12 @@ begin
   try
     AXML.Add('Record').FromRecord(ARec);
     ACopy := AXML.ItemByName('Record').Copy;
-//    ACopy.AttrByPath('Int64Val', 'value').AsInt64 := 100;
-//    ACopy.AttrByPath('UStr', 'value').AsString := 'UnicodeString-ByXML';
-//    ACopy.AttrByPath('AStr', 'value').AsString := 'AnsiString-ByXML';
-//    ACopy.AttrByPath('SStr', 'value').AsString := 'ShortString-ByXML';
-//    ACopy.AttrByPath('EnumVal', 'value').AsString := 'alBottom';
-//    ACopy.AttrByPath('SetVal', 'value').AsString := '[biHelp]';
+    // ACopy.AttrByPath('Int64Val', 'value').AsInt64 := 100;
+    // ACopy.AttrByPath('UStr', 'value').AsString := 'UnicodeString-ByXML';
+    // ACopy.AttrByPath('AStr', 'value').AsString := 'AnsiString-ByXML';
+    // ACopy.AttrByPath('SStr', 'value').AsString := 'ShortString-ByXML';
+    // ACopy.AttrByPath('EnumVal', 'value').AsString := 'alBottom';
+    // ACopy.AttrByPath('SetVal', 'value').AsString := '[biHelp]';
     ACopy.ToRecord(ARec);
     ACopy.Free;
     AXML.Add('NewRecord').FromRecord(ARec);

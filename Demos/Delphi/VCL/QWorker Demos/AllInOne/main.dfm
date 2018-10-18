@@ -412,8 +412,9 @@ object Form1: TForm1
     Top = 256
     Width = 100
     Height = 25
-    Caption = 'Button40'
+    Caption = #21463#38480#20998#32452#20316#19994
     TabOrder = 40
+    OnClick = Button40Click
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer

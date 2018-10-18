@@ -365,8 +365,6 @@ object frmLogViewer: TfrmLogViewer
       ParentDoubleBuffered = False
       TabOrder = 1
       Visible = False
-      ExplicitLeft = 10
-      ExplicitTop = 91
     end
   end
   object pnlSearch: TPanel

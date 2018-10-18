@@ -4,17 +4,19 @@ interface
 
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes,
-  System.Variants, qdac_fmx_virtualtree, qdac_fmx_vtdbadapter, Data.DB,
+  System.Variants, qdac_fmx_virtualtree, Data.DB,
   Datasnap.DBClient,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs;
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
+  FMX.Controls.Presentation, FMX.StdCtrls;
 
 type
   TfrmDBTree = class(TForm)
+    vtDBTree: TQVirtualTreeView;
+    QVTDBAdapter1: TQVTDBAdapter;
     procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
     FTreeView: TQVirtualTreeView;
-    FAdapter: TQDBTreeAdapter;
     FDataSet: TClientDataSet;
   public
     { Public declarations }
@@ -33,17 +35,10 @@ var
   I: Integer;
   ASource, ADest: TField;
 begin
-  FTreeView := TQVirtualTreeView.Create(Self);
-  FTreeView.Options := [TQVTOption.toTestHover, toRowSizable];
-  FTreeView.PaintOptions := [TQVTPaintOption.poHorizLine,
-    TQVTPaintOption.poVertLine, TQVTPaintOption.poTreeLine,
-    TQVTPaintOption.poColSelection, TQVTPaintOption.poRowSelection,
-    TQVTPaintOption.poNodeButton, TQVTPaintOption.poHover];
-  FTreeView.Header.Options := [TQVTHeaderOption.hoVisible,
-    TQVTHeaderOption.hoResizable];
-  FTreeView.Parent := Self;
-  FTreeView.TextSettings.WordWrap := False;
-  FTreeView.Align := TAlignLayout.Client;
+  vtDBTree.Options := frmMain.vtGrid.Options;
+  vtDBTree.PaintOptions := frmMain.vtGrid.PaintOptions;
+  vtDBTree.Header.Options := frmMain.vtGrid.Header.Options;
+  vtDBTree.TextSettings.WordWrap := False;
   FDataSet := TClientDataSet.Create(Self);
   FDataSet.CloneCursor(frmMain.adsData, true);
   for I := 0 to frmMain.adsData.Fields.Count - 1 do
@@ -53,15 +48,9 @@ begin
     ADest.Visible := ASource.Visible;
     ADest.DisplayLabel := ASource.DisplayLabel;
   end;
-  FAdapter := TQDBTreeAdapter.Create(FDataSet.FieldByName('Id'),
-    FDataSet.FieldByName('Parent'));
-  FAdapter.TreeView := FTreeView;
-  ASource := FDataSet.FieldByName('Sold');
-  FAdapter.SetFieldCellType(ASource, TQDBProgressCellData.Create(ASource));
-  ASource := FDataSet.FieldByName('Packable');
-  FAdapter.SetFieldCellType(ASource, TQDBCheckCellData.Create(ASource));
-  ASource := FDataSet.FieldByName('Status');
-  FAdapter.SetFieldCellType(ASource, TQDBRadioCellData.Create(ASource));
+  QVTDBAdapter1.DataSet := FDataSet;
+  QVTDBAdapter1.KeyField := FDataSet.FieldByName('Id');
+  QVTDBAdapter1.ParentField := FDataSet.FieldByName('Parent');
 end;
 
 end.

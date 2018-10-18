@@ -18,11 +18,13 @@ object Form1: TForm1
     Left = 0
     Top = 0
     Width = 856
-    Height = 129
+    Height = 161
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
     OnClick = Panel1Click
+    ExplicitLeft = 8
+    ExplicitTop = -6
     object Button1: TButton
       Left = 8
       Top = 8
@@ -177,7 +179,7 @@ object Form1: TForm1
     end
     object Button17: TButton
       Left = 408
-      Top = 72
+      Top = 70
       Width = 115
       Height = 25
       Caption = 'HasChild'
@@ -186,7 +188,7 @@ object Form1: TForm1
     end
     object Button19: TButton
       Left = 539
-      Top = 74
+      Top = 70
       Width = 117
       Height = 25
       Caption = #21547#27880#37322'JSON'#35299#26512
@@ -195,7 +197,7 @@ object Form1: TForm1
     end
     object Button18: TButton
       Left = 672
-      Top = 74
+      Top = 70
       Width = 75
       Height = 25
       Caption = #27969#21040'Json'
@@ -204,7 +206,7 @@ object Form1: TForm1
     end
     object Button20: TButton
       Left = 753
-      Top = 74
+      Top = 70
       Width = 75
       Height = 25
       Caption = #25490#24207
@@ -248,8 +250,8 @@ object Form1: TForm1
       OnClick = Button24Click
     end
     object Button25: TButton
-      Left = 539
-      Top = 105
+      Left = 753
+      Top = 101
       Width = 75
       Height = 25
       Caption = #20020#26102#27979#35797
@@ -257,32 +259,43 @@ object Form1: TForm1
       OnClick = Button25Click
     end
     object Button26: TButton
-      Left = 632
-      Top = 104
-      Width = 75
+      Left = 539
+      Top = 101
+      Width = 117
       Height = 25
       Caption = 'IndexOfValue'
       TabOrder = 26
       OnClick = Button26Click
     end
     object Button27: TButton
-      Left = 720
-      Top = 104
+      Left = 672
+      Top = 101
       Width = 75
       Height = 25
-      Caption = 'Button27'
+      Caption = #21512#24182
       TabOrder = 27
       OnClick = Button27Click
+    end
+    object Button28: TButton
+      Left = 8
+      Top = 132
+      Width = 117
+      Height = 25
+      Caption = #27491#21017#26816#32034
+      TabOrder = 28
+      OnClick = Button28Click
     end
   end
   object mmResult: TMemo
     Left = 0
-    Top = 129
+    Top = 161
     Width = 856
-    Height = 296
+    Height = 264
     Align = alClient
     ImeName = #20013#25991' - QQ'#20116#31508#36755#20837#27861
     TabOrder = 1
+    ExplicitTop = 129
+    ExplicitHeight = 296
   end
   object OpenDialog1: TOpenDialog
     Left = 80

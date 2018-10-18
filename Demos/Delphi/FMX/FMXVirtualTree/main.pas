@@ -7,7 +7,7 @@ uses
   System.Variants, FMX.TextLayout,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Objects
   // Custom units
-    , qdac_fmx_virtualtree, qdac_fmx_vtdbadapter, Math,
+    , qdac_fmx_virtualtree, Math,
   System.Generics.Collections,
   FMX.ImgList,
   FMX.Controls.Presentation,
@@ -44,7 +44,9 @@ type
     adsDataParent: TIntegerField;
     chkMultiSort: TCheckBox;
     btnEditor: TButton;
-    Edit1: TEdit;
+    chkAutoCascade: TCheckBox;
+    btnMultiDrawer: TButton;
+    vtGrid: TQVirtualTreeView;
     procedure FormCreate(Sender: TObject);
     procedure chkTreeLineChange(Sender: TObject);
     procedure chkShowHeaderChange(Sender: TObject);
@@ -57,9 +59,8 @@ type
     procedure btnViewAsTreeClick(Sender: TObject);
     procedure btnMilloNodesClick(Sender: TObject);
     procedure btnEditorClick(Sender: TObject);
+    procedure btnMultiDrawerClick(Sender: TObject);
   private
-    FTreeView: TQVirtualTreeView;
-    FCellDatas: array of IQVTCellData;
     FIndexExists: Boolean;
     procedure DoGetCellData(Sender: TQVirtualTreeView; ANode: TQVTNode;
       ACol: Integer; var AData: IQVTCellData);
@@ -78,7 +79,7 @@ var
 
 implementation
 
-uses dbtreeview, millonodes, inspector, qdac_fmx_modaldlg;
+uses dbtreeview, millonodes, inspector, qdac_fmx_modaldlg,multidrawer;
 {$R *.fmx}
 
 procedure TfrmMain.btnEditorClick(Sender: TObject);
@@ -91,6 +92,11 @@ begin
   ModalDialog(TfrmMillioNodes, nil);
 end;
 
+procedure TfrmMain.btnMultiDrawerClick(Sender: TObject);
+begin
+  ModalDialog(TfrmCellMultiDrawer,nil);
+end;
+
 procedure TfrmMain.btnViewAsTreeClick(Sender: TObject);
 begin
   ModalDialog(TfrmDBTree, nil);
@@ -98,40 +104,48 @@ end;
 
 procedure TfrmMain.Button1Click(Sender: TObject);
 begin
-  FTreeView.VertScrollBar.Value := FTreeView.VertScrollBar.Value + 10;
+  vtGrid.VertScrollBar.Value := vtGrid.VertScrollBar.Value + 10;
 end;
 
 procedure TfrmMain.Button2Click(Sender: TObject);
 begin
-  FTreeView.VertScrollBar.Value := FTreeView.VertScrollBar.Value - 10;
+  vtGrid.VertScrollBar.Value := vtGrid.VertScrollBar.Value - 10;
 end;
 
 procedure TfrmMain.Button3Click(Sender: TObject);
 begin
-  FTreeView.HorzScrollBar.Value := FTreeView.HorzScrollBar.Value + 10;
+  vtGrid.HorzScrollBar.Value := vtGrid.HorzScrollBar.Value + 10;
 end;
 
 procedure TfrmMain.Button4Click(Sender: TObject);
 begin
-  FTreeView.HorzScrollBar.Value := FTreeView.HorzScrollBar.Value - 10;
+  vtGrid.HorzScrollBar.Value := vtGrid.HorzScrollBar.Value - 10;
 end;
 
 procedure TfrmMain.Button5Click(Sender: TObject);
 begin
-  FTreeView.FocusNode := FTreeView.RootNode.GetFirstChild;
+  vtGrid.FocusNode := vtGrid.RootNode.GetFirstChild;
 end;
 
 procedure TfrmMain.chkRowSizableChange(Sender: TObject);
+var
+  AOptions: TQVTOptions;
 begin
+  AOptions := vtGrid.Options;
   if chkRowSizable.IsChecked then
-    FTreeView.Options := FTreeView.Options + [TQVTOption.toRowSizable]
+    AOptions := AOptions + [TQVTOption.toRowSizable]
   else
-    FTreeView.Options := FTreeView.Options - [TQVTOption.toRowSizable];
+    AOptions := AOptions - [TQVTOption.toRowSizable];
+  if chkAutoCascade.IsChecked then
+    AOptions := AOptions + [TQVTOption.toAutoCascade]
+  else
+    AOptions := AOptions - [TQVTOption.toAutoCascade];
+  vtGrid.Options := AOptions;
   if chkColSizable.IsChecked then
-    FTreeView.Header.Options := FTreeView.Header.Options +
+    vtGrid.Header.Options := vtGrid.Header.Options +
       [TQVTHeaderOption.hoResizable]
   else
-    FTreeView.Header.Options := FTreeView.Header.Options -
+    vtGrid.Header.Options := vtGrid.Header.Options -
       [TQVTHeaderOption.hoResizable];
 end;
 
@@ -139,7 +153,7 @@ procedure TfrmMain.chkShowHeaderChange(Sender: TObject);
 var
   AOptions: TQVTHeaderOptions;
 begin
-  AOptions := FTreeView.Header.Options;
+  AOptions := vtGrid.Header.Options;
   if chkShowHeader.IsChecked then
     AOptions := AOptions + [TQVTHeaderOption.hoVisible]
   else
@@ -148,7 +162,7 @@ begin
     AOptions := AOptions + [TQVTHeaderOption.hoMultiSortColumns]
   else
     AOptions := AOptions - [TQVTHeaderOption.hoMultiSortColumns];
-  FTreeView.Header.Options := AOptions;
+  vtGrid.Header.Options := AOptions;
 end;
 
 procedure TfrmMain.chkTreeLineChange(Sender: TObject);
@@ -167,15 +181,15 @@ begin
   if chkDrawHover.IsChecked then
   begin
     AOptions := AOptions + [TQVTPaintOption.poHover];
-    FTreeView.Options := FTreeView.Options + [TQVTOption.toTestHover];
+    vtGrid.Options := vtGrid.Options + [TQVTOption.toTestHover];
   end
   else
-    FTreeView.Options := FTreeView.Options - [TQVTOption.toTestHover];
+    vtGrid.Options := vtGrid.Options - [TQVTOption.toTestHover];
   if chkRowSelection.IsChecked then
     AOptions := AOptions + [TQVTPaintOption.poRowSelection];
   if chkColSelection.IsChecked then
     AOptions := AOptions + [TQVTPaintOption.poColSelection];
-  FTreeView.PaintOptions := AOptions;
+  vtGrid.PaintOptions := AOptions;
 end;
 
 procedure TfrmMain.CreateDemoDataSet;
@@ -292,9 +306,9 @@ end;
 
 procedure TfrmMain.DoHoverChanged(Sender: TObject);
 begin
-  if FTreeview.HoverNode <> nil then
-    Caption := '当前行 ' + IntToStr(FTreeView.HoverNode.RowIndex) + ',列 ' +
-      IntToStr(FTreeView.HoverColumn)
+  if vtGrid.HoverNode <> nil then
+    Caption := '当前行 ' + IntToStr(vtGrid.HoverNode.RowIndex) + ',列 ' +
+      IntToStr(vtGrid.HoverColumn)
   else
     Caption := '无热点';
 end;
@@ -308,12 +322,12 @@ var
 begin
   ASort := '';
   ADesc := false;
-  for I := 0 to FTreeView.SortColumns.Count - 1 do
+  for I := 0 to vtGrid.SortColumns.Count - 1 do
   begin
-    AField := (FCellDatas[FTreeView.SortColumns[I].Index]
+    AField := (FCellDatas[vtGrid.SortColumns[I].Index]
       as TQDBCellData).Field;
     ASort := ASort + AField.FieldName + ';';
-    if FTreeView.SortColumns[I].Title.SortMarker = TQVTColumnSortMarker.smDesc
+    if vtGrid.SortColumns[I].Title.SortMarker = TQVTColumnSortMarker.smDesc
     then
       ADescs := ADescs + AField.FieldName + ';';
   end;
@@ -337,15 +351,15 @@ var
   AField: TField;
   ADrawerType: TQVTDrawerType;
 begin
-  FTreeView := TQVirtualTreeView.Create(Self);
-  FTreeView.Parent := Self;
-  FTreeView.Align := TAlignLayout.Client;
-  FTreeView.Padding.Rect := RectF(5, 5, 5, 5);
+  vtGrid := TQVirtualTreeView.Create(Self);
+  vtGrid.Parent := Self;
+  vtGrid.Align := TAlignLayout.Client;
+  vtGrid.Padding.Rect := RectF(5, 5, 5, 5);
   CreateDemoDataSet;
-  FTreeView.TextSettings.WordWrap:=False;
-  FTreeView.Header.Columns.BeginUpdate;
+  vtGrid.TextSettings.WordWrap := False;
+  vtGrid.Header.Columns.BeginUpdate;
   try
-    with FTreeView.Header.Columns.Add do
+    with vtGrid.Header.Columns.Add do
     begin
       Width := 18;
       DrawerType := TQVTDrawerType.dtRowIndicator;
@@ -360,26 +374,26 @@ begin
         ADrawerType := TQVTDrawerType.dtDefault;
         if AField = adsDataSold then
         begin
-          FCellDatas[FTreeView.Header.Columns.Count] :=
+          FCellDatas[vtGrid.Header.Columns.Count] :=
             TQDBProgressCellData.Create(AField);
           ADrawerType := TQVTDrawerType.dtProgress;
         end
         else if AField = adsDataPackable then
         begin
-          FCellDatas[FTreeView.Header.Columns.Count] :=
+          FCellDatas[vtGrid.Header.Columns.Count] :=
             TQDBCheckCellData.Create(AField);
           ADrawerType := TQVTDrawerType.dtCheck;
         end
         else if AField = adsDataStatus then
         begin
-          FCellDatas[FTreeView.Header.Columns.Count] :=
+          FCellDatas[vtGrid.Header.Columns.Count] :=
             TQDBRadioCellData.Create(AField);
           ADrawerType := TQVTDrawerType.dtRadio;
         end
         else
-          FCellDatas[FTreeView.Header.Columns.Count] :=
+          FCellDatas[vtGrid.Header.Columns.Count] :=
             TQDBTextCellData.Create(AField);
-        with FTreeView.Header.Columns.Add do
+        with vtGrid.Header.Columns.Add do
         begin
           Title.Text := adsData.Fields[I].DisplayLabel;
           Title.Clickable := True;
@@ -389,23 +403,23 @@ begin
           DrawerType := ADrawerType;
         end;
         if AField = adsDataName then
-          FTreeView.Header.MasterColumn := FTreeView.Header.Columns.Count - 1;
+          vtGrid.Header.MasterColumn := vtGrid.Header.Columns.Count - 1;
       end;
     end;
   finally
-    FTreeView.Header.Columns.EndUpdate;
+    vtGrid.Header.Columns.EndUpdate;
   end;
-  FTreeView.PaintOptions := [TQVTPaintOption.poHorizLine,
+  vtGrid.PaintOptions := [TQVTPaintOption.poHorizLine,
     TQVTPaintOption.poVertLine, TQVTPaintOption.poTreeLine,
     TQVTPaintOption.poNodeButton, TQVTPaintOption.poRowSelection];
-  FTreeView.OnGetCellData := DoGetCellData;
-  FTreeView.OnHoverChanged := DoHoverChanged;
-  FTreeView.OnCellClick := DoCellClick;
-  FTreeView.RootNodeCount := adsData.RecordCount;
-  FTreeView.Margins.Rect := RectF(5, 5, 5, 5);
-  FTreeView.TintColor := TAlphaColors.Blue;
-  FTreeView.OnSortmarkerChanged := DoSortMarkerChanged;
-  FTreeView.Header.AutoSizeColumn := 1;
+  vtGrid.OnGetCellData := DoGetCellData;
+  vtGrid.OnHoverChanged := DoHoverChanged;
+  vtGrid.OnCellClick := DoCellClick;
+  vtGrid.RootNodeCount := adsData.RecordCount;
+  vtGrid.Margins.Rect := RectF(5, 5, 5, 5);
+  vtGrid.TintColor := TAlphaColors.Blue;
+  vtGrid.OnSortmarkerChanged := DoSortMarkerChanged;
+  vtGrid.Header.AutoSizeColumn := 1;
   // 修改默认的排序图标
   // TQVTHeaderDrawer.AscPath.Data :=
   // 'M260.62336 662.82496h502.74816L512 361.16992l-251.37664 301.65504z';

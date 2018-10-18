@@ -12514,9 +12514,9 @@ WriteMissingFlagsAsText=1
 
 [Configurations\CodeGear Studio Integration\Image Paths]
 Count=3
-Path0=images
-Path1=$(DOM)\graphics
-Path2=$(DOM)\graphics\en
+Path0=$(DOM)\graphics
+Path1=$(DOM)\graphics\en
+Path2=images
 
 [Configurations\CodeGear Studio Integration\Link Database]
 LinkPrecedence=0
@@ -23009,7 +23009,7 @@ Help2PluginNamespace=0
 Help2PluginNamespaceName=MS.VSIPCC+
 Help2RegisterType=0
 Help2UnregisterNamespace=1
-HelpCompiler=E:\TOOLS\HTML Help Workshop\hhc.exe
+HelpCompiler=F:\TOOLS\HTML Help Workshop\hhc.exe
 HelpProjectFileAutomatic=1
 HTMLHelp2Filename=
 HTMLHelpDisplayFontScaleButton=0
@@ -25813,9 +25813,9 @@ WriteMissingFlagsAsText=1
 
 [Configurations\Configuration 1\Image Paths]
 Count=3
-Path0=images
-Path1=$(DOM)\graphics
-Path2=$(DOM)\graphics\en
+Path0=$(DOM)\graphics
+Path1=$(DOM)\graphics\en
+Path2=images
 
 [Configurations\Configuration 1\Link Database]
 LinkPrecedence=0
@@ -35871,9 +35871,9 @@ WriteMissingFlagsAsText=1
 
 [Configurations\Print Manual\Image Paths]
 Count=3
-Path0=images
-Path1=$(DOM)\graphics
-Path2=$(DOM)\graphics\en
+Path0=$(DOM)\graphics
+Path1=$(DOM)\graphics\en
+Path2=images
 
 [Configurations\Print Manual\Link Database]
 LinkPrecedence=0
@@ -48999,9 +48999,9 @@ WriteMissingFlagsAsText=1
 
 [Configurations\Web Help\Image Paths]
 Count=3
-Path0=images
-Path1=$(DOM)\graphics
-Path2=$(DOM)\graphics\en
+Path0=$(DOM)\graphics
+Path1=$(DOM)\graphics\en
+Path2=images
 
 [Configurations\Web Help\Link Database]
 LinkPrecedence=0

@@ -88,6 +88,8 @@ begin
   AReq.OnRecvData := DoRecvProgress;
   AReq.AfterDone := DoReqestDone;
   AReq.OnError := DoError;
+  AReq.Path:=ExtractFilePath(Application.ExeName);
+  AReq.FileName := 'temp.~a';
   AReq.ResumeBroken := True;
   AReq.BeforeDownload := DoBeforeDownload;
   AReq.BeforeUrlRedirect := DoRedirect;
@@ -141,23 +143,26 @@ var
   AReq: TQHttpRequestItem;
   S: String;
 begin
-  AReq := Sender as TQHttpRequestItem;
-  if AReq is TQHttpFileRequestItem then
+  if not Abort then
   begin
-    with AReq as TQHttpFileRequestItem do
+    AReq := Sender as TQHttpRequestItem;
+    if AReq is TQHttpFileRequestItem then
     begin
-      S := RollupSize(ResponseStream.Position);
-      if AReq.ContentLength > 0 then
-        S := S + '/' + RollupSize(FileSize);
-    end;
-  end
-  else
-    S := '';
-  S := S + ' -' + RollupSize(AReaded);
-  if ATotal > 0 then
-    Caption := S + '/' + RollupSize(ATotal)
-  else
-    Caption := S;
+      with AReq as TQHttpFileRequestItem do
+      begin
+        S := RollupSize(ResponseStream.Position);
+        if AReq.ContentLength > 0 then
+          S := S + '/' + RollupSize(FileSize);
+      end;
+    end
+    else
+      S := '';
+    S := S + ' -' + RollupSize(AReaded);
+    if ATotal > 0 then
+      Caption := S + '/' + RollupSize(ATotal)
+    else
+      Caption := S;
+  end;
 end;
 
 procedure TForm2.DoRedirect(ASender: TObject; var Allow: Boolean);
@@ -197,6 +202,8 @@ begin
       StopTime));
     Memo1.Lines.Add('Sent bytes:' + RollupSize(SentBytes));
     Memo1.Lines.Add('Recv bytes:' + RollupSize(RecvBytes));
+    if IsAborted then
+      Memo1.Lines.Add('Aborted');
   end;
 end;
 

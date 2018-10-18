@@ -10,4 +10,33 @@ object frmDBTree: TfrmDBTree
   FormFactor.Devices = [Desktop]
   OnCreate = FormCreate
   DesignerMasterStyle = 0
+  object vtDBTree: TQVirtualTreeView
+    SelectionColor = claLightblue
+    HoverColor = claLightpink
+    TintColor = claBlack
+    NodeIndent = 16.000000000000000000
+    Header.Columns = <>
+    Header.Options = [hoResizable]
+    Header.MasterColumn = 0
+    Header.AutoSizeColumn = -1
+    Header.Height = 20.000000000000000000
+    DefaultRowHeight = 20.000000000000000000
+    Options = []
+    PaintOptions = [poTreeLine, poRowSelection, poNodeButton]
+    RootNodeCount = 0
+    ColSpace = 1.000000000000000000
+    RowSpace = 1.000000000000000000
+    Align = Client
+    HitTest = True
+    Size.Width = 640.000000000000000000
+    Size.Height = 480.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+  end
+  object QVTDBAdapter1: TQVTDBAdapter
+    TreeView = vtDBTree
+    AddOrphanAsRoot = False
+    Left = 304
+    Top = 224
+  end
 end

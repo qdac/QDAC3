@@ -7,7 +7,7 @@ uses
   System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls,
   Vcl.ExtCtrls, qmsgpack,
-  Vcl.Buttons, clTcpClient, clSFtp, VirtualTrees;
+  Vcl.Buttons, VirtualTrees, ScSFTPClient, ScSSHClient;
 
 type
   TfrmSftpBrowser = class(TForm)
@@ -28,9 +28,10 @@ type
     Label3: TLabel;
     edtPass: TEdit;
     btnConnect: TButton;
-    sftpClient: TclSFtp;
     tvDirList: TTreeView;
     edtServer: TEdit;
+    sftpClient: TScSFTPClient;
+    sshClient: TScSSHClient;
     procedure btnConnectClick(Sender: TObject);
     procedure tvDirListExpanding(Sender: TObject; Node: TTreeNode;
       var AllowExpansion: Boolean);
@@ -107,11 +108,11 @@ procedure TfrmSftpBrowser.btnConnectClick(Sender: TObject);
 begin
   if Assigned(FActiveSession) then
     SaveActiveSession;
-  sftpClient.Close;
-  sftpClient.Server := edtServer.Text;
-  sftpClient.UserName := edtUser.Text;
-  sftpClient.Password := edtPass.Text;
-  sftpClient.Open;
+  sftpClient.Disconnect;
+  sshClient.HostName := edtServer.Text;
+  sshClient.User := edtUser.Text;
+  sshClient.Password := edtPass.Text;
+  sshClient.Connect;
   SaveSession;
   tvDirList.Items.Clear;
   pcSession.ActivePage := tsDirectory;
@@ -339,7 +340,7 @@ var
 
 begin
   if not Assigned(ANode) then
-    ADir := sftpClient.CurrentDir
+    ADir := '/'
   else
     ADir := GetNodePath;
   if sftpClient.CurrentDir <> ADir then
@@ -416,7 +417,7 @@ begin
     APath := ExtractFilePath(Application.ExeName);
     GetTempFileName(PChar(APath), 'sf', 0, PChar(@AName[0]));
     ATempFile := PChar(@AName[0]);
-    sftpClient.GetFile(AListItem.Caption, ATempFile);
+    sftpClient.DownloadFile(AListItem.Caption, ATempFile,true);
     frmLogViewer.edtLogFile.Text := ATempFile;
     frmLogViewer.OpenLog;
     frmLogViewer.DeleteFileBeforeClose := true;

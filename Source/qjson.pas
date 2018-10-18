@@ -2636,6 +2636,7 @@ begin
   if ADataType <> jdtUnknown then
     DataType := ADataType;
   Value := AValue;
+//  DebugOut('Create Json Object %x', [IntPtr(Self)]);
 end;
 
 function TQJson.CreateJson: TQJson;
@@ -2651,6 +2652,7 @@ begin
   inherited;
   FCommentStyle := jcsInherited;
   FIgnoreCase := not JsonCaseSensitive;
+//  DebugOut('Create Json Object %x', [IntPtr(Self)]);
 end;
 
 function TQJson.DateTimeByName(AName: QStringW; ADefVal: TDateTime): TDateTime;
@@ -2763,11 +2765,8 @@ end;
 
 destructor TQJson.Destroy;
 begin
-  if DataType in [jdtArray, jdtObject] then
-  begin
-    Clear;
-    FreeObject(FItems);
-  end;
+//  DebugOut('Free Json object %s %s', [IntToHex(IntPtr(Self), 8), Path]);
+  ResetNull;
   inherited;
 end;
 
@@ -4443,7 +4442,7 @@ end;
 function TQJson.InternalGetAsBytes(AConverter: TQJsonDecodeBytesEvent;
   AEncoding: TTextEncoding; AWriteBom: Boolean): TBytes;
 var
-  I, c: Integer;
+  I: Integer;
   AItem: TQJson;
   function StrToBytes: TBytes;
   var
@@ -4461,38 +4460,51 @@ var
       if AEncoding = teUtf8 then
       begin
         U := qstring.Utf8Encode(V);
-        c := U.Length;
         if AWriteBom then
         begin
-          SetLength(Result, c + 3);
+          SetLength(Result, U.Length + 3);
           // 前面加上UTF8的BOM
           Result[0] := $EF;
           Result[1] := $BB;
           Result[2] := $BF;
-          Move(PQCharA(U)^, Result[3], c);
+          Move(PQCharA(U)^, Result[3], U.Length);
         end
         else
           Result := U;
       end
       else if AEncoding = teAnsi then // ANSI没有 BOM 头，所以忽略
         Result := AnsiEncode(V)
-      else
+      else if AEncoding = teUnicode16BE then
       begin
-        C:=Length(V) shl 1;
         if AWriteBom then
         begin
-          SetLength(Result, C + 2);
-          Move(PWideChar(V)^, Result[2], C);
+          SetLength(Result, Length(V) shl 1 + 2);
+          Move(PWideChar(V)^, Result[2], Length(Result));
+          ExchangeByteOrder(PQCharA(@Result[2]), Length(Result));
+          Result[0] := $FE;
+          Result[1] := $FF;
+        end
+        else
+        begin
+          SetLength(Result, Length(V) shl 1);
+          Move(PWideChar(V)^, Result[0], Length(Result));
+          ExchangeByteOrder(PQCharA(@Result[0]), Length(Result));
+        end;
+      end
+      else
+      begin
+        if AWriteBom then
+        begin
+          SetLength(Result, Length(V) shl 1 + 2);
+          Move(PWideChar(V)^, Result[2], Length(Result));
           Result[0] := $FF;
           Result[1] := $FE;
         end
         else
         begin
-          SetLength(Result, C);
-          Move(PWideChar(V)^, Result[0], C);
+          SetLength(Result, Length(V) shl 1);
+          Move(PWideChar(V)^, Result[0], Length(Result));
         end;
-        if AEncoding = teUnicode16BE then
-          ExchangeByteOrder(PQCharA(@Result[0]), Length(Result));
       end;
     end;
   end;
@@ -6515,9 +6527,10 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
   var
     AProp: PPropInfo;
     ACount: Integer;
-    J: Integer;
+    J, V: Integer;
     AObj, AChildObj: TObject;
     AChild: TQJson;
+    AIdentToInt: TIdentToInt;
   begin
     AObj := ADest;
     ACount := Count;
@@ -6551,7 +6564,19 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
                   AProp.PropType^);
               end;
             tkInteger:
-              SetOrdProp(AObj, AProp, AChild.AsInteger);
+              begin
+                if AChild.DataType = jdtString then
+                begin
+                  AIdentToInt := FindIdentToInt(AProp.PropType^);
+                  if Assigned(AIdentToInt) then
+                  begin
+                    if AIdentToInt(AChild.AsString, V) then
+                      SetOrdProp(AObj, AProp, V);
+                  end;
+                end
+                else
+                  SetOrdProp(AObj, AProp, AChild.AsInteger);
+              end;
             tkFloat:
               begin
                 if (AProp.PropType^ = TypeInfo(TDateTime)) or

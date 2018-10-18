@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899-12-30 00:00:00.000.830,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.555,C:\User\QDAC\Source\dgbuiler.dproj=C:\User\dialgBuilder\dailogBuilder.dproj</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.337,C:\User\QDAC\Source\vcl.qdialog_buillder.pas=C:\User\QDAC\Source\qdialog_buillder.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.367,C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Project1.dproj=C:\User\QDAC\Source\dgbuiler.dproj</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.675,C:\User\QDAC\Source\qdialog_buillder.pas=C:\User\QDAC\Source\qdialog_builder.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.904,C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit2.pas=C:\User\QDAC\Source\vcl.qdialog_buillder.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.498,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.708,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.314,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.343,C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.dfm=C:\User\dialgBuilder\Unit1.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.343,C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas=C:\User\dialgBuilder\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.092,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+  </Transactions>
+</BorlandProject>

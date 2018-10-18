@@ -5,6 +5,7 @@
     <Transaction>1899-12-30 00:00:00.000.160,C:\Users\swish\Documents\Embarcadero\Studio\Projects\Project3.dproj=H:\User\QDAC\Demos\Delphi\FMX\VirtualTreeView\areatree\areatree.dproj</Transaction>
   </Transactions>
 	<ActiveMobileDevice>
-		<POSX iOSSimulator="iPhone5"/>  <NoProfile Android="CJL5T15B18044567"/>
-  </ActiveMobileDevice>
+		<POSX iOSSimulator="iPhone5"/>
+		<NoProfile Android=""/>
+	</ActiveMobileDevice>
 </BorlandProject>

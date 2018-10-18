@@ -225,7 +225,6 @@ type
     FSyncEvent: TEvent;
     FAcceptLevels: TQLogLevels;
     FEnabled: Boolean;
-
     procedure SetMode(const Value: TQLogMode);
     procedure Lock;
     procedure Unlock;
@@ -233,6 +232,8 @@ type
     function CreateCastor: TQLogCastor; virtual;
     function GetCastor: TQLogCastor;
     procedure WaitLogWrote;
+    procedure BeginWrite;
+    procedure EndWrite;
   public
     constructor Create; overload;
     destructor Destroy; override;
@@ -251,6 +252,8 @@ type
   TQLogWriter = class
   protected
     FCastor: TQLogCastor;
+    procedure BeginWrite; virtual;
+    procedure EndWrite; virtual;
   public
     constructor Create; overload;
     destructor Destroy; override;
@@ -406,6 +409,31 @@ type
     property TextEncoding: TTextEncoding read FTextEncoding
       write SetTextEncoding;
     property UseTCP: Boolean read FUseTCP write FUseTCP;
+  end;
+
+  PQLogTextItem = ^TQLogTextItem;
+
+  TQLogTextItem = record
+    Text: String;
+    Next: PQLogTextItem;
+  end;
+
+  TQLogStringsWriter = class(TQLogWriter)
+  private
+    FMaxItems: Integer;
+    FItems: TStrings;
+    FFirstItem, FLastItem: PQLogTextItem;
+    FBuffered: Integer;
+    FLocker: TCriticalSection;
+    procedure BeginWrite; override;
+    procedure EndWrite; override;
+    procedure DoItemsUpdated;
+  public
+    constructor Create;
+    function WriteItem(AItem: PQLogItem): Boolean; override;
+    procedure HandleNeeded; override;
+    property MaxItems: Integer read FMaxItems write FMaxItems;
+    property Items: TStrings read FItems write FItems;
   end;
 
 procedure PostLog(ALevel: TQLogLevel; const AMsg: QStringW); overload;
@@ -687,6 +715,11 @@ begin
 end;
 
 // TQLogWriter
+procedure TQLogWriter.BeginWrite;
+begin
+
+end;
+
 constructor TQLogWriter.Create;
 begin
   inherited;
@@ -695,6 +728,11 @@ end;
 destructor TQLogWriter.Destroy;
 begin
   inherited;
+end;
+
+procedure TQLogWriter.EndWrite;
+begin
+
 end;
 
 procedure TQLogWriter.HandleNeeded;
@@ -1100,19 +1138,23 @@ var
 begin
   while not Terminated do
   begin
-    if WaitForLog then
+    if WaitForLog and (FOwner.Count-FOwner.Flushed>0) then
     begin
-      FActiveLog := FetchNext;
-      // 开始写入日志
-      while FActiveLog <> nil do
-      begin
-        WriteItem;
-        APrior := FActiveLog;
-        FActiveLog := APrior.Next;
-        FreeItem(APrior);
-        Inc(FOwner.FFlushed);
+      FOwner.BeginWrite;
+      try
+        FActiveLog := FetchNext;
+        // 开始写入日志
+        while FActiveLog <> nil do
+        begin
+          WriteItem;
+          APrior := FActiveLog;
+          FActiveLog := APrior.Next;
+          FreeItem(APrior);
+          Inc(FOwner.FFlushed);
+        end;
+      finally
+        FOwner.EndWrite;
       end;
-      FOwner.FSyncEvent.SetEvent;
     end;
   end;
 end;
@@ -1289,6 +1331,18 @@ begin
   end;
 end;
 
+procedure TQLog.BeginWrite;
+var
+  AWriter: PLogWriterItem;
+begin
+  AWriter := FCastor.FirstWriter;
+  while Assigned(AWriter) do
+  begin
+    AWriter.Writer.BeginWrite;
+    AWriter := FCastor.NextWriter;
+  end;
+end;
+
 constructor TQLog.Create;
 begin
   inherited;
@@ -1323,6 +1377,19 @@ begin
   FreeObject(FCS);
   FreeObject(FSyncEvent);
   inherited;
+end;
+
+procedure TQLog.EndWrite;
+var
+  AWriter: PLogWriterItem;
+begin
+  FSyncEvent.SetEvent;
+  AWriter := FCastor.FirstWriter;
+  while Assigned(AWriter) do
+  begin
+    AWriter.Writer.EndWrite;
+    AWriter := FCastor.NextWriter;
+  end;
 end;
 
 function TQLog.GetCastor: TQLogCastor;
@@ -1764,6 +1831,115 @@ begin
   PostLog(llDebug, PQCharW(PerfTagStopFormat), [FTag,
 {$IF RTLVersion>=23}TThread.{$IFEND}GetTickCount - FStartTick]);
   inherited;
+end;
+
+{ TQLogStringsWriter }
+
+procedure TQLogStringsWriter.BeginWrite;
+begin
+  if Assigned(FItems) then
+    FItems.BeginUpdate;
+end;
+
+constructor TQLogStringsWriter.Create;
+begin
+  inherited;
+  FLocker := TCriticalSection.Create;
+end;
+
+procedure TQLogStringsWriter.DoItemsUpdated;
+var
+  I: Integer;
+  ADelta: Integer;
+  AItem: PQLogTextItem;
+begin
+  if Assigned(FItems) then
+  begin
+    FLocker.Enter;
+    try
+      if FMaxItems > 0 then
+      begin
+        FItems.Capacity := FMaxItems;
+        AItem := FFirstItem;
+        while FBuffered > FMaxItems do
+        begin
+          FFirstItem := AItem.Next;
+          Dispose(AItem);
+          AItem := FFirstItem;
+          Dec(FBuffered);
+        end;
+        ADelta := FItems.Count + FBuffered - FMaxItems;
+        if ADelta > 0 then
+        begin
+          I := ADelta;
+          while I < FItems.Count do
+          begin
+            FItems[I - ADelta] := FItems[I];
+            Inc(I);
+          end;
+          Dec(I, ADelta);
+          while Assigned(AItem) do
+          begin
+            FItems[I] := AItem.Text;
+            FFirstItem := AItem.Next;
+            Dispose(AItem);
+            AItem := FFirstItem;
+            Inc(I);
+          end;
+        end
+        else
+        begin
+          while Assigned(AItem) do
+          begin
+            FItems.Add(AItem.Text);
+            FFirstItem := AItem.Next;
+            Dispose(AItem);
+            AItem := FFirstItem;
+          end;
+        end;
+      end;
+      FLastItem := nil;
+      FBuffered:=0;
+    finally
+      FLocker.Leave;
+      FItems.EndUpdate;
+    end;
+  end;
+end;
+
+procedure TQLogStringsWriter.EndWrite;
+begin
+  if Assigned(FItems) then
+  begin
+    TThread.Queue(nil, DoItemsUpdated);
+  end;
+end;
+
+procedure TQLogStringsWriter.HandleNeeded;
+begin
+  // 不需要
+end;
+
+function TQLogStringsWriter.WriteItem(AItem: PQLogItem): Boolean;
+var
+  ATextItem: PQLogTextItem;
+begin
+  New(ATextItem);
+  ATextItem.Next := nil;
+  ATextItem.Text := '[' + IntToStr(AItem.ThreadId) + ']' +
+    FormatDateTime('hh:nn:ss.zz', AItem.TimeStamp) + ' ' + LogLevelText
+    [AItem.Level] + ':' + StrDupX(@AItem.Text[0], AItem.MsgLen shr 1);
+  FLocker.Enter;
+  try
+    if Assigned(FLastItem) then
+      FLastItem.Next := ATextItem
+    else
+      FFirstItem := ATextItem;
+    FLastItem := ATextItem;
+    Inc(FBuffered);
+  finally
+    FLocker.Leave;
+  end;
 end;
 
 initialization

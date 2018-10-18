@@ -116,11 +116,18 @@ begin
   AParams.Add('Text', ptUnicodeString).AsString :=
     PluginsManager.NewString('Hello,world');
   (PluginsManager as IQWorkers)
-    .Post(TSimpleJobA.Create(procedure(AParams: IQParams)var I: Integer;
-  begin Memo1.Lines.BeginUpdate;
-    try for I := 0 to AParams.Count - 1 do Memo1.Lines.Add(Format('%s - %s',
-    [AParams[I].Name, AParams[I].AsString.Value]));
-    finally Memo1.Lines.EndUpdate; end; end), AParams, true);
+    .Post(TSimpleJobA.Create(
+    procedure(AParams: IQParams)
+    var I: Integer;
+    begin
+      Memo1.Lines.BeginUpdate;
+      try
+        for I := 0 to AParams.Count - 1 do
+        Memo1.Lines.Add(Format('%s - %s',[AParams[I].Name, AParams[I].AsString.Value]));
+    finally
+      Memo1.Lines.EndUpdate;
+    end;
+  end), AParams, true);
 end;
 
 { TSimpleJobA }
