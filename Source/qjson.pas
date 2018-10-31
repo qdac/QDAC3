@@ -517,19 +517,20 @@ type
     jmsMatchValue);
   TQJsonMatchSettings = set of TQJsonMatchSetting;
   TQJsonContainerEnumerator = class;
-
+  IQJsonContainer=interface;
   IQJsonContainer = interface
     ['{C9FF8471-19FC-435A-B1A7-21F0D5206720}']
     function GetCount: Integer;
     function GetItems(const AIndex: Integer): TQJson;
+    {$IFDEF UNICODE}
     function ForEach(ACallback: TQJsonForEachCallback; ATag: Pointer = nil)
       : IQJsonContainer; overload;
-{$IFDEF UNICODE}
+
     function ForEach(ACallback: TQJsonForEachCallbackA)
       : IQJsonContainer; overload;
     function Match(const AFilter: TQJsonMatchFilterCallbackA;
       ATag: Pointer = nil): IQJsonContainer; overload;
-{$ENDIF}
+
     function Match(const ARegex: QStringW; ASettings: TQJsonMatchSettings)
       : IQJsonContainer; overload;
     function Match(const AIndexes: array of Integer): IQJsonContainer; overload;
@@ -537,6 +538,7 @@ type
       : IQJsonContainer; overload;
     function Match(const AFilter: TQJsonMatchFilterCallback;
       ATag: Pointer = nil): IQJsonContainer; overload;
+    {$ENDIF}
     function GetEnumerator: TQJsonContainerEnumerator;
     function GetIsEmpty: Boolean;
     property Items[const AIndex: Integer]: TQJson read GetItems; default;
@@ -661,7 +663,6 @@ type
     function CreateJson: TQJson; virtual;
     procedure FreeJson(AJson: TQJson); inline;
     procedure CopyValue(ASource: TQJson); inline;
-    procedure Replace(AIndex: Integer; ANewItem: TQJson); virtual;
     procedure InternalRttiFilter(ASender: TQJson; AObject: Pointer;
       APropName: QStringW; APropType: PTypeInfo; var Accept: Boolean;
       ATag: Pointer);
@@ -676,12 +677,12 @@ type
     function GetAsBytes: TBytes;
     procedure SetAsBytes(const Value: TBytes);
     class function SkipSpaceAndComment(var p: PQCharW; var AComment: QStringW;
-      lastvalidchar: Char = #0): Integer;
+      lastvalidchar: QCharW = #0): Integer;
     procedure DoParsed; virtual;
     procedure SetIgnoreCase(const Value: Boolean);
     function HashName(const S: QStringW): TQHashType;
     procedure HashNeeded; inline;
-    procedure FromType(const AValue: String; AType: TQJsonDataType);
+    procedure FromType(const AValue: QStringW; AType: TQJsonDataType);
     function GetRoot: TQJson;
     function DoCompareName(Item1, Item2: Pointer): Integer;
     function DoCompareValueBoolean(Item1, Item2: Pointer): Integer;
@@ -1279,6 +1280,7 @@ type
       : QStringW; overload;
     class function JsonUnescape(const S: QStringW): QStringW;
     class function EncodeDateTime(const AValue: TDateTime): QStringW;
+    procedure Replace(AIndex: Integer; ANewItem: TQJson); virtual;
     /// <summary>父结点</summary>
     property Parent: TQJson read FParent;
     /// <summary>结点类型</summary>
@@ -1376,13 +1378,13 @@ type
   protected
     FHashTable: TQHashTable;
     function CreateJson: TQJson; override;
-    procedure Replace(AIndex: Integer; ANewItem: TQJson); override;
     procedure DoJsonNameChanged(AJson: TQJson); override;
     procedure DoParsed; override;
   public
     constructor Create; overload;
     destructor Destroy; override;
     procedure Assign(ANode: TQJson); override;
+    procedure Replace(AIndex: Integer; ANewItem: TQJson); override;
     function IndexOf(const AName: QStringW): Integer; override;
     function ItemByName(AName: QStringW): TQJson; overload; override;
     function Remove(AIndex: Integer): TQJson; override;
@@ -2636,7 +2638,7 @@ begin
   if ADataType <> jdtUnknown then
     DataType := ADataType;
   Value := AValue;
-//  DebugOut('Create Json Object %x', [IntPtr(Self)]);
+  // DebugOut('Create Json Object %x', [IntPtr(Self)]);
 end;
 
 function TQJson.CreateJson: TQJson;
@@ -2652,7 +2654,7 @@ begin
   inherited;
   FCommentStyle := jcsInherited;
   FIgnoreCase := not JsonCaseSensitive;
-//  DebugOut('Create Json Object %x', [IntPtr(Self)]);
+  // DebugOut('Create Json Object %x', [IntPtr(Self)]);
 end;
 
 function TQJson.DateTimeByName(AName: QStringW; ADefVal: TDateTime): TDateTime;
@@ -2765,7 +2767,7 @@ end;
 
 destructor TQJson.Destroy;
 begin
-//  DebugOut('Free Json object %s %s', [IntToHex(IntPtr(Self), 8), Path]);
+  // DebugOut('Free Json object %s %s', [IntToHex(IntPtr(Self), 8), Path]);
   ResetNull;
   inherited;
 end;
@@ -3267,7 +3269,7 @@ begin
     FreeObject(AJson);
 end;
 
-procedure TQJson.FromType(const AValue: String; AType: TQJsonDataType);
+procedure TQJson.FromType(const AValue: QStringW; AType: TQJsonDataType);
 var
   p: PQCharW;
   ABuilder: TQStringCatHelperW;
@@ -4479,7 +4481,7 @@ var
         if AWriteBom then
         begin
           SetLength(Result, Length(V) shl 1 + 2);
-          Move(PWideChar(V)^, Result[2], Length(Result));
+          Move(PWideChar(V)^, Result[2], Length(Result) - 2);
           ExchangeByteOrder(PQCharA(@Result[2]), Length(Result));
           Result[0] := $FE;
           Result[1] := $FF;
@@ -4496,7 +4498,7 @@ var
         if AWriteBom then
         begin
           SetLength(Result, Length(V) shl 1 + 2);
-          Move(PWideChar(V)^, Result[2], Length(Result));
+          Move(PWideChar(V)^, Result[2], Length(Result) - 2);
           Result[0] := $FF;
           Result[1] := $FE;
         end
@@ -5883,7 +5885,7 @@ begin
 end;
 
 class function TQJson.SkipSpaceAndComment(var p: PQCharW;
-  var AComment: QStringW; lastvalidchar: Char = #0): Integer;
+  var AComment: QStringW; lastvalidchar: QCharW = #0): Integer;
 var
   ps: PQCharW;
 begin
@@ -8057,7 +8059,6 @@ var
   I, c: Integer;
   T: TQJsonContainer;
 begin
-  I := 0;
   T := TQJsonContainer.Create;
   Result := T;
   c := FItems.Count;
@@ -8078,7 +8079,6 @@ var
   procedure DoMatch(AJson: TQJson);
   var
     J: Integer;
-    Accept: Boolean;
   begin
     if jmsMatchName in ASettings then
     begin

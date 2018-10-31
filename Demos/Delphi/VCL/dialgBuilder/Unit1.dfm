@@ -119,4 +119,13 @@ object Form1: TForm1
     TabOrder = 10
     OnClick = Button11Click
   end
+  object Button12: TButton
+    Left = 439
+    Top = 112
+    Width = 120
+    Height = 32
+    Caption = 'Animate Gauge'
+    TabOrder = 11
+    OnClick = Button12Click
+  end
 end

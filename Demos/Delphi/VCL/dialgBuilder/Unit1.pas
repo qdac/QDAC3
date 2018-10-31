@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.Types, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
-  qdialog_builder, Vcl.ComCtrls;
+  qdialog_builder, Vcl.ComCtrls, Vcl.Samples.Gauges;
 
 type
   TForm1 = class(TForm)
@@ -22,6 +22,7 @@ type
     Button9: TButton;
     Button10: TButton;
     Button11: TButton;
+    Button12: TButton;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -33,6 +34,7 @@ type
     procedure Button9Click(Sender: TObject);
     procedure Button10Click(Sender: TObject);
     procedure Button11Click(Sender: TObject);
+    procedure Button12Click(Sender: TObject);
   private
     { Private declarations }
     FBuilder: IDialogBuilder;
@@ -98,6 +100,55 @@ begin
     end;
   end;
   ABuilder._Release;
+end;
+
+procedure TForm1.Button12Click(Sender: TObject);
+var
+  ABuilder: IDialogBuilder;
+  I, T, ADelta: Integer;
+  AGauges: array [0 .. 5] of TGauge;
+  J: Integer;
+begin
+  ABuilder := NewDialog;
+  ABuilder.AutoSize := True;
+  ABuilder.Dialog.Padding.Left := 5;
+  ABuilder.Dialog.Padding.Top := 5;
+  ABuilder.Dialog.Padding.Right := 5;
+  ABuilder.Dialog.Padding.Bottom := 5;
+  for I := 0 to 5 do
+  begin
+    with ABuilder.AddContainer(amHorizLeft) do
+    begin
+      AutoSize := True;
+      with TLabel(AddControl(TLabel).Control) do
+      begin
+        Caption := '½ø¶È ' + IntToStr(I);
+        Layout := tlCenter;
+      end;
+      AGauges[I] := TGauge(AddControl(TGauge).Control);
+      with AGauges[I] do
+      begin
+        Progress := random(100);
+        Height := 10;
+      end;
+    end;
+  end;
+  ABuilder.Popup(Button12);
+  T := Button12.Top;
+  for I := 0 to 99 do
+  begin
+    Application.ProcessMessages;
+    Sleep(10);
+    if (I mod 10) = 0 then
+    begin
+      for J := 0 to 5 do
+        AGauges[J].Progress := random(100);
+    end;
+    if I < 50 then
+      Button12.Top := Button12.Top + 1
+    else
+      Button12.Top := Button12.Top - 1;
+  end;
 end;
 
 procedure TForm1.Button1Click(Sender: TObject);

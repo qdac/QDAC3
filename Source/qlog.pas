@@ -254,6 +254,7 @@ type
     FCastor: TQLogCastor;
     procedure BeginWrite; virtual;
     procedure EndWrite; virtual;
+    procedure LazyWrite; virtual;
   public
     constructor Create; overload;
     destructor Destroy; override;
@@ -289,6 +290,8 @@ type
 
   // 日志广播对象，用于将日志传送到相应的对象，如本地系统文件或者是远程日志对象
   TQLogCastor = class(TThread)
+  private
+    FLazyInterval: Cardinal;
   protected
     FLastError: Cardinal;
     FLastErrorMsg: QStringW;
@@ -315,6 +318,7 @@ type
     procedure AddWriter(AWriter: TQLogWriter);
     procedure RemoveWriter(AWriter: TQLogWriter);
     property ActiveLog: PQLogItem read FActiveLog;
+    property LazyInterval: Cardinal read FLazyInterval write FLazyInterval;
 {$IFNDEF UNICODE}
     property Finished: Boolean read GetFinished;
 {$ENDIF}
@@ -424,16 +428,22 @@ type
     FItems: TStrings;
     FFirstItem, FLastItem: PQLogTextItem;
     FBuffered: Integer;
+    FLastFlush: Cardinal;
     FLocker: TCriticalSection;
+    FLazyMode: Boolean;
     procedure BeginWrite; override;
     procedure EndWrite; override;
     procedure DoItemsUpdated;
+    procedure LazyWrite; override;
+    procedure FlushLogs;
+    procedure SetLazyMode(const Value: Boolean);
   public
     constructor Create;
     function WriteItem(AItem: PQLogItem): Boolean; override;
     procedure HandleNeeded; override;
     property MaxItems: Integer read FMaxItems write FMaxItems;
     property Items: TStrings read FItems write FItems;
+    property LazyMode: Boolean read FLazyMode write SetLazyMode;
   end;
 
 procedure PostLog(ALevel: TQLogLevel; const AMsg: QStringW); overload;
@@ -738,6 +748,11 @@ end;
 procedure TQLogWriter.HandleNeeded;
 begin
   raise EXCEPTIOn.Create(SHandleNeeded);
+end;
+
+procedure TQLogWriter.LazyWrite;
+begin
+  // 啥也不干，反正我也不知道该干啥
 end;
 
 function TQLogWriter.WriteItem(AItem: PQLogItem): Boolean;
@@ -1138,7 +1153,7 @@ var
 begin
   while not Terminated do
   begin
-    if WaitForLog and (FOwner.Count-FOwner.Flushed>0) then
+    if WaitForLog and (FOwner.Count - FOwner.Flushed > 0) then
     begin
       FOwner.BeginWrite;
       try
@@ -1267,8 +1282,27 @@ begin
 end;
 
 function TQLogCastor.WaitForLog: Boolean;
+var
+  AResult: TWaitResult;
 begin
-  Result := (FNotifyHandle.WaitFor(INFINITE) = wrSignaled);
+  if LazyInterval > 0 then
+  begin
+    repeat
+      AResult := FNotifyHandle.WaitFor(LazyInterval);
+      if AResult = wrTimeout then
+      begin
+        FirstWriter;
+        while Assigned(FActiveWriter) do
+        begin
+          FActiveWriter.Writer.LazyWrite;
+          NextWriter;
+        end;
+      end;
+    until (AResult = wrSignaled) or Terminated;
+    Result := AResult = wrSignaled;
+  end
+  else
+    Result := (FNotifyHandle.WaitFor(INFINITE) = wrSignaled);
 end;
 
 { TQLog }
@@ -1837,8 +1871,7 @@ end;
 
 procedure TQLogStringsWriter.BeginWrite;
 begin
-  if Assigned(FItems) then
-    FItems.BeginUpdate;
+
 end;
 
 constructor TQLogStringsWriter.Create;
@@ -1848,13 +1881,30 @@ begin
 end;
 
 procedure TQLogStringsWriter.DoItemsUpdated;
+begin
+  if (not LazyMode) or ({$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount -
+    FLastFlush > 100) then
+    FlushLogs;
+end;
+
+procedure TQLogStringsWriter.EndWrite;
+begin
+  if Assigned(FItems) then
+  begin
+    TThread.Queue(nil, DoItemsUpdated);
+  end;
+end;
+
+procedure TQLogStringsWriter.FlushLogs;
 var
   I: Integer;
   ADelta: Integer;
   AItem: PQLogTextItem;
 begin
+  FLastFlush := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
   if Assigned(FItems) then
   begin
+    FItems.BeginUpdate;
     FLocker.Enter;
     try
       if FMaxItems > 0 then
@@ -1868,6 +1918,18 @@ begin
           AItem := FFirstItem;
           Dec(FBuffered);
         end;
+        ADelta := FItems.Count - FMaxItems;
+        if ADelta > 0 then
+        begin
+          I := 0;
+          while I < FMaxItems do
+          begin
+            FItems[I] := FItems[I + ADelta];
+            Inc(I);
+          end;
+          while FItems.Count > FMaxItems do
+            FItems.Delete(FItems.Count - 1);
+        end;
         ADelta := FItems.Count + FBuffered - FMaxItems;
         if ADelta > 0 then
         begin
@@ -1878,7 +1940,7 @@ begin
             Inc(I);
           end;
           Dec(I, ADelta);
-          while Assigned(AItem) do
+          while Assigned(AItem) and (I < FItems.Count) do
           begin
             FItems[I] := AItem.Text;
             FFirstItem := AItem.Next;
@@ -1886,20 +1948,17 @@ begin
             AItem := FFirstItem;
             Inc(I);
           end;
-        end
-        else
+        end;
+        while Assigned(AItem) do
         begin
-          while Assigned(AItem) do
-          begin
-            FItems.Add(AItem.Text);
-            FFirstItem := AItem.Next;
-            Dispose(AItem);
-            AItem := FFirstItem;
-          end;
+          FItems.Add(AItem.Text);
+          FFirstItem := AItem.Next;
+          Dispose(AItem);
+          AItem := FFirstItem;
         end;
       end;
       FLastItem := nil;
-      FBuffered:=0;
+      FBuffered := 0;
     finally
       FLocker.Leave;
       FItems.EndUpdate;
@@ -1907,17 +1966,25 @@ begin
   end;
 end;
 
-procedure TQLogStringsWriter.EndWrite;
-begin
-  if Assigned(FItems) then
-  begin
-    TThread.Queue(nil, DoItemsUpdated);
-  end;
-end;
-
 procedure TQLogStringsWriter.HandleNeeded;
 begin
   // 不需要
+end;
+
+procedure TQLogStringsWriter.LazyWrite;
+begin
+  if LazyMode and (FBuffered > 0) then
+    FlushLogs;
+end;
+
+procedure TQLogStringsWriter.SetLazyMode(const Value: Boolean);
+begin
+  if FLazyMode <> Value then
+  begin
+    FLazyMode := Value;
+    if Value then // 如果是懒人模式，则延迟100ms写入
+      Logs.Castor.LazyInterval := 100;
+  end;
 end;
 
 function TQLogStringsWriter.WriteItem(AItem: PQLogItem): Boolean;

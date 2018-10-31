@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2018/09/18 20:29:43.000.407,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2018/10/14 12:31:26.000.934,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2018/10/14 12:32:50.000.581,C:\user\QDAC\Demos\Delphi\VCL\QLogStringsWriter\Unit1.dfm=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.dfm</Transaction>
+    <Transaction>2018/10/14 12:32:50.000.581,C:\user\QDAC\Demos\Delphi\VCL\QLogStringsWriter\Unit1.pas=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2018/10/14 12:32:55.000.060,C:\user\QDAC\Demos\Delphi\VCL\QLogStringsWriter\strwriter.dproj=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+  </Transactions>
+</BorlandProject>

@@ -319,14 +319,19 @@ type
 {$ELSE}
   QStringW = WideString;
 {$ENDIF UNICODE}
-{$IF RTLVersion>=21}
-  TValueArray = array of TValue;
-{$IFEND >=2010}
 {$IF RTLVersion<25}
   IntPtr = Integer;
   IntUPtr = Cardinal;
   UIntPtr = Cardinal;
 {$IFEND IntPtr}
+{$IF RTLVersion>=21}
+  TValueArray = TArray<TValue>;
+  TIntArray = TArray<Integer>;
+  TQStringArray = TArray<QStringW>;
+{$ELSE}
+  TIntArray = array of Integer;
+  TQStringArray = array of QStringW;
+{$IFEND >=2010}
   // {$IF RTLVersion<=18}
   // DWORD_PTR = DWORD;
   // ULONGLONG = Int64;
@@ -1026,6 +1031,8 @@ function CharCountU(const source: QStringA): Integer;
 function CharCodeA(c: PQCharA): Cardinal;
 function CharCodeU(c: PQCharA): Cardinal;
 function CharCodeW(c: PQCharW): Cardinal;
+function CharAdd(const w: WideChar; ADelta: Integer): WideChar; inline;
+function CharDelta(const c1, c2: WideChar): Integer; inline;
 // 检查字符是否在指定的列表中
 function CharInA(const c: PQCharA; const List: array of QCharA;
   ACharLen: PInteger = nil): Boolean;
@@ -1104,6 +1111,9 @@ function SplitTokenW(AList: TStrings; p: PQCharW; ADelimiters: PQCharW;
   AQuoter: QCharW; AIgnoreSpace: Boolean): Integer; overload;
 function SplitTokenW(AList: TStrings; const S: QStringW; ADelimiters: PQCharW;
   AQuoter: QCharW; AIgnoreSpace: Boolean): Integer; overload;
+function SplitTokenW(const S: QStringW; ADelimiters: PQCharW; AQuoter: QCharW;
+  AIgnoreSpace: Boolean): TQStringArray; overload;
+
 function StrBeforeW(var source: PQCharW; const ASpliter: QStringW;
   AIgnoreCase, ARemove: Boolean; AMustMatch: Boolean = false)
   : QStringW; overload;
@@ -1561,6 +1571,8 @@ function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW;
 function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW = ':')
   : QStringW; overload;
 
+function MonthFirstDay(ADate: TDateTime): TDateTime;
+
 var
   JavaFormatUtf8: Boolean;
   IsFMXApp: Boolean;
@@ -1608,11 +1620,6 @@ type
   end;
 
   TStrStrFunction = function(s1, s2: PQCharW): PQCharW;
-{$IF RTLVersion>=21}
-  TIntArray = TArray<Integer>;
-{$ELSE}
-  TIntArray = array of Integer;
-{$IFEND >=2010}
 {$IFDEF MSWINDOWS}
   TMSVCStrStr = function(s1, s2: PQCharA): PQCharA; cdecl;
   TMSVCStrStrW = function(s1, s2: PQCharW): PQCharW; cdecl;
@@ -2402,6 +2409,16 @@ begin
   end
   else
     Result := Ord(c^);
+end;
+
+function CharAdd(const w: WideChar; ADelta: Integer): WideChar;
+begin
+  Result := WideChar(Ord(w) + ADelta);
+end;
+
+function CharDelta(const c1, c2: WideChar): Integer;
+begin
+  Result := Ord(c1) - Ord(c2);
 end;
 
 function CharCountA(const source: QStringA): Integer;
@@ -3468,6 +3485,24 @@ begin
   Result := SplitTokenW(AList, PQCharW(S), ADelimiters, AQuoter, AIgnoreSpace);
 end;
 
+function SplitTokenW(const S: QStringW; ADelimiters: PQCharW; AQuoter: QCharW;
+  AIgnoreSpace: Boolean): TQStringArray;
+var
+  l: Integer;
+  p: PQCharW;
+begin
+  SetLength(Result, 4);
+  l := 0;
+  p := PQCharW(S);
+  repeat
+    Result[l] := DecodeTokenW(p, ADelimiters, AQuoter, AIgnoreSpace);
+    Inc(l);
+    if (l = Length(Result)) and (p^ <> #0) then
+      SetLength(Result, l + 4);
+  until p^ = #0;
+  SetLength(Result, l);
+end;
+
 function StrBeforeW(var source: PQCharW; const ASpliter: QStringW;
   AIgnoreCase, ARemove: Boolean; AMustMatch: Boolean = false): QStringW;
 var
@@ -3634,7 +3669,8 @@ begin
   begin
     Move(Result.FValue[Result.Length - AMaxSize + 3], Result.FValue[4],
       AMaxSize - 3);
-    Result.FValue[1] := $2E; // ...
+    Result.FValue[1] := $2E;
+    // ...
     Result.FValue[2] := $2E;
     Result.FValue[3] := $2E;
   end;
@@ -3651,7 +3687,8 @@ begin
     begin
       Move(Result.FValue[Result.Length - AMaxSize + 3], Result.FValue[4],
         AMaxSize - 3);
-      Result.FValue[1] := $2E; // ...
+      Result.FValue[1] := $2E;
+      // ...
       Result.FValue[2] := $2E;
       Result.FValue[3] := $2E;
     end;
@@ -4551,7 +4588,8 @@ begin
         Dec(l, 2);
         while I <= l do
         begin
-          if (pAnsi^ and $80) <> 0 then // 高位为1
+          if (pAnsi^ and $80) <> 0 then
+          // 高位为1
           begin
             if (l - I >= 4) then
             begin
@@ -4586,7 +4624,8 @@ begin
                 Break;
               end;
             end
-            else if PByte(IntPtr(pAnsi) + 1)^ = 0 then // xx 00 低位在前，是LE编码
+            else if PByte(IntPtr(pAnsi) + 1)^ = 0 then
+            // xx 00 低位在前，是LE编码
             begin
               Result := teUnicode16LE;
               Break;
@@ -5503,7 +5542,8 @@ var
   end;
   function FullToHalfChar(c: Word): QCharW;
   begin
-    if (c = $3000) then // 全角空格'　'
+    if (c = $3000) then
+      // 全角空格'　'
       Result := QCharW($20)
     else if (c >= $FF01) and (c <= $FF5E) then
       Result := QCharW($21 + (c - $FF01))
@@ -6254,7 +6294,8 @@ begin
   pds := pd;
   AIsHex := false;
   NegPosCheck;
-  if nftHexPrec in Accepts then // Check Hex prec
+  if nftHexPrec in Accepts then
+  // Check Hex prec
   begin
     if (p^ = '0') and (nftCHex in Accepts) then // C Style
     begin
@@ -7373,7 +7414,8 @@ begin
                   HexValue(p[4]));
                 Inc(p, 4);
               end;
-            'U': // \Uxxxxxxxx
+            'U':
+              // \Uxxxxxxxx
               begin
                 pd^ := WideChar((HexValue(p[1]) shl 12) or
                   (HexValue(p[2]) shl 8) or (HexValue(p[3]) shl 4) or
@@ -7434,7 +7476,8 @@ var
 begin
   if Length(S) > 0 then
   begin
-    System.SetLength(Result, Length(S) shl 3); // 转义串最长不超过8个字符，长度*8肯定够了
+    System.SetLength(Result, Length(S) shl 3);
+    // 转义串最长不超过8个字符，长度*8肯定够了
     p := PWideChar(S);
     pd := PWideChar(Result);
     while p^ <> #0 do
@@ -8041,7 +8084,8 @@ function DateTimeFromString(AStr: String; var AResult: TDateTime;
     Result := True;
     while (pf^ <> #0) and Result do
     begin
-      if (pf^ = 'y') or (pf^ = 'Y') then // 到了年份的部分
+      if (pf^ = 'y') or (pf^ = 'Y') then
+      // 到了年份的部分
       begin
         Result := DecodeTagValue(pf, ps, 'y', 'Y', Y, c, 4) and (c <> 3);
         if Result then
@@ -8127,7 +8171,8 @@ function DateTimeFromString(AStr: String; var AResult: TDateTime;
     begin
       if TryStrToInt64(AStr, V) then
       begin
-        if V > 235959 then // 大于这个的肯定不是时间，那么可能是yymmdd
+        if V > 235959 then
+        // 大于这个的肯定不是时间，那么可能是yymmdd
         begin
           if not DecodeAsFormat('yymmdd') then
             Result := false;
@@ -8148,11 +8193,13 @@ function DateTimeFromString(AStr: String; var AResult: TDateTime;
       Exit
     else if (l = 9) and DecodeAsFormat('hhnnsszzz') then
       Exit
-    else if l = 10 then // yyyy-mm-dd yyyy/mm/dd mm/dd/yyyy dd.mm.yyyy dd/mm/yy
+    else if l = 10 then
+    // yyyy-mm-dd yyyy/mm/dd mm/dd/yyyy dd.mm.yyyy dd/mm/yy
     begin
       p := ps;
       Inc(p, 2);
-      if (p^ < '0') or (p^ > '9') then // mm?dd?yyyy or dd?mm?yyyy
+      if (p^ < '0') or (p^ > '9') then
+      // mm?dd?yyyy or dd?mm?yyyy
       begin
         // dd mm yyyy 的国家居多，优先识别为这种
         if DecodeAsFormat('dd' + p^ + 'mm' + p^ + 'yyyy') or
@@ -8187,7 +8234,8 @@ function DateTimeFromString(AStr: String; var AResult: TDateTime;
 begin
   if Length(AFormat) > 0 then
     Result := DecodeAsFormat(AFormat)
-  else // 检测日期时间类型格式
+  else
+    // 检测日期时间类型格式
     SmartDetect;
 end;
 
@@ -12547,6 +12595,14 @@ end;
 function TQReadOnlyMemoryStream.Write(const Buffer; count: Longint): Longint;
 begin
   raise EStreamError.Create(SStreamReadOnly);
+end;
+
+function MonthFirstDay(ADate: TDateTime): TDateTime;
+var
+  Y, M, d: Word;
+begin
+  DecodeDate(ADate, Y, M, d);
+  Result := EncodeDate(Y, M, 1);
 end;
 
 initialization

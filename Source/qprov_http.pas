@@ -102,7 +102,7 @@ begin
       RaiseError(AJson);
   end
   else
-    SetError(0,'');
+    SetError(0, '');
 end;
 
 procedure TQHttpProvider.CloseHandle(AHandle: THandle);
@@ -319,6 +319,13 @@ var
       Result := 0
     else if ADef.DataType = ftGuid then
       Result := dsGuidStringLength
+    else if ADef.DataType = ftBcd then
+    begin
+      if AValue > 32 then
+        Result := 32
+      else
+        Result := AValue;
+    end
     else if AValue < 0 then
     begin
       if ADef.DataType in [ftString, ftWideString] then
@@ -328,6 +335,16 @@ var
     end
     else
       Result := AValue;
+  end;
+
+  function ForceInRange(const V, AMin, AMax: Integer): Integer;
+  begin
+    if V < AMin then
+      Result := AMin
+    else if V > AMax then
+      Result := AMax
+    else
+      Result := V;
   end;
 
   procedure LoadFieldDefs;

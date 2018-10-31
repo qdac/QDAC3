@@ -4,10 +4,10 @@ interface
 
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes,
-  System.Variants, System.Generics.Defaults,FMX.Layouts,
+  System.Variants, System.Generics.Defaults, FMX.Layouts,
   System.Generics.Collections, FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics,
   FMX.Dialogs, qjson,
-  qdac_fmx_virtualtree, FMX.Controls.Presentation, FMX.StdCtrls;
+  qdac_fmx_virtualtree, FMX.Controls.Presentation, FMX.StdCtrls, FMX.Edit;
 
 type
   TAreaType = (atUnknown, atCountry, atProvince, atCity, atCounty, atTownship);
@@ -44,6 +44,9 @@ type
     QVTCustomTextCell1: TQVTCustomTextCell;
     Label1: TLabel;
     Timer1: TTimer;
+    Edit1: TEdit;
+    QVTCustomTextCell2: TQVTCustomTextCell;
+    chkDefaultStateChars: TCheckBox;
     procedure QVTCustomTextCell1GetText(ASender: TObject; var AText: string);
     procedure QVirtualTreeView1InitNode(Sender: TQVirtualTreeView;
       ANode: TQVTNode);
@@ -54,10 +57,16 @@ type
     procedure QVirtualTreeView1Paint(Sender: TObject; Canvas: TCanvas;
       const ARect: TRectF);
     procedure Timer1Timer(Sender: TObject);
+    procedure QVirtualTreeView1SortmarkerChanged(Sender: TObject);
+    procedure QVirtualTreeView1GetNodeBackground(Sender: TQVirtualTreeView;
+      ANode: TQVTNode; AFill: TBrush; var AHandled: Boolean);
+    procedure QVirtualTreeView1GetCellBackground(Sender: TQVirtualTreeView;
+      ANode: TQVTNode; AColumn: Integer; AFill: TBrush; var AHandled: Boolean);
+    procedure chkDefaultStateCharsChange(Sender: TObject);
   private
     { Private declarations }
     FRootArea: TAreaItem;
-    FFps:Integer;
+    FFps: Integer;
   public
     { Public declarations }
   end;
@@ -67,8 +76,23 @@ var
 
 implementation
 
-uses system.ioutils;
+uses System.ioutils;
 {$R *.fmx}
+
+procedure TForm3.chkDefaultStateCharsChange(Sender: TObject);
+begin
+  if chkDefaultStateChars.IsChecked then
+  begin
+    TQVTHeaderDrawer.AscChar := '^';
+    TQVTHeaderDrawer.DescChar := 'v';
+  end
+  else
+  begin
+    TQVTHeaderDrawer.AscChar := '↑';
+    TQVTHeaderDrawer.DescChar := '↓';
+  end;
+  QVirtualTreeView1.Invalidate;
+end;
 
 procedure TForm3.FormCreate(Sender: TObject);
 var
@@ -95,6 +119,7 @@ begin
     FreeAndNil(AJson);
   end;
   QVirtualTreeView1.RootNodeCount := FRootArea.Count;
+  QVirtualTreeView1.Options := QVirtualTreeView1.Options + [toMultiSelection];
 end;
 
 procedure TForm3.FormDestroy(Sender: TObject);
@@ -116,6 +141,35 @@ begin
     Caption := 'Area tree';
 end;
 
+procedure TForm3.QVirtualTreeView1GetCellBackground(Sender: TQVirtualTreeView;
+  ANode: TQVTNode; AColumn: Integer; AFill: TBrush; var AHandled: Boolean);
+var
+  ADrawer: IQVTTextDrawable;
+begin
+  if ANode.Index = AColumn then // 1/1,2/2,3/3 颜色设置为红色背景，注意我们的颜色优先，所以会覆盖选择或热点颜色
+    AFill.Color := TAlphaColors.Red
+  else
+  begin
+    if Supports(ANode.CellData[AColumn], IQVTTextDrawable, ADrawer) then
+    begin
+      if ANode.Index = 4 then // 修改第五行的字体颜色
+        ADrawer.TextSettings.FontColor := TAlphaColors.Greenyellow
+      else
+        ADrawer.TextSettings.FontColor := TAlphaColors.Black;
+    end;
+    AHandled := false;
+  end;
+end;
+
+procedure TForm3.QVirtualTreeView1GetNodeBackground(Sender: TQVirtualTreeView;
+  ANode: TQVTNode; AFill: TBrush; var AHandled: Boolean);
+begin
+  if ((ANode.Index mod 2) = 1) then
+    AFill.Color := TAlphaColors.Yellowgreen
+  else
+    AHandled := false;
+end;
+
 procedure TForm3.QVirtualTreeView1InitNode(Sender: TQVirtualTreeView;
   ANode: TQVTNode);
 var
@@ -125,7 +179,10 @@ begin
     AParent := FRootArea
   else
     AParent := TAreaItem(ANode.Parent.ExtByType(TAreaItem));
-  AItem := AParent[ANode.Index];
+  if Sender.Header.Columns[0].Title.SortMarker = smDesc then
+    AItem := AParent[AParent.Count - ANode.Index - 1]
+  else
+    AItem := AParent[ANode.Index];
   ANode.Exts.Add(AItem);
   ANode.ChildCount := AItem.Count;
   // 如果这里不能确定有多少个子结点，则可以设置States包含 nsHasChildren状态，然后在 OnInitChildren 中再计算实际的ChildCount进行赋值
@@ -134,7 +191,19 @@ end;
 procedure TForm3.QVirtualTreeView1Paint(Sender: TObject; Canvas: TCanvas;
   const ARect: TRectF);
 begin
-Inc(FFps);
+  Inc(FFps);
+end;
+
+procedure TForm3.QVirtualTreeView1SortmarkerChanged(Sender: TObject);
+begin
+  // Todo:加入排序的代码
+  case QVirtualTreeView1.Header.Columns[0].Title.SortMarker of
+    smAsc, smDesc:
+      begin
+        FRootArea.Sort(true);
+        QVirtualTreeView1.RootNode.ReinitChildren(true);
+      end;
+  end;
 end;
 
 procedure TForm3.QVTCustomTextCell1GetText(ASender: TObject; var AText: string);
@@ -169,8 +238,8 @@ end;
 
 procedure TForm3.Timer1Timer(Sender: TObject);
 begin
-Label1.Text:='FPS:'+IntToStr(FFps);
-FFps:=0;
+  Label1.Text := 'FPS:' + IntToStr(FFps);
+  FFps := 0;
 end;
 
 { TAreaItem }

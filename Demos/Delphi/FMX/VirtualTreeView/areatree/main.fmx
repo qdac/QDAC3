@@ -17,10 +17,14 @@ object Form3: TForm3
     NodeIndent = 16.000000000000000000
     Header.Columns = <
       item
+        TextSettings.HorzAlign = Leading
+        Title.TextSettings.FontColor = claWheat
+        Title.TextSettings.HorzAlign = Leading
+        Title.Fill.Color = claBlack
         Title.Text = 'Name'
         Title.DrawerType = dtHeader
-        Title.Clickable = False
-        Title.SortOnClick = False
+        Title.Clickable = True
+        Title.SortOnClick = True
         Title.SortMarker = smNone
         Frozen = False
         Visible = True
@@ -32,6 +36,9 @@ object Form3: TForm3
         Tag = 0
       end
       item
+        TextSettings.FontColor = claBlue
+        TextSettings.HorzAlign = Leading
+        Title.TextSettings.HorzAlign = Center
         Title.Text = 'Code'
         Title.DrawerType = dtHeader
         Title.Clickable = False
@@ -43,10 +50,12 @@ object Form3: TForm3
         Enabled = True
         DrawerType = dtDefault
         Width = 75.000000000000000000
-        CellData = QVTCustomTextCell1
+        CellData = QVTCustomTextCell2
         Tag = 0
       end
       item
+        TextSettings.HorzAlign = Leading
+        Title.TextSettings.HorzAlign = Center
         Title.Text = 'Type'
         Title.DrawerType = dtHeader
         Title.Clickable = False
@@ -73,11 +82,16 @@ object Form3: TForm3
     RowSpace = 1.000000000000000000
     OnInitNode = QVirtualTreeView1InitNode
     OnFocusChanged = QVirtualTreeView1FocusChanged
+    OnSortmarkerChanged = QVirtualTreeView1SortmarkerChanged
+    OnGetCellBackground = QVirtualTreeView1GetCellBackground
+    OnGetNodeBackground = QVirtualTreeView1GetNodeBackground
     Align = Client
     HitTest = True
     Size.Width = 640.000000000000000000
     Size.Height = 439.000000000000000000
     Size.PlatformDefault = False
+    TextSettings.HorzAlign = Leading
+    TextSettings.WordWrap = False
     TabOrder = 0
     OnPaint = QVirtualTreeView1Paint
   end
@@ -95,11 +109,43 @@ object Form3: TForm3
     Left = 320
     Top = 136
   end
+  object Edit1: TEdit
+    Touch.InteractiveGestures = [LongTap, DoubleTap]
+    TabOrder = 8
+    Position.X = 304.000000000000000000
+    Position.Y = 9.000000000000000000
+    Size.Width = 329.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    TextPrompt = 'Virtual Selection color will changed when this focused'
+  end
+  object chkDefaultStateChars: TCheckBox
+    IsChecked = True
+    Position.X = 144.000000000000000000
+    Position.Y = 8.000000000000000000
+    Size.Width = 145.000000000000000000
+    Size.Height = 19.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 12
+    Text = 'Use default sort char'
+    OnChange = chkDefaultStateCharsChange
+  end
   object QVTCustomTextCell1: TQVTCustomTextCell
     Enabled = True
     Sides = [Top, Left, Bottom, Right]
+    TextSettings.FontColor = claBlue
+    TextSettings.HorzAlign = Leading
     OnGetText = QVTCustomTextCell1GetText
-    Left = 448
-    Top = 104
+    Left = 328
+    Top = 80
+  end
+  object QVTCustomTextCell2: TQVTCustomTextCell
+    Enabled = True
+    Sides = [Top, Left, Bottom, Right]
+    TextSettings.FontColor = claBlue
+    TextSettings.HorzAlign = Center
+    OnGetText = QVTCustomTextCell1GetText
+    Left = 512
+    Top = 88
   end
 end

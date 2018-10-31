@@ -17,6 +17,22 @@ const
   AllCurrentPlatforms = $FFFF;
 
 type
+  // 最简单的对象封装，用于将简单类型转换为对象
+TQSimpleObject < T >= class //
+  private FValue: T;
+public
+  constructor Create(const AValue: T);
+  overload;
+  property value: T read FValue write FValue;
+  end;
+  TQSimpleInterface < T >= class(TInterfacedObject)private FValue: T;
+public
+  constructor Create(const AValue: T);
+  overload;
+  property value: T read FValue write FValue;
+  end;
+
+type
   {
     结点的状态：
     Initialized 已经初始化完成
@@ -34,7 +50,8 @@ type
   TQVirtualTreeView = class;
   TQVTColumn = class;
   TQVTNodeState = (nsInitialized, nsVisible, nsHover, nsMouseDown, nsUnchecked,
-    nsChecked, nsSomeChecked, nsSelected, nsExpanded, nsInvalid, nsHasChildren);
+    nsChecked, nsSomeChecked, nsSelected, nsFocused, nsExpanded, nsInvalid,
+    nsHasChildren);
 
   TQVTNodeStates = set of TQVTNodeState;
   TQVTCheckState = (csChecked, csSomeChecked);
@@ -50,6 +67,23 @@ type
 
   IQVTDrawer = interface;
   IQVTCellData = interface;
+
+  IQVTNamedExt = interface
+    ['{78787785-3DE5-43FA-BDDE-9F9A39607546}']
+    function GetName: String;
+    property Name: String read GetName;
+  end;
+
+  IQVTExtendable = interface
+    ['{984368F3-B4D4-4D20-96E4-7E8C4DCA7133}']
+    function ExtByType(const IID: TGUID; var AValue): Boolean; overload;
+    function ExtByType(const AClass: TClass): TObject; overload;
+    function ExtByType(const AClass: TClass; var AValue): Boolean; overload;
+    function ExtByName(const AName: String): IQVTNamedExt;
+    function GetExts: TList<IInterface>;
+    function HasExts: Boolean;
+    property Exts: TList<IInterface> read GetExts;
+  end;
 
   IQVTDrawable = interface
     ['{066AE9A9-18F1-484E-BA57-28BFF5221F06}']
@@ -272,7 +306,7 @@ type
     property CellData[const ACol: Integer]: IQVTCellData read GetCellData;
   end;
 
-  IVirtualNode = interface
+  IQVirtualNode = interface
     ['{DEFFEB6D-538D-4AFE-BEE6-9A617CB60177}']
     // 结点状态
     function GetStates: TQVTNodeStates;
@@ -337,7 +371,7 @@ type
 
   TQVTTextDrawableObject = class(TQVTDrawableObject, IQVTTextDrawable)
   protected
-    FTextSettings: TTextSettings;
+    FTextSettings: TTextSettingsInfo;
     function GetTextSettings: TTextSettings; virtual;
     procedure SetTextSettings(value: TTextSettings); virtual;
   public
@@ -348,6 +382,21 @@ type
       write SetTextSettings;
   end;
 {$M+}
+
+  TQVTExtendableObject = class(TInterfacedObject, IQVTExtendable, IInterface)
+  protected
+    FExts: TList<IInterface>;
+    function GetExts: TList<IInterface>;
+  public
+    destructor Destroy; override;
+    function ExtByType(const IID: TGUID; var AValue): Boolean; overload;
+    function ExtByType(const AClass: TClass): TObject; overload;
+    function ExtByType(const AClass: TClass; var AValue): Boolean; overload;
+    function ExtByName(const AName: String): IQVTNamedExt;
+    function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
+    function HasExts: Boolean;
+    property Exts: TList<IInterface> read GetExts;
+  end;
 
   TQVTColumnTitle = class(TQVTTextDrawableObject, IQVTCellData,
     IQVTTextCellData, IQVTTextDrawable)
@@ -398,7 +447,7 @@ type
       write SetSortMarker;
   end;
 
-  TQVTColumn = class(TCollectionItem)
+  TQVTColumn = class(TCollectionItem, IQVTExtendable, IInterface)
   private
     FTextSettingsInfo: TTextSettingsInfo;
     FTitle: TQVTColumnTitle;
@@ -414,6 +463,8 @@ type
     FMinWidth, FMaxWidth: Single;
     FSortIndex: Integer;
     FTag: NativeInt;
+    FExts: IQVTExtendable;
+    FSelected: Boolean;
     procedure SetTextSettings(const value: TTextSettings);
     procedure SetFrozen(const value: Boolean);
     procedure SetTitle(const ATitle: TQVTColumnTitle);
@@ -430,6 +481,8 @@ type
     function GetTextSettings: TTextSettings;
     function GetFixedWidth: Single;
     procedure SetFixedWidth(const value: Single);
+    procedure NeedExts; inline;
+    procedure SetSelected(const value: Boolean);
   published
     property TextSettings: TTextSettings read GetTextSettings
       write SetTextSettings;
@@ -450,9 +503,20 @@ type
     constructor Create(ACollection: TCollection); override;
     destructor Destroy; override;
     procedure Assign(src: TPersistent); override;
+    function ExtByType(const IID: TGUID; var AValue): Boolean; overload;
+    function ExtByType(const AClass: TClass): TObject; overload;
+    function ExtByType(const AClass: TClass; var AValue): Boolean; overload;
+    function ExtByName(const AName: String): IQVTNamedExt;
+    function GetExts: TList<IInterface>;
+    function HasExts: Boolean;
+    function _AddRef: Integer; stdcall;
+    function _Release: Integer; stdcall;
+    function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
     property TreeView: TQVirtualTreeView read GetTreeView;
     property SortIndex: Integer read FSortIndex write SetSortIndex;
     property FixedWidth: Single read GetFixedWidth write SetFixedWidth;
+    property Exts: TList<IInterface> read GetExts;
+    property Selected: Boolean read FSelected write SetSelected;
   end;
 
   TQVTColumns = class(TOwnedCollection)
@@ -486,6 +550,7 @@ type
     FTreeView: TQVirtualTreeView;
     FHeight: Single;
     FMinHeight, FMaxHeight: Single;
+    FSizing: Boolean;
     procedure SetColumns(const value: TQVTColumns);
     procedure SetOptions(const value: TQVTHeaderOptions);
     procedure SetMasterColumn(const value: Integer);
@@ -500,6 +565,7 @@ type
     destructor Destroy; override;
     procedure Assign(src: TPersistent); override;
     property TreeView: TQVirtualTreeView read FTreeView;
+    property Sizing: Boolean read FSizing;
   published
     property Columns: TQVTColumns read FColumns write SetColumns;
     property Options: TQVTHeaderOptions read FOptions write SetOptions;
@@ -519,15 +585,10 @@ type
   TNodeInsertPosition = (ipNoWhere, ipBefore, ipAfter, ipFirstChild,
     ipLastChild);
 
-  IQVTNamedExt = interface
-    ['{78787785-3DE5-43FA-BDDE-9F9A39607546}']
-    function GetName: String;
-    property Name: String read GetName;
-  end;
-
-  TQVTNode = class(TInterfacedObject, IVirtualNode, IQVTNodeData, IInterface)
+  //
+  TQVTNode = class(TQVTExtendableObject, IQVirtualNode, IQVTNodeData)
   private
-    FTag: NativeInt;
+
   protected
     FStates: TQVTNodeStates; // 结点的状态
     [unsafe]
@@ -559,7 +620,7 @@ type
     FVisibleRowIndex: Integer; // 当结点可见时，它所在的行号
     FDisplayRect: TRectF; // 当前结点的显示区域，仅可见时有意义
     FButtonRect: TRectF; // 当前结点如果包含子结点，则展开/收起按钮的位置
-    FExts: TList<IInterface>;
+    FTag: NativeInt;
     function GetCanFocus: Boolean;
     procedure SetChildCount(const value: Integer); virtual;
     function GetHeight: Single; virtual;
@@ -571,7 +632,6 @@ type
     procedure SetMinHeight(const value: Single);
     function GetDisplayRect: TRectF;
     function GetCellRect(AColumn: Integer): TRectF;
-    function GetExts: TList<IInterface>;
     function GetIndex: Integer;
     function GetIsRoot: Boolean;
     function GetIsExpanded: Boolean;
@@ -619,11 +679,7 @@ type
     procedure ReinitChildren(ANest: Boolean = false);
     function IsChildOf(ANode: TQVTNode): Boolean;
     function IsParentOf(ANode: TQVTNode): Boolean;
-    function ExtByType(const IID: TGUID; var AValue): Boolean; overload;
-    function ExtByType(const AClass: TClass): TObject; overload;
-    function ExtByType(const AClass: TClass; var AValue): Boolean; overload;
-    function ExtByName(const AName: String): IInterface;
-    function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
+
     property Parent: TQVTNode read FParent;
     property States: TQVTNodeStates read FStates write SetStates;
     property Prior: TQVTNode read FPrior;
@@ -641,7 +697,6 @@ type
     property DisplayRect: TRectF read GetDisplayRect;
     property CellRect[AColumn: Integer]: TRectF read GetCellRect;
     property Index: Integer read GetIndex;
-    property Exts: TList<IInterface> read GetExts;
     property IsRoot: Boolean read GetIsRoot;
     property IsFirstChild: Boolean read GetIsFirstChild;
     property IsLastChild: Boolean read GetIsLastChild;
@@ -720,8 +775,13 @@ type
   TQVTHeaderDrawer = class(TQVTStateDrawer)
   private
     class var FStatePath: array [0 .. 1] of TPathData;
+    class var FStateChar: array [0 .. 1] of WideChar;
     class function GetAscPath: TPathData; static;
     class function GetDescPath: TPathData; static;
+    class function GetAscChar: WideChar; static;
+    class function GetDescChar: WideChar; static;
+    class procedure SetAscChar(const value: WideChar); static;
+    class procedure SetDescChar(const value: WideChar); static;
   protected
     FCurrentPath: array [0 .. 1] of TPathData;
     procedure Draw(ARect: TRectF; AData: IQVTCellData); override;
@@ -730,6 +790,8 @@ type
     class destructor Destroy;
     class property AscPath: TPathData read GetAscPath;
     class property DescPath: TPathData read GetDescPath;
+    class property AscChar: WideChar read GetAscChar write SetAscChar;
+    class property DescChar: WideChar read GetDescChar write SetDescChar;
   end;
 
   TQVTColorDrawer = class(TQVTStateDrawer)
@@ -948,7 +1010,6 @@ type
     property Stroke: TStrokeBrush read GetStroke write SetStroke;
     property TextSettings: TTextSettings read GetTextSettings
       write SetTextSettings;
-
     property OnGetText: TQVTCellTextGetEvent read FOnGetText write FOnGetText;
     property OnSetText: TQVTCellTextSetEvent read FOnSetText write FOnSetText;
     property OnValidText: TQVTCellTextValidEvent read FOnValidText
@@ -1302,24 +1363,32 @@ type
   TQVTGetCellSpansEvent = procedure(ASender: TQVirtualTreeView; ANode: TQVTNode;
     ACol: Integer; var ASpans: Integer) of object;
   TQVTPaintOption = (poHorizLine, poVertLine, poTreeLine, poColSelection,
-    poRowSelection, poCellSelection, poNodeButton, poHover);
+    poRowSelection, poCellSelection, poNodeButton, poHover,
+    poAutoHideSelection);
   TQVTPaintOptions = set of TQVTPaintOption;
   TQVTOption = (toTestHover, toRowSizable, toEditable, toAutoCascade,
-    toClickToEdit, toClickToExpand);
+    toClickToEdit, toClickToExpand, toMultiSelection, toRowSelection,
+    toColSelection);
   TQVTOptions = set of TQVTOption;
   TQVTState = (tsScrolling, tsDragging, tsRowSizing, tsColSizing,
     tsVisibleChanged, tsContentChanged);
   TQVTStates = set of TQVTState;
   TQVTHitTestResult = (hrNone, hrHeader, hrNode, hrColumnSpace, hrRowSpace);
   TQVTSortColumns = TList<TQVTColumn>;
+  TGetCellBackgroundEvent = procedure(Sender: TQVirtualTreeView;
+    ANode: TQVTNode; AColumn: Integer; AFill: TBrush; var AHandled: Boolean)
+    of object;
+  TGetNodeBackgroundEvent = procedure(Sender: TQVirtualTreeView;
+    ANode: TQVTNode; AFill: TBrush; var AHandled: Boolean) of object;
+
+  TQVTNodeList = TList<TQVTNode>;
 
   [ComponentPlatformsAttribute(AllCurrentPlatforms)]
   TQVirtualTreeView = class(TPresentedTextControl, IQVTDrawable)
   private
     class var DefaultDrawers: array [TQVTDrawerType] of IQVTDrawer;
-    function GetIsEditing: Boolean;
-    procedure SetFill(const value: TBrush);
-    procedure SetStroke(const value: TStrokeBrush);
+    function GetSelections: TQVTNodeList;
+    procedure SetOptions(const value: TQVTOptions);
   protected
     // Vars
     FRootNode: TQVTNode;
@@ -1330,7 +1399,7 @@ type
     FMouseDownNode: TQVTNode;
     FEditingNode: TQVTNode;
     FFirstVisibleColumn: Integer;
-    FFill: TBrush;
+    FFill, FActiveFill: TBrush;
     FStroke: TStrokeBrush;
     FSelectionColor: TAlphaColor;
     FHoverColor: TAlphaColor;
@@ -1354,7 +1423,7 @@ type
     FSpace: TPointF;
     FOptions: TQVTOptions;
     FContentSize: TSizeF;
-
+    FSelections: TQVTNodeList;
     FSizingNodeOriginHeight: Single;
     FSizingColumn: TQVTColumn;
     FSizingColumnOriginWidth: Single;
@@ -1388,6 +1457,11 @@ type
     FOnCancelEdit: TQVTColumnNotifyEvent;
     FAfterEdit: TQVTColumnNotifyEvent;
     FOnGetCellSpans: TQVTGetCellSpansEvent;
+    FOnGetCellBackground: TGetCellBackgroundEvent;
+    FOnGetNodeBackground: TGetNodeBackgroundEvent;
+    function GetIsEditing: Boolean;
+    procedure SetFill(const value: TBrush);
+    procedure SetStroke(const value: TStrokeBrush);
     procedure SetFocusColumn(const value: Integer);
     procedure SetPaintOptions(const value: TQVTPaintOptions);
     procedure SetSpace(const value: TPointF);
@@ -1447,6 +1521,15 @@ type
       Operation: TOperation); override;
     procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
     procedure DoCellDataRemove(const Sender: TObject; const M: TMessage);
+    function GetTextSettingsClass
+      : TTextSettingsInfo.TCustomTextSettingsClass; override;
+    function GetNodeFill(ANode: TQVTNode; ABrush: TBrush): Boolean;
+    function GetCellFill(ANode: TQVTNode; AColumn: Integer;
+      ABrush: TBrush): Boolean;
+    function ActiveFill: TBrush;
+    procedure DoSelectionChanged(Sender: TObject; const Item: TQVTNode;
+      Action: TCollectionNotification);
+    function GrayColor(AColor: TAlphaColor): TAlphaColor;
   published
     property LineStyle: TStrokeBrush read FLineStyle;
     property Fill: TBrush read FFill write SetFill;
@@ -1459,7 +1542,7 @@ type
     property Header: TQVTHeader read FHeader write SetHeader;
     property DefaultRowHeight: Single read FDefaultRowHeight
       write FDefaultRowHeight;
-    property Options: TQVTOptions read FOptions write FOptions;
+    property Options: TQVTOptions read FOptions write SetOptions;
     property PaintOptions: TQVTPaintOptions read FPaintOptions
       write SetPaintOptions;
     property RootNodeCount: Integer read GetRootNodeCount
@@ -1499,6 +1582,10 @@ type
       write FOnSortmarkerChanged;
     property OnGetCellSpans: TQVTGetCellSpansEvent read FOnGetCellSpans
       write FOnGetCellSpans;
+    property OnGetCellBackground: TGetCellBackgroundEvent
+      read FOnGetCellBackground write FOnGetCellBackground;
+    property OnGetNodeBackground: TGetNodeBackgroundEvent
+      read FOnGetNodeBackground write FOnGetNodeBackground;
     // inherited event
 
     property Action;
@@ -1579,6 +1666,7 @@ type
     function GetNext(ANode: TQVTNode): TQVTNode;
     function GetNextVisible(ANode: TQVTNode;
       AutoExpandChildren: Boolean = false): TQVTNode;
+    function GetPrior(ANode: TQVTNode): TQVTNode;
     function GetPriorVisible(ANode: TQVTNode): TQVTNode;
     function GetNodeAt(const APos: TPointF; AColumn: PInteger = nil): TQVTNode;
     procedure MakeNodeVisible(ANode: TQVTNode; ACenterInView: Boolean = false);
@@ -1587,6 +1675,7 @@ type
     function BeginEdit(ANode: TQVTNode; ACol: Integer): Boolean;
     function EndEdit: Boolean;
     procedure CancelEdit;
+    procedure SelectNode(ANode: TQVTNode; AIncludeChildren: Boolean);
     class function GetDefaultDrawer(AType: TQVTDrawerType): IQVTDrawer;
     property VertScrollBar: TScrollBar read FVertScrollBar;
     property HorzScrollBar: TScrollBar read FHorzScrollBar;
@@ -1605,21 +1694,7 @@ type
     property MouseDownPosition: TQVTHitTestResult read FMouseDownPosition;
     property Space: TPointF read FSpace write SetSpace;
     property IsEditing: Boolean read GetIsEditing;
-  end;
-
-  // 最简单的对象封装，用于将简单类型转换为对象
-TQSimpleObject < T >= class //
-  private FValue: T;
-public
-  constructor Create(const AValue: T);
-  overload;
-  property value: T read FValue write FValue;
-  end;
-  TQSimpleInterface < T >= class(TInterfacedObject)private FValue: T;
-public
-  constructor Create(const AValue: T);
-  overload;
-  property value: T read FValue write FValue;
+    property Selections: TQVTNodeList read GetSelections;
   end;
 
 implementation
@@ -1635,11 +1710,12 @@ type
   published
     property Font;
     property FontColor;
-    property HorzAlign;
+    property HorzAlign nodefault;
     property VertAlign;
     property WordWrap;
     property Trimming;
   end;
+
   { TQVTDrawableObject }
 
 procedure TQVTDrawableObject.AfterConstruction;
@@ -1649,7 +1725,6 @@ begin
 end;
 
 procedure TQVTDrawableObject.Assign(src: TPersistent);
-
 var
   ASource: TQVTDrawableObject;
 begin
@@ -1791,14 +1866,14 @@ end;
 
 function TQVTTextDrawableObject.GetTextSettings: TTextSettings;
 begin
-  Result := FTextSettings;
+  Result := FTextSettings.TextSettings;
 end;
 
 procedure TQVTTextDrawableObject.SetTextSettings(value: TTextSettings);
 begin
   if not Assigned(FTextSettings) then
-    FTextSettings := TTextSettings.Create(nil);
-  FTextSettings.Assign(value);
+    FTextSettings := TTextSettingsInfo.Create(Self, TCellTextSettings);
+  FTextSettings.TextSettings.Assign(value);
 end;
 
 { TQVTHeader }
@@ -2056,6 +2131,14 @@ end;
 
 { TQVirtualTreeView }
 
+function TQVirtualTreeView.ActiveFill: TBrush;
+begin
+  if Assigned(FActiveFill) then
+    Result := FActiveFill
+  else
+    Result := Fill;
+end;
+
 procedure TQVirtualTreeView.AdjustAutoSizeColumn;
 
 var
@@ -2063,22 +2146,30 @@ var
   I: Integer;
   ACol: TQVTColumn;
 begin
+  if Header.Sizing then
+    Exit;
   if (Header.AutoSizeColumn >= 0) and
     (Header.AutoSizeColumn < Header.Columns.Count) then
   begin
-    W := 0;
-    for I := 0 to Header.Columns.Count - 1 do
-    begin
-      ACol := Header.Columns[I];
-      if (I <> Header.AutoSizeColumn) and ACol.Visible then
-        W := W + ACol.Width + Space.X;
-    end;
-    if Header.Columns[Header.AutoSizeColumn].Visible then
-    begin
-      W := Width - Padding.Left - Padding.Right - W;
-      if Assigned(FVertScrollBar) then
-        W := W - FVertScrollBar.Width;
-      Header.Columns[Header.AutoSizeColumn].Width := W;
+    Header.FSizing := True;
+    try
+      W := 0;
+      for I := 0 to Header.Columns.Count - 1 do
+      begin
+        ACol := Header.Columns[I];
+        if (I <> Header.AutoSizeColumn) and ACol.Visible then
+          W := W + ACol.Width + Space.X;
+      end;
+      W := W + Space.X;
+      if Header.Columns[Header.AutoSizeColumn].Visible then
+      begin
+        W := Width - Padding.Left - Padding.Right - W;
+        if Assigned(FVertScrollBar) then
+          W := W - FVertScrollBar.Width;
+        Header.Columns[Header.AutoSizeColumn].Width := W;
+      end;
+    finally
+      Header.FSizing := false;
     end;
   end;
 end;
@@ -2206,8 +2297,6 @@ begin
         R.Top := R.Top + FHeader.Height + FSpace.Y
       else
         R.Top := R.Top + FSpace.X;
-      if TQVTHeaderOption.hoVisible in Header.Options then
-        R.Top := R.Top + Header.Height + FSpace.Y;
       if R.Right > AClientRect.Right then
         R.Right := AClientRect.Right;
       while Assigned(ANode) do
@@ -2356,7 +2445,7 @@ begin
   FSpace.X := 1;
   FSpace.Y := 1;
   CanFocus := True;
-  FVisibleNodes := TList<TQVTNode>.Create;
+  FVisibleNodes := TQVTNodeList.Create;
   FStates := [tsVisibleChanged];
   FPaintOptions := [TQVTPaintOption.poNodeButton, TQVTPaintOption.poTreeLine,
     TQVTPaintOption.poRowSelection];
@@ -2443,6 +2532,8 @@ end;
 
 destructor TQVirtualTreeView.Destroy;
 begin
+  if Assigned(FSelections) then
+    FreeAndNil(FSelections);
   if Assigned(FAniCalculations) then
     FreeAndNil(FAniCalculations);
   if Assigned(FInplaceEditor) then
@@ -2458,6 +2549,7 @@ begin
     FreeAndNil(FTextLayout);
   if Assigned(FSortColumns) then
   begin
+    FSortColumns.OnNotify := nil;
     FSortColumns.Clear;
     FreeAndNil(FSortColumns);
   end;
@@ -2480,7 +2572,7 @@ begin
   begin
     if CanEdit(FocusNode, FocusColumn) then
       BeginEdit(FocusNode, FocusColumn);
-    Key:=0;
+    Key := 0;
   end;
   inherited;
 end;
@@ -2559,6 +2651,18 @@ begin
     pt.Y := 0;
   FAniCalculations.ViewportPositionF := pt;
   NodeVisibleChanged;
+end;
+
+procedure TQVirtualTreeView.DoSelectionChanged(Sender: TObject;
+  const Item: TQVTNode; Action: TCollectionNotification);
+begin
+  case Action of
+    cnAdded:
+      Item.States := Item.States + [nsSelected];
+    cnRemoved, cnExtracted:
+      Item.States := Item.States - [nsSelected];
+  end;
+  Invalidate;
 end;
 
 procedure TQVirtualTreeView.DoSortColumnsChanged(Sender: TObject;
@@ -2662,6 +2766,48 @@ begin
     end
     else
       Result := GetDefaultDrawer(TQVTDrawerType.dtDefault);
+  end;
+end;
+
+function TQVirtualTreeView.GetCellFill(ANode: TQVTNode; AColumn: Integer;
+  ABrush: TBrush): Boolean;
+begin
+  Result := false;
+  if Assigned(OnGetCellBackground) then
+  begin
+    ABrush.Assign(Fill);
+    Result := True;
+    OnGetCellBackground(Self, ANode, AColumn, ABrush, Result);
+  end;
+  if not Result then
+  begin
+    if (nsHover in ANode.States) and (poHover in PaintOptions) then
+    begin
+      ABrush.Color := HoverColor;
+      ABrush.Kind := TBrushKind.Solid;
+      Result := (ABrush.Color <> Fill.Color) or (ABrush.Kind <> Fill.Kind);
+    end
+    else if ([nsSelected, nsFocused] * ANode.States <> []) and
+      (poCellSelection in PaintOptions) and
+      (IsFocused or (not(poAutoHideSelection in PaintOptions))) then
+    begin
+      if IsFocused and (nsFocused in ANode.States) then
+        ABrush.Color := SelectionColor
+      else
+        ABrush.Color := GrayColor(Fill.Color);
+      ABrush.Kind := TBrushKind.Solid;
+      Result := (ABrush.Color <> Fill.Color) or (ABrush.Kind <> Fill.Kind);
+    end;
+  end
+  else
+  begin
+    if [nsSelected, nsFocused] * ANode.States <> [] then
+    begin
+      if IsFocused then
+        ABrush.Color := GrayColor(ABrush.Color)
+      else if not(poAutoHideSelection in PaintOptions) then
+        ABrush.Color := GrayColor(ABrush.Color);
+    end;
   end;
 end;
 
@@ -2793,7 +2939,6 @@ end;
 
 function TQVirtualTreeView.GetNodeAt(const APos: TPointF; AColumn: PInteger)
   : TQVTNode;
-
 var
   Dummy: Integer;
 begin
@@ -2802,8 +2947,73 @@ begin
     AColumn^ := Dummy;
 end;
 
-function TQVirtualTreeView.GetPriorVisible(ANode: TQVTNode): TQVTNode;
+function TQVirtualTreeView.GetNodeFill(ANode: TQVTNode; ABrush: TBrush)
+  : Boolean;
+begin
+  Result := false;
+  if Assigned(OnGetNodeBackground) then
+  begin
+    ABrush.Assign(Fill);
+    Result := True;
+    OnGetNodeBackground(Self, ANode, ABrush, Result);
+  end;
+  if not Result then
+  begin
+    if (nsHover in ANode.States) and (poHover in PaintOptions) then
+    begin
+      ABrush.Kind := TBrushKind.Solid;
+      if IsFocused then
+        ABrush.Color := HoverColor
+      else
+        ABrush.Color := GrayColor(Fill.Color); // 变暗
+      Result := (ABrush.Color <> Fill.Color) or (ABrush.Kind <> Fill.Kind);
+    end
+    else if ([nsSelected, nsFocused] * ANode.States <> []) and
+      (poRowSelection in PaintOptions) and
+      (IsFocused or (not(poAutoHideSelection in PaintOptions))) then
+    begin
+      ABrush.Color := SelectionColor;
+      if IsFocused and (nsFocused in ANode.States) then
+        ABrush.Color := SelectionColor
+      else
+        ABrush.Color := GrayColor(Fill.Color);
+      ABrush.Kind := TBrushKind.Solid;
+      Result := (ABrush.Color <> Fill.Color) or (ABrush.Kind <> Fill.Kind);
+    end;
+  end
+  else if [nsSelected, nsFocused] * ANode.States <> [] then
+  begin
+    if IsFocused then
+      ABrush.Color := GrayColor(ABrush.Color)
+    else if not(poAutoHideSelection in PaintOptions) then
+      ABrush.Color := GrayColor(ABrush.Color);
+  end;
+end;
 
+function TQVirtualTreeView.GetPrior(ANode: TQVTNode): TQVTNode;
+var
+  APrior: TQVTNode;
+begin
+  Result := nil;
+  APrior := ANode.GetPrior;
+  if not Assigned(APrior) then
+  begin
+    if ANode.Parent <> RootNode then
+      Result := ANode.Parent;
+  end
+  else
+  begin
+    while APrior.HasChildren and (TQVTNodeState.nsExpanded in APrior.FStates) do
+    begin
+      Result := APrior.GetLastChild;
+      if Assigned(Result) then
+        APrior := Result;
+    end;
+    Result := APrior;
+  end;
+end;
+
+function TQVirtualTreeView.GetPriorVisible(ANode: TQVTNode): TQVTNode;
 var
   APrior: TQVTNode;
 begin
@@ -2849,6 +3059,16 @@ begin
   Result := FSpace.Y;
 end;
 
+function TQVirtualTreeView.GetSelections: TQVTNodeList;
+begin
+  if not Assigned(FSelections) then
+  begin
+    FSelections := TQVTNodeList.Create();
+    FSelections.OnNotify := DoSelectionChanged;
+  end;
+  Result := FSelections;
+end;
+
 function TQVirtualTreeView.GetSortColumns: TQVTSortColumns;
 begin
   if not Assigned(FSortColumns) then
@@ -2862,6 +3082,24 @@ end;
 function TQVirtualTreeView.GetStroke: TStrokeBrush;
 begin
   Result := FStroke;
+end;
+
+function TQVirtualTreeView.GetTextSettingsClass
+  : TTextSettingsInfo.TCustomTextSettingsClass;
+begin
+  Result := TCellTextSettings;
+end;
+
+function TQVirtualTreeView.GrayColor(AColor: TAlphaColor): TAlphaColor;
+var
+  C: TAlphaColorRec absolute Result;
+const
+  GrayRatio = 0.8; //
+begin
+  Result := AColor;
+  C.R := Trunc(C.R * GrayRatio);
+  C.G := Trunc(C.G * GrayRatio);
+  C.B := Trunc(C.B * GrayRatio);
 end;
 
 procedure TQVirtualTreeView.DoCellDataRemove(const Sender: TObject;
@@ -3167,7 +3405,6 @@ var
   pt: TPointF;
   AHitTest: TQVTHitTestResult;
   procedure DoTitleClick;
-
   var
     AColumn: TQVTColumn;
     I: Integer;
@@ -3224,6 +3461,44 @@ var
     end;
   end;
 
+  procedure SelectBetweenNodes;
+  var
+    AFirstNode, AStartNode, ATemp, ALastNode: TQVTNode;
+  begin
+    AStartNode := FocusNode;
+    if not Assigned(AStartNode) then
+      AStartNode := RootNode.FirstChild;
+    AFirstNode := AStartNode;
+    ALastNode := ANode;
+    // 我们需要确认下谁在前面，谁在后面，所以将它俩降维到相同的父，然后比索引位置
+    while AFirstNode.Level > ALastNode.Level do
+      AFirstNode := AFirstNode.Parent;
+    while ALastNode.Level > AFirstNode.Level do
+      ALastNode := ALastNode.Parent;
+    while AFirstNode.Parent <> ALastNode.Parent do
+    begin
+      AFirstNode := AFirstNode.Parent;
+      ALastNode := ALastNode.Parent;
+    end;
+    if AFirstNode.Index > ALastNode.Index then
+    begin
+      AFirstNode := ANode;
+      ALastNode := AStartNode;
+    end
+    else // if AFirstNode.Index<ALastNode.Index then
+    begin
+      AFirstNode := AStartNode;
+      ALastNode := ANode;
+    end;
+    AStartNode := ALastNode;
+    SelectNode(ALastNode, false);
+    repeat
+      ATemp := ALastNode;
+      ALastNode := GetPrior(ATemp);
+      SelectNode(ALastNode, not ALastNode.IsParentOf(AStartNode));
+    until ALastNode = AFirstNode;
+  end;
+
 begin
   inherited;
   pt := PointF(X, Y);
@@ -3242,10 +3517,27 @@ begin
       end
       else
       begin
-        if FocusChanging(ANode, ACol) then
+        if (ANode <> FFocusNode) and FocusChanging(ANode, ACol) then
         begin
           FFocusColumn := ACol;
-          FFocusNode := ANode;
+          if (toMultiSelection in Options) then
+          begin
+            if Assigned(ANode) then
+            begin
+              if ssCtrl in Shift then // 单个增删
+              begin
+                if TQVTNodeState.nsSelected in ANode.States then
+                  Selections.Remove(ANode)
+                else
+                  Selections.Add(ANode);
+              end
+              else if ssShift in Shift then // 从上个到当前位置选中
+                SelectBetweenNodes
+              else // 没有其它，则取消选区
+                Selections.Clear;
+            end;
+          end;
+          FocusNode := ANode;
           FocusChanged;
         end;
         if Assigned(FMouseEditor) then
@@ -3253,15 +3545,6 @@ begin
         CellClick(ANode, ACol, pt);
       end;
     end
-    // else if AHitTest in [TQVTHitTestResult.hrNone] then
-    // begin
-    // if FocusChanging(nil, -1) then
-    // begin
-    // FFocusColumn := -1;
-    // FFocusNode := nil;
-    // FocusChanged;
-    // end;
-    // end
     else if AHitTest = TQVTHitTestResult.hrHeader then
       DoTitleClick;
   end;
@@ -3353,9 +3636,11 @@ var
   ACol: Integer;
   AHitTest: TQVTHitTestResult;
 begin
-  if FAniCalculations.Down and (not(ssLeft in Shift)) then // 鼠标移出时需要控制时下
+  if FAniCalculations.Down and (not(ssLeft in Shift)) then
+    // 鼠标移出时需要控制时下
     FAniCalculations.Down := false;
-  if Assigned(FMouseEditor) then // 编辑器优先获得处理权限
+  if Assigned(FMouseEditor) then
+    // 编辑器优先获得处理权限
     FMouseEditor.MouseMove(Shift, PointF(X, Y))
   else if TQVTState.tsColSizing in FStates then
   begin
@@ -3391,7 +3676,11 @@ begin
             if (TQVTOption.toTestHover in Options) and
               ((ANode <> FHoverNode) or (ACol <> FHoverColumn)) then
             begin
+              if Assigned(FHoverNode) then
+                FHoverNode.States := FHoverNode.States - [nsHover];
               FHoverNode := ANode;
+              if Assigned(FHoverNode) then
+                FHoverNode.States := FHoverNode.States + [nsHover];
               FHoverColumn := ACol;
               if Assigned(FOnHoverChanged) then
                 FOnHoverChanged(Self);
@@ -3514,7 +3803,6 @@ var
   ANode: TQVTNode;
   AState: TCanvasSaveState;
   procedure DrawGridLines;
-
   var
     pt1, pt2: TPointF;
     I: Integer;
@@ -3535,7 +3823,7 @@ var
     for I := 0 to FVisibleNodes.Count do
     begin
       pt2.Y := pt1.Y;
-      if ADrawVert then
+      if ADrawHorz then
         Canvas.DrawLine(pt1.SnapToPixel(Canvas.Scale),
           pt2.SnapToPixel(Canvas.Scale), Opacity, FStroke);
       if I < FVisibleNodes.Count then
@@ -3545,7 +3833,7 @@ var
           pt1.Y := pt1.Y + FSpace.Y;
       end;
     end;
-    if ADrawHorz then
+    if ADrawVert then
     begin
       pt1 := AClientRect.TopLeft;
       pt1.X := pt1.X - FPaintOffset.X;
@@ -3553,14 +3841,17 @@ var
       for I := 0 to FHeader.Columns.Count do
       begin
         pt2.X := pt1.X;
-        if I >= FFirstVisibleColumn then
-          Canvas.DrawLine(pt1.SnapToPixel(Canvas.Scale),
-            pt2.SnapToPixel(Canvas.Scale), Opacity, FStroke);
-        if I < FHeader.Columns.Count then
+        if FHeader.Columns[I].Visible then
         begin
-          pt1.X := pt1.X + FHeader.Columns[I].Width;
-          if I + 1 < FHeader.Columns.Count then
-            pt1.X := pt1.X + FSpace.X;
+          if I >= FFirstVisibleColumn then
+            Canvas.DrawLine(pt1.SnapToPixel(Canvas.Scale),
+              pt2.SnapToPixel(Canvas.Scale), Opacity, FStroke);
+          if I < FHeader.Columns.Count then
+          begin
+            pt1.X := pt1.X + FHeader.Columns[I].Width;
+            if I + 1 < FHeader.Columns.Count then
+              pt1.X := pt1.X + FSpace.X;
+          end;
         end;
       end;
     end;
@@ -3585,21 +3876,24 @@ var
       for I := 0 to FHeader.Columns.Count - 1 do
       begin
         ACol := FHeader.Columns[I];
-        R.Right := R.Left + ACol.Width;
-        if R.Right > AMaxRight then
-          R.Right := AMaxRight;
-        if R.Left < Stroke.Thickness then
-          R.Left := Stroke.Thickness;
-        if (I >= FFirstVisibleColumn) and (R.Left < R.Right) then
+        if ACol.Visible then
         begin
-          ADrawer := ACol.Title.Drawer;
-          if Assigned(ADrawer) then
-            ADrawer.Draw(R, ACol.Title as IQVTCellData);
-        end;
+          R.Right := R.Left + ACol.Width;
+          if R.Right > AMaxRight then
+            R.Right := AMaxRight;
+          if R.Left < Stroke.Thickness then
+            R.Left := Stroke.Thickness;
+          if (I >= FFirstVisibleColumn) and (R.Left < R.Right) then
+          begin
+            ADrawer := ACol.Title.Drawer;
+            if Assigned(ADrawer) then
+              ADrawer.Draw(R, ACol.Title as IQVTCellData);
+          end;
 
-        R.Left := R.Right + FSpace.X;
-        if R.Left > AMaxRight then
-          Break;
+          R.Left := R.Right + FSpace.X;
+          if R.Left > AMaxRight then
+            Break;
+        end;
       end;
     end
   end;
@@ -3653,84 +3947,85 @@ var
       AdjustEditor := AEditorVisible and
         (FInplaceEditor.GetEditing(AEditingCol) = ANode);
       R := ANode.FDisplayRect;
-      if ADrawHover and (ANode = FHoverNode) then
-      begin
-        if (ANode <> FFocusNode) or (not ADrawRowSelection) then
-          Canvas.ClearRect(R, FHoverColor);
-      end;
-      if ADrawRowSelection and (ANode = FFocusNode) then
-        Canvas.ClearRect(R, FSelectionColor);
       J := 0;
       ACellRect.Top := R.Top - FSpace.Y / 2;
       if poHorizLine in PaintOptions then
         ACellRect.Bottom := R.Bottom - FStroke.Thickness
       else
         ACellRect.Bottom := R.Bottom;
+      if GetNodeFill(ANode, FActiveFill) then
+        // Canvas.ClearRect(R,FActiveFill.Color);
+        Canvas.FillRect(R.SnapToPixel(Canvas.Scale), 0, 0, [], Opacity,
+          FActiveFill);
       while J < FHeader.Columns.Count do
       begin
         ACol := FHeader.Columns[J];
-        ACellRect.Left := R.Left;
-        ACellRect.Right := R.Left;
-        ASpans := 0;
-        if Assigned(OnGetCellSpans) then
+        if ACol.Visible then
         begin
-          OnGetCellSpans(Self, ANode, J, ASpans);
-          if J + ASpans >= FHeader.Columns.Count then
-            ASpans := FHeader.Columns.Count - J - 1;
-        end;
-        for K := 0 to ASpans do
-          ACellRect.Right := ACellRect.Right + FHeader.Columns[J + K].Width
-            + FSpace.X;
-        ACellRect.Right := ACellRect.Right - FSpace.X;
-        ADrawer := ANode.CellDrawer[J];
-        ACellData := ANode.CellData[J];
-        if Assigned(ADrawer) then
-        begin
-          AColFocused := (J <= FFocusColumn) and (J + ASpans >= FFocusColumn);
-          if ADrawHover and AColFocused then
+          ACellRect.Left := R.Left;
+          ACellRect.Right := R.Left;
+          ASpans := 0;
+          if Assigned(OnGetCellSpans) then
           begin
-            if (J <> FFocusColumn) or (not ADrawColSelection) then
-              Canvas.ClearRect(ACellRect, FHoverColor);
+            OnGetCellSpans(Self, ANode, J, ASpans);
+            if J + ASpans >= FHeader.Columns.Count then
+              ASpans := FHeader.Columns.Count - J - 1;
           end;
-          if AdjustEditor and (J = FocusColumn) then
+          for K := 0 to ASpans do
+            ACellRect.Right := ACellRect.Right + FHeader.Columns[J + K].Width
+              + FSpace.X;
+          ACellRect.Right := ACellRect.Right - FSpace.X;
+          ADrawer := ANode.CellDrawer[J];
+          ACellData := ANode.CellData[J];
+          if GetCellFill(ANode, J, FActiveFill) then
+            // Canvas.ClearRect(ACellRect,FActiveFill.Color);
+            Canvas.FillRect(ACellRect.SnapToPixel(Canvas.Scale), 0, 0, [],
+              Opacity, FActiveFill);
+          if Assigned(ADrawer) then
           begin
-            AEditorRect := ADrawer.EditorBounds[ACellData];
-            ADrawer.Draw(RectF(ACellRect.Left, ACellRect.Top, AEditorRect.Left,
-              ACellRect.Bottom), ACellData);
-          end
-          else
-          begin
-            if AColFocused and
-              (ADrawColSelection or (ADrawCellSelection and
-              (ANode = FFocusNode))) then
-              Canvas.ClearRect(ACellRect, FSelectionColor);
-            if J >= FFirstVisibleColumn then
-              ADrawer.Draw(ACellRect, ACellData);
+            AColFocused := (J <= FFocusColumn) and (J + ASpans >= FFocusColumn);
+            if AdjustEditor and (J = FocusColumn) then
+            begin
+              AEditorRect := ADrawer.EditorBounds[ACellData];
+              ADrawer.Draw(RectF(ACellRect.Left, ACellRect.Top,
+                AEditorRect.Left, ACellRect.Bottom), ACellData);
+            end
+            else
+            begin
+              if AColFocused and
+                (ADrawColSelection or (ADrawCellSelection and
+                (ANode = FFocusNode))) then
+                Canvas.ClearRect(ACellRect, FSelectionColor);
+              if J >= FFirstVisibleColumn then
+                ADrawer.Draw(ACellRect, ACellData);
+            end;
           end;
-        end;
-        R.Left := ACellRect.Right + FSpace.X;
-        if Assigned(ACellData) and ADrawCellGrid then
-        begin
-          ACellRect.Left := ACellRect.Left - FSpace.X / 2;
-          ACellRect.Right := ACellRect.Right + FSpace.X / 2;
-          // 计算需要绘制的表格边框
-          ASides := [TSide.Bottom];
-          if ACellRect.Left > Stroke.Thickness then
-            ASides := ASides + [TSide.Left];
-          if J + ASpans + 1 = FHeader.Columns.Count then
-            ASides := ASides + [TSide.Right];
-          if not(TQVTPaintOption.poHorizLine in FPaintOptions) then
-            ASides := ASides - [TSide.Left, TSide.Right];
-          if not(TQVTPaintOption.poVertLine in FPaintOptions) then
-            ASides := ASides - [TSide.Top, TSide.Bottom];
-          ASides := ASides * ACellData.Sides;
-          if ASides <> [] then
-            Canvas.DrawRectSides(ACellRect.SnapToPixel(Canvas.Scale), 0, 0, [],
-              Opacity, ASides, FStroke);
-        end;
-        if R.Left > AMaxRight then
-          Break;
-        Inc(J, ASpans + 1);
+          R.Left := ACellRect.Right + FSpace.X;
+          if Assigned(ACellData) and ADrawCellGrid then
+          begin
+            ACellRect.Left := ACellRect.Left - FSpace.X / 2;
+            ACellRect.Right := ACellRect.Right + FSpace.X / 2;
+            // 计算需要绘制的表格边框
+            ASides := [TSide.Bottom];
+            if ACellRect.Left > Stroke.Thickness then
+              ASides := ASides + [TSide.Left];
+            if J + ASpans + 1 = FHeader.Columns.Count then
+              ASides := ASides + [TSide.Right];
+            if not(TQVTPaintOption.poVertLine in FPaintOptions) then
+              ASides := ASides - [TSide.Left, TSide.Right];
+            if not(TQVTPaintOption.poHorizLine in FPaintOptions) then
+              ASides := ASides - [TSide.Top, TSide.Bottom];
+            ASides := ASides * ACellData.Sides;
+            if ASides <> [] then
+              Canvas.DrawRectSides(ACellRect.SnapToPixel(Canvas.Scale), 0, 0,
+                [], Opacity, ASides, FStroke);
+          end;
+          if R.Left > AMaxRight then
+            Break;
+          Inc(J, ASpans + 1);
+        end
+        else
+          Inc(J);
       end;
     end;
     if AEditorVisible then
@@ -3748,6 +4043,7 @@ begin
   R := LocalRect;
   if Canvas.BeginScene then
   begin
+    FActiveFill := TBrush.Create(TBrushKind.Solid, TAlphaColors.Null);
     AState := Canvas.SaveState;
     try
       Canvas.FillRect(R, 0, 0, [], Opacity, Fill);
@@ -3777,6 +4073,7 @@ begin
     finally
       Canvas.RestoreState(AState);
       Canvas.EndScene;
+      FreeAndNil(FActiveFill);
     end;
   end;
 end;
@@ -3800,6 +4097,28 @@ begin
     VertScrollBar.value := VertScrollBar.value + dy;
   if Assigned(HorzScrollBar) then
     HorzScrollBar.value := HorzScrollBar.value + dx;
+end;
+
+procedure TQVirtualTreeView.SelectNode(ANode: TQVTNode;
+  AIncludeChildren: Boolean);
+var
+  AChild: TQVTNode;
+begin
+  if toMultiSelection in Options then
+  begin
+    ANode.States := ANode.States + [TQVTNodeState.nsSelected];
+    if AIncludeChildren and (TQVTNodeState.nsHasChildren in ANode.States) then
+    begin
+      AChild := ANode.FirstChild;
+      while Assigned(AChild) do
+      begin
+        SelectNode(AChild, True);
+        AChild := AChild.Next;
+      end;
+    end;
+  end
+  else
+    ANode.SetFocus;
 end;
 
 procedure TQVirtualTreeView.SetColSpace(const value: Single);
@@ -3837,6 +4156,8 @@ begin
       value.SetFocus
     else
     begin
+      if Assigned(FFocusNode) then
+        FFocusNode.FStates := FFocusNode.FStates - [TQVTNodeState.nsFocused];
       FocusChanging(nil, FocusColumn);
       FFocusNode := nil;
       FocusChanged;
@@ -3850,6 +4171,17 @@ begin
     FHeader.Assign(value)
   else
     FHeader.Columns.Clear;
+end;
+
+procedure TQVirtualTreeView.SetOptions(const value: TQVTOptions);
+begin
+  FOptions := value;
+  if Assigned(FSelections) and (not(toMultiSelection in value)) then
+  begin
+    FSelections.Clear;
+    if FocusNode <> nil then
+      FSelections.Add(FocusNode);
+  end;
 end;
 
 procedure TQVirtualTreeView.SetPaintOptions(const value: TQVTPaintOptions);
@@ -3942,11 +4274,41 @@ begin
   inherited;
 end;
 
+function TQVTColumn.ExtByName(const AName: String): IQVTNamedExt;
+begin
+  NeedExts;
+  Result := FExts.ExtByName(AName);
+end;
+
+function TQVTColumn.ExtByType(const IID: TGUID; var AValue): Boolean;
+begin
+  NeedExts;
+  Result := FExts.ExtByType(IID, AValue);
+end;
+
+function TQVTColumn.ExtByType(const AClass: TClass): TObject;
+begin
+  NeedExts;
+  Result := FExts.ExtByType(AClass);
+end;
+
+function TQVTColumn.ExtByType(const AClass: TClass; var AValue): Boolean;
+begin
+  NeedExts;
+  Result := FExts.ExtByType(AClass, AValue);
+end;
+
 function TQVTColumn.GetDrawer: IQVTDrawer;
 begin
   if not Assigned(FDrawer) then
     Result := TreeView.GetCellDrawer(nil, Index);
   Result := FDrawer;
+end;
+
+function TQVTColumn.GetExts: TList<IInterface>;
+begin
+  NeedExts;
+  Result := FExts.Exts;
 end;
 
 function TQVTColumn.GetFixedWidth: Single;
@@ -3965,6 +4327,27 @@ end;
 function TQVTColumn.GetTreeView: TQVirtualTreeView;
 begin
   Result := ((Collection as TQVTColumns).Owner as TQVTHeader).TreeView;
+end;
+
+function TQVTColumn.HasExts: Boolean;
+begin
+  Result := Assigned(FExts) and FExts.HasExts;
+end;
+
+procedure TQVTColumn.NeedExts;
+begin
+  if not Assigned(FExts) then
+    FExts := TQVTExtendableObject.Create;
+end;
+
+function TQVTColumn.QueryInterface(const IID: TGUID; out Obj): HResult;
+begin
+  if GetInterface(IID, Obj) then
+    Result := S_OK
+  else if Assigned(FExts) then
+    Result := FExts.QueryInterface(IID, Obj)
+  else
+    Result := E_NOINTERFACE;
 end;
 
 procedure TQVTColumn.SetDrawerType(const value: TQVTDrawerType);
@@ -4025,6 +4408,15 @@ begin
     TreeView.CheckForBrowseMode(Self);
 end;
 
+procedure TQVTColumn.SetSelected(const value: Boolean);
+begin
+  if FSelected <> value then
+  begin
+    FSelected := value;
+    TreeView.InvalidateColumn(Index);
+  end;
+end;
+
 procedure TQVTColumn.SetSortIndex(const value: Integer);
 begin
   if FSortIndex <> value then
@@ -4056,6 +4448,7 @@ begin
   if FVisible <> value then
   begin
     FVisible := value;
+    TreeView.AdjustAutoSizeColumn;
     TreeView.Invalidate;
   end;
 end;
@@ -4074,8 +4467,22 @@ begin
     else
       FWidth := MinWidth;
     if Visible then
+    begin
+      if TreeView.Header.AutoSizeColumn <> -1 then
+        TreeView.AdjustAutoSizeColumn;
       TreeView.NodeContentChanged;
+    end;
   end;
+end;
+
+function TQVTColumn._AddRef: Integer;
+begin
+  Result := -1;
+end;
+
+function TQVTColumn._Release: Integer;
+begin
+  Result := -1;
 end;
 
 { TQVTColumns }
@@ -4218,7 +4625,11 @@ begin
   FLastInitChild := nil;
   FFirstDirtyChild := nil;
   FCount := 0;
+  FCreatedCount := 0;
   FStates := FStates - [TQVTNodeState.nsHasChildren];
+  if Self = TreeView.RootNode then
+    TreeView.FFirstVisibleNode := nil;
+  TreeView.NodeContentChanged;
 end;
 
 constructor TQVTNode.Create(AOwner: TQVirtualTreeView);
@@ -4283,6 +4694,11 @@ begin
     FTreeView.FMouseDownNode := nil;
   if FTreeView.FSizingNode = Self then
     FTreeView.FSizingNode := nil;
+  if TQVTNodeState.nsSelected in States then
+  begin
+    if TQVTOption.toMultiSelection in FTreeView.Options then
+      FTreeView.Selections.Remove(Self);
+  end;
   _Release;
 end;
 
@@ -4292,8 +4708,6 @@ begin
   Pointer(FParent) := nil;
   Pointer(FNext) := nil;
   Pointer(FPrior) := nil;
-  if Assigned(FExts) then
-    FreeAndNil(FExts);
   Pointer(FTreeView) := nil;
   inherited;
 end;
@@ -4328,69 +4742,6 @@ begin
       end;
     end;
     TreeView.NodeContentChanged;
-  end;
-end;
-
-function TQVTNode.ExtByName(const AName: String): IInterface;
-
-var
-  I: Integer;
-  AExt: IQVTNamedExt;
-begin
-  Result := nil;
-  if Assigned(FExts) then
-  begin
-    for I := 0 to FExts.Count - 1 do
-    begin
-      if Supports(FExts[I], IQVTNamedExt, AExt) and (AExt.Name = AName) then
-      begin
-        Result := AExt;
-        Exit;
-      end;
-    end;
-  end;
-end;
-
-function TQVTNode.ExtByType(const AClass: TClass; var AValue): Boolean;
-begin
-  TObject(AValue) := ExtByType(AClass);
-  Result := TObject(AValue) <> nil;
-end;
-
-function TQVTNode.ExtByType(const AClass: TClass): TObject;
-var
-  I: Integer;
-  AExt: IInterface;
-begin
-  Result := nil;
-  if Assigned(FExts) then
-  begin
-    for I := 0 to FExts.Count - 1 do
-    begin
-      AExt := FExts[I];
-      if AExt is AClass then
-      begin
-        Result := AExt as AClass;
-        Exit;
-      end;
-    end;
-  end;
-end;
-
-function TQVTNode.ExtByType(const IID: TGUID; var AValue): Boolean;
-var
-  I: Integer;
-begin
-  Result := false;
-  Pointer(AValue) := nil;
-  if Assigned(FExts) then
-  begin
-    for I := 0 to FExts.Count - 1 do
-    begin
-      Result := Supports(FExts[I], IID, AValue);
-      if Result then
-        Exit;
-    end;
   end;
 end;
 
@@ -4443,13 +4794,6 @@ end;
 function TQVTNode.GetDisplayRect: TRectF;
 begin
   Result := TreeView.DisplayRect[Self];
-end;
-
-function TQVTNode.GetExts: TList<IInterface>;
-begin
-  if not Assigned(FExts) then
-    FExts := TList<IInterface>.Create;
-  Result := FExts;
 end;
 
 function TQVTNode.GetFirstChild: TQVTNode;
@@ -4803,23 +5147,6 @@ begin
     TreeView.InitNode(Self);
 end;
 
-function TQVTNode.QueryInterface(const IID: TGUID; out Obj): HResult;
-
-var
-  I: Integer;
-begin
-  Result := inherited;
-  if (Result = E_NOINTERFACE) and Assigned(FExts) then
-  begin
-    for I := 0 to FExts.Count - 1 do
-    begin
-      Result := FExts[I].QueryInterface(IID, Obj);
-      if Result = S_OK then
-        Break;
-    end;
-  end;
-end;
-
 procedure TQVTNode.Reinit(ANest: Boolean);
 var
   AExpanded: Boolean;
@@ -4828,7 +5155,8 @@ begin
     ReinitChildren(ANest)
   else
   begin
-    Exts.Clear;
+    if HasExts then
+      Exts.Clear;
     AExpanded := TQVTNodeState.nsExpanded in FStates;
     FStates := [TQVTNodeState.nsVisible];
     NeedInitialized;
@@ -4961,15 +5289,21 @@ begin
       if not(TQVTNodeState.nsExpanded in AParent.FStates) then
       begin
         AContentChanged := True;
-        AParent.FStates := AParent.FStates + [TQVTNodeState.nsExpanded];
+        AParent.States := AParent.FStates + [TQVTNodeState.nsExpanded];
       end;
       AParent := AParent.FParent;
     end;
-    TreeView.FocusChanging(Self, TreeView.FocusColumn);
-    TreeView.FFocusNode := Self;
-    TreeView.FocusChanged;
-    if AContentChanged then
-      TreeView.NodeContentChanged;
+    FStates := FStates + [nsFocused];
+    with TreeView do
+    begin
+      FocusChanging(Self, TreeView.FocusColumn);
+      if Assigned(FFocusNode) then
+        FFocusNode.States := FFocusNode.States - [nsFocused];
+      FFocusNode := Self;
+      FocusChanged;
+      if AContentChanged then
+        NodeContentChanged;
+    end;
     ScrollToView;
   end;
 end;
@@ -5030,13 +5364,41 @@ begin
 end;
 
 procedure TQVTNode.SetStates(const value: TQVTNodeStates);
+var
+  ALastStates: TQVTNodeStates;
 begin
   if FStates <> value then
   begin
-    if ([TQVTNodeState.nsVisible, TQVTNodeState.nsExpanded] * FStates) <>
+    ALastStates := FStates;
+    FStates := value;
+    if ([TQVTNodeState.nsVisible, TQVTNodeState.nsExpanded] * ALastStates) <>
       ([TQVTNodeState.nsVisible, TQVTNodeState.nsExpanded] * value) then
       TreeView.NodeContentChanged;
-    FStates := value;
+    // 新状态选中
+    if TQVTNodeState.nsSelected in value then
+    begin
+      if not(TQVTNodeState.nsSelected in ALastStates) then
+      begin
+        if TQVTOption.toMultiSelection in TreeView.Options then
+        begin
+          if TreeView.Selections.IndexOf(Self) = -1 then
+            TreeView.Selections.Add(Self);
+        end
+        else
+          SetFocus;
+      end;
+    end
+    else
+    begin
+      if TQVTNodeState.nsSelected in ALastStates then
+      begin
+        if TQVTOption.toMultiSelection in TreeView.Options then
+          TreeView.Selections.Remove(Self)
+        else if TreeView.FocusNode = Self then
+          TreeView.FFocusNode := nil;
+        TreeView.InvalidateNode(Self);
+      end;
+    end;
   end;
 end;
 
@@ -5052,7 +5414,6 @@ begin
 end;
 
 procedure TQVTTextDrawer.Draw(ARect: TRectF; AData: IQVTCellData);
-
 var
   ATextData: IQVTTextCellData;
   ATreeView: TQVirtualTreeView;
@@ -5067,7 +5428,7 @@ begin
       ATextSettings := ADrawable.TextSettings;
       if not Assigned(ATextSettings) then
         ATextSettings := ATreeView.TextSettings;
-      if ADrawable.Fill <> nil then
+      if ADrawable.Fill <> ATreeView.ActiveFill then
         ATreeView.Canvas.FillRect(ARect, 0, 0, [], ATreeView.Opacity,
           ADrawable.Fill);
       DrawText(ARect, ATextData, ATextSettings);
@@ -5119,7 +5480,6 @@ end;
 
 function TQVTTextDrawer.GetFill(AData: IQVTCellData;
   AllowNull: Boolean): TBrush;
-
 var
   ADrawable: IQVTDrawable;
 begin
@@ -5130,7 +5490,7 @@ begin
   if not Assigned(Result) then
   begin
     if not AllowNull then
-      Result := AData.TreeView.Fill;
+      Result := AData.TreeView.ActiveFill;
   end;
 end;
 
@@ -5178,7 +5538,8 @@ var
   ATextData: IQVTTextCellData;
   AFill: TBrush;
   AStroke: TStrokeBrush;
-  ATextSettings: TTextSettings;
+  ATextSettings: TTextSettingsInfo;
+  ASourceSettings: TTextSettings;
   R: TRectF;
   PW: Single;
   AText: String;
@@ -5227,11 +5588,13 @@ begin
     begin
       ARect.Left := R.Left + 3;
       AText := ATextData.Text;
-      ATextSettings := TTextSettings.Create(nil);
+      ASourceSettings := GetTextSettings(AData, false);
+      ATextSettings := TTextSettingsInfo.Create(Self, TCellTextSettings);
       try
-        ATextSettings.Assign(GetTextSettings(AData, false));
-        ATextSettings.FontColor := CalcTextColor(ATextSettings.FontColor);
-        DrawText(ARect, ATextData, ATextSettings);
+        ATextSettings.TextSettings.Assign(ASourceSettings);
+        ATextSettings.TextSettings.FontColor :=
+          CalcTextColor(ATextSettings.TextSettings.FontColor);
+        DrawText(ARect, ATextData, ATextSettings.ResultingTextSettings);
       finally
         FreeAndNil(ATextSettings);
       end;
@@ -5339,7 +5702,6 @@ var
       AButtonRect := RectF(pt.X - 1, pt.Y - ButtonSize,
         pt.X + 1 + ButtonSize, pt.Y);
     end;
-    ACanvas.ClearRect(ANode.FButtonRect, AColor);
     ACanvas.Fill.Assign(ATreeView.LineStyle);
     ACanvas.FillPolygon(APolygon, ATreeView.Opacity);
   end;
@@ -6121,7 +6483,8 @@ end;
 
 class constructor TQVTHeaderDrawer.Create;
 begin
-
+  FStateChar[0] := '^';
+  FStateChar[1] := 'v';
 end;
 
 class destructor TQVTHeaderDrawer.Destroy;
@@ -6139,7 +6502,7 @@ var
   ATreeView: TQVirtualTreeView;
   ACanvas: TCanvas;
   AFill: TBrush;
-  ATextSettings: TTextSettings;
+  ATextSettings: TTextSettingsInfo;
   AColors: array [0 .. 1] of TAlphaColor;
   R: TRectF;
   ASides: TSides;
@@ -6149,34 +6512,37 @@ var
     begin
       case AColumn.Title.SortMarker of
         smAsc:
-          DrawText(ATreeView, R, '↑' + IntToStr(AColumn.SortIndex + 1),
-            ATextSettings, AColumn.Enabled);
+          DrawText(ATreeView, R, FStateChar[0] + IntToStr(AColumn.SortIndex +
+            1), ATextSettings.TextSettings, AColumn.Enabled);
         smDesc:
-          DrawText(ATreeView, R, '↓' + IntToStr(AColumn.SortIndex + 1),
-            ATextSettings, AColumn.Enabled);
+          DrawText(ATreeView, R, FStateChar[1] + IntToStr(AColumn.SortIndex +
+            1), ATextSettings.TextSettings, AColumn.Enabled);
       end;
     end
     else
     begin
       case AColumn.Title.SortMarker of
         smAsc:
-          DrawText(ATreeView, R, '↑', ATextSettings, AColumn.Enabled);
+          DrawText(ATreeView, R, FStateChar[0], ATextSettings.TextSettings,
+            AColumn.Enabled);
         smDesc:
-          DrawText(ATreeView, R, '↓', ATextSettings, AColumn.Enabled);
+          DrawText(ATreeView, R, FStateChar[1], ATextSettings.TextSettings,
+            AColumn.Enabled);
       end;
     end;
   end;
 
   procedure DrawSortMarkers;
-
   var
     MR: TRectF;
+    ASourceSettings: TTextSettings;
   begin
-    ATextSettings := TTextSettings.Create(nil);
+    ASourceSettings := GetTextSettings(AData, false);
+    ATextSettings := TTextSettingsInfo.Create(Self, TCellTextSettings);
     try
-      ATextSettings.Assign(GetTextSettings(AData, false));
+      ATextSettings.TextSettings.Assign(ASourceSettings);
       // Marker的字体大小设置为9pt
-      ATextSettings.Font.Size := 10;
+      ATextSettings.TextSettings.Font.Size := 10;
       if Assigned(FStatePath[0]) and (Length(FStatePath[0].Data) > 0) and
         (AColumn.Title.SortMarker = TQVTColumnSortMarker.smAsc) then
       begin
@@ -6193,8 +6559,8 @@ var
         if ATreeView.SortColumns.Count > 1 then
         begin
           R.Left := MR.Right;
-          DrawText(ATreeView, R, IntToStr(AColumn.SortIndex + 1), ATextSettings,
-            AColumn.Enabled);
+          DrawText(ATreeView, R, IntToStr(AColumn.SortIndex + 1),
+            ATextSettings.ResultingTextSettings, AColumn.Enabled);
         end;
       end
       else if Assigned(FStatePath[1]) and (Length(FStatePath[1].Data) > 0) and
@@ -6213,8 +6579,8 @@ var
         if ATreeView.SortColumns.Count > 1 then
         begin
           R.Left := MR.Right;
-          DrawText(ATreeView, R, IntToStr(AColumn.SortIndex + 1), ATextSettings,
-            AColumn.Enabled);
+          DrawText(ATreeView, R, IntToStr(AColumn.SortIndex + 1),
+            ATextSettings.ResultingTextSettings, AColumn.Enabled);
         end;
       end
       else
@@ -6229,14 +6595,6 @@ begin
   AColumn := ATreeView.Header.Columns[AData.Column];
   ACanvas := ATreeView.Canvas;
   R := ARect;
-  if AColumn.Title.SortMarker <> TQVTColumnSortMarker.smNone then
-  begin
-    R.Right := R.Right - 16;
-    AFill := GetFill(AData, false);
-    if AFill.Kind <> TBrushKind.None then
-      ACanvas.FillRect(RectF(R.Right, R.Top, ARect.Right, R.Bottom)
-        .SnapToPixel(ACanvas.Scale), 0, 0, [], ATreeView.Opacity, AFill);
-  end;
   inherited Draw(R, AData);
   // 要在右侧绘制排序状态
   if AColumn.Title.SortMarker <> smNone then
@@ -6312,6 +6670,11 @@ begin
   end;
 end;
 
+class function TQVTHeaderDrawer.GetAscChar: WideChar;
+begin
+  Result := FStateChar[0];
+end;
+
 class function TQVTHeaderDrawer.GetAscPath: TPathData;
 begin
   if not Assigned(FStatePath[0]) then
@@ -6319,11 +6682,26 @@ begin
   Result := FStatePath[0];
 end;
 
+class function TQVTHeaderDrawer.GetDescChar: WideChar;
+begin
+  Result := FStateChar[1];
+end;
+
 class function TQVTHeaderDrawer.GetDescPath: TPathData;
 begin
   if not Assigned(FStatePath[1]) then
     FStatePath[1] := TPathData.Create;
   Result := FStatePath[1];
+end;
+
+class procedure TQVTHeaderDrawer.SetAscChar(const value: WideChar);
+begin
+  FStateChar[0] := value;
+end;
+
+class procedure TQVTHeaderDrawer.SetDescChar(const value: WideChar);
+begin
+  FStateChar[1] := value;
 end;
 
 { TQVTCheckCellData }
@@ -7820,6 +8198,107 @@ procedure TQVTCustomDrawer.Draw(ARect: TRectF; AData: IQVTCellData);
 begin
   if Assigned(FOnDraw) then
     FOnDraw(Self, ARect, AData);
+end;
+
+{ TQVTExtendableObject }
+
+destructor TQVTExtendableObject.Destroy;
+begin
+  if Assigned(FExts) then
+    FreeAndNil(FExts);
+  inherited;
+end;
+
+function TQVTExtendableObject.ExtByName(const AName: String): IQVTNamedExt;
+var
+  I: Integer;
+  AExt: IQVTNamedExt;
+begin
+  Result := nil;
+  if Assigned(FExts) then
+  begin
+    for I := 0 to FExts.Count - 1 do
+    begin
+      if Supports(FExts[I], IQVTNamedExt, AExt) and (AExt.Name = AName) then
+      begin
+        Result := AExt;
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+function TQVTExtendableObject.ExtByType(const IID: TGUID; var AValue): Boolean;
+var
+  I: Integer;
+begin
+  Result := false;
+  Pointer(AValue) := nil;
+  if Assigned(FExts) then
+  begin
+    for I := 0 to FExts.Count - 1 do
+    begin
+      Result := Supports(FExts[I], IID, AValue);
+      if Result then
+        Exit;
+    end;
+  end;
+end;
+
+function TQVTExtendableObject.ExtByType(const AClass: TClass): TObject;
+var
+  I: Integer;
+  AExt: IInterface;
+begin
+  Result := nil;
+  if Assigned(FExts) then
+  begin
+    for I := 0 to FExts.Count - 1 do
+    begin
+      AExt := FExts[I];
+      if AExt is AClass then
+      begin
+        Result := AExt as AClass;
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+function TQVTExtendableObject.ExtByType(const AClass: TClass;
+var AValue): Boolean;
+begin
+  TObject(AValue) := ExtByType(AClass);
+  Result := TObject(AValue) <> nil;
+end;
+
+function TQVTExtendableObject.GetExts: TList<IInterface>;
+begin
+  if not Assigned(FExts) then
+    FExts := TList<IInterface>.Create;
+  Result := FExts;
+end;
+
+function TQVTExtendableObject.HasExts: Boolean;
+begin
+  Result := Assigned(FExts) and (FExts.Count > 0);
+end;
+
+function TQVTExtendableObject.QueryInterface(const IID: TGUID; out Obj)
+  : HResult;
+var
+  I: Integer;
+begin
+  Result := inherited;
+  if (Result = E_NOINTERFACE) and Assigned(FExts) then
+  begin
+    for I := 0 to FExts.Count - 1 do
+    begin
+      Result := FExts[I].QueryInterface(IID, Obj);
+      if Result = S_OK then
+        Break;
+    end;
+  end;
 end;
 
 end.

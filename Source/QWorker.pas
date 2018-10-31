@@ -32,6 +32,11 @@ interface
 }
 {$REGION '修订日志'}
 { 修订日志
+  2018.10.20
+  ==========
+  * 统一匿名函数规则和其它组件一致，均是标记 TMehtod.Data 为 -1
+  * 修正了 WaitRunningDone 为 false 时没有清理正在运行的作业的问题（丰盛辉煌报告）
+  + Clear 函数加入了几个重载
   2017.5.8
   ==========
   * 修订了 DLL 中主线程作业可能无法执行的问题
@@ -663,6 +668,8 @@ type
         (ForProcA: Pointer);
       6:
         (Code: Pointer; Data: Pointer);
+      7:
+        (Method: TMethod);
   end;
 
   TQJob = record
@@ -684,6 +691,7 @@ type
     procedure SetFreeType(const Value: TQJobDataFreeType);
     function GetHandle: IntPtr;
     function GetIsPlanRunning: Boolean;
+    function GetIsAnonWorkerProc: Boolean;
   public
     constructor Create(AProc: TQJobProc); overload;
     /// <summary>值拷贝函数</summary>
@@ -726,8 +734,7 @@ type
     /// <summary>判断作业的Data指向的是一个接口且要求作业完成时自动释放</summary>
     property IsInterfaceOwner: Boolean read GetIsInterfaceOwner;
     /// <summary>判断作业处理过程是否是一个匿名函数</summary>
-    property IsAnonWorkerProc: Boolean index JOB_ANONPROC read GetFlags
-      write SetFlags;
+    property IsAnonWorkerProc: Boolean read GetIsAnonWorkerProc;
     /// <summary>作业是由一个计划任务触发</summary>
     property IsByPlan: Boolean index JOB_BY_PLAN read GetFlags write SetFlags;
     /// <summary>扩展的作业处理过程数据</summary>
@@ -1448,6 +1455,26 @@ type
     /// <returns>返回实际清除的作业数量</returns>
     function Clear(AProc: TQJobProc; AData: Pointer; AMaxTimes: Integer = -1;
       AWaitRunningDone: Boolean = True): Integer; overload;
+    /// <summary>清除所有投寄的指定过程作业</summary>
+    /// <param name="AProc">要清除的作业执行过程</param>
+    /// <param name="AData">要清除的作业附加数据指针地址，如果值为Pointer(-1)，
+    /// 则清除所有的相关过程，否则，只清除附加数据地址一致的过程</param>
+    /// <param name="AMaxTimes">最多清除的数量，如果<0，则全清</param>
+    /// <param name="AWaitRunningDone">是否等待正在运行的作业完成，默认为 true 等待</param>
+    /// <returns>返回实际清除的作业数量</returns>
+    function Clear(AProc: TQJobProcG; AData: Pointer; AMaxTimes: Integer = -1;
+      AWaitRunningDone: Boolean = True): Integer; overload;
+{$IFDEF UNICODE}
+    /// <summary>清除所有投寄的指定过程作业</summary>
+    /// <param name="AProc">要清除的作业执行过程</param>
+    /// <param name="AData">要清除的作业附加数据指针地址，如果值为Pointer(-1)，
+    /// 则清除所有的相关过程，否则，只清除附加数据地址一致的过程</param>
+    /// <param name="AMaxTimes">最多清除的数量，如果<0，则全清</param>
+    /// <param name="AWaitRunningDone">是否等待正在运行的作业完成，默认为 true 等待</param>
+    /// <returns>返回实际清除的作业数量</returns>
+    function Clear(AProc: TQJobProcA; AData: Pointer; AMaxTimes: Integer = -1;
+      AWaitRunningDone: Boolean = True): Integer; overload;
+{$ENDIF}
     /// <summary>清除指定信号关联的所有作业</summary>
     /// <param name="ASingalName">要清除的信号名称</param>
     /// <param name="AWaitRunningDone">是否等待正在运行的作业完成，默认为 true 等待</param>
@@ -1850,7 +1877,10 @@ type
   /// <summary>将全局的作业处理函数转换为TQJobProc类型，以便正常调度使用</summary>
   /// <param name="AProc">全局的作业处理函数</param>
   /// <returns>返回新的TQJobProc实例</returns>
-function MakeJobProc(const AProc: TQJobProcG): TQJobProc; overload;
+function MakeJobProc(const AProc: TQJobProcG): TMethod; overload;
+{$IFDEF UNICODE}
+function MakeJobProc(const AProc: TQJobProcA): TMethod; overload;
+{$ENDIF}
 // 获取系统中CPU的核心数量
 function GetCPUCount: Integer;
 // 获取当前系统的时间戳，最高可精确到0.1ms，但实际受操作系统限制
@@ -1867,7 +1897,7 @@ function JobPoolCount: NativeInt;
 function JobPoolPrint: QStringW;
 /// <summary>清除指定作业状态的状态信息</summary>
 /// <param name="AState">作业状态</param>
-procedure ClearJobState(var AState: TQJobState);  inline;
+procedure ClearJobState(var AState: TQJobState); inline;
 /// <summary>清除指定作业状态数组的状态信息</summary>
 /// <param name="AStates">作业状态数组</param>
 procedure ClearJobStates(var AStates: TQJobStateArray);
@@ -1913,6 +1943,8 @@ resourcestring
   STooManyLongtimeWorker = '不能允许太多长时间作业线程(最多允许工作者一半)。';
   SBadWaitDoneParam = '未知的等待正在执行作业完成方式:%d';
   SUnsupportPlatform = '%s 当前在本平台不受支持。';
+  STerminateMainThreadJobInMainThread =
+    '在主线程中等待主线程作业结束可能会造成死循环，请将 AWaitRunningDone 参数设置为 false。';
 
 type
 {$IFDEF MSWINDOWS}
@@ -1999,7 +2031,7 @@ function ThreadExists(AThreadId: TThreadId; AProcessId: DWORD): Boolean;
     THREAD_QUERY_INFORMATION = $0040;
     THREAD_SUSPEND_RESUME = $0002;
   begin
-    AHandle := OpenThread(THREAD_SUSPEND_RESUME, true, AThreadId);
+    AHandle := OpenThread(THREAD_SUSPEND_RESUME, True, AThreadId);
     Result := AHandle <> 0;
     if Result then
     begin
@@ -2140,7 +2172,7 @@ end;
 procedure ClearJobState(var AState: TQJobState);
 begin
 {$IFDEF UNICODE}
-  if (AState.Flags and JOB_ANONPROC) <> 0 then
+  if (AState.Proc.Data = Pointer(-1)) then
     TQJobProcA(AState.Proc.ProcA) := nil;
 {$ENDIF}
   if IsFMXApp then
@@ -2259,11 +2291,22 @@ begin
     Result := _CPUCount;
 end;
 
-function MakeJobProc(const AProc: TQJobProcG): TQJobProc;
+function MakeJobProc(const AProc: TQJobProcG): TMethod;
 begin
-  TMethod(Result).Data := nil;
-  TMethod(Result).Code := @AProc;
+  Result.Data := nil;
+  Result.Code := @AProc;
 end;
+{$IFDEF UNICODE}
+
+function MakeJobProc(const AProc: TQJobProcA): TMethod;
+var
+  AMethod: TMethod absolute Result;
+begin
+  AMethod.Data := Pointer(-1);
+  AMethod.Code := nil;
+  TQJobProcA(AMethod.Code) := AProc;
+end;
+{$ENDIF}
 
 function SameWorkerProc(const P1: TQJobMethod; P2: TQJobProc): Boolean; inline;
 begin
@@ -2319,6 +2362,11 @@ begin
     Result := TotalUsedTime div Cardinal(Runs)
   else
     Result := 0;
+end;
+
+function TQJob.GetIsAnonWorkerProc: Boolean;
+begin
+  Result := (WorkerProc.Data = Pointer(-1));
 end;
 
 function TQJob.GetIsCustomFree: Boolean;
@@ -2662,19 +2710,19 @@ var
   // AHandleEof: PIntPtr;
   function Accept(AJob: PQJob): Boolean;
   var
-    p: PIntPtr;
+    P: PIntPtr;
   begin
-    p := AHandles;
+    P := AHandles;
     Result := false;
-    while IntPtr(p) < IntPtr(AHandles) do
+    while IntPtr(P) < IntPtr(AHandles) do
     begin
-      if (IntPtr(p^) and (not $03)) = IntPtr(AJob) then
+      if (IntPtr(P^) and (not $03)) = IntPtr(AJob) then
       begin
-        p^ := 0; // 置空
+        P^ := 0; // 置空
         Result := True;
         Exit;
       end;
-      Inc(p);
+      Inc(P);
     end;
   end;
 
@@ -3152,19 +3200,19 @@ var
   ACanDelete: Boolean;
   function Accept(AJob: PQJob): Boolean;
   var
-    p: PIntPtr;
+    P: PIntPtr;
   begin
-    p := AHandles;
+    P := AHandles;
     Result := false;
-    while IntPtr(p) < IntPtr(AHandles) do
+    while IntPtr(P) < IntPtr(AHandles) do
     begin
-      if (IntPtr(p^) and (not $03)) = IntPtr(AJob) then
+      if (IntPtr(P^) and (not $03)) = IntPtr(AJob) then
       begin
-        p^ := 0;
+        P^ := 0;
         Result := True;
         Exit;
       end;
-      Inc(p);
+      Inc(P);
     end;
   end;
 
@@ -3605,7 +3653,8 @@ end;
 function TQWorkers.Post(AProc: TQJobProcG; AData: Pointer;
   ARunInMainThread: Boolean; AFreeType: TQJobDataFreeType): IntPtr;
 begin
-  Result := Post(MakeJobProc(AProc), AData, ARunInMainThread, AFreeType);
+  Result := Post(TQJobProc(MakeJobProc(AProc)), AData, ARunInMainThread,
+    AFreeType);
 end;
 
 {$IFDEF UNICODE}
@@ -3617,8 +3666,7 @@ var
 begin
   AJob := JobPool.Pop;
   JobInitialize(AJob, AData, AFreeType, True, ARunInMainThread);
-  TQJobProcA(AJob.WorkerProc.ProcA) := AProc;
-  AJob.IsAnonWorkerProc := True;
+  AJob.WorkerProc.Method := MakeJobProc(AProc);
   Result := Post(AJob);
 end;
 {$ENDIF}
@@ -3691,12 +3739,9 @@ begin
     Dec(AMaxTimes, ACleared);
     if AMaxTimes = 0 then
       Exit;
-    if AWaitRunningDone then
-    begin
-      AWaitParam.WaitType := 0;
-      AWaitParam.Bound := AObject;
-      WaitRunningDone(AWaitParam);
-    end;
+    AWaitParam.WaitType := 0;
+    AWaitParam.Bound := AObject;
+    WaitRunningDone(AWaitParam, not AWaitRunningDone);
   end;
 end;
 
@@ -3795,8 +3840,7 @@ var
 begin
   AJob := JobPool.Pop;
   JobInitialize(AJob, AData, AFreeType, AInterval <= 0, ARunInMainThread);
-  TQJobProcA(AJob.WorkerProc.ProcA) := AProc;
-  AJob.IsAnonWorkerProc := True;
+  AJob.WorkerProc.Method := MakeJobProc(AProc);
   AJob.Interval := AInterval;
   // ATime我们只要时间部分，日期忽略
   ANow := Now;
@@ -3892,13 +3936,10 @@ begin
     Inc(Result, ACleared);
     if AMaxTimes = 0 then
       Exit;
-    if AWaitRunningDone then
-    begin
-      AWaitParam.WaitType := 1;
-      AWaitParam.Data := AData;
-      AWaitParam.WorkerProc := TMethod(AProc);
-      WaitRunningDone(AWaitParam);
-    end;
+    AWaitParam.WaitType := 1;
+    AWaitParam.Data := AData;
+    AWaitParam.WorkerProc := TMethod(AProc);
+    WaitRunningDone(AWaitParam, not AWaitRunningDone);
   end;
 end;
 
@@ -3959,9 +4000,9 @@ var
   begin
     while PeekMessage(AMsg, FMainWorker, WM_APP, WM_APP, PM_REMOVE) do
     begin
-      ACopy.Msg := AMsg.message;
-      ACopy.WParam := AMsg.wParam;
-      ACopy.LParam := AMsg.lParam;
+      ACopy.MSG := AMsg.message;
+      ACopy.WPARAM := AMsg.WPARAM;
+      ACopy.LPARAM := AMsg.LPARAM;
       ACopy.Result := 0;
       DoMainThreadWork(ACopy);
     end;
@@ -4096,8 +4137,7 @@ var
 begin
   AJob := JobPool.Pop;
   JobInitialize(AJob, AData, AFreeType, not ARepeat, ARunInMainThread);
-  TQJobProcA(AJob.WorkerProc.ProcA) := AProc;
-  AJob.IsAnonWorkerProc := True;
+  AJob.WorkerProc.Method := MakeJobProc(AProc);
   if ADelay > 0 then
     AJob.FirstDelay := ADelay;
   AJob.IsDelayRepeat := ARepeat;
@@ -4110,8 +4150,8 @@ function TQWorkers.Delay(AProc: TQJobProcG; ADelay: Int64; AData: Pointer;
   ARunInMainThread: Boolean; AFreeType: TQJobDataFreeType;
   ARepeat: Boolean): IntPtr;
 begin
-  Result := Delay(MakeJobProc(AProc), ADelay, AData, ARunInMainThread,
-    AFreeType, ARepeat);
+  Result := Delay(TQJobProc(MakeJobProc(AProc)), ADelay, AData,
+    ARunInMainThread, AFreeType, ARepeat);
 end;
 
 destructor TQWorkers.Destroy;
@@ -4323,12 +4363,14 @@ var
         SetLength(Result, Length(Result) + 4096);
       Assert(AJob.Handle <> 0);
       Result[I].Handle := AJob.Handle;
+      Result[I].Proc := AJob.WorkerProc;
 {$IFDEF UNICODE}
       if AJob.IsAnonWorkerProc then
-        TQJobProcA(Result[I].Proc.ProcA) := TQJobProcA(AJob.WorkerProc.ProcA)
-      else
+      begin
+        Result[I].Proc.ProcA := nil;
+        TQJobProcA(Result[I].Proc.ProcA) := TQJobProcA(AJob.WorkerProc.ProcA);
+      end;
 {$ENDIF}
-        Result[I].Proc := AJob.WorkerProc;
       Result[I].Flags := AJob.Flags;
       Result[I].PushTime := AJob.PushTime;
       if AJob.IsByPlan then
@@ -4372,12 +4414,14 @@ var
           if I = Length(ATemp) then
             SetLength(ATemp, I shl 1);
           ATemp[I].Handle := AJob.Handle;
+          ATemp[I].Proc := AJob.WorkerProc;
 {$IFDEF UNICODE}
           if AJob.IsAnonWorkerProc then
+          begin
+            ATemp[I].Proc.ProcA := nil;
             TQJobProcA(ATemp[I].Proc.ProcA) := TQJobProcA(AJob.WorkerProc.ProcA)
-          else
+          end;
 {$ENDIF}
-            ATemp[I].Proc := AJob.WorkerProc;
           ATemp[I].Flags := AJob.Flags;
           ATemp[I].Runs := AJob.Runs;
           ATemp[I].PushTime := AJob.PushTime;
@@ -4423,12 +4467,14 @@ var
           if L >= Length(ATemp) then
             SetLength(ATemp, Length(ATemp) + 4096);
           ATemp[L].Handle := AJob.Handle;
+          ATemp[L].Proc := AJob.WorkerProc;
 {$IFDEF UNICODE}
           if AJob.IsAnonWorkerProc then
+          begin
+            ATemp[I].Proc.ProcA := nil;
             TQJobProcA(ATemp[I].Proc.ProcA) := TQJobProcA(AJob.WorkerProc.ProcA)
-          else
+          end;
 {$ENDIF}
-            ATemp[L].Proc := AJob.WorkerProc;
           ATemp[L].Runs := AJob.Runs;
           ATemp[L].Flags := AJob.Flags;
           ATemp[L].PushTime := AJob.PushTime;
@@ -4805,8 +4851,7 @@ begin
     AJob := JobPool.Pop;
     JobInitialize(AJob, AData, AFreeType, True, false);
     AJob.SetFlags(JOB_LONGTIME, True);
-    TQJobProcA(AJob.WorkerProc.ProcA) := AProc;
-    AJob.IsAnonWorkerProc := True;
+    AJob.WorkerProc.Method := MakeJobProc(AProc);
     Result := Post(AJob);
   end
   else
@@ -4820,7 +4865,7 @@ end;
 function TQWorkers.LongtimeJob(AProc: TQJobProcG; AData: Pointer;
   AFreeType: TQJobDataFreeType): IntPtr;
 begin
-  Result := LongtimeJob(MakeJobProc(AProc), AData, AFreeType);
+  Result := LongtimeJob(TQJobProc(MakeJobProc(AProc)), AData, AFreeType);
 end;
 
 function TQWorkers.LookupIdleWorker(AFromStatic: Boolean): Boolean;
@@ -4913,12 +4958,14 @@ var
       if IntPtr(AJob) = AJobHandle then
       begin
         AResult.Handle := IntPtr(AJob);
+        AResult.Proc := AJob.WorkerProc;
 {$IFDEF UNICODE}
         if AJob.IsAnonWorkerProc then
+        begin
+          AResult.Proc.ProcA := nil;
           TQJobProcA(AResult.Proc.ProcA) := TQJobProcA(AJob.WorkerProc.ProcA)
-        else
+        end;
 {$ENDIF}
-          AResult.Proc := AJob.WorkerProc;
         AResult.Flags := AJob.Flags;
         AResult.PushTime := AJob.PushTime;
         if AJob.IsByPlan then
@@ -4956,13 +5003,15 @@ var
           if IntPtr(AJob) = AJobHandle then
           begin
             AResult.Handle := IntPtr(AJob) or $01;
+            AResult.Proc := AJob.WorkerProc;
 {$IFDEF UNICODE}
             if AJob.IsAnonWorkerProc then
+            begin
+              AResult.Proc.ProcA := nil;
               TQJobProcA(AResult.Proc.ProcA) :=
                 TQJobProcA(AJob.WorkerProc.ProcA)
-            else
+            end;
 {$ENDIF}
-              AResult.Proc := AJob.WorkerProc;
             AResult.Flags := AJob.Flags;
             AResult.Runs := AJob.Runs;
             AResult.PushTime := AJob.PushTime;
@@ -5004,13 +5053,15 @@ var
           if IntPtr(AJob) = AJobHandle then
           begin
             AResult.Handle := AJob.Handle;
+            AResult.Proc := AJob.WorkerProc;
 {$IFDEF UNICODE}
             if AJob.IsAnonWorkerProc then
+            begin
+              AResult.Proc.ProcA := nil;
               TQJobProcA(AResult.Proc.ProcA) :=
-                TQJobProcA(AJob.WorkerProc.ProcA)
-            else
+                TQJobProcA(AJob.WorkerProc.ProcA);
+            end;
 {$ENDIF}
-              AResult.Proc := AJob.WorkerProc;
             AResult.Runs := AJob.Runs;
             AResult.Flags := AJob.Flags;
             AResult.PushTime := AJob.PushTime;
@@ -5050,13 +5101,15 @@ var
             if not Result then
             begin
               AResult.Handle := AHandle;
+              AResult.Proc := AJob.WorkerProc;
 {$IFDEF UNICODE}
               if AJob.IsAnonWorkerProc then
+              begin
+                AResult.Proc.ProcA := nil;
                 TQJobProcA(AResult.Proc.ProcA) :=
                   TQJobProcA(AJob.WorkerProc.ProcA)
-              else
+              end;
 {$ENDIF}
-                AResult.Proc := AJob.WorkerProc;
               AResult.Runs := AJob.Runs;
               AResult.Flags := AJob.Flags;
               AResult.PushTime := AJob.PushTime;
@@ -5113,7 +5166,7 @@ function TQWorkers.Plan(AProc: TQJobProcG; const APlan: TQPlanMask;
   AData: Pointer; ARunInMainThread: Boolean;
   AFreeType: TQJobDataFreeType): IntPtr;
 begin
-  Result := Plan(MakeJobProc(AProc), APlan, AData, ARunInMainThread, AFreeType);
+  Result := Plan(TQJobProc(MakeJobProc(AProc)), APlan, AData, ARunInMainThread, AFreeType);
 end;
 
 function TQWorkers.Plan(AProc: TQJobProc; const APlan: TQPlanMask;
@@ -5153,8 +5206,7 @@ begin
   JobInitialize(AJob, TQJobExtData.Create(APlan, AData, AFreeType),
     jdfFreeAsObject, false, ARunInMainThread);
   AJob.IsByPlan := True;
-  AJob.IsAnonWorkerProc := True;
-  TQJobProcA(AJob.WorkerProc.ProcA) := AProc;
+  AJob.WorkerProc.Method := MakeJobProc(AProc);
   Result := Post(AJob);
 end;
 
@@ -5499,8 +5551,7 @@ begin
   begin
     AJob := JobPool.Pop;
     JobInitialize(AJob, AData, AFreeType, false, ARunInMainThread);
-    TQJobProcA(AJob.WorkerProc.ProcA) := AProc;
-    AJob.IsAnonWorkerProc := True;
+    AJob.WorkerProc.Method := MakeJobProc(AProc);
     AJob.SetFlags(JOB_SIGNAL_WAKEUP, True);
     AJob.PushTime := GetTimestamp;
     Result := 0;
@@ -5667,7 +5718,7 @@ function TQWorkers.Wait(AProc: TQJobProcG; ASignalId: Integer;
   ARunInMainThread: Boolean; AData: Pointer;
   AFreeType: TQJobDataFreeType): IntPtr;
 begin
-  Result := Wait(MakeJobProc(AProc), ASignalId, ARunInMainThread, AData,
+  Result := Wait(TQJobProc(MakeJobProc(AProc)), ASignalId, ARunInMainThread, AData,
     AFreeType);
 end;
 
@@ -5738,6 +5789,15 @@ var
             if AFound then
             begin
               FWorkers[I].FTerminatingJob := AJob;
+              // 检查是否当前是主线程中停止主线程作业，如果是的话，是无法停止的，所以只是标记一下
+              if (not AMarkTerminateOnly) and AJob.InMainThread and
+                (GetCurrentThreadId = MainThreadId) then
+              begin
+{$IFDEF DEBUG}
+                raise Exception.Create(STerminateMainThreadJobInMainThread);
+{$ENDIF}
+                AMarkTerminateOnly := True;
+              end;
               Result := True;
             end;
           end
@@ -5808,8 +5868,7 @@ var
 begin
   AJob := JobPool.Pop;
   JobInitialize(AJob, AData, AFreeType, AInterval <= 0, ARunInMainThread);
-  TQJobProcA(AJob.WorkerProc.ProcA) := AProc;
-  AJob.IsAnonWorkerProc := True;
+  AJob.WorkerProc.Method := MakeJobProc(AProc);
   AJob.Interval := AInterval;
   AJob.FirstDelay := ADelay;
   Result := Post(AJob);
@@ -5820,7 +5879,7 @@ function TQWorkers.At(AProc: TQJobProcG; const ADelay, AInterval: Int64;
   AData: Pointer; ARunInMainThread: Boolean;
   AFreeType: TQJobDataFreeType): IntPtr;
 begin
-  Result := At(MakeJobProc(AProc), ADelay, AInterval, AData, ARunInMainThread,
+  Result := At(TQJobProc(MakeJobProc(AProc)), ADelay, AInterval, AData, ARunInMainThread,
     AFreeType);
 end;
 
@@ -5828,7 +5887,7 @@ function TQWorkers.At(AProc: TQJobProcG; const ATime: TDateTime;
   const AInterval: Int64; AData: Pointer; ARunInMainThread: Boolean;
   AFreeType: TQJobDataFreeType): IntPtr;
 begin
-  Result := At(MakeJobProc(AProc), ATime, AInterval, AData, ARunInMainThread,
+  Result := At(TQJobProc(MakeJobProc(AProc)), ATime, AInterval, AData, ARunInMainThread,
     AFreeType);
 end;
 
@@ -5895,6 +5954,20 @@ begin
   else
     Result := 0;
 end;
+{$IFDEF UNICODE}
+
+function TQWorkers.Clear(AProc: TQJobProcA; AData: Pointer; AMaxTimes: Integer;
+  AWaitRunningDone: Boolean): Integer;
+begin
+
+end;
+{$ENDIF}
+
+function TQWorkers.Clear(AProc: TQJobProcG; AData: Pointer; AMaxTimes: Integer;
+  AWaitRunningDone: Boolean): Integer;
+begin
+  Result := Clear(TQJobProc(MakeJobProc(AProc)), AData, AMaxTimes, AWaitRunningDone);
+end;
 
 procedure TQWorkers.Clear(AWaitRunningDone: Boolean);
 var
@@ -5918,11 +5991,8 @@ begin
     finally
       FLocker.Leave;
     end;
-    if AWaitRunningDone then
-    begin
-      AParam.WaitType := $FF;
-      WaitRunningDone(AParam);
-    end;
+    AParam.WaitType := $FF;
+    WaitRunningDone(AParam);
     FPlanCheckJob := 0;
   finally
     EnableWorkers;
@@ -5997,8 +6067,7 @@ var
 begin
   AJob := JobPool.Pop;
   JobInitialize(AJob, AData, AFreeType, AInterval <= 0, ARunInMainThread);
-  TQJobProcA(AJob.WorkerProc.ProcA) := AProc;
-  AJob.IsAnonWorkerProc := True;
+  AJob.WorkerProc.Method := MakeJobProc(AProc);
   AJob.Interval := AInterval;
   Result := Post(AJob);
 end;
@@ -6020,7 +6089,7 @@ end;
 function TQWorkers.Post(AProc: TQJobProcG; AInterval: Int64; AData: Pointer;
   ARunInMainThread: Boolean; AFreeType: TQJobDataFreeType): IntPtr;
 begin
-  Result := Post(MakeJobProc(AProc), AInterval, AData, ARunInMainThread,
+  Result := Post(TQJobProc(MakeJobProc(AProc)), AInterval, AData, ARunInMainThread,
     AFreeType);
 end;
 
@@ -6374,7 +6443,7 @@ end;
 function TQJobGroup.Add(AProc: TQJobProcG; AData: Pointer;
   AInMainThread: Boolean; AFreeType: TQJobDataFreeType): Boolean;
 begin
-  Result := Add(MakeJobProc(AProc), AData, AInMainThread, AFreeType);
+  Result := Add(TQJobProc(MakeJobProc(AProc)), AData, AInMainThread, AFreeType);
 end;
 {$IFDEF UNICODE}
 
@@ -6384,8 +6453,7 @@ var
   AJob: PQJob;
 begin
   AJob := InitGroupJob(AData, AInMainThread, AFreeType);
-  AJob.IsAnonWorkerProc := True;
-  TQJobProcA(AJob.WorkerProc.ProcA) := AProc;
+  AJob.WorkerProc.Method := MakeJobProc(AProc);
   Result := InternalAddJob(AJob);
 end;
 {$ENDIF}
@@ -6631,7 +6699,7 @@ var
   AJob: PQJob;
 begin
   AJob := InitGroupJob(AData, AInMainThread, AFreeType);
-  TQJobProcA(AJob.WorkerProc.ProcA) := AProc;
+  AJob.WorkerProc.Method := MakeJobProc(AProc);
   Result := InternalInsertJob(AIndex, AJob);
 end;
 {$ENDIF}
@@ -6949,8 +7017,9 @@ var
 begin
   AInst := TQForJobs.Create(AStartIndex, AStopIndex, AData, AFreeType);
   try
-    TQForJobProcA(AInst.FWorkJob.WorkerProc.ForProcA) := AWorkerProc;
-    AInst.FWorkJob.IsAnonWorkerProc := True;
+    AInst.FWorkJob.WorkerProc.ForProc := nil;
+    AInst.FWorkJob.WorkerProc.Data := Pointer(-1);
+    TQForJobProcA(AInst.FWorkJob.WorkerProc.Code) := AWorkerProc;
     AInst.Start;
     Result := AInst.Wait(AMsgWait);
   finally
