@@ -1009,7 +1009,7 @@ begin
     if ModalResult < 100 then
       Action := caNone;
   end;
-  if Action <> caNone then
+  if (dbsPopup in FStates) and (Action <> caNone) then
     PostMessage(Dialog.Handle, WM_APP, 0, 0);
 end;
 

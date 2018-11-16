@@ -512,9 +512,9 @@ var
     J: Integer;
   begin
     Result := True;
-    for J := 0 to AParams.Count - 1 do
+    for J := 0 to AParams.count - 1 do
     begin
-      if Assigned(AParams[J].Name) and (AParams[J].Name^<>#0) then
+      if Assigned(AParams[J].Name) and (AParams[J].Name^ <> #0) then
       begin
         Result := false;
         Break;
@@ -525,7 +525,7 @@ var
 begin
   if IsArray then
     AParent.DataType := jdtArray;
-  for I := 0 to AParams.Count - 1 do
+  for I := 0 to AParams.count - 1 do
   begin
     AParam := AParams[I];
     case AParam.ParamType of
@@ -536,7 +536,7 @@ begin
       ptDateTime:
         AParent.Add(AParam.Name).AsDateTime := AParam.AsFloat;
       ptInterval, ptAnsiString, ptUtf8String, ptUnicodeString:
-        AParent.Add(AParam.Name).AsString := AParam.AsString.Value;
+        AParent.Add(AParam.Name).AsString := AParam.AsString.value;
       ptBoolean:
         AParent.Add(AParam.Name).AsBoolean := AParam.AsBoolean;
       ptGuid:
@@ -924,7 +924,7 @@ var
   begin
     AStream := TMemoryStream.Create;
     try
-      AsArray.SaveToStream(NewStream(AStream, False));
+      AsArray.SaveToStream(NewStream(AStream, false));
       SetLength(ATemp, AStream.size);
       AStream.Position := 0;
       AStream.Read(ATemp[0], Length(ATemp));
@@ -951,7 +951,7 @@ begin
     else
       Result := ABufLen;
     if Result > 0 then
-      Move(ATemp[0], ABuf, Result);
+      Move(ATemp[0], ABuf^, Result);
   end;
 end;
 
@@ -1263,8 +1263,6 @@ begin
   case FType of
     ptInterface:
       IInterface(FValue.value.AsPointer) := nil;
-    ptBytes, ptStream:
-      IQStream(FValue.value.AsPointer) := nil;
     ptArray:
       IQParams(FValue.value.AsPointer) := nil
   else
@@ -1301,8 +1299,7 @@ begin
       ptGuid:
         FValue.TypeNeeded(vdtGuid);
       ptBytes, ptStream:
-        IQStream(FValue.value.AsPointer) :=
-          NewStream(TMemoryStream.Create, True);
+        FValue.TypeNeeded(vdtStream);
       ptArray:
         begin
           FValue.Reset;
@@ -1607,7 +1604,7 @@ begin
       Inc(APath);
     while APath^ <> #0 do
     begin
-      AName := DecodeTokenW(APath, PathDelimiter, NullChar, False);
+      AName := DecodeTokenW(APath, PathDelimiter, NullChar, false);
       if Length(AName) > 0 then
       begin
         Result := AParent.ByName(PQCharW(AName));
@@ -1668,7 +1665,7 @@ const
 begin
   AHelper := TQStringCatHelperW.Create;
   try
-    AHasName := False;
+    AHasName := false;
     for I := 0 to count - 1 do
     begin
       AParam := Items[I];
@@ -1690,7 +1687,7 @@ begin
       if AParam.ParamType in [ptDateTime, ptInterval, ptAnsiString,
         ptUtf8String, ptUnicodeString, ptGuid, ptBytes, ptStream] then
         AHelper.Cat(QuotedStrW(JavaEscape(AParam.AsString.value,
-          False), SQuoter))
+          false), SQuoter))
       else
         AHelper.Cat(AParam.AsString.value);
       AHelper.Cat(SDelimiter);
@@ -2601,7 +2598,7 @@ end;
 
 procedure TQParamsHelper.LoadFromStream(AStream: TStream);
 begin
-  FInterface.LoadFromStream(NewStream(AStream, False));
+  FInterface.LoadFromStream(NewStream(AStream, false));
 end;
 
 procedure TQParamsHelper.SaveToFile(const AFileName: QStringW);
@@ -2611,7 +2608,7 @@ end;
 
 procedure TQParamsHelper.SaveToStream(AStream: TStream);
 begin
-  FInterface.SaveToStream(NewStream(AStream, False));
+  FInterface.SaveToStream(NewStream(AStream, false));
 end;
 
 procedure TQParamsHelper.ToJson(AJson: TQJson);
@@ -2750,9 +2747,9 @@ var
 begin
   AStream := TFileStream.Create(fileName, fmOpenRead or fmShareDenyWrite);
   try
-    FCatHelper.Capacity := AStream.Size;
+    FCatHelper.Capacity := AStream.size;
     AStream.ReadBuffer(FCatHelper.Start^, FCatHelper.Capacity);
-    FCatHelper.Position := AStream.Size;
+    FCatHelper.Position := AStream.size;
   finally
     FreeAndNil(AStream);
   end;

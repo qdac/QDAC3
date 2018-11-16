@@ -1884,7 +1884,7 @@ procedure TQLogStringsWriter.DoItemsUpdated;
 begin
   if (not LazyMode) or ({$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount -
     FLastFlush > 100) then
-    FlushLogs;
+    TThread.Queue(nil, FlushLogs);
 end;
 
 procedure TQLogStringsWriter.EndWrite;
@@ -1974,7 +1974,7 @@ end;
 procedure TQLogStringsWriter.LazyWrite;
 begin
   if LazyMode and (FBuffered > 0) then
-    FlushLogs;
+    TThread.Queue(nil, FlushLogs);
 end;
 
 procedure TQLogStringsWriter.SetLazyMode(const Value: Boolean);
