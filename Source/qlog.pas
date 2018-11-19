@@ -252,14 +252,21 @@ type
   TQLogWriter = class
   protected
     FCastor: TQLogCastor;
+    FAcceptLevels: TQLogLevels;
+    FLazyMode: Boolean;
+    FLazyList: TQLogList;
     procedure BeginWrite; virtual;
     procedure EndWrite; virtual;
     procedure LazyWrite; virtual;
+    procedure SetLazyMode(const Value: Boolean);
+    function ItemToText(AItem: PQLogItem): String; virtual;
+    property LazyMode: Boolean read FLazyMode write SetLazyMode;
   public
     constructor Create; overload;
     destructor Destroy; override;
     procedure HandleNeeded; virtual;
     function WriteItem(AItem: PQLogItem): Boolean; virtual;
+    property AcceptLevels: TQLogLevels read FAcceptLevels write FAcceptLevels;
   end;
 
   // 日志读取对象
@@ -325,6 +332,8 @@ type
   end;
 
   TQLogFileCreateMode = (lcmReplace, lcmRename, lcmAppend);
+  TQLogFileStream =
+{$IF RTLVersion>=31}TBufferedFileStream{$ELSE}TFileStream{$IFEND};
 
   TQLogFileWriter = class(TQLogWriter)
   private
@@ -335,8 +344,6 @@ type
     // 索引和日志文件句柄
     FLogHandle: TFileStream;
     FFileName: QStringW;
-    FBuffer: TBytes;
-    FBuffered: Integer;
     FPosition: Int64;
     FLastTime: TDateTime;
     FLastThreadId: Cardinal;
@@ -349,6 +356,7 @@ type
     function CompressLog(ALogFileName: QStringW): Boolean;
     procedure RenameHistory;
     procedure DeleteHistories;
+    procedure LazyWrite; override;
   public
     /// 创建一个日志文件
     /// <param name="AFileName">文件名</param>
@@ -415,35 +423,26 @@ type
     property UseTCP: Boolean read FUseTCP write FUseTCP;
   end;
 
-  PQLogTextItem = ^TQLogTextItem;
-
-  TQLogTextItem = record
-    Text: String;
-    Next: PQLogTextItem;
-  end;
-
   TQLogStringsWriter = class(TQLogWriter)
-  private
+  protected
     FMaxItems: Integer;
     FItems: TStrings;
-    FFirstItem, FLastItem: PQLogTextItem;
     FBuffered: Integer;
     FLastFlush: Cardinal;
     FLocker: TCriticalSection;
-    FLazyMode: Boolean;
     procedure BeginWrite; override;
     procedure EndWrite; override;
     procedure DoItemsUpdated;
     procedure LazyWrite; override;
     procedure FlushLogs;
-    procedure SetLazyMode(const Value: Boolean);
   public
     constructor Create;
+    destructor Destroy; override;
     function WriteItem(AItem: PQLogItem): Boolean; override;
     procedure HandleNeeded; override;
     property MaxItems: Integer read FMaxItems write FMaxItems;
     property Items: TStrings read FItems write FItems;
-    property LazyMode: Boolean read FLazyMode write SetLazyMode;
+    property LazyMode;
   end;
 
 procedure PostLog(ALevel: TQLogLevel; const AMsg: QStringW); overload;
@@ -663,6 +662,17 @@ begin
     Move(PQCharW(AMsg)^, Result.Text[0], Result.MsgLen);
 end;
 
+function CopyItem(const ASource: PQLogItem): PQLogItem; inline;
+var
+  ALen: Integer;
+begin
+  ALen := SizeOf(TQLogItem) + ASource.MsgLen;
+  GetMem(Result, ALen);
+  Move(ASource^, Result^, ALen);
+  Result.Next := nil;
+  Result.Prior := nil;
+end;
+
 procedure FreeItem(AItem: PQLogItem);
 begin
   FreeMem(AItem);
@@ -733,6 +743,9 @@ end;
 constructor TQLogWriter.Create;
 begin
   inherited;
+  // 默认记录所有日志
+  FAcceptLevels := [llEmergency, llAlert, llFatal, llError, llWarning, llHint,
+    llMessage, llDebug];
 end;
 
 destructor TQLogWriter.Destroy;
@@ -750,9 +763,26 @@ begin
   raise EXCEPTIOn.Create(SHandleNeeded);
 end;
 
+function TQLogWriter.ItemToText(AItem: PQLogItem): String;
+begin
+  Result := '[' + IntToStr(AItem.ThreadId) + ']' + FormatDateTime('hh:nn:ss.zz',
+    AItem.TimeStamp) + ' ' + LogLevelText[AItem.Level] + ':' +
+    StrDupX(@AItem.Text[0], AItem.MsgLen shr 1);
+end;
+
 procedure TQLogWriter.LazyWrite;
 begin
   // 啥也不干，反正我也不知道该干啥
+end;
+
+procedure TQLogWriter.SetLazyMode(const Value: Boolean);
+begin
+  if FLazyMode <> Value then
+  begin
+    FLazyMode := Value;
+    if Value then // 如果是懒人模式，则延迟100ms写入
+      Logs.Castor.LazyInterval := 100;
+  end;
 end;
 
 function TQLogWriter.WriteItem(AItem: PQLogItem): Boolean;
@@ -768,8 +798,11 @@ begin
   inherited Create;
   FFileName := AFileName;
   FLogHandle := nil;
-  SetLength(FBuffer, 65536); // 64K缓冲区
   FBuilder := TQStringCatHelperW.Create;
+{$IF RTLVersion>=31}
+  // Berlin 以后的版本强制启用懒汉模式
+  LazyMode := true;
+{$IFEND}
 end;
 
 function TQLogFileWriter.CompressLog(ALogFileName: QStringW): Boolean;
@@ -789,29 +822,27 @@ begin
 end;
 
 constructor TQLogFileWriter.Create;
-{$IFDEF MSWINDOWS}
 var
+  APath: QStringW;
+{$IFDEF MSWINDOWS}
   AExt: QStringW;
 {$ENDIF MSWINDOWS}
 begin
   inherited Create;
   FBuilder := TQStringCatHelperW.Create;
+  FFileName := ParamStr(0);
 {$IFDEF MSWINDOWS}
-  SetLength(FFileName, MAX_PATH);
-{$IFDEF UNICODE}
-  SetLength(FFileName, GetModuleFileName(0, PQCharW(FFileName), MAX_PATH));
+  APath := ExtractFilePath(FFileName) + 'Logs\';;
+  ForceDirectories(APath);
+  FFileName := APath + DeleteRightW(ExtractFileName(FFileName), '.exe', true,
+    1) + '.log';
 {$ELSE}
-  SetLength(FFileName, GetModuleFileNameW(0, PQCharW(FFileName), MAX_PATH));
-{$ENDIF}
-  AExt := ExtractFileExt(FFileName);
-  if Length(AExt) > 0 then
-    FFileName := Copy(PQCharW(FFileName), 0, Length(FFileName) - Length(AExt)
-      ) + '.log'
-  else
-    FFileName := FFileName + '.log';
-{$ELSE}
-  FFileName := TPath.GetSharedDocumentsPath + TPath.DirectorySeparatorChar +
-    FormatDateTime('yyyymmddhhnnss', Now) + '.log';
+  APath := TPath.GetSharedDocumentsPath + TPath.DirectorySeparatorChar
+    + 'Logs/';
+  ForceDirectories(APath);
+  FFileName := ExtractFileName(ParamStr(0));
+  FFileName := APath + DeleteRightW(FFileName, ExtractFileExt(FFileName), true,
+    1) + '.log';
 {$ENDIF}
 end;
 
@@ -875,6 +906,7 @@ begin
     if AWriteBytes = 0 then
     begin
       FCastor.SetLastError(ELOG_WRITE_FAILURE, SysErrorMessage(GetLastError));
+      DebugOut('无法写入日志数据：%s', [FCastor.FLastErrorMsg]);
       Result := False;
       Break
     end
@@ -948,10 +980,10 @@ begin
               begin
                 if (not FileExists(FFileName)) or CanAccess(FFileName) then
                 begin
-                  FLogHandle := TFileStream.Create(FFileName, fmCreate);
+                  FLogHandle := TQLogFileStream.Create(FFileName, fmCreate);
                   // 好吧，创建的禁止他人读，我创建再打开还不行嘛
                   FreeObject(FLogHandle);
-                  FLogHandle := TFileStream.Create(FFileName,
+                  FLogHandle := TQLogFileStream.Create(FFileName,
                     fmOpenWrite or fmShareDenyWrite);
                 end
                 else
@@ -969,7 +1001,7 @@ begin
                   end
                   else
                   begin
-                    FLogHandle := TFileStream.Create(FFileName,
+                    FLogHandle := TQLogFileStream.Create(FFileName,
                       fmOpenWrite or fmShareDenyWrite);
                     FLogHandle.Seek(0, soEnd);
                   end;
@@ -989,6 +1021,15 @@ begin
       FPosition := FLogHandle.Position;
     end;
   end;
+end;
+
+procedure TQLogFileWriter.LazyWrite;
+begin
+  inherited;
+{$IF RTLVersion>=31}
+  // Berlin以上版本使用TBufferedFileStream以优化日志写入，在LazyWrite时刷新到缓冲区
+  TBufferedFileStream(FLogHandle).FlushBuffer;
+{$IFEND}
 end;
 
 procedure TQLogFileWriter.RenameHistory;
@@ -1139,11 +1180,14 @@ var
     FirstWriter;
     while Assigned(FActiveWriter) do
     begin
-      if not FActiveWriter.Writer.WriteItem(ActiveLog) then
+      if (ActiveLog.Level in FActiveWriter.Writer.AcceptLevels) then
       begin
-        if FLastError = ELOG_WRITE_FAILURE then
+        if not FActiveWriter.Writer.WriteItem(ActiveLog) then
         begin
-          // Write Error handle
+          if FLastError = ELOG_WRITE_FAILURE then
+          begin
+            // Write Error handle
+          end;
         end;
       end;
       NextWriter;
@@ -1245,7 +1289,6 @@ var
   AItem: PLogWriterItem;
 begin
   repeat
-    AItem := nil;
     FCS.Enter;
     try
       if not Assigned(FActiveWriter) or (FActiveWriter.Writer <> AWriter) then
@@ -1476,9 +1519,7 @@ function TQLogConsoleWriter.WriteItem(AItem: PQLogItem): Boolean;
 var
   S: QStringW;
 begin
-  S := FormatDateTime('hh:nn:ss.zzz', AItem.TimeStamp) + ' [' +
-    IntToStr(AItem.ThreadId) + '] ' + StrDupX(@AItem.Text[0],
-    AItem.MsgLen shr 1);
+  S := ItemToText(AItem);
 {$IFDEF MSWINDOWS}
   S := LogLevelText[AItem.Level] + ' ' + S;
   if UseDebugConsole then
@@ -1657,7 +1698,7 @@ begin
 {$IFDEF MSWINDOWS}PAnsiChar(@I){$ELSE}I{$ENDIF}, SizeOf(I));
   AHost.sin_family := AF_INET;
   AHost.sin_port := htons(ServerPort);
-  AHost.sin_addr.s_addr := INADDR_BROADCAST;
+  AHost.sin_addr.s_addr := Longint(INADDR_BROADCAST);
   PInt64(@AHost.sin_zero[0])^ := 0;
   tv.tv_sec := 0;
   tv.tv_usec := 500 * 1000; // 50ms
@@ -1880,11 +1921,20 @@ begin
   FLocker := TCriticalSection.Create;
 end;
 
+destructor TQLogStringsWriter.Destroy;
+begin
+  FreeAndNil(FLocker);
+  inherited;
+end;
+
 procedure TQLogStringsWriter.DoItemsUpdated;
 begin
   if (not LazyMode) or ({$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount -
     FLastFlush > 100) then
+  begin
+    FLastFlush := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
     TThread.Queue(nil, FlushLogs);
+  end;
 end;
 
 procedure TQLogStringsWriter.EndWrite;
@@ -1897,71 +1947,50 @@ end;
 
 procedure TQLogStringsWriter.FlushLogs;
 var
-  I: Integer;
   ADelta: Integer;
-  AItem: PQLogTextItem;
+  AFirst, AItem: PQLogItem;
 begin
-  FLastFlush := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
-  if Assigned(FItems) then
+  if Assigned(FItems) and (FBuffered > 0) then
   begin
+    AFirst := nil;
     FItems.BeginUpdate;
     FLocker.Enter;
     try
+      AFirst := FLazyList.First;
       if FMaxItems > 0 then
       begin
         FItems.Capacity := FMaxItems;
-        AItem := FFirstItem;
         while FBuffered > FMaxItems do
         begin
-          FFirstItem := AItem.Next;
-          Dispose(AItem);
-          AItem := FFirstItem;
+          FLazyList.First := FLazyList.First.Next;
           Dec(FBuffered);
         end;
-        ADelta := FItems.Count - FMaxItems;
-        if ADelta > 0 then
-        begin
-          I := 0;
-          while I < FMaxItems do
-          begin
-            FItems[I] := FItems[I + ADelta];
-            Inc(I);
-          end;
-          while FItems.Count > FMaxItems do
-            FItems.Delete(FItems.Count - 1);
-        end;
+        if FBuffered = FMaxItems then
+          FItems.Clear;
+        // 计算要删除的数量
         ADelta := FItems.Count + FBuffered - FMaxItems;
-        if ADelta > 0 then
+        while ADelta > 0 do
         begin
-          I := ADelta;
-          while I < FItems.Count do
-          begin
-            FItems[I - ADelta] := FItems[I];
-            Inc(I);
-          end;
-          Dec(I, ADelta);
-          while Assigned(AItem) and (I < FItems.Count) do
-          begin
-            FItems[I] := AItem.Text;
-            FFirstItem := AItem.Next;
-            Dispose(AItem);
-            AItem := FFirstItem;
-            Inc(I);
-          end;
-        end;
-        while Assigned(AItem) do
-        begin
-          FItems.Add(AItem.Text);
-          FFirstItem := AItem.Next;
-          Dispose(AItem);
-          AItem := FFirstItem;
+          FItems.Delete(0);
+          Dec(ADelta);
         end;
       end;
-      FLastItem := nil;
+      while Assigned(FLazyList.First) do
+      begin
+        FItems.Add(ItemToText(FLazyList.First));
+        FLazyList.First := FLazyList.First.Next;
+      end;
+      FLazyList.Last := nil;
       FBuffered := 0;
     finally
       FLocker.Leave;
       FItems.EndUpdate;
+      while Assigned(AFirst) do
+      begin
+        AItem := AFirst.Next;
+        FreeItem(AFirst);
+        AFirst := AItem;
+      end;
     end;
   end;
 end;
@@ -1974,39 +2003,39 @@ end;
 procedure TQLogStringsWriter.LazyWrite;
 begin
   if LazyMode and (FBuffered > 0) then
-    TThread.Queue(nil, FlushLogs);
-end;
-
-procedure TQLogStringsWriter.SetLazyMode(const Value: Boolean);
-begin
-  if FLazyMode <> Value then
   begin
-    FLazyMode := Value;
-    if Value then // 如果是懒人模式，则延迟100ms写入
-      Logs.Castor.LazyInterval := 100;
+    FLastFlush := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
+    TThread.Queue(nil, FlushLogs);
   end;
 end;
 
 function TQLogStringsWriter.WriteItem(AItem: PQLogItem): Boolean;
 var
-  ATextItem: PQLogTextItem;
+  ACopy, AFirst: PQLogItem;
 begin
-  New(ATextItem);
-  ATextItem.Next := nil;
-  ATextItem.Text := '[' + IntToStr(AItem.ThreadId) + ']' +
-    FormatDateTime('hh:nn:ss.zz', AItem.TimeStamp) + ' ' + LogLevelText
-    [AItem.Level] + ':' + StrDupX(@AItem.Text[0], AItem.MsgLen shr 1);
+  ACopy := CopyItem(AItem);
+  AFirst := nil;
   FLocker.Enter;
   try
-    if Assigned(FLastItem) then
-      FLastItem.Next := ATextItem
+    if (MaxItems > 0) and (FBuffered = MaxItems) then
+    begin
+      AFirst := FLazyList.First;
+      FLazyList.First := FLazyList.First.Next;
+    end
     else
-      FFirstItem := ATextItem;
-    FLastItem := ATextItem;
-    Inc(FBuffered);
+      Inc(FBuffered);
+    if not Assigned(FLazyList.Last) then
+      FLazyList.First := ACopy;
+    ACopy.Prior := FLazyList.Last;
+    if Assigned(FLazyList.Last) then
+      FLazyList.Last.Next := ACopy;
+    FLazyList.Last := ACopy;
   finally
     FLocker.Leave;
+    if Assigned(AFirst) then
+      FreeItem(AFirst);
   end;
+  Result := true;
 end;
 
 initialization

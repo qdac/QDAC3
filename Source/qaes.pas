@@ -2679,14 +2679,20 @@ begin
   PCardinal(@OutBuf[12])^ := T0[3];
 end;
 
-procedure FillPaddings(var ABuf: TQAESBuffer; len: Integer;
-  APaddingMode: TQAESPaddingMode); inline;
+function FillPaddings(var ABuf: TQAESBuffer; len: Integer;
+  APaddingMode: TQAESPaddingMode): Integer; inline;
 begin
   case APaddingMode of
     pmZero:
-      FillChar(ABuf[len], SizeOf(TQAESBuffer) - len, 0);
+      begin
+        Result := SizeOf(TQAESBuffer) - len;
+        FillChar(ABuf[len], Result, 0);
+      end;
     pmPKCS5, pmPKCS7:
-      FillChar(ABuf[len], SizeOf(TQAESBuffer) - len, SizeOf(TQAESBuffer) - len);
+      begin
+        Result := (SizeOf(TQAESBuffer) - len);
+        FillChar(ABuf[len], Result, Result);
+      end;
   end;
 end;
 
@@ -2698,15 +2704,17 @@ var
   AProcessed, ALastProcessed, ATotal, ASize: Int64;
   procedure ProcessBlock;
   var
-    ABlockSize: Integer;
+    ABlockSize, APaddings: Integer;
   begin
     ABlockSize := Source.Read(TempIn, SizeOf(TempIn));
     if ABlockSize < SizeOf(TempIn) then
-      FillPaddings(TempIn, ABlockSize, APaddingMode);
+      APaddings := FillPaddings(TempIn, ABlockSize, APaddingMode)
+    else
+      APaddings := 0;
     EncryptAES(TempIn, ExpandedKey, TempOut);
-    Dest.WriteBuffer(TempOut, SizeOf(TempOut));
-    Dec(ASize, SizeOf(TempOut));
-    Inc(AProcessed, SizeOf(TempOut));
+    Dest.WriteBuffer(TempOut, ABlockSize + APaddings);
+    Dec(ASize, ABlockSize);
+    Inc(AProcessed, ABlockSize);
   end;
 
 begin
@@ -2738,15 +2746,17 @@ var
   AProcessed, ALastProcessed, ATotal, ASize: Int64;
   procedure ProcessBlock;
   var
-    ABlockSize: Integer;
+    ABlockSize, APaddings: Integer;
   begin
     ABlockSize := Source.Read(TempIn, SizeOf(TempIn));
     if ABlockSize < SizeOf(TempIn) then
-      FillPaddings(TempIn, ABlockSize, APaddingMode);
+      APaddings := FillPaddings(TempIn, ABlockSize, APaddingMode)
+    else
+      APaddings := 0;
     EncryptAES(TempIn, ExpandedKey, TempOut);
-    Dest.WriteBuffer(TempOut, SizeOf(TempOut));
-    Dec(ASize, SizeOf(TempOut));
-    Inc(AProcessed, SizeOf(TempOut));
+    Dest.WriteBuffer(TempOut, ABlockSize + APaddings);
+    Dec(ASize, ABlockSize);
+    Inc(AProcessed, ABlockSize);
   end;
 
 begin
@@ -2778,15 +2788,17 @@ var
   AProcessed, ALastProcessed, ATotal, ASize: Int64;
   procedure ProcessBlock;
   var
-    ABlockSize: Integer;
+    ABlockSize, APaddings: Integer;
   begin
     ABlockSize := Source.Read(TempIn, SizeOf(TempIn));
     if ABlockSize < SizeOf(TempIn) then
-      FillPaddings(TempIn, ABlockSize, APaddingMode);
+      APaddings := FillPaddings(TempIn, ABlockSize, APaddingMode)
+    else
+      APaddings := 0;
     EncryptAES(TempIn, ExpandedKey, TempOut);
-    Dest.WriteBuffer(TempOut, SizeOf(TempOut));
-    Dec(ASize, SizeOf(TempOut));
-    Inc(AProcessed, SizeOf(TempOut));
+    Dest.WriteBuffer(TempOut, ABlockSize + APaddings);
+    Dec(ASize, ABlockSize);
+    Inc(AProcessed, ABlockSize);
   end;
 
 begin
@@ -2984,21 +2996,23 @@ var
   AProcessed, ALastProcessed, ATotal, ASize: Int64;
   procedure ProcessBlock;
   var
-    ABlockSize: Integer;
+    ABlockSize, APaddings: Integer;
   begin
     ABlockSize := Source.Read(TempIn, SizeOf(TempIn));
     if ABlockSize < SizeOf(TempIn) then
-      FillPaddings(TempIn, ABlockSize, APaddingMode);
+      APaddings := FillPaddings(TempIn, ABlockSize, APaddingMode)
+    else
+      APaddings := 0;
     PCardinal(@TempIn[0])^ := PCardinal(@TempIn[0])^ xor PCardinal(@Vector[0])^;
     PCardinal(@TempIn[4])^ := PCardinal(@TempIn[4])^ xor PCardinal(@Vector[4])^;
     PCardinal(@TempIn[8])^ := PCardinal(@TempIn[8])^ xor PCardinal(@Vector[8])^;
     PCardinal(@TempIn[12])^ := PCardinal(@TempIn[12])
       ^ xor PCardinal(@Vector[12])^;
     EncryptAES(TempIn, ExpandedKey, TempOut);
-    Dest.WriteBuffer(TempOut, SizeOf(TempOut));
+    Dest.WriteBuffer(TempOut, ABlockSize + APaddings);
     Vector := TempOut;
-    Dec(ASize, SizeOf(TempIn));
-    Inc(AProcessed, SizeOf(TempIn));
+    Dec(ASize, ABlockSize);
+    Inc(AProcessed, ABlockSize);
   end;
 
 begin
@@ -3034,21 +3048,23 @@ var
   AProcessed, ALastProcessed, ATotal, ASize: Int64;
   procedure ProcessBlock;
   var
-    ABlockSize: Integer;
+    ABlockSize, APaddings: Integer;
   begin
     ABlockSize := Source.Read(TempIn, SizeOf(TempIn));
     if ABlockSize < SizeOf(TempIn) then
-      FillPaddings(TempIn, ABlockSize, APaddingMode);
+      APaddings := FillPaddings(TempIn, ABlockSize, APaddingMode)
+    else
+      APaddings := 0;
     PCardinal(@TempIn[0])^ := PCardinal(@TempIn[0])^ xor PCardinal(@Vector[0])^;
     PCardinal(@TempIn[4])^ := PCardinal(@TempIn[4])^ xor PCardinal(@Vector[4])^;
     PCardinal(@TempIn[8])^ := PCardinal(@TempIn[8])^ xor PCardinal(@Vector[8])^;
     PCardinal(@TempIn[12])^ := PCardinal(@TempIn[12])
       ^ xor PCardinal(@Vector[12])^;
     EncryptAES(TempIn, ExpandedKey, TempOut);
-    Dest.WriteBuffer(TempOut, SizeOf(TempOut));
+    Dest.WriteBuffer(TempOut, ABlockSize + APaddings);
     Vector := TempOut;
-    Dec(ASize, SizeOf(TempIn));
-    Inc(AProcessed, SizeOf(TempIn));
+    Dec(ASize, ABlockSize);
+    Inc(AProcessed, ABlockSize);
   end;
 
 begin
@@ -3084,21 +3100,23 @@ var
   AProcessed, ALastProcessed, ATotal, ASize: Int64;
   procedure ProcessBlock;
   var
-    ABlockSize: Integer;
+    ABlockSize, APaddings: Integer;
   begin
     ABlockSize := Source.Read(TempIn, SizeOf(TempIn));
     if ABlockSize < SizeOf(TempIn) then
-      FillPaddings(TempIn, ABlockSize, APaddingMode);
+      APaddings := FillPaddings(TempIn, ABlockSize, APaddingMode)
+    else
+      APaddings := 0;
     PCardinal(@TempIn[0])^ := PCardinal(@TempIn[0])^ xor PCardinal(@Vector[0])^;
     PCardinal(@TempIn[4])^ := PCardinal(@TempIn[4])^ xor PCardinal(@Vector[4])^;
     PCardinal(@TempIn[8])^ := PCardinal(@TempIn[8])^ xor PCardinal(@Vector[8])^;
     PCardinal(@TempIn[12])^ := PCardinal(@TempIn[12])
       ^ xor PCardinal(@Vector[12])^;
     EncryptAES(TempIn, ExpandedKey, TempOut);
-    Dest.WriteBuffer(TempOut, SizeOf(TempOut));
+    Dest.WriteBuffer(TempOut, ABlockSize + APaddings);
     Vector := TempOut;
-    Dec(ASize, SizeOf(TempIn));
-    Inc(AProcessed, SizeOf(TempIn));
+    Dec(ASize, ABlockSize);
+    Inc(AProcessed, ABlockSize);
   end;
 
 begin
@@ -3490,58 +3508,50 @@ var
   // 用来处理最后不足16字节的内容
   AKeyData: TQAESKey;
   AExpendedKey: TQAESExpandedKey;
+  APaddings: Integer;
   procedure Encrypt128EBC;
   begin
     ExpandAESKeyForEncryption(AKeyData.Key128, AExpendedKey.Key128);
-    while len > SizeOf(TQAESBuffer) do
+    while len >= SizeOf(TQAESBuffer) do
     begin
       EncryptAES(pIn^, AExpendedKey.Key128, pOut^);
       Dec(len, SizeOf(TQAESBuffer));
       Inc(pIn);
       Inc(pOut);
     end;
-    if len <> 0 then
-    begin
-      Move(pIn^, ABuf[0], len);
-      FillPaddings(ABuf, len, APaddingMode);
-      EncryptAES(ABuf, AExpendedKey.Key128, pOut^);
-    end;
+    Move(pIn^, ABuf[0], len);
+    APaddings := FillPaddings(ABuf, len, APaddingMode);
+    EncryptAES(ABuf, AExpendedKey.Key128, pOut^);
   end;
 
   procedure Encrypt192EBC;
   begin
     ExpandAESKeyForEncryption(AKeyData.Key192, AExpendedKey.Key192);
-    while len > SizeOf(TQAESBuffer) do
+    while len >= SizeOf(TQAESBuffer) do
     begin
       EncryptAES(pIn^, AExpendedKey.Key192, pOut^);
       Dec(len, SizeOf(TQAESBuffer));
       Inc(pIn);
       Inc(pOut);
     end;
-    if len <> 0 then
-    begin
-      Move(pIn^, ABuf[0], len);
-      FillPaddings(ABuf, len, APaddingMode);
-      EncryptAES(ABuf, AExpendedKey.Key192, pOut^);
-    end;
+    Move(pIn^, ABuf[0], len);
+    APaddings := FillPaddings(ABuf, len, APaddingMode);
+    EncryptAES(ABuf, AExpendedKey.Key192, pOut^);
   end;
 
   procedure Encrypt256EBC;
   begin
     ExpandAESKeyForEncryption(AKeyData.Key256, AExpendedKey.Key256);
-    while len > SizeOf(TQAESBuffer) do
+    while len >= SizeOf(TQAESBuffer) do
     begin
       EncryptAES(pIn^, AExpendedKey.Key256, pOut^);
       Dec(len, SizeOf(TQAESBuffer));
       Inc(pIn);
       Inc(pOut);
     end;
-    if len <> 0 then
-    begin
-      Move(pIn^, ABuf[0], len);
-      FillPaddings(ABuf, len, APaddingMode);
-      EncryptAES(ABuf, AExpendedKey.Key256, pOut^);
-    end;
+    Move(pIn^, ABuf[0], len);
+    APaddings := FillPaddings(ABuf, len, APaddingMode);
+    EncryptAES(ABuf, AExpendedKey.Key256, pOut^);
   end;
 
   procedure XorVector;
@@ -3553,7 +3563,7 @@ var
   procedure Encrypt128CBC;
   begin
     ExpandAESKeyForEncryption(AKeyData.Key128, AExpendedKey.Key128);
-    while len > SizeOf(TQAESBuffer) do
+    while len >= SizeOf(TQAESBuffer) do
     begin
       ABuf := pIn^;
       XorVector;
@@ -3563,19 +3573,16 @@ var
       Inc(pIn);
       Inc(pOut);
     end;
-    if len <> 0 then
-    begin
-      Move(pIn^, ABuf[0], len);
-      FillPaddings(ABuf, len, APaddingMode);
-      XorVector;
-      EncryptAES(ABuf, AExpendedKey.Key128, pOut^);
-    end;
+    Move(pIn^, ABuf[0], len);
+    APaddings := FillPaddings(ABuf, len, APaddingMode);
+    XorVector;
+    EncryptAES(ABuf, AExpendedKey.Key128, pOut^);
   end;
 
   procedure Encrypt192CBC;
   begin
     ExpandAESKeyForEncryption(AKeyData.Key192, AExpendedKey.Key192);
-    while len > SizeOf(TQAESBuffer) do
+    while len >= SizeOf(TQAESBuffer) do
     begin
       ABuf := pIn^;
       XorVector;
@@ -3585,19 +3592,16 @@ var
       Inc(pIn);
       Inc(pOut);
     end;
-    if len <> 0 then
-    begin
-      Move(pIn^, ABuf[0], len);
-      FillPaddings(ABuf, len, APaddingMode);
-      XorVector;
-      EncryptAES(ABuf, AExpendedKey.Key192, pOut^);
-    end;
+    Move(pIn^, ABuf[0], len);
+    APaddings := FillPaddings(ABuf, len, APaddingMode);
+    XorVector;
+    EncryptAES(ABuf, AExpendedKey.Key192, pOut^);
   end;
 
   procedure Encrypt256CBC;
   begin
     ExpandAESKeyForEncryption(AKeyData.Key256, AExpendedKey.Key256);
-    while len > SizeOf(TQAESBuffer) do
+    while len >= SizeOf(TQAESBuffer) do
     begin
       ABuf := pIn^;
       XorVector;
@@ -3607,13 +3611,10 @@ var
       Inc(pIn);
       Inc(pOut);
     end;
-    if len <> 0 then
-    begin
-      Move(pIn^, ABuf[0], len);
-      FillPaddings(ABuf, len, APaddingMode);
-      XorVector;
-      EncryptAES(ABuf, AExpendedKey.Key256, pOut^);
-    end;
+    Move(pIn^, ABuf[0], len);
+    APaddings := FillPaddings(ABuf, len, APaddingMode);
+    XorVector;
+    EncryptAES(ABuf, AExpendedKey.Key256, pOut^);
   end;
 
 begin
@@ -3627,7 +3628,7 @@ begin
   if (len and $F) <> 0 then
     SetLength(AResult, ((len shr 4) + 1) shl 4)
   else
-    SetLength(AResult, len);
+    SetLength(AResult, len + 16);
   pOut := @AResult[0];
   if AMode = emECB then
   begin
@@ -3651,6 +3652,8 @@ begin
         Encrypt256CBC;
     end;
   end;
+  len := Length(AResult) - (SizeOf(TQAESBuffer) - len - APaddings);
+  SetLength(AResult, len);
 end;
 
 procedure AESEncrypt(const AData: TBytes; AInitVector: TQAESBuffer;
@@ -3844,7 +3847,7 @@ var
   begin
     if APaddingMode in [pmPKCS5, pmPKCS7] then
     begin
-      L := Length(AResult);
+      L := Length(AResult) + len;
       if L > 0 then
       begin
         B := AResult[L - 1];

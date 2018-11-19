@@ -1,7 +1,7 @@
 object Form1: TForm1
   Left = 0
   Top = 0
-  Caption = 'Form1'
+  Caption = 'QLog Strings Writer Demo'
   ClientHeight = 638
   ClientWidth = 799
   Color = clBtnFace
@@ -29,24 +29,31 @@ object Form1: TForm1
     Caption = 'Max Items'
   end
   object Label3: TLabel
-    Left = 32
-    Top = 583
-    Width = 70
+    Left = 40
+    Top = 592
+    Width = 68
     Height = 13
-    Caption = 'Lazy log writer'
+    Caption = 'Log post time:'
   end
   object Label4: TLabel
-    Left = 400
-    Top = 583
-    Width = 91
+    Left = 32
+    Top = 112
+    Width = 33
     Height = 13
-    Caption = 'standard log writer'
+    Caption = 'All logs'
+  end
+  object Label5: TLabel
+    Left = 400
+    Top = 109
+    Width = 46
+    Height = 13
+    Caption = 'Error logs'
   end
   object Memo1: TMemo
     Left = 32
-    Top = 112
+    Top = 128
     Width = 345
-    Height = 465
+    Height = 449
     Lines.Strings = (
       'Log will fill into this memo')
     TabOrder = 0
@@ -56,15 +63,15 @@ object Form1: TForm1
     Top = 16
     Width = 75
     Height = 25
-    Caption = 'Button1'
+    Caption = 'Start'
     TabOrder = 1
     OnClick = Button1Click
   end
   object ListBox1: TListBox
     Left = 400
-    Top = 112
+    Top = 128
     Width = 337
-    Height = 465
+    Height = 449
     ItemHeight = 13
     TabOrder = 2
   end
@@ -89,5 +96,16 @@ object Form1: TForm1
     TabOrder = 4
     Value = 10
     OnChange = SpinEdit2Change
+  end
+  object CheckBox1: TCheckBox
+    Left = 128
+    Top = 20
+    Width = 97
+    Height = 17
+    Caption = 'Lazy Mode'
+    Checked = True
+    State = cbChecked
+    TabOrder = 5
+    OnClick = CheckBox1Click
   end
 end
