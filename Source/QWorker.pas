@@ -3941,6 +3941,8 @@ begin
     AWaitParam.WorkerProc := TMethod(AProc);
     WaitRunningDone(AWaitParam, not AWaitRunningDone);
   end;
+  if TMethod(AProc).Data = Pointer(-1) then
+    TQJobProcA(TMethod(AProc).Code) := nil;
 end;
 
 procedure TQWorkers.ClearWorkers;
@@ -5166,7 +5168,8 @@ function TQWorkers.Plan(AProc: TQJobProcG; const APlan: TQPlanMask;
   AData: Pointer; ARunInMainThread: Boolean;
   AFreeType: TQJobDataFreeType): IntPtr;
 begin
-  Result := Plan(TQJobProc(MakeJobProc(AProc)), APlan, AData, ARunInMainThread, AFreeType);
+  Result := Plan(TQJobProc(MakeJobProc(AProc)), APlan, AData, ARunInMainThread,
+    AFreeType);
 end;
 
 function TQWorkers.Plan(AProc: TQJobProc; const APlan: TQPlanMask;
@@ -5718,8 +5721,8 @@ function TQWorkers.Wait(AProc: TQJobProcG; ASignalId: Integer;
   ARunInMainThread: Boolean; AData: Pointer;
   AFreeType: TQJobDataFreeType): IntPtr;
 begin
-  Result := Wait(TQJobProc(MakeJobProc(AProc)), ASignalId, ARunInMainThread, AData,
-    AFreeType);
+  Result := Wait(TQJobProc(MakeJobProc(AProc)), ASignalId, ARunInMainThread,
+    AData, AFreeType);
 end;
 
 function TQWorkers.Wait(AProc: TQJobProcG; const ASignalName: QStringW;
@@ -5879,16 +5882,16 @@ function TQWorkers.At(AProc: TQJobProcG; const ADelay, AInterval: Int64;
   AData: Pointer; ARunInMainThread: Boolean;
   AFreeType: TQJobDataFreeType): IntPtr;
 begin
-  Result := At(TQJobProc(MakeJobProc(AProc)), ADelay, AInterval, AData, ARunInMainThread,
-    AFreeType);
+  Result := At(TQJobProc(MakeJobProc(AProc)), ADelay, AInterval, AData,
+    ARunInMainThread, AFreeType);
 end;
 
 function TQWorkers.At(AProc: TQJobProcG; const ATime: TDateTime;
   const AInterval: Int64; AData: Pointer; ARunInMainThread: Boolean;
   AFreeType: TQJobDataFreeType): IntPtr;
 begin
-  Result := At(TQJobProc(MakeJobProc(AProc)), ATime, AInterval, AData, ARunInMainThread,
-    AFreeType);
+  Result := At(TQJobProc(MakeJobProc(AProc)), ATime, AInterval, AData,
+    ARunInMainThread, AFreeType);
 end;
 
 procedure TQWorkers.CheckWaitChain(AJob: PQJob);
@@ -5959,14 +5962,16 @@ end;
 function TQWorkers.Clear(AProc: TQJobProcA; AData: Pointer; AMaxTimes: Integer;
   AWaitRunningDone: Boolean): Integer;
 begin
-
+  Result := Clear(TQJobProc(MakeJobProc(AProc)), AData, AMaxTimes,
+    AWaitRunningDone);
 end;
 {$ENDIF}
 
 function TQWorkers.Clear(AProc: TQJobProcG; AData: Pointer; AMaxTimes: Integer;
   AWaitRunningDone: Boolean): Integer;
 begin
-  Result := Clear(TQJobProc(MakeJobProc(AProc)), AData, AMaxTimes, AWaitRunningDone);
+  Result := Clear(TQJobProc(MakeJobProc(AProc)), AData, AMaxTimes,
+    AWaitRunningDone);
 end;
 
 procedure TQWorkers.Clear(AWaitRunningDone: Boolean);
@@ -6089,8 +6094,8 @@ end;
 function TQWorkers.Post(AProc: TQJobProcG; AInterval: Int64; AData: Pointer;
   ARunInMainThread: Boolean; AFreeType: TQJobDataFreeType): IntPtr;
 begin
-  Result := Post(TQJobProc(MakeJobProc(AProc)), AInterval, AData, ARunInMainThread,
-    AFreeType);
+  Result := Post(TQJobProc(MakeJobProc(AProc)), AInterval, AData,
+    ARunInMainThread, AFreeType);
 end;
 
 procedure TQWorkers.ClearSingleJob(AHandle: IntPtr; AWaitRunningDone: Boolean);

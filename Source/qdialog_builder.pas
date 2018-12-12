@@ -701,6 +701,11 @@ begin
       Inc(Result.cy, Padding.Top + Padding.Bottom);
     end;
   end;
+  if Control.AlignWithMargins then
+  begin
+    Inc(Result.cx, Control.Margins.Left + Control.Margins.Right);
+    Inc(Result.cy, Control.Margins.Top + Control.Margins.Bottom);
+  end;
 end;
 
 procedure TDialogContainer.Realign;
@@ -1033,8 +1038,14 @@ procedure TDialogBuilder.DoPopupMessage(var Msg: tagMSG; var Handled: Boolean);
   var
     pt: TPoint;
   begin
-    pt := CalcControlPopupPos(FPopupHelper.Control);
-    Dialog.SetBounds(pt.X, pt.Y, Dialog.Width, Dialog.Height);
+    if Application.Active then
+    begin
+      pt := CalcControlPopupPos(FPopupHelper.Control);
+      if (pt.X <> Dialog.Left) or (pt.Y <> Dialog.Top) then
+        Dialog.SetBounds(pt.X, pt.Y, Dialog.Width, Dialog.Height);
+    end
+    else
+      DoClosePopup(Self);
   end;
 
 begin
@@ -1426,17 +1437,17 @@ end;
 function TControlDialogItem.GetBounds: TRect;
 begin
   Result := FControl.BoundsRect;
-  if FControl.ClassName = 'TEdit' then
-  begin
-    Notify(Self, dneItemChanged);
-  end;
-  if FControl.AlignWithMargins then
-  begin
-    Result.Left := Result.Left - FControl.Margins.Left;
-    Result.Top := Result.Top - FControl.Margins.Top;
-    Result.Right := Result.Right + FControl.Margins.Right;
-    Result.Bottom := Result.Bottom + FControl.Margins.Bottom;
-  end;
+  // if FControl.ClassName = 'TEdit' then
+  // begin
+  // Notify(Self, dneItemChanged);
+  // end;
+  // if FControl.AlignWithMargins then
+  // begin
+  // Result.Left := Result.Left + FControl.Margins.Left;
+  // Result.Top := Result.Top + FControl.Margins.Top;
+  // Result.Right := Result.Right + FControl.Margins.Right;
+  // Result.Bottom := Result.Bottom + FControl.Margins.Bottom;
+  // end;
 end;
 
 function TControlDialogItem.GetControl: TControl;
@@ -1470,12 +1481,7 @@ end;
 
 procedure TControlDialogItem.SetBounds(const R: TRect);
 begin
-  if FControl.AlignWithMargins then
-    FControl.BoundsRect := Rect(R.Left + FControl.Margins.Left,
-      R.Top + FControl.Margins.Top, R.Right - FControl.Margins.Right,
-      R.Bottom - FControl.Margins.Bottom)
-  else
-    FControl.BoundsRect := R;
+  FControl.BoundsRect := R;
 end;
 
 procedure TControlDialogItem.SetOnClick(const Value: TNotifyEvent);

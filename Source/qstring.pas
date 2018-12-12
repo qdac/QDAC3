@@ -7075,7 +7075,7 @@ begin
   LD := Length(ADelete);
   if LS < LD then
     Result := S
-  else
+  else if LD > 0 then
   begin
     ps := PQCharW(S);
     pd := PQCharW(ADelete);
@@ -7108,7 +7108,9 @@ begin
     SetLength(Result, LS);
     if LS > 0 then
       Move(ps^, PQCharW(Result)^, LS shl 1);
-  end;
+  end
+  else
+    Result := S;
 end;
 
 function ContainsCharW(const S, ACharList: QStringW): Boolean;
@@ -8077,6 +8079,7 @@ function DateTimeFromString(AStr: String; var AResult: TDateTime;
     c := 0;
     Y := 0;
     M := 0;
+    d := 0;
     H := 0;
     N := 0;
     S := 0;
@@ -8140,11 +8143,11 @@ function DateTimeFromString(AStr: String; var AResult: TDateTime;
     Result := Result and (ps^ = #0);
     if Result then
     begin
-
-      if Y > 0 then
-        Result := TryEncodeDate(Y, M, d, ADate)
-      else
-        ADate := 0;
+      if M=0 then
+        M:=1;
+      if D=0 then
+        D:=1;
+      Result := TryEncodeDate(Y, M, d, ADate);
       Result := Result and TryEncodeTime(H, N, S, MS, ATime);
       if Result then
         AResult := ADate + ATime;
@@ -8154,8 +8157,8 @@ function DateTimeFromString(AStr: String; var AResult: TDateTime;
   var
     V: Int64;
     l: Integer;
-    ps, p: PWideChar;
-    I: Integer;
+    ps, p, tz: PWideChar;
+    I, AOffset: Integer;
   const
     KnownFormats: array [0 .. 15] of String = ('y-m-d h:n:s.z', 'y-m-d h:n:s',
       'y-m-d', 'h:n:s.z', 'h:n:s', 'y-m-d"T"h:n:s.z', 'y-m-d"T"h:n:s',
@@ -8163,7 +8166,21 @@ function DateTimeFromString(AStr: String; var AResult: TDateTime;
       'm/d/y', 'y/m/d h:n:s.z', 'y/m/d h:n:s', 'y/m/d');
   begin
     ps := PWideChar(AStr);
-    l := Length(AStr);
+    tz := StrStrW(ps, '+'); // +xxyy
+    AOffset := 0;
+    if tz <> nil then
+    begin
+      l := (IntPtr(tz) - IntPtr(ps)) shr 1;
+      Inc(tz);
+      while tz^ <> #0 do
+      begin
+        AOffset := AOffset * 10 + Ord(tz^) - Ord('0');
+        Inc(tz);
+      end;
+      // Todo:Timezone将来处理下
+    end
+    else
+      l := Length(AStr);
     Result := True;
     if (l = 5) and DecodeAsFormat('h:n:s') then
       Exit
@@ -8468,7 +8485,7 @@ end;
 function ParseWebTime(p: PWideChar; var AResult: TDateTime): Boolean;
 var
   I: Integer;
-  Y, M, d, H, N, S, TZ: Integer;
+  Y, M, d, H, N, S, tz: Integer;
 const
   MonthNames: array [0 .. 11] of QStringW = ('Jan', 'Feb', 'Mar', 'Apr', 'May',
     'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
@@ -8570,7 +8587,7 @@ begin
       Inc(p);
     end;
     SkipSpaceW(p);
-    TZ := 0;
+    tz := 0;
     if StartWithW(p, 'GMT', True) then
     begin
       Inc(p, 3);
@@ -8588,18 +8605,18 @@ begin
       SkipSpaceW(p);
       while (p^ >= '0') and (p^ <= '9') do
       begin
-        TZ := TZ * 10 + Ord(p^) - Ord('0');
+        tz := tz * 10 + Ord(p^) - Ord('0');
         Inc(p);
       end;
-      TZ := TZ * 60;
+      tz := tz * 60;
       if p^ = ':' then
         Inc(p);
       while (p^ >= '0') and (p^ <= '9') do
       begin
-        TZ := TZ * 10 + Ord(p^) - Ord('0');
+        tz := tz * 10 + Ord(p^) - Ord('0');
         Inc(p);
       end;
-      TZ := TZ * I;
+      tz := tz * I;
     end;
   end
   else
@@ -8607,11 +8624,11 @@ begin
     H := 0;
     N := 0;
     S := 0;
-    TZ := 0;
+    tz := 0;
   end;
   Result := TryEncodeDateTime(Y, M, d, H, N, S, 0, AResult);
-  if Result and (TZ <> 0) then
-    AResult := IncMinute(AResult, -TZ);
+  if Result and (tz <> 0) then
+    AResult := IncMinute(AResult, -tz);
 end;
 
 function EncodeWebTime(ATime: TDateTime): String;

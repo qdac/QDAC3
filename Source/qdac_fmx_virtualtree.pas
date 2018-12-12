@@ -163,7 +163,7 @@ type
   end;
 
   // 鼠标操纵单元格内容
-  IQVTCellMouseEditCellData = interface
+  IQVTCellMouseEditCellData = interface(IQVTCellData)
     ['{73E532B2-BBBF-41DB-B78B-AD8D30A5ED59}']
     procedure MouseDown(AButton: TMouseButton; AShift: TShiftState;
       const APos: TPointF);
@@ -1261,14 +1261,14 @@ type
   // Editor basic support
   TQVTCellEditorClass = class of TQVTBaseEditor;
 
-  TQVTBaseEditor = class(TComponent, IQVTInplaceEditor)
-  private
-    FEnterAsTab: Boolean;
+  TQVTBaseEditor = class(TComponent, IQVTInplaceEditor, IInterface)
   protected
     FControlClass: TComponentClass;
     FControl: TControl;
     FNode: TQVTNode;
     FColumn: Integer;
+    FEnterAsTab: Boolean;
+    FRefCount: Integer;
     function GetControl: TControl; virtual;
     procedure SetBounds(R: TRectF); virtual;
     function BeginEdit(ANode: TQVTNode; ACol: Integer): Boolean; virtual;
@@ -1284,6 +1284,8 @@ type
   public
     constructor Create(AOwner: TComponent); overload; override;
     destructor Destroy; override;
+    function _AddRef: Integer; stdcall;
+    function _Release: Integer; stdcall;
     procedure BeforeDestruction; override;
     property ControlClass: TComponentClass read FControlClass
       write FControlClass;
@@ -2207,8 +2209,9 @@ begin
     Result := EndEdit and CanEdit(ANode, ACol)
   else
     Result := CanEdit(ANode, ACol);
-  if Result then
+  if Result and ANode.CanFocus then
   begin
+    FocusNode := ANode;
     if Assigned(FBeforeEdit) then
       FBeforeEdit(Self, ANode, ACol);
     FInplaceEditor := CreateEditor(ANode, ACol);
@@ -2237,7 +2240,9 @@ begin
     end
     else
       Result := false;
-  end;
+  end
+  else
+    Result := false;
 end;
 
 function TQVirtualTreeView.CalcScrollRange: TSizeF;
@@ -2321,7 +2326,7 @@ begin
   if Assigned(FInplaceEditor) then
   begin
     FInplaceEditor.CancelEdit;
-    FInplaceEditor := nil;;
+    FInplaceEditor := nil;
     FEditingNode := nil;
     FEditingColumn := 0;
   end;
@@ -2516,12 +2521,14 @@ begin
         Result.Height := 8;
         Result.Margins.Left := Stroke.Thickness;
         Result.Margins.Right := Result.Margins.Left;
+        Result.Margins.Bottom := Stroke.Thickness;
       end;
     TOrientation.Vertical:
       begin
         Result.Name := 'VertBar';
         Result.Align := TAlignLayout.Right;
         Result.Margins.Top := Stroke.Thickness;
+        Result.Margins.Right := Stroke.Thickness;
         Result.Margins.Bottom := Result.Margins.Top;
         Result.Width := 8;
       end;
@@ -2773,9 +2780,9 @@ function TQVirtualTreeView.GetCellFill(ANode: TQVTNode; AColumn: Integer;
   ABrush: TBrush): Boolean;
 begin
   Result := false;
+  ABrush.Assign(Fill);
   if Assigned(OnGetCellBackground) then
   begin
-    ABrush.Assign(Fill);
     Result := True;
     OnGetCellBackground(Self, ANode, AColumn, ABrush, Result);
   end;
@@ -3517,7 +3524,8 @@ begin
       end
       else
       begin
-        if (ANode <> FFocusNode) and FocusChanging(ANode, ACol) then
+        if ((ANode <> FFocusNode) or (FFocusColumn <> ACol)) and
+          FocusChanging(ANode, ACol) then
         begin
           FFocusColumn := ACol;
           if (toMultiSelection in Options) then
@@ -3541,7 +3549,11 @@ begin
           FocusChanged;
         end;
         if Assigned(FMouseEditor) then
+        begin
+          FMouseEditor.Node := ANode;
+          FMouseEditor.Column := ACol;
           FMouseEditor.MouseClick(Button, Shift, pt);
+        end;
         CellClick(ANode, ACol, pt);
       end;
     end
@@ -3554,51 +3566,50 @@ procedure TQVirtualTreeView.MouseDown(Button: TMouseButton; Shift: TShiftState;
   X, Y: Single);
 begin
   inherited;
-  if (([TQVTOption.toTestHover, TQVTOption.toRowSizable] * Options) <> []) or
-    (TQVTHeaderOption.hoResizable in Header.Options) then
-  begin
-    FMouseDownPos.X := X;
-    FMouseDownPos.Y := Y;
-    if Assigned(FHorzScrollBar) then
-      FMouseDownOffset.X := HorzScrollBar.value
-    else
-      FMouseDownOffset.X := 0;
-    if Assigned(FVertScrollBar) then
-      FMouseDownOffset.Y := VertScrollBar.value
-    else
-      FMouseDownOffset.Y := 0;
-    FMouseDownTime := TThread.GetTickCount;
-    FMouseDownPosition := DoHitTest(FMouseDownPos, FMouseDownNode,
-      FMouseDownColumn);
-    case FMouseDownPosition of
-      hrNode, hrHeader:
-        // To drag node?
+  FMouseDownPos.X := X;
+  FMouseDownPos.Y := Y;
+  if Assigned(FHorzScrollBar) then
+    FMouseDownOffset.X := HorzScrollBar.value
+  else
+    FMouseDownOffset.X := 0;
+  if Assigned(FVertScrollBar) then
+    FMouseDownOffset.Y := VertScrollBar.value
+  else
+    FMouseDownOffset.Y := 0;
+  FMouseDownTime := TThread.GetTickCount;
+  FMouseDownPosition := DoHitTest(FMouseDownPos, FMouseDownNode,
+    FMouseDownColumn);
+  case FMouseDownPosition of
+    hrNode, hrHeader:
+      // To drag node?
+      begin
+        if Header.Columns[FMouseDownColumn].Title.Clickable then
+          Invalidate;
+        if (FMouseDownPosition = hrNode) then
         begin
-          if Header.Columns[FMouseDownColumn].Title.Clickable then
-            Invalidate;
-          if (FMouseDownPosition = hrNode) then
+          if (ssDouble in Shift) then
           begin
-            if (ssDouble in Shift) then
-            begin
-              if toAutoCascade in Options then
-                FMouseDownNode.IsExpanded := not FMouseDownNode.IsExpanded;
-              if Assigned(FOnCellDblClick) then
-                FOnCellDblClick(Self, FMouseDownNode, FMouseDownColumn,
-                  FMouseDownPos);
-            end;
-            if (toClickToExpand in Options) and FMouseDownNode.HasChildren and
-              (not FMouseDownNode.IsExpanded) and
-              (not PtInRect(FMouseDownNode.FButtonRect, FMouseDownPos)) then
-              FMouseDownNode.Expand();
-            if Supports(FMouseDownNode.CellData[FMouseDownColumn],
-              IQVTCellMouseEditCellData, FMouseEditor) and
-              CanEdit(FMouseDownNode, FMouseDownColumn) then
-              FMouseEditor.MouseDown(Button, Shift, FMouseDownOffset)
-            else
-              FMouseEditor := nil;
+            if toAutoCascade in Options then
+              FMouseDownNode.IsExpanded := not FMouseDownNode.IsExpanded;
+            if Assigned(FOnCellDblClick) then
+              FOnCellDblClick(Self, FMouseDownNode, FMouseDownColumn,
+                FMouseDownPos);
           end;
+          if (toClickToExpand in Options) and FMouseDownNode.HasChildren and
+            (not FMouseDownNode.IsExpanded) and
+            (not PtInRect(FMouseDownNode.FButtonRect, FMouseDownPos)) then
+            FMouseDownNode.Expand();
+          if Supports(FMouseDownNode.CellData[FMouseDownColumn],
+            IQVTCellMouseEditCellData, FMouseEditor) and
+            CanEdit(FMouseDownNode, FMouseDownColumn) then
+            FMouseEditor.MouseDown(Button, Shift, FMouseDownOffset)
+          else
+            FMouseEditor := nil;
         end;
-      hrColumnSpace:
+      end;
+    hrColumnSpace:
+      begin
+        if (TQVTHeaderOption.hoResizable in Header.Options) then
         begin
           if FMouseDownColumn = -1 then
             FSizingColumn := FHeader.Columns[FHeader.Columns.Count - 1]
@@ -3607,7 +3618,11 @@ begin
           FSizingColumnOriginWidth := FSizingColumn.Width;
           FStates := FStates + [TQVTState.tsColSizing];
         end;
-      hrRowSpace:
+      end;
+    hrRowSpace:
+      begin
+        if (([TQVTOption.toTestHover, TQVTOption.toRowSizable] * Options) <> [])
+        then
         begin
           if not Assigned(FMouseDownNode) then
             DoHitTest(FMouseDownPos, FMouseDownNode, FMouseDownColumn);
@@ -3618,14 +3633,14 @@ begin
             FSizingNodeOriginHeight := FHeader.Height;
           FStates := FStates + [TQVTState.tsRowSizing];
         end;
-    end;
-    if (Button = TMouseButton.mbLeft) and (not Assigned(FMouseEditor)) and
-      (FStates * [TQVTState.tsColSizing, TQVTState.tsRowSizing] = []) and
-      (Assigned(FVertScrollBar) or Assigned(FHorzScrollBar)) then
-    begin
-      FAniCalculations.Averaging := ssTouch in Shift;
-      FAniCalculations.MouseDown(X, Y);
-    end;
+      end;
+  end;
+  if (Button = TMouseButton.mbLeft) and (not Assigned(FMouseEditor)) and
+    (FStates * [TQVTState.tsColSizing, TQVTState.tsRowSizing] = []) and
+    (Assigned(FVertScrollBar) or Assigned(FHorzScrollBar)) then
+  begin
+    FAniCalculations.Averaging := ssTouch in Shift;
+    FAniCalculations.MouseDown(X, Y);
   end;
 end;
 
@@ -3944,7 +3959,7 @@ var
     for I := 0 to FVisibleNodes.Count - 1 do
     begin
       ANode := FVisibleNodes[I];
-      AdjustEditor := AEditorVisible and
+      AdjustEditor := Assigned(FInplaceEditor) and
         (FInplaceEditor.GetEditing(AEditingCol) = ANode);
       R := ANode.FDisplayRect;
       J := 0;
@@ -3984,7 +3999,7 @@ var
           if Assigned(ADrawer) then
           begin
             AColFocused := (J <= FFocusColumn) and (J + ASpans >= FFocusColumn);
-            if AdjustEditor and (J = FocusColumn) then
+            if AdjustEditor and (J = FEditingColumn) then
             begin
               AEditorRect := ADrawer.EditorBounds[ACellData];
               ADrawer.Draw(RectF(ACellRect.Left, ACellRect.Top,
@@ -4028,6 +4043,7 @@ var
           Inc(J);
       end;
     end;
+    AEditorVisible := not AEditorRect.IsEmpty;
     if AEditorVisible then
     begin
       if not AEditorRect.IsEmpty then
@@ -4046,8 +4062,9 @@ begin
     FActiveFill := TBrush.Create(TBrushKind.Solid, TAlphaColors.Null);
     AState := Canvas.SaveState;
     try
+      Canvas.IntersectClipRect(R);
       Canvas.FillRect(R, 0, 0, [], Opacity, Fill);
-      Canvas.DrawRect(R.SnapToPixel(Canvas.Scale), 0, 0, [], Opacity, Stroke);
+      R.Inflate(-1, -1);
       if not Assigned(FTextLayout) then
         FTextLayout := TTextLayoutManager.TextLayoutByCanvas(Canvas.ClassType)
           .Create(Canvas);
@@ -4070,6 +4087,10 @@ begin
       CalcVisibleNodes;
       DrawNodes;
       DrawHeader;
+      R := LocalRect;
+      R.Right := R.Right - 1;
+      R.Bottom := R.Bottom - 1;
+      Canvas.DrawRect(R.SnapToPixel(Canvas.Scale), 0, 0, [], Opacity, Stroke);
     finally
       Canvas.RestoreState(AState);
       Canvas.EndScene;
@@ -5215,7 +5236,7 @@ begin
     if FCount < value then
     // 如果新的子结点数量增大，则末个结点变空，以便后续初始化
     begin
-      Pointer(FLastChild) := nil;
+      // Pointer(FLastChild) := nil;
       FCount := value;
     end
     else
@@ -7551,7 +7572,7 @@ end;
 
 procedure TQVTBaseEditor.CancelEdit;
 begin
-  // Do Nothing
+  Hide;
 end;
 
 constructor TQVTBaseEditor.Create(AOwner: TComponent);
@@ -7646,6 +7667,35 @@ begin
   if not Control.IsFocused then
     Control.SetFocus;
   Control.Repaint;
+end;
+
+function TQVTBaseEditor._AddRef: Integer;
+begin
+  Result := AtomicIncrement(FRefCount);
+end;
+
+function TQVTBaseEditor._Release: Integer;
+{$IFNDEF AUTOREFCOUNT}
+var
+  LRefCount: Integer;
+{$ENDIF}
+const
+  objDestroyingFlag = Integer($80000000);
+begin
+{$IFNDEF AUTOREFCOUNT}
+  Result := AtomicDecrement(FRefCount);
+  if Result = 0 then
+  begin
+    repeat
+      LRefCount := FRefCount;
+    until AtomicCmpExchange(FRefCount, LRefCount or objDestroyingFlag,
+      LRefCount) = LRefCount;
+    // Mark the refcount field so that any refcounting during destruction doesn't infinitely recurse.
+    Destroy;
+  end;
+{$ELSE}
+  Result := __ObjRelease;
+{$ENDIF}
 end;
 
 { TQVTTextEditor }

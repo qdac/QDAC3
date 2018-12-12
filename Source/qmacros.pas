@@ -126,6 +126,14 @@ type
     p: PQCharW; var ALen: Integer; var AType: TQMacroCharType);
   PQMacroNameTestEventA = ^TQMacroNameTestEventA;
 {$ENDIF}
+  TQMacroCompileErrorEvent = procedure(ASender: TQMacroManager;
+    AError: Exception; const AText: QStringW; const AOffset: Integer) of object;
+  TQMacroCompileErrorEventG = procedure(ASender: TQMacroManager;
+    AError: Exception; const AText: QStringW; const AOffset: Integer);
+{$IFDEF UNICODE}
+  TQMacroCompileErrorEventA = reference to procedure(ASender: TQMacroManager;
+    AError: Exception; const AText: QStringW; const AOffset: Integer);
+{$ENDIF}
   /// <summary>
   /// 宏定义值的稳定性定义
   /// </summary>
@@ -300,6 +308,7 @@ type
     FOnMacroMissed: TQMacroMissEvent;
     FOnTestNameStart: TQMacroNameTestEvent;
     FOnTestNameEnd: TQMacroNameTestEvent;
+    FOnCompileError: TQMacroCompileErrorEvent;
     function GetCount: Integer;
     function GetItems(AIndex: Integer): TQMacroItem;
     function GetValues(AName: QStringW): QStringW;
@@ -335,6 +344,8 @@ type
     function Unescape(p: PQCharW; ALen: Integer): QStringW; overload;
     procedure DoFetchIterator(AMacro: TQMacroItem; const AQuoter: QCharW);
     procedure DoFetchIteratorIndex(AMacro: TQMacroItem; const AQuoter: QCharW);
+    procedure DoCompileError(AError: Exception; const AText: String;
+      AErrorOffset: Integer);
   public
     /// <summary>构造函数</summary>
     constructor Create; overload;
@@ -466,6 +477,8 @@ type
       write SetOnTestNameStart;
     property OnTestNameEnd: TQMacroNameTestEvent read FOnTestNameEnd
       write SetOnTestNameEnd;
+    property OnCompileError: TQMacroCompileErrorEvent read FOnCompileError
+      write FOnCompileError;
     property BooleanAsInt: Boolean read FBooleanAsInt write FBooleanAsInt;
   end;
 
@@ -473,7 +486,7 @@ implementation
 
 resourcestring
   SMacroValueUnknown = '指定的宏 %s 的值未定义。';
-  SMacroNotFound = '指定的宏 %s 未定义。';
+  SMacroNotFound = '%d 行 %d 列指定的宏 %s 未定义。';
   STagNotClosed = '指定的宏 %s 的结束标签未找到。';
   SMacroStartNeeded = '只定义了宏结束字符串而未指定宏定义开始字符串。';
   SBadFileFormat = '无效的QMacros预编译缓存数据。';
@@ -674,8 +687,32 @@ begin
 {$IFDEF UNICODE}
   if TMethod(OnMacroMissed).Data = Pointer(-1) then
     TQMacroMissEventA(TMethod(FOnMacroMissed).Code) := nil;
+  if TMethod(OnCompileError).Data = Pointer(-1) then
+    TQMacroCompileErrorEventA(TMethod(FOnCompileError).Code) := nil;
+  if TMethod(OnTestNameStart).Data = Pointer(-1) then
+    TQMacroNameTestEventA(TMethod(FOnTestNameStart).Code) := nil;
+  if TMethod(OnTestNameEnd).Data = Pointer(-1) then
+    TQMacroNameTestEventA(TMethod(FOnTestNameEnd).Code) := nil;
 {$ENDIF}
   inherited;
+end;
+
+procedure TQMacroManager.DoCompileError(AError: Exception; const AText: String;
+  AErrorOffset: Integer);
+begin
+  if Assigned(FOnCompileError) then
+  begin
+    if TMethod(FOnCompileError).Data = nil then
+      TQMacroCompileErrorEventG(TMethod(FOnCompileError).Code)
+        (Self, AError, AText, AErrorOffset)
+{$IFDEF UNICODE}
+    else if TMethod(FOnCompileError).Data = Pointer(-1) then
+      TQMacroCompileErrorEventA(TMethod(FOnCompileError).Code)
+        (Self, AError, AText, AErrorOffset)
+{$ENDIF}
+    else
+      FOnCompileError(Self, AError, AText, AErrorOffset);
+  end;
 end;
 
 procedure TQMacroManager.DoFetchFieldQuotedValue(AMacro: TQMacroItem;
@@ -1023,7 +1060,10 @@ var
             if (AFlags and MRF_DELAY_BINDING) <> 0 then
               AIndex := -1
             else
-              raise Exception.CreateFmt(SMacroNotFound, [AName]);
+            begin
+              StrPosW(pts, p, ACol, ALine);
+              raise Exception.CreateFmt(SMacroNotFound, [ALine, ACol, AName]);
+            end;
           end;
         end;
         AItem := @AResult.Items[AResult.Count];
@@ -1274,9 +1314,13 @@ begin
         ParseWithBoundary;
       end;
     except
-      if AIsNewResult then
-        FreeObject(AResult);
-      raise;
+      on E: Exception do
+      begin
+        DoCompileError(E, AText, (IntPtr(p) - IntPtr(pts)) shr 1);
+        if AIsNewResult then
+          FreeObject(AResult);
+        raise;
+      end;
     end;
   end;
   AResult.FFlags := AFlags;
@@ -1331,7 +1375,7 @@ begin
   ALast.SavePoint := FSavePoint;
   ALast.Volatile := AStable;
   ALast.Tag := ATag;
-  ALast.ReplaceId:=FReplaceId;
+  ALast.ReplaceId := FReplaceId;
   if Assigned(AMacro.FValue) then
     AMacro.FValue.Next := ALast;
   AMacro.FValue := ALast;
@@ -2167,7 +2211,7 @@ end;
 
 function TQMacroIterator.HasNext: Boolean;
 begin
-  Result := false;
+  Result := False;
 end;
 
 function TQMacroIterator.Replace: QStringW;
