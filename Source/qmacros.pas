@@ -81,7 +81,8 @@ const
   MRF_ENABLE_ESCAPE = $20; // 启用转义支持
   MRF_IGNORE_MISSED = $40; // 忽略无法识别的宏名称，将其认为是普通的字符串
   MFF_FILETYPE = $736F7263614D51; // 缓存文件标志符，用于区分其它文件
-
+  MFF_DEFAULT = MRF_IN_DBL_QUOTER OR MRF_IN_SINGLE_QUOTER OR
+    MRF_ENABLE_ESCAPE OR MRF_PARSE_PARAMS;
 {$HPPEMIT '#pragma link "qmacros"'}
 
 type

@@ -255,7 +255,7 @@ uses classes, sysutils, types{$IF RTLVersion>=21},
     , windows
 {$ENDIF}
 {$IFDEF POSIX}
-    , Posix.String_
+    , Posix.String_, Posix.Time,Posix.SysTypes
 {$ENDIF}
 {$IFDEF ANDROID}
     , Androidapi.Log
@@ -1445,7 +1445,12 @@ function DateTimeFromString(AStr: String; var AResult: TDateTime;
   AFormat: String = ''): Boolean; overload;
 function DateTimeFromString(Str: String; AFormat: String = '';
   ADef: TDateTime = 0): TDateTime; overload;
-function EncodeWebTime(ATime: TDateTime): String;
+// 获取当前时区偏移，单位为分钟，如中国为东8区，值为480
+function GetTimeZone: Integer;
+// 获取当前时区偏移文本表示，如中国为东8区，值为+0800
+function GetTimezoneText: QStringW;
+function EncodeWebTime(ATime: TDateTime): QStringW;
+
 function RollupSize(ASize: Int64): QStringW;
 function RollupTime(ASeconds: Int64; AHideZero: Boolean = True): QStringW;
 function DetectTextEncoding(const p: Pointer; l: Integer; var b: Boolean)
@@ -7924,7 +7929,7 @@ var
             Break;
           end;
         end
-        else if p^ = '+' then
+        else if ps^ = '+' then
         begin
           pd^ := 32;
           Inc(ps);
@@ -8027,7 +8032,7 @@ begin
     end
     else
     begin
-      if not DecodeUrlStr(ps,ADocument) then
+      if not DecodeUrlStr(ps, ADocument) then
         ADocument := ps;
       AParams.Clear;
     end;
@@ -8140,13 +8145,13 @@ function DateTimeFromString(AStr: String; var AResult: TDateTime;
       else
         Result := false;
     end;
-    Result := Result and (ps^ = #0);
+    Result := Result and ((ps^ = #0) or (ps^ = '+'));
     if Result then
     begin
-      if M=0 then
-        M:=1;
-      if D=0 then
-        D:=1;
+      if M = 0 then
+        M := 1;
+      if d = 0 then
+        d := 1;
       Result := TryEncodeDate(Y, M, d, ADate);
       Result := Result and TryEncodeTime(H, N, S, MS, ATime);
       if Result then
@@ -8631,9 +8636,47 @@ begin
     AResult := IncMinute(AResult, -tz);
 end;
 
-function EncodeWebTime(ATime: TDateTime): String;
+function GetTimeZone: Integer;
+var
+{$IFDEF MSWindows}
+  TimeZone: TTimeZoneInformation;
+{$ELSE}
+  tmLocal, tmUtc: ptm;
+  t1, t2: time_t;
+{$ENDIF}
+begin
+{$IFDEF MSWINDOWS}
+  GetTimeZoneInformation(TimeZone);
+  Result := -TimeZone.Bias;
+{$ELSE}
+  t1:=0;
+  t2 := 0;
+  tmLocal := localtime(t1);
+  t1 := mktime(tmLocal^);
+  tmUtc := gmtime(t2);
+  t2 := mktime(tmUtc^);
+  Result := (t1 - t2) div 60;
+{$ENDIF}
+end;
+
+function GetTimezoneText: QStringW;
+var
+  ATz: Integer;
+begin
+  ATz := GetTimeZone;
+  if ATz > 0 then
+    Result := Format('+%.2d%.2d', [ATz div 60, ATz mod 60])
+  else
+  begin
+    ATz := -ATz;
+    Result := Format('-%.2d%.2d', [ATz div 60, ATz mod 60]);
+  end;
+end;
+
+function EncodeWebTime(ATime: TDateTime): QStringW;
 var
   Y, M, d, H, N, S, MS: Word;
+  ATimeZone: String;
 const
   DefShortMonthNames: array [1 .. 12] of String = ('Jan', 'Feb', 'Mar', 'Apr',
     'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
@@ -8644,6 +8687,9 @@ begin
   Result := DefShortDayNames[DayOfWeek(ATime)] + ',' + IntToStr(d) + ' ' +
     DefShortMonthNames[M] + ' ' + IntToStr(Y) + ' ' + IntToStr(H) + ':' +
     IntToStr(N) + ':' + IntToStr(S);
+  ATimeZone := GetTimezoneText;
+  if Length(ATimeZone) > 0 then
+    Result := Result + ' GMT ' + ATimeZone;
 end;
 
 function RollupSize(ASize: Int64): QStringW;

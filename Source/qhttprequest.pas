@@ -3502,6 +3502,8 @@ begin
   AHeadReq.Action := reqHead;
   AHeadReq.AfterDone := DoHeadReady;
   AHeadReq.OnError := DoError;
+  if RequestHeaders.Count>0 then
+    AHeadReq.RequestHeaders.Merge(RequestHeaders);
   FQueue.Push(AHeadReq);
   inherited;
 end;

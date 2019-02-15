@@ -1,4 +1,4 @@
-package qfmxvt;
+package dclqfmxvt;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -25,16 +25,17 @@ package qfmxvt;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$RUNONLY}
+{$DESCRIPTION 'QDAC VirtualTreeView for FMX'}
+{$DESIGNONLY}
 {$IMPLICITBUILD ON}
 
 requires
   rtl,
   fmx,
-  DesignIDE,
-  dbrtl;
+  qfmxvt;
 
 contains
-  qdac_fmx_virtualtree in '..\Source\qdac_fmx_virtualtree.pas';
+  qdac_fmx_virtualtree_designeditor in '..\Source\qdac_fmx_virtualtree_designeditor.pas',
+  qvtreg in 'qvtreg.pas';
 
 end.

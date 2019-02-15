@@ -266,6 +266,7 @@ type
     FTag: IntPtr;
     FLazyMode: Boolean;
     FEnabled: Boolean;
+    FAcceptTags: QStringW;
     procedure BeginWrite; virtual;
     procedure EndWrite; virtual;
     procedure LazyWrite; virtual;
@@ -282,6 +283,7 @@ type
     property Enabled: Boolean read FEnabled write FEnabled;
     property OnAccept: TQLogItemAcceptEvent read FOnAccept write FOnAccept;
     property Tag: IntPtr read FTag write FTag;
+    property AcceptTags: QStringW read FAcceptTags write FAcceptTags;
   end;
 
   // 日志读取对象
@@ -758,8 +760,40 @@ end;
 
 // TQLogWriter
 function TQLogWriter.Accept(AItem: PQLogItem): Boolean;
+var
+  pTags, pTag: PWideChar;
+  ATag: QStringW;
 begin
   Result := Enabled and (AItem.Level in AcceptLevels);
+  if Result and (Length(FAcceptTags) > 0) then
+  begin
+    Result := (AItem.TagLen > 0);
+    if Result then
+    begin
+      pTags := PWideChar(FAcceptTags);
+      ATag := AItem.Tag;
+      pTag := StrIStrW(pTags, PWideChar(ATag));
+      if Assigned(pTag) then
+      begin
+        if pTag <> pTags then
+        begin
+          Dec(pTag);
+          if pTag^ = ',' then
+          begin
+            Inc(pTag, Length(ATag) + 1);
+            Result := (pTag^ = ',') or (pTag^ = #0);
+          end
+          else
+            Result := False;
+        end
+        else
+        begin
+          Inc(pTag, Length(ATag));
+          Result := (pTag^ = ',') or (pTag^ = #0);
+        end;
+      end;
+    end;
+  end;
   if Assigned(OnAccept) then
     OnAccept(Self, AItem, Result);
 end;
@@ -1991,13 +2025,13 @@ procedure TQLogStringsWriter.FlushLogs;
 var
   ADelta, ABuffered: Integer;
   AFirst, AItem: PQLogItem;
-//  T: Cardinal;
+  // T: Cardinal;
   ATemp: TStrings;
   I: Integer;
 begin
   if Assigned(FItems) and (FBuffered > 0) then
   begin
-//    T := GetTickCount;
+    // T := GetTickCount;
     FLocker.Enter;
     AFirst := FLazyList.First;
     FLazyList.First := nil;
@@ -2056,21 +2090,24 @@ begin
     finally
       if ATemp <> FItems then
       begin
-        // 一次性赋值
-        FItems.Text := ATemp.Text;
+        if FMaxItems > 0 then
+          // 一次性赋值
+          FItems.Text := ATemp.Text
+        else
+          FItems.AddStrings(ATemp);
         FreeAndNil(ATemp);
       end;
     end;
     AtomicDecrement(FFlushRefCount);
-//{$IFDEF DEBUG}
-//    DebugOut('Flush log used time %d ms',
-//      [{$IF RTLVersion>=23}TThread.{$IFEND}GetTickCount - T]);
-//{$ENDIF}
+    // {$IFDEF DEBUG}
+    // DebugOut('Flush log used time %d ms',
+    // [{$IF RTLVersion>=23}TThread.{$IFEND}GetTickCount - T]);
+    // {$ENDIF}
   end
-//{$IFDEF DEBUG}
-//  else
-//    DebugOut('No log need flush');
-//{$ENDIF}
+  // {$IFDEF DEBUG}
+  // else
+  // DebugOut('No log need flush');
+  // {$ENDIF}
 end;
 
 procedure TQLogStringsWriter.HandleNeeded;
@@ -2081,6 +2118,15 @@ end;
 procedure TQLogStringsWriter.LazyWrite;
 var
   T: Cardinal;
+  procedure DoFlush;
+  begin
+    FLastFlush := T;
+    if AtomicIncrement(FFlushRefCount) = 1 then
+      TThread.Queue(nil, FlushLogs)
+    else
+      AtomicDecrement(FFlushRefCount);
+  end;
+
 begin
   T := GetTickCount;
   if FBuffered > 0 then
@@ -2088,16 +2134,11 @@ begin
     if LazyMode then
     begin
       if T - FLastFlush >= Logs.Castor.LazyInterval then // 大于日志刷新间隔
-      begin
-        FLastFlush := T;
-        if AtomicIncrement(FFlushRefCount) = 1 then
-          TThread.Queue(nil, FlushLogs)
-        else
-          AtomicDecrement(FFlushRefCount);
-      end;
-    end;
+        DoFlush;
+    end
+    else
+      DoFlush;
   end;
-
 end;
 
 function TQLogStringsWriter.WriteItem(AItem: PQLogItem): Boolean;

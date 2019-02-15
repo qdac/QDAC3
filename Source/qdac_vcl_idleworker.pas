@@ -139,15 +139,17 @@ end;
 procedure TQIdleWorker.Execute;
 var
   AMsg: MSG;
+  AItem:PQIdleJob;
 begin
   while Assigned(FFirst) do
   begin
     try
-      if Assigned(FFirst.BeforeExecute.Code) then
-        InvokeJobProc(FFirst.BeforeExecute, FFirst.Param);
-      InvokeJobProc(FFirst.WorkProc, FFirst.Param);
+      AItem:=FFirst;
+      FFirst:=AItem.Next;
+      if Assigned(AItem.BeforeExecute.Code) then
+        InvokeJobProc(AItem.BeforeExecute, AItem.Param);
+      InvokeJobProc(AItem.WorkProc, AItem.Param);
     finally
-      FFirst := FreeJob(FFirst);
       if not Assigned(FFirst) then
         FLast := nil;
     end;

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Transactions>
-    <Transaction>1899/12/30 00:00:00.000.691,H:\User\QDAC\Packages\qfmxvt.dproj=C:\Users\swish\Documents\Embarcadero\Studio\Projects\Package1.dproj</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.691,C:\Users\swish\Documents\Embarcadero\Studio\Projects\Package1.dproj=H:\User\QDAC\Packages\qfmxvt.dproj</Transaction>
   </Transactions>
 </BorlandProject>

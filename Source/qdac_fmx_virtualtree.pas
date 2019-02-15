@@ -9,8 +9,7 @@ uses System.Classes, System.Sysutils, System.Types, System.UITypes,
   System.Math.Vectors,
   System.Generics.Collections, System.RTLConsts, System.Messaging,
   Math, FMX.TextLayout, FMX.Layouts, FMX.StdCtrls, FMX.Edit, FMX.ListBox,
-  FMX.ComboEdit,
-  FMX.Memo, FMX.InertialMovement, FMX.Colors, Data.DB, FMX.Forms,
+  FMX.ComboEdit, FMX.Memo, FMX.InertialMovement, FMX.Colors, FMX.Forms,
   FMX.Types, FMX.Controls, FMX.Graphics, FMX.Dialogs, FMX.Objects, FMX.Platform;
 
 const
@@ -334,6 +333,16 @@ type
     procedure Hide;
   end;
 
+  IQVTDataAdapter = interface
+    ['{F84A9932-7ECC-47CE-8523-96A9885EE0F8}']
+    function GetChildCount(ANode: TQVTNode): Integer;
+    function GetCellData(ANode: TQVTNode; AColumn: Integer): IQVTCellData;
+    function CanEdit(ANode: TQVTNode; AColumn: Integer): Boolean;
+    function GetTreeView: TQVirtualTreeView;
+    procedure SetTreeView(const AValue: TQVirtualTreeView);
+    property TreeView: TQVirtualTreeView read GetTreeView write SetTreeView;
+  end;
+
   TQVTDrawableObject = class(TPersistent, IInterface, IQVTDrawable)
   private
   protected
@@ -447,6 +456,8 @@ type
       write SetSortMarker;
   end;
 
+  TQVTColumnClass = class of TQVTColumn;
+
   TQVTColumn = class(TCollectionItem, IQVTExtendable, IInterface)
   private
     FTextSettingsInfo: TTextSettingsInfo;
@@ -522,6 +533,8 @@ type
   TQVTColumns = class(TOwnedCollection)
   private
     function GetTreeView: TQVirtualTreeView;
+    function GetItemClass: TCollectionItemClass;
+    procedure SetItemClass(const value: TCollectionItemClass);
   protected
     function GetAttrCount: Integer; override;
     function GetAttr(Index: Integer): string; override;
@@ -530,10 +543,12 @@ type
   public
     function GetItems(const AIndex: Integer): TQVTColumn;
   public
-    constructor Create(AOwner: TPersistent); overload;
+    constructor Create(AOwner: TPersistent); overload; virtual;
     function Add: TQVTColumn; overload;
     property Items[const AIndex: Integer]: TQVTColumn read GetItems; default;
     property TreeView: TQVirtualTreeView read GetTreeView;
+    property ItemClass: TCollectionItemClass read GetItemClass
+      write SetItemClass;
   end;
 
   TQVTHeaderOption = (hoVisible, hoResizable, hoSelectColumn, hoSelectAll,
@@ -1016,68 +1031,6 @@ type
       write FOnValidText;
   end;
 
-  [ComponentPlatformsAttribute(AllCurrentPlatforms)]
-  TQVTDBAdapter = class(TComponent)
-  private
-    FAddOrphanAsRoot: Boolean;
-
-  type
-    TQDBNodeExt = class(TInterfacedObject)
-    private
-      FBookmark: TBookmark;
-      FKeyValue, FParentValue: String;
-      FChildren: TObjectList<TQDBNodeExt>;
-      FParent: TQDBNodeExt;
-      FFlags: Integer;
-      function GetChildren: TObjectList<TQDBNodeExt>;
-    public
-      constructor Create;
-      destructor Destroy; override;
-      property Children: TObjectList<TQDBNodeExt> read GetChildren;
-    end;
-  protected
-    FDataSet: TDataSet;
-    FTreeView: TQVirtualTreeView;
-    FKeyField: TField;
-    FParentField: TField;
-    FRootItems: TObjectList<TQDBNodeExt>;
-    FDataSource: TDataSource;
-    FRootParentValue: String;
-    procedure SetDataSource(const value: TDataSource);
-    procedure SetDataSet(const value: TDataSet);
-    procedure SetTreeView(const value: TQVirtualTreeView);
-    procedure SetKeyField(const value: TField);
-    procedure SetParentField(const value: TField);
-    procedure ContentChanged;
-    procedure DoInitNode(Sender: TQVirtualTreeView; ANode: TQVTNode);
-  public
-    constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
-  published
-    property TreeView: TQVirtualTreeView read FTreeView write SetTreeView;
-    property DataSet: TDataSet read FDataSet write SetDataSet;
-    property DataSource: TDataSource read FDataSource write SetDataSource;
-    property KeyField: TField read FKeyField write SetKeyField;
-    property ParentField: TField read FParentField write SetParentField;
-    property RootParentValue: String read FRootParentValue
-      write FRootParentValue;
-    property AddOrphanAsRoot: Boolean read FAddOrphanAsRoot
-      write FAddOrphanAsRoot;
-  end;
-
-  [ComponentPlatformsAttribute(AllCurrentPlatforms)]
-  TQVTDBTextCell = class(TQVTCustomTextCell)
-  private
-    procedure SetField(const value: TField);
-  protected
-    FField: TField;
-    function GetText: String; override;
-    procedure SetText(const S: String); override;
-    function GetEnabled: Boolean; override;
-  published
-    property Field: TField read FField write SetField;
-  end;
-
   TQVTPickListCellGetEvent = procedure(Sender: TObject; AList: TStrings)
     of object;
 
@@ -1391,6 +1344,8 @@ type
     class var DefaultDrawers: array [TQVTDrawerType] of IQVTDrawer;
     function GetSelections: TQVTNodeList;
     procedure SetOptions(const value: TQVTOptions);
+    procedure SetDataAdapter(const value: IQVTDataAdapter);
+    function GetColumns: TQVTColumns;
   protected
     // Vars
     FRootNode: TQVTNode;
@@ -1441,6 +1396,7 @@ type
     FSortColumns: TQVTSortColumns;
     FMouseEditor: IQVTCellMouseEditCellData;
     FAniCalculations: TAniCalculations;
+    FDataAdapter: IQVTDataAdapter;
     // Events
     FOnHoverChanged: TNotifyEvent;
     FOnInitChildren: TQVTNodeNotifyEvent;
@@ -1506,8 +1462,8 @@ type
     function CreateScrollBar(AOrientation: TOrientation): TScrollBar;
     procedure DoScrollChanged(ASender: TObject);
     function CalcScrollRange: TSizeF;
-    procedure NodeVisibleChanged;
-    procedure NodeContentChanged;
+    procedure NodeVisibleChanged(ARecalcVisibleNodes: Boolean = false);
+    procedure NodeContentChanged(ARecalcVisibleNodes: Boolean = false);
     procedure CheckScrollBars;
     function FocusChanging(ANewNode: TQVTNode; ANewCol: Integer): Boolean;
     procedure FocusChanged;
@@ -1532,6 +1488,7 @@ type
     procedure DoSelectionChanged(Sender: TObject; const Item: TQVTNode;
       Action: TCollectionNotification);
     function GrayColor(AColor: TAlphaColor): TAlphaColor;
+    procedure DoStyleChanged; override;
   published
     property LineStyle: TStrokeBrush read FLineStyle;
     property Fill: TBrush read FFill write SetFill;
@@ -1552,6 +1509,8 @@ type
     property ColSpace: Single read GetColSpace write SetColSpace nodefault;
     property RowSpace: Single read GetRowSpace write SetRowSpace nodefault;
     property AniCalculations: TAniCalculations read FAniCalculations;
+    property DataAdapter: IQVTDataAdapter read FDataAdapter
+      write SetDataAdapter;
     // Events
     property OnGetCellData: TQVTGetCellDataEvent read FOnGetCellData
       write FOnGetCellData;
@@ -1697,6 +1656,7 @@ type
     property Space: TPointF read FSpace write SetSpace;
     property IsEditing: Boolean read GetIsEditing;
     property Selections: TQVTNodeList read GetSelections;
+    property Columns: TQVTColumns read GetColumns;
   end;
 
 implementation
@@ -1957,7 +1917,7 @@ begin
       if IsZero(MaxHeight) or (value <= MaxHeight) then
       begin
         FHeight := value;
-        TreeView.NodeVisibleChanged;
+        TreeView.NodeContentChanged;
       end;
     end;
   end;
@@ -2278,7 +2238,6 @@ begin
 end;
 
 procedure TQVirtualTreeView.CalcVisibleNodes;
-
 var
   W: Single;
   ANode: TQVTNode;
@@ -2342,7 +2301,11 @@ begin
   begin
     ACellData := ANode.CellData[ACol];
     if Assigned(ACellData) and ACellData.Enabled then
-      Result := (not Header.Columns[ACol].ReadOnly)
+    begin
+      Result := (not Header.Columns[ACol].ReadOnly);
+      if Result and Assigned(FDataAdapter) then
+        Result := FDataAdapter.CanEdit(ANode, ACol);
+    end
     else
       Result := false;
     if Assigned(FOnCanEdit) then
@@ -2405,7 +2368,12 @@ begin
         FVertScrollBar.ViewportSize := R.Height;
     end
     else
+    begin
       FreeAndNil(FVertScrollBar);
+      FPaintOffset.Y := 0;
+      FStates := FStates + [TQVTState.tsVisibleChanged];
+      CalcVisibleNodes;
+    end;
     if FContentSize.cx > R.Width then
     begin
       if not Assigned(FHorzScrollBar) then
@@ -2416,7 +2384,12 @@ begin
       FHorzScrollBar.ViewportSize := R.Width;
     end
     else
+    begin
       FreeAndNil(FHorzScrollBar);
+      FPaintOffset.X := 0;
+      FStates := FStates + [TQVTState.tsVisibleChanged];
+      CalcVisibleNodes;
+    end;
     SetLength(Targets, 2);
 
     Targets[0].TargetType := TAniCalculations.TTargetType.Min;
@@ -2539,6 +2512,8 @@ end;
 
 destructor TQVirtualTreeView.Destroy;
 begin
+  TMessageManager.DefaultManager.Unsubscribe(TQVTCellNotifyMessage,
+    FNotifyMsgId);
   if Assigned(FSelections) then
     FreeAndNil(FSelections);
   if Assigned(FAniCalculations) then
@@ -2566,8 +2541,6 @@ begin
     FRootNode._Release;
     FRootNode := nil;
   end;
-  TMessageManager.DefaultManager.Unsubscribe(TQVTCellNotifyMessage,
-    FNotifyMsgId);
   inherited;
 end;
 
@@ -2657,7 +2630,7 @@ begin
   else
     pt.Y := 0;
   FAniCalculations.ViewportPositionF := pt;
-  NodeVisibleChanged;
+  NodeVisibleChanged(false);
 end;
 
 procedure TQVirtualTreeView.DoSelectionChanged(Sender: TObject;
@@ -2674,7 +2647,6 @@ end;
 
 procedure TQVirtualTreeView.DoSortColumnsChanged(Sender: TObject;
   const Item: TQVTColumn; Action: TCollectionNotification);
-
 var
   I: Integer;
 begin
@@ -2688,6 +2660,13 @@ begin
   if Assigned(FOnSortmarkerChanged) then
     FOnSortmarkerChanged(Self);
   Invalidate;
+end;
+
+procedure TQVirtualTreeView.DoStyleChanged;
+begin
+  inherited;
+  AdjustAutoSizeColumn;
+  NodeContentChanged;
 end;
 
 function TQVirtualTreeView.EndEdit: Boolean;
@@ -2731,7 +2710,14 @@ end;
 function TQVirtualTreeView.GetCellData(ANode: TQVTNode; AColIndex: Integer)
   : IQVTCellData;
 begin
-  Result := FHeader.Columns[AColIndex].CellData;
+  if Assigned(FDataAdapter) then
+  begin
+    Result := FDataAdapter.GetCellData(ANode, AColIndex);
+    if not Assigned(Result) then
+      Result := FHeader.Columns[AColIndex].CellData;
+  end
+  else
+    Result := FHeader.Columns[AColIndex].CellData;
   if Assigned(OnGetCellData) then
     OnGetCellData(Self, ANode, AColIndex, Result);
   if Assigned(Result) then
@@ -2861,6 +2847,11 @@ begin
   Result := FSpace.X;
 end;
 
+function TQVirtualTreeView.GetColumns: TQVTColumns;
+begin
+  Result := FHeader.Columns;
+end;
+
 function TQVirtualTreeView.GetChildCount(ANode: TQVTNode): Integer;
 begin
   ANode.InitChildren;
@@ -2940,7 +2931,9 @@ begin
     if not Assigned(Result) then
       ANode := ANode.Parent
     else if TQVTNodeState.nsVisible in Result.FStates then
-      Break;
+      Break
+    else
+      ANode := Result;
   until not Assigned(ANode);
 end;
 
@@ -3783,15 +3776,19 @@ begin
     DoWheel(FVertScrollBar);
 end;
 
-procedure TQVirtualTreeView.NodeContentChanged;
+procedure TQVirtualTreeView.NodeContentChanged(ARecalcVisibleNodes: Boolean);
 begin
   FStates := FStates + [TQVTState.tsVisibleChanged, TQVTState.tsContentChanged];
+  if ARecalcVisibleNodes then
+    FFirstVisibleNode := nil;
   Invalidate;
 end;
 
-procedure TQVirtualTreeView.NodeVisibleChanged;
+procedure TQVirtualTreeView.NodeVisibleChanged(ARecalcVisibleNodes: Boolean);
 begin
   FStates := FStates + [TQVTState.tsVisibleChanged];
+  if ARecalcVisibleNodes then
+    FFirstVisibleNode := nil;
   Invalidate;
 end;
 
@@ -4152,6 +4149,19 @@ begin
       FSpace.X := 0;
     AdjustAutoSizeColumn;
     NodeContentChanged;
+  end;
+end;
+
+procedure TQVirtualTreeView.SetDataAdapter(const value: IQVTDataAdapter);
+begin
+  if FDataAdapter <> value then
+  begin
+    if Assigned(FDataAdapter) then
+      FDataAdapter.TreeView := nil;
+    FDataAdapter := value;
+    RootNodeCount := 0;
+    if Assigned(value) then
+      value.TreeView := Self;
   end;
 end;
 
@@ -4552,6 +4562,11 @@ begin
   end;
 end;
 
+function TQVTColumns.GetItemClass: TCollectionItemClass;
+begin
+  Result := inherited ItemClass;
+end;
+
 function TQVTColumns.GetItems(const AIndex: Integer): TQVTColumn;
 begin
   Result := GetItem(AIndex) as TQVTColumn;
@@ -4560,6 +4575,27 @@ end;
 function TQVTColumns.GetTreeView: TQVirtualTreeView;
 begin
   Result := (Owner as TQVTHeader).TreeView;
+end;
+
+procedure TQVTColumns.SetItemClass(const value: TCollectionItemClass);
+var
+  AItems: TArray<TCollectionItem>;
+  I: Integer;
+begin
+  SetLength(AItems, Count);
+  for I := 0 to Count - 1 do
+  begin
+    AItems[I] := ItemClass.Create(Self);
+    AItems[I].Assign(Items[I]);
+  end;
+  BeginUpdate;
+  try
+    Clear;
+    for I := 0 to High(AItems) do
+      Add.Assign(AItems[I]);
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TQVTColumns.Update(Item: TCollectionItem);
@@ -5027,6 +5063,8 @@ procedure TQVTNode.InitChildren;
 begin
   if FCount < 0 then
   begin
+    if Assigned(TreeView.FDataAdapter) then
+      FCount := TreeView.FDataAdapter.GetChildCount(Self);
     if Assigned(TreeView.FOnInitChildren) then
       TreeView.FOnInitChildren(TreeView, Self);
     if FCount < 0 then
@@ -5274,6 +5312,16 @@ begin
         // 释放掉多余的结点
         while Assigned(AChild) do
         begin
+          if AChild = TreeView.FocusNode then
+          begin
+            TreeView.FFocusNode := nil;
+            TreeView.FocusChanged;
+          end;
+          if AChild = TreeView.FirstVisibleNode then
+          begin
+            TreeView.FFirstVisibleNode := nil;
+            TreeView.NodeVisibleChanged;
+          end;
           ANext := AChild.FNext;
           Pointer(AChild.FNext) := nil;
           if Assigned(ANext) then
@@ -5394,31 +5442,37 @@ begin
     FStates := value;
     if ([TQVTNodeState.nsVisible, TQVTNodeState.nsExpanded] * ALastStates) <>
       ([TQVTNodeState.nsVisible, TQVTNodeState.nsExpanded] * value) then
-      TreeView.NodeContentChanged;
-    // 新状态选中
-    if TQVTNodeState.nsSelected in value then
     begin
-      if not(TQVTNodeState.nsSelected in ALastStates) then
-      begin
-        if TQVTOption.toMultiSelection in TreeView.Options then
-        begin
-          if TreeView.Selections.IndexOf(Self) = -1 then
-            TreeView.Selections.Add(Self);
-        end
-        else
-          SetFocus;
-      end;
-    end
-    else
+      TreeView.NodeContentChanged(((TQVTNodeState.nsVisible in value) and
+        (not(TQVTNodeState.nsVisible in ALastStates))) or
+        (Assigned(TreeView.FFirstVisibleNode) and
+        ((TreeView.FirstVisibleNode = Self) or
+        TreeView.FirstVisibleNode.IsChildOf(Self))));
+    end;
+  end;
+  // 新状态选中
+  if TQVTNodeState.nsSelected in value then
+  begin
+    if not(TQVTNodeState.nsSelected in ALastStates) then
     begin
-      if TQVTNodeState.nsSelected in ALastStates then
+      if TQVTOption.toMultiSelection in TreeView.Options then
       begin
-        if TQVTOption.toMultiSelection in TreeView.Options then
-          TreeView.Selections.Remove(Self)
-        else if TreeView.FocusNode = Self then
-          TreeView.FFocusNode := nil;
-        TreeView.InvalidateNode(Self);
-      end;
+        if TreeView.Selections.IndexOf(Self) = -1 then
+          TreeView.Selections.Add(Self);
+      end
+      else
+        SetFocus;
+    end;
+  end
+  else
+  begin
+    if TQVTNodeState.nsSelected in ALastStates then
+    begin
+      if TQVTOption.toMultiSelection in TreeView.Options then
+        TreeView.Selections.Remove(Self)
+      else if TreeView.FocusNode = Self then
+        TreeView.FFocusNode := nil;
+      TreeView.InvalidateNode(Self);
     end;
   end;
 end;
@@ -5724,6 +5778,7 @@ var
         pt.X + 1 + ButtonSize, pt.Y);
     end;
     ACanvas.Fill.Assign(ATreeView.LineStyle);
+    ACanvas.Fill.Color := AColor;
     ACanvas.FillPolygon(APolygon, ATreeView.Opacity);
   end;
   procedure DrawButton;
@@ -6517,12 +6572,10 @@ begin
 end;
 
 procedure TQVTHeaderDrawer.Draw(ARect: TRectF; AData: IQVTCellData);
-
 var
   AColumn: TQVTColumn;
   ATreeView: TQVirtualTreeView;
   ACanvas: TCanvas;
-  AFill: TBrush;
   ATextSettings: TTextSettingsInfo;
   AColors: array [0 .. 1] of TAlphaColor;
   R: TRectF;
@@ -7986,185 +8039,6 @@ begin
   end;
 end;
 
-{ TQVTDBTextCell }
-
-function TQVTDBTextCell.GetEnabled: Boolean;
-begin
-  if Assigned(FField) then
-    Result := not FField.ReadOnly
-  else
-    Result := inherited;
-end;
-
-function TQVTDBTextCell.GetText: String;
-begin
-  if Assigned(FField) and FField.DataSet.Active then
-    Result := FField.AsString
-  else
-    Result := DefaultText;
-  if Assigned(OnGetText) then
-    OnGetText(Self, Result);
-end;
-
-procedure TQVTDBTextCell.SetField(const value: TField);
-begin
-  if FField <> value then
-  begin
-    FField := value;
-    if Assigned(Node) then
-      Node.TreeView.Invalidate;
-  end;
-end;
-
-procedure TQVTDBTextCell.SetText(const S: String);
-begin
-  inherited;
-  if Assigned(FField) and FField.DataSet.Active then
-  begin
-    if not(FField.DataSet.State in [dsEdit, dsInsert]) then
-      FField.DataSet.Edit;
-    FField.AsString := S;
-  end;
-end;
-
-{ TQVTDBAdapter }
-
-procedure TQVTDBAdapter.ContentChanged;
-var
-  ABookmark: TBookmark;
-  AItem: TQDBNodeExt;
-  ADict: TDictionary<String, TQDBNodeExt>;
-  APair: TPair<String, TQDBNodeExt>;
-  AParent: TQDBNodeExt;
-const
-  EXT_PARENT_FOUND = $1;
-begin
-  if Assigned(FDataSet) and Assigned(FTreeView) and FDataSet.Active then
-  begin
-    if Assigned(FParentField) and Assigned(FKeyField) then
-    begin
-      ABookmark := FDataSet.Bookmark;
-      ADict := TDictionary<String, TQDBNodeExt>.Create;
-      FDataSet.DisableControls;
-      try
-        FDataSet.First;
-        FRootItems.Clear;
-        while not FDataSet.Eof do
-        begin
-          AItem := TQDBNodeExt.Create;
-          AItem.FKeyValue := FKeyField.AsString;
-          AItem.FParentValue := FParentField.AsString;
-          AItem.FBookmark := FDataSet.Bookmark;
-          ADict.Add(AItem.FKeyValue, AItem);
-          FDataSet.Next;
-        end;
-        for APair in ADict do
-        begin
-          if ADict.TryGetValue(APair.value.FParentValue, AParent) then
-          begin
-            APair.value.FParent := AParent;
-            APair.value.FFlags := APair.value.FFlags or EXT_PARENT_FOUND;
-            AParent.Children.Add(APair.value);
-          end
-          else if APair.value.FParentValue = FRootParentValue then
-          begin
-            APair.value.FFlags := APair.value.FFlags or EXT_PARENT_FOUND;
-            FRootItems.Add(APair.value);
-          end;
-        end;
-        // 对于孤儿结点处理
-        for APair in ADict do
-        begin
-          if (APair.value.FFlags and EXT_PARENT_FOUND) = 0 then
-          begin
-            if AddOrphanAsRoot then
-              FRootItems.Add(APair.value)
-            else
-              APair.value.DisposeOf;
-          end;
-        end;
-      finally
-        FDataSet.Bookmark := ABookmark;
-        FDataSet.EnableControls;
-        FreeAndNil(ADict);
-        FTreeView.RootNodeCount := FRootItems.Count;
-        FTreeView.RootNode.ReinitChildren;
-      end;
-    end;
-  end
-  else if Assigned(FTreeView) then
-    FTreeView.RootNodeCount := 0;
-end;
-
-constructor TQVTDBAdapter.Create(AOwner: TComponent);
-begin
-  inherited;
-  FRootItems := TObjectList<TQDBNodeExt>.Create;
-end;
-
-destructor TQVTDBAdapter.Destroy;
-begin
-  FreeAndNil(FRootItems);
-  inherited;
-end;
-
-procedure TQVTDBAdapter.DoInitNode(Sender: TQVirtualTreeView; ANode: TQVTNode);
-var
-  AExt: TQDBNodeExt;
-begin
-  if ANode.Parent = Sender.RootNode then
-    AExt := FRootItems[ANode.Index]
-  else
-  begin
-    AExt := ANode.Parent.ExtByType(TQDBNodeExt) as TQDBNodeExt;
-    AExt := AExt.Children[ANode.Index]
-  end;
-  if Assigned(AExt.FChildren) then
-    ANode.ChildCount := AExt.FChildren.Count;
-  ANode.Exts.Add(AExt);
-end;
-
-procedure TQVTDBAdapter.SetDataSet(const value: TDataSet);
-begin
-  if FDataSet <> value then
-  begin
-    FDataSet := value;
-    ContentChanged;
-  end;
-end;
-
-procedure TQVTDBAdapter.SetDataSource(const value: TDataSource);
-begin
-  if FDataSource <> value then
-  begin
-    FDataSource := value;
-    if Assigned(value) then
-      FDataSet := value.DataSet;
-    ContentChanged;
-  end;
-end;
-
-procedure TQVTDBAdapter.SetKeyField(const value: TField);
-begin
-  FKeyField := value;
-end;
-
-procedure TQVTDBAdapter.SetParentField(const value: TField);
-begin
-  FParentField := value;
-end;
-
-procedure TQVTDBAdapter.SetTreeView(const value: TQVirtualTreeView);
-begin
-  if FTreeView <> value then
-  begin
-    FTreeView := value;
-    if Assigned(value) then
-      FTreeView.OnInitNode := DoInitNode;
-    ContentChanged;
-  end;
-end;
-
 { TQSimpleObject<T> }
 
 constructor TQSimpleObject<T>.Create(const AValue: T);
@@ -8179,27 +8053,6 @@ constructor TQSimpleInterface<T>.Create(const AValue: T);
 begin
   inherited Create;
   FValue := AValue;
-end;
-
-{ TQVTDBAdapter.TQDBNodeExt }
-
-constructor TQVTDBAdapter.TQDBNodeExt.Create;
-begin
-
-end;
-
-destructor TQVTDBAdapter.TQDBNodeExt.Destroy;
-begin
-  if Assigned(FChildren) then
-    FreeAndNil(FChildren);
-  inherited;
-end;
-
-function TQVTDBAdapter.TQDBNodeExt.GetChildren: TObjectList<TQDBNodeExt>;
-begin
-  if not Assigned(FChildren) then
-    FChildren := TObjectList<TQDBNodeExt>.Create;
-  Result := FChildren;
 end;
 
 { TQVTColorDrawer }

@@ -4567,13 +4567,19 @@ end;
 
 function TQDataSet.GetBookmark: TBookmark;
 begin
+  if RecordCount > 0 then
+  begin
 {$IFDEF UNICODE}
-  SetLength(Result, BookmarkSize);
-  GetBookmarkData(TRecordBuffer(ActiveBuffer), @Result[0]);
+    SetLength(Result, BookmarkSize);
+    GetBookmarkData(TRecordBuffer(ActiveBuffer), @Result[0]);
+
 {$ELSE}
-  GetMem(Result, BookmarkSize);
-  GetBookmarkData(PChar(ActiveBuffer), Result);
+    GetMem(Result, BookmarkSize);
+    GetBookmarkData(PChar(ActiveBuffer), Result);
 {$ENDIF}
+  end
+  else
+    Result := nil;
 end;
 
 {$IFNDEF NEXTGEN}
@@ -8888,7 +8894,7 @@ procedure TQProvider.DisablePeek;
 begin
   if FPeekJobHandle <> 0 then
   begin
-    Workers.ClearSingleJob(FPeekJobHandle,false);
+    Workers.ClearSingleJob(FPeekJobHandle, False);
     FPeekJobHandle := 0;
   end;
 end;

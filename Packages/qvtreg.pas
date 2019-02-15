@@ -12,7 +12,7 @@ begin
   RegisterComponents('QDAC 3.0', [TQVirtualTreeView, TQVTCustomTextCell,
     TQVTCustomCheckCell, TQVTCustomRadioCell, TQVTCustomProgressCell,
     TQVTImageCell, TQVTImageCell, TQVTPickListCell, TQVTTextEditor,
-    TQVTListEditor, TQVTColorEditor, TQVTDialogEditor,TQVTDBAdapter]);
+    TQVTListEditor, TQVTColorEditor, TQVTDialogEditor]);
 end;
 
 initialization
@@ -20,6 +20,6 @@ initialization
 RegisterFmxClasses([TQVirtualTreeView, TQVTCustomTextCell, TQVTCustomCheckCell,
   TQVTCustomRadioCell, TQVTCustomProgressCell, TQVTImageCell, TQVTImageCell,
   TQVTPickListCell, TQVTTextEditor, TQVTListEditor, TQVTColorEditor,
-  TQVTDialogEditor,TQVTDBAdapter,TQVTCustomDrawer]);
+  TQVTDialogEditor,TQVTCustomDrawer]);
 
 end.
