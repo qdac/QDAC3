@@ -255,7 +255,7 @@ uses classes, sysutils, types{$IF RTLVersion>=21},
     , windows
 {$ENDIF}
 {$IFDEF POSIX}
-    , Posix.String_, Posix.Time
+    , Posix.String_, ,Posix.SysTypes,Posix.Time
 {$ENDIF}
 {$IFDEF ANDROID}
     , Androidapi.Log
