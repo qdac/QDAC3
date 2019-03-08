@@ -1,17 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Transactions>
-    <Transaction>1899-12-30 00:00:00.000.807,C:\user\SimpleMathExpr\QSimpleMathExpr.pas=C:\user\SimpleMathExpr\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.329,C:\user\SimpleMathExpr\QSimple_math_expr.pas=C:\user\SimpleMathExpr\QMath_expr.pas</Transaction>
     <Transaction>1899-12-30 00:00:00.000.716,=C:\user\SimpleMathExpr\Unit1.pas</Transaction>
-    <Transaction>1899-12-30 00:00:00.000.319,C:\user\SimpleMathExpr\mathexpr.dfm=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.dfm</Transaction>
-    <Transaction>1899-12-30 00:00:00.000.378,C:\user\SimpleMathExpr\main.dfm=C:\user\SimpleMathExpr\mathexpr.dfm</Transaction>
-    <Transaction>1899-12-30 00:00:00.000.244,C:\user\SimpleMathExpr\simpexp.dproj=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
-    <Transaction>1899-12-30 00:00:00.000.378,C:\user\SimpleMathExpr\main.pas=C:\user\SimpleMathExpr\mathexpr.pas</Transaction>
-    <Transaction>1899-12-30 00:00:00.000.407,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.807,C:\user\SimpleMathExpr\Unit1.pas=C:\user\SimpleMathExpr\QSimpleMathExpr.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.244,C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Project1.dproj=C:\user\SimpleMathExpr\simpexp.dproj</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.378,C:\user\SimpleMathExpr\mathexpr.dfm=C:\user\SimpleMathExpr\main.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.532,C:\user\SimpleMathExpr\QSimpleMathExpr.pas=C:\user\SimpleMathExpr\QSimple_math_expr.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.319,C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas=C:\user\SimpleMathExpr\mathexpr.pas</Transaction>
     <Transaction>1899-12-30 00:00:00.000.501,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>1899-12-30 00:00:00.000.319,C:\user\SimpleMathExpr\mathexpr.pas=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>1899-12-30 00:00:00.000.532,C:\user\SimpleMathExpr\QSimple_math_expr.pas=C:\user\SimpleMathExpr\QSimpleMathExpr.pas</Transaction>
-    <Transaction>2019-01-12 11:03:32.329,C:\user\SimpleMathExpr\QMath_expr.pas=C:\user\SimpleMathExpr\QSimple_math_expr.pas</Transaction>
-    <Transaction>2019-01-12 11:03:52.642,C:\user\SimpleMathExpr\QMathExpr.pas=C:\user\SimpleMathExpr\QMath_expr.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.407,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.319,C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.dfm=C:\user\SimpleMathExpr\mathexpr.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.378,C:\user\SimpleMathExpr\mathexpr.pas=C:\user\SimpleMathExpr\main.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.642,C:\user\SimpleMathExpr\QMath_expr.pas=C:\user\SimpleMathExpr\QMathExpr.pas</Transaction>
   </Transactions>
 </BorlandProject>

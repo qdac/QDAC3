@@ -463,11 +463,17 @@ type
     property LazyMode;
   end;
 
+  IPerfCounter = interface
+    ['{FD288B18-F6C8-4EF7-B66B-38267D1A80FA}']
+    procedure MarkEscape(const ATag: String);
+  end;
+
 procedure PostLog(ALevel: TQLogLevel; const AMsg: QStringW;
   const ATag: QStringW = ''); overload;
 procedure PostLog(ALevel: TQLogLevel; const fmt: PWideChar;
   Args: array of const; const ATag: QStringW = ''); overload;
-function CalcPerf(const ATag: QStringW): IInterface;
+function CalcPerf(const ATag: QStringW; const ALogToConsole: Boolean = true)
+  : IPerfCounter;
 {$IFDEF POSIX}
 function GetCurrentProcessId: Integer;
 {$ENDIF}
@@ -515,13 +521,15 @@ type
     constructor Create(ALogFileName: QStringW); overload;
   end;
 
-  TQPerfCounter = class(TInterfacedObject)
+  TQPerfCounter = class(TInterfacedObject, IPerfCounter)
   private
     FTag: QStringW;
-    FStartTick: Cardinal;
+    FStartTick, FLastTick: Cardinal;
+    FLogToConsole: Boolean;
   public
-    constructor Create(const ATag: QStringW); overload;
+    constructor Create(const ATag: QStringW; ALogToConsole: Boolean); overload;
     destructor Destroy; override;
+    procedure MarkEscape(const ATag: String);
   end;
 
 {$IF RTLVersion<26}
@@ -551,9 +559,9 @@ begin
 end;
 {$ENDIF}
 
-function CalcPerf(const ATag: QStringW): IInterface;
+function CalcPerf(const ATag: QStringW;const ALogToConsole: Boolean): IPerfCounter;
 begin
-  Result := TQPerfCounter.Create(ATag);
+  Result := TQPerfCounter.Create(ATag, ALogToConsole);
 end;
 
 function FormatSyslogTime(ATimeStamp: TDateTime): QStringW;
@@ -1974,20 +1982,41 @@ end;
 
 { TQPerfCounter }
 
-constructor TQPerfCounter.Create(const ATag: QStringW);
+constructor TQPerfCounter.Create(const ATag: QStringW; ALogToConsole: Boolean);
 begin
   inherited Create;
   FTag := ATag;
+  FLogToConsole := ALogToConsole;
   FStartTick :=
 {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
-  PostLog(llDebug, PQCharW(PerfTagStartFormat), [ATag]);
+  FLastTick := FStartTick;
+  if FLogToConsole then
+    DebugOut(PQCharW(PerfTagStartFormat), [ATag])
+  else
+    PostLog(llDebug, PQCharW(PerfTagStartFormat), [ATag]);
 end;
 
 destructor TQPerfCounter.Destroy;
 begin
-  PostLog(llDebug, PQCharW(PerfTagStopFormat), [FTag,
+  if FLogToConsole then
+    DebugOut(PQCharW(PerfTagStopFormat), [FTag,
+{$IF RTLVersion>=23}TThread.{$IFEND}GetTickCount - FStartTick])
+  else
+    PostLog(llDebug, PQCharW(PerfTagStopFormat), [FTag,
 {$IF RTLVersion>=23}TThread.{$IFEND}GetTickCount - FStartTick]);
   inherited;
+end;
+
+procedure TQPerfCounter.MarkEscape(const ATag: String);
+var
+  ATick: Cardinal;
+begin
+  ATick := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
+  if FLogToConsole then
+    DebugOut(PQCharW('  '+PerfTagStopFormat), [ATag, ATick - FLastTick])
+  else
+    PostLog(llDebug, PQCharW('  '+PerfTagStopFormat), [ATag, ATick - FLastTick]);
+  FLastTick := ATick;
 end;
 
 { TQLogStringsWriter }

@@ -21,6 +21,7 @@ interface
   户名：管耸寰
   账号：4367 4209 4324 0179 731
   开户行：建设银行长春团风储蓄所
+
 }
 
 { 修订日志
@@ -36,7 +37,7 @@ interface
 
   2017.1.1
   ==========
-  + 增加 Insert 系列函数，用于在指定的位置插入一个结点（阿木、恢弘建议）                                     {￥I不【
+  + 增加 Insert 系列函数，用于在指定的位置插入一个结点（阿木、恢弘建议）
 
   2016.11.23
   ==========
@@ -4995,7 +4996,10 @@ begin
   else
   begin
     if Parent = ANewParent then
+      begin
+      Parent.FItems.Move(ItemIndex,AIndex);
       Exit;
+      end;
     if IsParentOf(ANewParent) then
       raise Exception.Create(SCantMoveToChild);
     if ANewParent.DataType in [jdtArray, jdtObject] then

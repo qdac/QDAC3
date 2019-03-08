@@ -5,11 +5,11 @@ interface
 {$I qdac.inc}
 {$HPPEMIT '#pragma link "qplugins"'}
 
-uses classes, sysutils, types, qstring, qvalue, qtimetypes, qdac_postqueue,
+uses classes, types, qstring, qvalue, qtimetypes, qdac_postqueue,
   qplugins_base, qplugins_params, syncobjs, math{$IFDEF MSWINDOWS},
   windows{$ENDIF} {$IFDEF POSIX},
   Posix.Unistd, Posix.PThread{$ENDIF}{$IFDEF UNICODE},
-  Generics.collections{$ENDIF};
+  Generics.collections{$ENDIF}, sysutils;
 
 { QPlugins 插件管理引擎 Delphi 接口实现单元，其它编程语言会有自己的实现
   本单元实现了Delphi下的 QPlugins 的核心实现（注：不包括额外的加载器和路由器）。
@@ -2714,6 +2714,7 @@ var
           StartPlugins(APath + sr.Name +
 {$IFDEF MSWINDOWS}'\'{$ELSE}'/'{$ENDIF});
       until FindNext(sr) <> 0;
+      FindClose(sr);
     end;
   end;
 

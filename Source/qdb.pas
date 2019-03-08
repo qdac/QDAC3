@@ -6280,6 +6280,7 @@ var
           if ARec.Status <> usUnmodified then
             ARec.FChangedIndex := ADataSet.FChangedRecords.Add(ARec);
         end;
+        ARec.Release;
         ARec := ADataSet.AllocRecord;
       end;
       ADataSet.FreeRecord(ARec);

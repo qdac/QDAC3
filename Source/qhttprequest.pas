@@ -47,6 +47,7 @@ type
     FParams: TStringList;
     FChanged: Boolean;
     FSpaceAsPlus: Boolean;
+    FEnableBookmark: Boolean;
     function GetParams: TStrings;
     function GetUrl: QStringW;
     procedure SetUrl(const Value: QStringW);
@@ -67,7 +68,7 @@ type
     function GetOriginParams: QStringW;
   public
     constructor Create; overload;
-    constructor Create(AUrl: QStringW); overload;
+    constructor Create(AUrl: QStringW; AEnableBookmark: Boolean=false); overload;
     destructor Destroy; override;
     procedure Assign(ASource: TQUrl);
     procedure SortParams(ACaseSensitive: Boolean = false;
@@ -92,6 +93,7 @@ type
     property SpaceAsPlus: Boolean read FSpaceAsPlus write FSpaceAsPlus;
     property HostAddr: QStringW read GetHostAddr;
     property IPAddr: Cardinal read GetIPAddr;
+    property EnableBookmark: Boolean read FEnableBookmark write FEnableBookmark;
   end;
 
   IQHttpHeaders = interface
@@ -1409,9 +1411,10 @@ begin
   FSpaceAsPlus := ASource.SpaceAsPlus;
 end;
 
-constructor TQUrl.Create(AUrl: QStringW);
+constructor TQUrl.Create(AUrl: QStringW; AEnableBookmark: Boolean);
 begin
   inherited Create;
+  FEnableBookmark := AEnableBookmark;
   Url := AUrl;
 end;
 
@@ -1761,10 +1764,14 @@ begin
         Document := ADoc;
         if AParams.Count > 0 then
         begin
-          // 测试Bookmark
-          FBookmark := AParams.ValueFromIndex[AParams.Count - 1];
-          AParams.ValueFromIndex[AParams.Count - 1] :=
-            DecodeTokenW(FBookmark, BookmarkDelimiter, NullQuoter, True, True);
+          if EnableBookmark then
+          begin
+            // 测试Bookmark
+            FBookmark := AParams.ValueFromIndex[AParams.Count - 1];
+            AParams.ValueFromIndex[AParams.Count - 1] :=
+              DecodeTokenW(FBookmark, BookmarkDelimiter, NullQuoter,
+              True, True);
+          end;
           Params.Assign(AParams);
         end
         else
@@ -1781,7 +1788,8 @@ begin
         FPassword := '';
         FBookmark := '';
         FPort := 0;
-        FParams.Clear;
+        if Assigned(FParams) then
+          FParams.Clear;
       end;
     finally
       FreeAndNil(AParams);
@@ -1813,14 +1821,17 @@ end;
 procedure TQUrl.SortParams(ACaseSensitive, AUseLocale: Boolean;
   Compare: TStringListSortCompare);
 begin
-  FParams.CaseSensitive := ACaseSensitive;
+  if Assigned(FParams) then
+  begin
+    FParams.CaseSensitive := ACaseSensitive;
 {$IF RTLVersion>=31}
-  FParams.UseLocale := AUseLocale;
+    FParams.UseLocale := AUseLocale;
 {$IFEND}
-  if Assigned(Compare) then
-    FParams.CustomSort(Compare)
-  else
-    FParams.CustomSort(SortByName);
+    if Assigned(Compare) then
+      FParams.CustomSort(Compare)
+    else
+      FParams.CustomSort(SortByName);
+  end;
 end;
 
 { TQHttpHeaders }
@@ -2386,67 +2397,103 @@ begin
       // (RequestHeaders as THeadersHelper).Headers)
       Workers.Post(
         procedure(AJob: PQJob)
+        var
+          ATryTimes: Integer;
         begin
-          try
-            FResponse := AClient.Get(ResultUrl, ResponseStream,
-              (RequestHeaders as THeadersHelper).Headers);
-          except
-            on E: Exception do
-            begin
-              // THttpClient 异步格式为：error sending data():....
-              FStatusCode := GetLastError;
-              if FStatusCode = 0 then
-                FStatusCode := DecodeExceptionErrorCode(E.Message);
-              FStatusText := SysErrorMessage(FStatusCode);
-              FLastException := E;
-              FAbort := True;
-              TThread.Synchronize(nil, DoError);
+          ATryTimes := 0;
+          repeat
+            try
+              FResponse := AClient.Get(ResultUrl, ResponseStream,
+                (RequestHeaders as THeadersHelper).Headers);
+              Break;
+            except
+              on E: Exception do
+              begin
+                // THttpClient 异步格式为：error sending data():....
+                FStatusCode := GetLastError;
+                if FStatusCode = 0 then
+                  FStatusCode := DecodeExceptionErrorCode(E.Message);
+                if (FStatusCode = 12002) and (not AJob.IsTerminated) then
+                begin
+                  Inc(ATryTimes);
+                  continue;
+                end;
+                FStatusText := SysErrorMessage(FStatusCode);
+                FLastException := E;
+                FAbort := True;
+                TThread.Synchronize(nil, DoError);
+                Break;
+              end;
             end;
-          end;
+          until ATryTimes = 3;
           DoAfterDone(AClient);
         end, nil);
     reqPost:
       begin
         Workers.Post(
           procedure(AJob: PQJob)
+          var
+            ATryTimes: Integer;
           begin
-            try
-              FResponse := AClient.Post(ResultUrl, RequestStream,
-                ResponseStream, (RequestHeaders as THeadersHelper).Headers);
-            except
-              on E: Exception do
-              begin
-                FStatusCode := GetLastError;
-                if FStatusCode = 0 then
-                  FStatusCode := DecodeExceptionErrorCode(E.Message);
-                FStatusText := SysErrorMessage(FStatusCode);
-                FLastException := E;
-                FAbort := True;
-                TThread.Synchronize(nil, DoError);
-              end
-            end;
+            ATryTimes := 0;
+            repeat
+              try
+                FResponse := AClient.Post(ResultUrl, RequestStream,
+                  ResponseStream, (RequestHeaders as THeadersHelper).Headers);
+                Break;
+              except
+                on E: Exception do
+                begin
+                  FStatusCode := GetLastError;
+                  if FStatusCode = 0 then
+                    FStatusCode := DecodeExceptionErrorCode(E.Message);
+                  if (FStatusCode = 12002) and (not AJob.IsTerminated) then
+                  begin
+                    Inc(ATryTimes);
+                    continue;
+                  end;
+                  FStatusText := SysErrorMessage(FStatusCode);
+                  FLastException := E;
+                  FAbort := True;
+                  TThread.Synchronize(nil, DoError);
+                  Break;
+                end
+              end;
+            until ATryTimes = 3;
             DoAfterDone(AClient);
           end, nil);
       end;
     reqHead:
       Workers.Post(
         procedure(AJob: PQJob)
+        var
+          ATryTimes: Integer;
         begin
-          try
-            FResponse := AClient.Head(ResultUrl,
-              (RequestHeaders as THeadersHelper).Headers);
-          except
-            on E: Exception do
-            begin
-              FStatusCode := GetLastError;
-              if FStatusCode = 0 then
-                FStatusCode := DecodeExceptionErrorCode(E.Message);
-              FStatusText := SysErrorMessage(FStatusCode);
-              FLastException := E;
-              FAbort := True;
-              TThread.Synchronize(nil, DoError);
-            end
-          end;
+          ATryTimes := 0;
+          repeat
+            try
+              FResponse := AClient.Head(ResultUrl,
+                (RequestHeaders as THeadersHelper).Headers);
+              Break;
+            except
+              on E: Exception do
+              begin
+                FStatusCode := GetLastError;
+                if FStatusCode = 0 then
+                  FStatusCode := DecodeExceptionErrorCode(E.Message);
+                if (FStatusCode = 12002) and (not AJob.IsTerminated) then
+                begin
+                  Inc(ATryTimes);
+                  continue;
+                end;
+                FStatusText := SysErrorMessage(FStatusCode);
+                FLastException := E;
+                FAbort := True;
+                TThread.Synchronize(nil, DoError);
+                Break;
+              end
+            end;
+          until ATryTimes = 3;
           DoAfterDone(AClient);
         end, nil);
   end;
@@ -2980,13 +3027,31 @@ Action: TQHttpClientAction): Integer;
 var
   AContent: QStringW;
   I: Integer;
+  AHelper: TQUrl;
+  APostUrl: String;
 begin
   AContent := '';
-  for I := 0 to AParams.Count - 1 do
-    AContent := AContent + UrlEncode(AParams.Names[I], True) + '=' +
-      UrlEncode(AParams.ValueFromIndex[I], True) + '&';
-  SetLength(AContent, Length(AContent) - 1);
-  Result := Rest(AUrl, AContent, AResult, AHeaders, AfterDone, Action);
+  if (not Assigned(AParams)) and (Action = reqPost) then
+  begin
+    AHelper := TQUrl.Create(AUrl);
+    AParams := AHelper.Params;
+    APostUrl := AHelper.GetUrlWithoutParams;
+  end
+  else
+  begin
+    APostUrl := AUrl;
+    AHelper := nil;
+  end;
+  try
+    for I := 0 to AParams.Count - 1 do
+      AContent := AContent + UrlEncode(AParams.Names[I], True) + '=' +
+        UrlEncode(AParams.ValueFromIndex[I], True) + '&';
+    SetLength(AContent, Length(AContent) - 1);
+    Result := Rest(APostUrl, AContent, AResult, AHeaders, AfterDone, Action);
+  finally
+    if Assigned(AHelper) then
+      FreeAndNil(AHelper);
+  end;
 end;
 
 function TQHttpRequests.Soap(const AUrl, Action, ARequestBody: QStringW;
@@ -3502,8 +3567,6 @@ begin
   AHeadReq.Action := reqHead;
   AHeadReq.AfterDone := DoHeadReady;
   AHeadReq.OnError := DoError;
-  if RequestHeaders.Count>0 then
-    AHeadReq.RequestHeaders.Merge(RequestHeaders);
   FQueue.Push(AHeadReq);
   inherited;
 end;

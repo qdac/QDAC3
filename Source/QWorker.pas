@@ -5997,7 +5997,7 @@ begin
       FLocker.Leave;
     end;
     AParam.WaitType := $FF;
-    WaitRunningDone(AParam);
+    WaitRunningDone(AParam,not AWaitRunningDone);
     FPlanCheckJob := 0;
   finally
     EnableWorkers;

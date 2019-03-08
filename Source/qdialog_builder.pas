@@ -196,7 +196,8 @@ type
 
   TDialogIcon = (diNone, diWarning, diHelp, diError, diInformation, diShield);
   // 新建一个对话框接口，如果不指定标题，则为Application.Title
-function NewDialog(ACaption: String = ''): IDialogBuilder;
+function NewDialog(ACaption: String = ''): IDialogBuilder; overload;
+function NewDialog(AClass: TFormClass): IDialogBuilder; overload;
 function CustomDialog(const ACaption, ATitle, AMessage: String;
   AButtons: array of String; AIcon: TDialogIcon; AFlags: Integer = 0;
   const ACustomProps: String = ''): Integer; overload;
@@ -371,6 +372,7 @@ type
 {$ENDIF}
   public
     constructor Create(const ACaption: String); overload;
+    constructor Create(const AClass: TFormClass); overload;
     destructor Destroy; override;
     procedure ShowModal(); overload;
     procedure Popup(AControl: TControl); overload;
@@ -399,6 +401,11 @@ begin
     Result := TDialogBuilder.Create(Application.Title)
   else
     Result := TDialogBuilder.Create(ACaption);
+end;
+
+function NewDialog(AClass: TFormClass): IDialogBuilder;
+begin
+  Result := TDialogBuilder.Create(AClass);
 end;
 
 function CustomDialog(const ACaption, ATitle, AMessage: String;
@@ -946,19 +953,24 @@ begin
   end;
 end;
 
-constructor TDialogBuilder.Create(const ACaption: String);
+constructor TDialogBuilder.Create(const AClass: TFormClass);
 begin
-  inherited Create(Self, TForm);
+  inherited Create(Self, AClass);
   FGroups := TStringList.Create;
   FDialog := Control as TForm;
   FDialog.BorderStyle := bsDialog;
   FDialog.Position := poScreenCenter;
-  FDialog.Caption := ACaption;
   FLastDialogWndProc := FDialog.WindowProc;
   FDialog.WindowProc := DoDialogWndProc;
   FDialog.OnClose := DoDialogClose;
   FStates := [dbsAlignRequest];
   FCanClose := True;
+end;
+
+constructor TDialogBuilder.Create(const ACaption: String);
+begin
+  Create(TForm);
+  FDialog.Caption := ACaption;
 end;
 
 destructor TDialogBuilder.Destroy;
@@ -981,11 +993,14 @@ end;
 
 procedure TDialogBuilder.DoClosePopup(ASender: TObject);
 begin
-  FStates := FStates - [dbsPopup];
   Dialog.Close;
-  DoResult;
-  // 减少弹出时增加的引用计数
-  _Release;
+  if not Dialog.Visible then
+  begin
+    FStates := FStates - [dbsPopup];
+    DoResult;
+    // 减少弹出时增加的引用计数
+    _Release;
+  end;
 end;
 
 procedure TDialogBuilder.DoCloseTimer(ASender: TObject);
@@ -1061,6 +1076,8 @@ begin
   end;
   if Assigned(FPopupHelper) and (FPopupHelper.Control <> nil) then
     FollowControl;
+  if (dbsPopup in FStates) and (Dialog.ModalResult <> mrNone) then
+    DoClosePopup(Self);
 end;
 
 procedure TDialogBuilder.DoResult;
@@ -1167,6 +1184,7 @@ begin
     RequestAlign;
   Dialog.BorderStyle := bsNone;
   Dialog.Position := poDesigned;
+  Dialog.ModalResult := mrNone;
   if dbsAlignRequest in FStates then
     Realign;
   Dialog.SetBounds(APos.X, APos.Y, Dialog.Width, Dialog.Height);

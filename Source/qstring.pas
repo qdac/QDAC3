@@ -255,7 +255,7 @@ uses classes, sysutils, types{$IF RTLVersion>=21},
     , windows
 {$ENDIF}
 {$IFDEF POSIX}
-    , Posix.String_, Posix.Time,Posix.SysTypes
+    , Posix.String_, Posix.Time
 {$ENDIF}
 {$IFDEF ANDROID}
     , Androidapi.Log
@@ -8641,7 +8641,7 @@ var
 {$IFDEF MSWindows}
   TimeZone: TTimeZoneInformation;
 {$ELSE}
-  tmLocal, tmUtc: ptm;
+  tmLocal, tmUtc: PTM;
   t1, t2: time_t;
 {$ENDIF}
 begin
@@ -8649,12 +8649,12 @@ begin
   GetTimeZoneInformation(TimeZone);
   Result := -TimeZone.Bias;
 {$ELSE}
-  t1:=0;
-  t2 := 0;
-  tmLocal := localtime(t1);
-  t1 := mktime(tmLocal^);
-  tmUtc := gmtime(t2);
-  t2 := mktime(tmUtc^);
+  time_r(@t1);
+  t2 := t1;
+  tmLocal := localtime(@t1);
+  t1 := mktime(tm_local);
+  tmUtc := gmtime(@t2);
+  t2 := mktime(tm_utc);
   Result := (t1 - t2) div 60;
 {$ENDIF}
 end;
@@ -8683,13 +8683,18 @@ const
   DefShortDayNames: array [1 .. 7] of String = ('Sun', 'Mon', 'Tue', 'Wed',
     'Thu', 'Fri', 'Sat');
 begin
-  DecodeDateTime(ATime, Y, M, d, H, N, S, MS);
-  Result := DefShortDayNames[DayOfWeek(ATime)] + ',' + IntToStr(d) + ' ' +
-    DefShortMonthNames[M] + ' ' + IntToStr(Y) + ' ' + IntToStr(H) + ':' +
-    IntToStr(N) + ':' + IntToStr(S);
-  ATimeZone := GetTimezoneText;
-  if Length(ATimeZone) > 0 then
-    Result := Result + ' GMT ' + ATimeZone;
+  if (ATime < MinDateTime) or (ATime > MaxDateTime) then
+    Result := ''
+  else
+  begin
+    DecodeDateTime(ATime, Y, M, d, H, N, S, MS);
+    Result := DefShortDayNames[DayOfWeek(ATime)] + ',' + IntToStr(d) + ' ' +
+      DefShortMonthNames[M] + ' ' + IntToStr(Y) + ' ' + IntToStr(H) + ':' +
+      IntToStr(N) + ':' + IntToStr(S);
+    ATimeZone := GetTimezoneText;
+    if Length(ATimeZone) > 0 then
+      Result := Result + ' GMT ' + ATimeZone;
+  end;
 end;
 
 function RollupSize(ASize: Int64): QStringW;

@@ -1214,14 +1214,13 @@ type
   // Editor basic support
   TQVTCellEditorClass = class of TQVTBaseEditor;
 
-  TQVTBaseEditor = class(TComponent, IQVTInplaceEditor, IInterface)
+  TQVTBaseEditor = class(TComponent, IQVTInplaceEditor)
   protected
     FControlClass: TComponentClass;
     FControl: TControl;
     FNode: TQVTNode;
     FColumn: Integer;
     FEnterAsTab: Boolean;
-    FRefCount: Integer;
     function GetControl: TControl; virtual;
     procedure SetBounds(R: TRectF); virtual;
     function BeginEdit(ANode: TQVTNode; ACol: Integer): Boolean; virtual;
@@ -1237,8 +1236,6 @@ type
   public
     constructor Create(AOwner: TComponent); overload; override;
     destructor Destroy; override;
-    function _AddRef: Integer; stdcall;
-    function _Release: Integer; stdcall;
     procedure BeforeDestruction; override;
     property ControlClass: TComponentClass read FControlClass
       write FControlClass;
@@ -1346,6 +1343,7 @@ type
     procedure SetOptions(const value: TQVTOptions);
     procedure SetDataAdapter(const value: IQVTDataAdapter);
     function GetColumns: TQVTColumns;
+    procedure SetLineStyle(const value: TStrokeBrush);
   protected
     // Vars
     FRootNode: TQVTNode;
@@ -1490,7 +1488,7 @@ type
     function GrayColor(AColor: TAlphaColor): TAlphaColor;
     procedure DoStyleChanged; override;
   published
-    property LineStyle: TStrokeBrush read FLineStyle;
+    property LineStyle: TStrokeBrush read FLineStyle write SetLineStyle;
     property Fill: TBrush read FFill write SetFill;
     property Stroke: TStrokeBrush read FStroke write SetStroke;
     property SelectionColor: TAlphaColor read FSelectionColor
@@ -4204,6 +4202,11 @@ begin
     FHeader.Columns.Clear;
 end;
 
+procedure TQVirtualTreeView.SetLineStyle(const value: TStrokeBrush);
+begin
+  FLineStyle.Assign(value);
+end;
+
 procedure TQVirtualTreeView.SetOptions(const value: TQVTOptions);
 begin
   FOptions := value;
@@ -5747,17 +5750,18 @@ var
     AButtonRect: TRectF;
     AColor: TAlphaColor;
   begin
-    AColor := ATreeView.Fill.Color;
+    ACanvas.Fill.Assign(ATreeView.LineStyle);
+    AColor := ACanvas.Fill.Color;
     if (ANode = ATreeView.HoverNode) and (AData.Column = ATreeView.FocusColumn)
       and (TQVTPaintOption.poHover in ATreeView.PaintOptions) then
-      AColor := ATreeView.HoverColor;
+      AColor := ATreeView.HoverColor xor AColor;
     if ANode = ATreeView.FocusNode then
     begin
       if (TQVTPaintOption.poRowSelection in ATreeView.PaintOptions) or
         (([TQVTPaintOption.poColSelection, TQVTPaintOption.poCellSelection] *
         ATreeView.PaintOptions <> []) and (AData.Column = ATreeView.FocusColumn))
       then
-        AColor := ATreeView.SelectionColor
+        AColor := ATreeView.SelectionColor xor AColor
     end;
     SetLength(APolygon, 3);
     pt := ct.SnapToPixel(ACanvas.Scale);
@@ -5777,8 +5781,6 @@ var
       AButtonRect := RectF(pt.X - 1, pt.Y - ButtonSize,
         pt.X + 1 + ButtonSize, pt.Y);
     end;
-    ACanvas.Fill.Assign(ATreeView.LineStyle);
-    ACanvas.Fill.Color := AColor;
     ACanvas.FillPolygon(APolygon, ATreeView.Opacity);
   end;
   procedure DrawButton;
@@ -7598,6 +7600,7 @@ end;
 
 { TQVTBaseEditor }
 
+
 procedure TQVTBaseEditor.BeforeDestruction;
 begin
   inherited;
@@ -7701,6 +7704,7 @@ begin
     FControl.Visible := false;
 end;
 
+
 procedure TQVTBaseEditor.DoKeyDown(Sender: TObject; var Key: Word;
 var KeyChar: System.WideChar; Shift: TShiftState);
 begin
@@ -7722,34 +7726,6 @@ begin
   Control.Repaint;
 end;
 
-function TQVTBaseEditor._AddRef: Integer;
-begin
-  Result := AtomicIncrement(FRefCount);
-end;
-
-function TQVTBaseEditor._Release: Integer;
-{$IFNDEF AUTOREFCOUNT}
-var
-  LRefCount: Integer;
-{$ENDIF}
-const
-  objDestroyingFlag = Integer($80000000);
-begin
-{$IFNDEF AUTOREFCOUNT}
-  Result := AtomicDecrement(FRefCount);
-  if Result = 0 then
-  begin
-    repeat
-      LRefCount := FRefCount;
-    until AtomicCmpExchange(FRefCount, LRefCount or objDestroyingFlag,
-      LRefCount) = LRefCount;
-    // Mark the refcount field so that any refcounting during destruction doesn't infinitely recurse.
-    Destroy;
-  end;
-{$ELSE}
-  Result := __ObjRelease;
-{$ENDIF}
-end;
 
 { TQVTTextEditor }
 
