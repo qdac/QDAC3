@@ -255,7 +255,7 @@ uses classes, sysutils, types{$IF RTLVersion>=21},
     , windows
 {$ENDIF}
 {$IFDEF POSIX}
-    , Posix.String_, ,Posix.SysTypes,Posix.Time
+    , Posix.String_, Posix.SysTypes, Posix.Time
 {$ENDIF}
 {$IFDEF ANDROID}
     , Androidapi.Log
@@ -7790,6 +7790,12 @@ begin
       Inc(ps, 3)
     else
     begin
+      if (ps^ = Ord('%')) and (not AEncodePercent) then
+      // 有非%xx这种，说明未编码过%，需要强制编码
+      begin
+        Result := UrlEncode(ABytes, l, ASpacesAsPlus, True);
+        Exit;
+      end;
       if (ps^ = 32) and ASpacesAsPlus then
         Inc(ps)
       else
@@ -8649,12 +8655,12 @@ begin
   GetTimeZoneInformation(TimeZone);
   Result := -TimeZone.Bias;
 {$ELSE}
-  time_r(@t1);
-  t2 := t1;
-  tmLocal := localtime(@t1);
-  t1 := mktime(tm_local);
-  tmUtc := gmtime(@t2);
-  t2 := mktime(tm_utc);
+  t1 := 0;
+  t2 := 0;
+  tmLocal := localtime(t1);
+  t1 := mktime(tmLocal^);
+  tmUtc := gmtime(t2);
+  t2 := mktime(tmUtc^);
   Result := (t1 - t2) div 60;
 {$ENDIF}
 end;

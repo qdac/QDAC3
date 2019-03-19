@@ -559,7 +559,8 @@ begin
 end;
 {$ENDIF}
 
-function CalcPerf(const ATag: QStringW;const ALogToConsole: Boolean): IPerfCounter;
+function CalcPerf(const ATag: QStringW; const ALogToConsole: Boolean)
+  : IPerfCounter;
 begin
   Result := TQPerfCounter.Create(ATag, ALogToConsole);
 end;
@@ -1788,7 +1789,7 @@ begin
 {$IFDEF MSWINDOWS}PAnsiChar(@I){$ELSE}I{$ENDIF}, SizeOf(I));
   AHost.sin_family := AF_INET;
   AHost.sin_port := htons(ServerPort);
-  AHost.sin_addr.s_addr := Longint(INADDR_BROADCAST);
+  AHost.sin_addr.s_addr := Cardinal(INADDR_BROADCAST);
   PInt64(@AHost.sin_zero[0])^ := 0;
   tv.tv_sec := 0;
   tv.tv_usec := 500 * 1000; // 50ms
@@ -2013,9 +2014,10 @@ var
 begin
   ATick := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
   if FLogToConsole then
-    DebugOut(PQCharW('  '+PerfTagStopFormat), [ATag, ATick - FLastTick])
+    DebugOut(PQCharW('  ' + PerfTagStopFormat), [ATag, ATick - FLastTick])
   else
-    PostLog(llDebug, PQCharW('  '+PerfTagStopFormat), [ATag, ATick - FLastTick]);
+    PostLog(llDebug, PQCharW('  ' + PerfTagStopFormat),
+      [ATag, ATick - FLastTick]);
   FLastTick := ATick;
 end;
 
@@ -2103,9 +2105,12 @@ begin
           else // 目标就是 TStringsList 类型，则直接移动数据
           begin
             for I := ADelta to FItems.Count - 1 do
-              ATemp.Exchange(I, ADelta - I);
+              ATemp.Exchange(I, I-ADelta);
             while ADelta > 0 do
+              begin
               FItems.Delete(FItems.Count - 1);
+              Dec(ADelta);
+              end;
           end;
         end;
       end;
@@ -2125,7 +2130,9 @@ begin
         else
           FItems.AddStrings(ATemp);
         FreeAndNil(ATemp);
-      end;
+      end
+      else
+        ATemp.EndUpdate;
     end;
     AtomicDecrement(FFlushRefCount);
     // {$IFDEF DEBUG}
@@ -2157,7 +2164,7 @@ var
   end;
 
 begin
-  T := GetTickCount;
+  T := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
   if FBuffered > 0 then
   begin
     if LazyMode then
