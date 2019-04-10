@@ -1045,7 +1045,7 @@ end;
 function TQParam.GetAsStream: IQStream;
 begin
   if FType = ptStream then
-    Result := IQStream(FValue.value.AsPointer)
+    Result := NewStream(TStream(FValue.value.AsStream),false)
   else
     raise QException.CreateFmt(SCantConvert, [ParamTypeNames[FType],
       ParamTypeNames[ptInt64]]);

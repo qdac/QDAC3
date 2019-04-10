@@ -968,7 +968,7 @@ var
     end;
   end;
 
-  procedure TestMacro;
+  procedure TestMacro(AQuoter:QCharW);
   var
     pq: PQCharW;
     ALine, ACol: Integer;
@@ -1104,6 +1104,8 @@ var
       Inc(p);
   end;
   procedure ParseInQuoter;
+  var
+    AQuoted:QCharW;
   begin
     AQuoter := p^;
     Inc(p);
@@ -1112,11 +1114,10 @@ var
       if p^ = AQuoter then
       begin
         Inc(p);
-        AQuoter := #0;
         Break;
       end
       else
-        TestMacro;
+        TestMacro(AQuoter);
     end;
   end;
   procedure ParseWithBoundary;
@@ -1150,7 +1151,7 @@ var
           ParseInQuoter;
       end
       else // No Quoted
-        TestMacro;
+        TestMacro(#0);
     end;
     if p <> ps then
     begin

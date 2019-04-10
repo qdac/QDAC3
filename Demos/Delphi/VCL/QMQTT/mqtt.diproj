@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project Version="1.0">
+  <Title>QMQTT - MQTT 客户端实现</Title>
+  <Summary>一个基于 MQTT 3.1.1 协议的免费开源实现</Summary>
+  <Author>swish</Author>
+  <Email>chinawsb@sina.com</Email>
+  <Copyright>2019，QDAC</Copyright>
+  <Comment/>
+  <Language>2052</Language>
+  <Charset>1</Charset>
+  <HeaderHtml>&lt;%TopicTitle%&gt;</HeaderHtml>
+  <FooterHtml>QDAC swish 作品 &lt;a href="http://blog.qdac.cc/" target="_blank"&gt;QDAC 官方网站 &lt;/a&gt;</FooterHtml>
+  <CustomDefines/>
+  <ShowImplementationSection>false</ShowImplementationSection>
+  <ShowPrivateMembers>true</ShowPrivateMembers>
+  <ShowProtectedMembers>true</ShowProtectedMembers>
+  <ShowInheritedMembers>true</ShowInheritedMembers>
+  <ShowPropertyAccessors>true</ShowPropertyAccessors>
+  <FileNamePolicy>0</FileNamePolicy>
+  <CompilerVersion>22</CompilerVersion>
+  <TargetPlatform>0</TargetPlatform>
+  <Sources>
+    <Source>.\mqtt.dpr</Source>
+  </Sources>
+  <Outputs>
+    <Output Type="HTML">
+      <Active>true</Active>
+      <OutputDirectory>Doc\Html</OutputDirectory>
+    </Output>
+    <Output Type="CHM">
+      <Active>false</Active>
+      <OutputFileName>Doc\CHM\mqtt.chm</OutputFileName>
+    </Output>
+    <Output Type="MSHELP2">
+      <Active>false</Active>
+      <OutputFileName>Doc\MSHelp2\mqtt.HxS</OutputFileName>
+      <Namespace>mqtt</Namespace>
+      <TitleID>library</TitleID>
+    </Output>
+    <Output Type="HelpAndManual">
+      <Active>false</Active>
+      <OutputFileName>Doc\HM\mqtt.hmxp</OutputFileName>
+    </Output>
+  </Outputs>
+</Project>

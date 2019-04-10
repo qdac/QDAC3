@@ -271,7 +271,7 @@ begin
     AIndex := 0;
     repeat
       AFieldVal := ARec.Values[AIndex].CurrentValue;
-      AValue := DecodeTokenW(p, [Delimiter], Quoter, True, False);
+      AValue := DecodeTokenW(p, [Delimiter], Quoter, Delimiter<>#9, False);
       if p^ = Delimiter then
         Inc(p);
       ADef := ARec.Fields[AIndex] as TQFieldDef;

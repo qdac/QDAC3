@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899-12-30 00:00:00.000.776,C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.dfm=C:\User\MQTTClient\main.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.393,C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Project1.dproj=C:\User\MQTTClient\mqtt.dproj</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.997,C:\User\MQTTClient\QMqttClient.pas=C:\User\QDAC3\Source\QMqttClient.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.727,C:\User\QDAC3\Source\QMqttClient.pas=C:\User\MQTTClient\messageClient.pas</Transaction>
+  </Transactions>
+</BorlandProject>

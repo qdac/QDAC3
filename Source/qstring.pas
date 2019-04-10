@@ -442,8 +442,10 @@ type
     procedure LoadFromFile(const AFileName: QStringW);
     procedure LoadFromStream(const AStream: TStream);
     procedure IncSize(ADelta: Integer);
-    function Cat(p: PQCharW; len: Integer): TQStringCatHelperW; overload;
-    function Cat(const S: QStringW): TQStringCatHelperW; overload;
+    function Cat(p: PQCharW; len: Integer; AQuoter: QCharW = #0)
+      : TQStringCatHelperW; overload;
+    function Cat(const S: QStringW; AQuoter: QCharW = #0)
+      : TQStringCatHelperW; overload;
     function Cat(c: QCharW): TQStringCatHelperW; overload;
     function Cat(const V: Int64): TQStringCatHelperW; overload;
     function Cat(const V: Double): TQStringCatHelperW; overload;
@@ -457,6 +459,7 @@ type
     procedure TrimRight;
     procedure Reset;
     function EndWith(const S: QStringW; AIgnoreCase: Boolean): Boolean;
+    function ToString: String; {$IFDEF UNICODE}override; {$ENDIF}
     property Value: QStringW read GetValue;
     property Chars[AIndex: Integer]: QCharW read GetChars;
     property Start: PQCharW read FStart;
@@ -1577,6 +1580,19 @@ function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW = ':')
   : QStringW; overload;
 
 function MonthFirstDay(ADate: TDateTime): TDateTime;
+/// <summary>合并地址的不同部分</summary>
+/// <param name="AProv">省份</param>
+/// <param name="ACity">市州</param>
+/// <param name="ACounty">区县</param>
+/// <param name="ATownship">乡镇</param>
+/// <param name="AVillage">村屯</param>
+/// <param name="ADetail">详细地址</param>
+/// <param name="AIgnoreCityIfSameEnding">合并时，如果市级和县级以同一级别结尾，是否忽略市级</param>
+/// <returns>
+/// 返回合并后的地址，如果 ADetail 包含前面的部分，则自动合并掉
+/// </returns>
+function MergeAddr(const AProv, ACity, ACounty, ATownship, AVillage,
+  ADetail: String; AIgnoreCityIfSameEnding: Boolean): String;
 
 var
   JavaFormatUtf8: Boolean;
@@ -7170,7 +7186,9 @@ begin
       if p^ < ' ' then // 控制字符
       begin
         if (p^ >= #7) and (p^ <= #13) then
-          Inc(ASize);
+          Inc(ASize)
+        else
+          Inc(ASize, 5);
       end
       else if p^ >= '~' then // 非可打印字符，转义的话使用 \uxxxx
       begin
@@ -7233,6 +7251,14 @@ begin
               end
           else
             begin
+              PInteger(pd)^ := $0075005C; // \u
+              Inc(pd, 2);
+              pd^ := '0';
+              Inc(pd);
+              pd^ := '0';
+              Inc(pd);
+              pd^ := '0';
+              Inc(pd);
               pd^ := p^;
               Inc(pd);
             end;
@@ -8655,12 +8681,12 @@ begin
   GetTimeZoneInformation(TimeZone);
   Result := -TimeZone.Bias;
 {$ELSE}
-  t1 := 0;
-  t2 := 0;
-  tmLocal := localtime(t1);
-  t1 := mktime(tmLocal^);
-  tmUtc := gmtime(t2);
-  t2 := mktime(tmUtc^);
+  time_r(@t1);
+  t2 := t1;
+  tmLocal := localtime(@t1);
+  t1 := mktime(tm_local);
+  tmUtc := gmtime(@t2);
+  t2 := mktime(tm_utc);
   Result := (t1 - t2) div 60;
 {$ENDIF}
 end;
@@ -9203,30 +9229,75 @@ begin
   end;
 end;
 
-function TQStringCatHelperW.Cat(const S: QStringW): TQStringCatHelperW;
+function TQStringCatHelperW.Cat(const S: QStringW; AQuoter: QCharW)
+  : TQStringCatHelperW;
 begin
-  Result := Cat(PQCharW(S), Length(S));
+  Result := Cat(PQCharW(S), Length(S), AQuoter);
 end;
 
-function TQStringCatHelperW.Cat(p: PQCharW; len: Integer): TQStringCatHelperW;
+function TQStringCatHelperW.Cat(p: PQCharW; len: Integer; AQuoter: QCharW)
+  : TQStringCatHelperW;
+var
+  ps: PQCharW;
+  ACount: Integer;
+  procedure DirectMove;
+  begin
+    Move(p^, FDest^, len shl 1);
+    Inc(FDest, len);
+  end;
+
 begin
   Result := Self;
-  if len < 0 then
+  if (len < 0) or (AQuoter <> #0) then
   begin
-    while p^ <> #0 do
+    ps := p;
+    len := 0;
+    ACount := 0;
+    // 先计算长度，一次分配内存
+    while ps^ <> #0 do
     begin
-      if Position >= FSize then
-        NeedSize(FSize + FBlockSize);
-      FDest^ := p^;
-      Inc(p);
-      Inc(FDest);
+      if ps^ = AQuoter then
+        Inc(ACount);
+      Inc(len);
+      Inc(ps);
     end;
+    if AQuoter <> #0 then
+      NeedSize(-len-ACount-2)
+    else
+      NeedSize(-len);
+    if AQuoter <> #0 then
+    begin
+      begin
+        FDest^ := AQuoter;
+        Inc(FDest);
+        // 如果引号数量为0，直接复制，不用循环
+        if ACount = 0 then
+          DirectMove
+        else
+        begin
+          while p^ <> #0 do
+          begin
+            FDest^ := p^;
+            Inc(FDest);
+            if p^ = AQuoter then
+            begin
+              FDest^ := p^;
+              Inc(FDest);
+            end;
+            Inc(p);
+          end;
+        end;
+        FDest^ := AQuoter;
+        Inc(FDest);
+      end;
+    end
+    else
+      DirectMove;
   end
   else
   begin
     NeedSize(-len);
-    Move(p^, FDest^, len shl 1);
-    Inc(FDest, len);
+    DirectMove;
   end;
 end;
 
@@ -9401,6 +9472,11 @@ begin
   end
   else
     FDest := FStart + Value;
+end;
+
+function TQStringCatHelperW.ToString: String;
+begin
+  Result := Value;
 end;
 
 procedure TQStringCatHelperW.TrimRight;
@@ -12677,6 +12753,46 @@ var
 begin
   DecodeDate(ADate, Y, M, d);
   Result := EncodeDate(Y, M, 1);
+end;
+
+function MergeAddr(const AProv, ACity, ACounty, ATownship, AVillage,
+  ADetail: String; AIgnoreCityIfSameEnding: Boolean): String;
+var
+  p: PWideChar;
+  procedure Cat(S: String);
+  begin
+    if (Length(S) > 0) and (not EndWithW(PWideChar(Result), PWideChar(S), false))
+    then
+    begin
+      Result := Result + S;
+      if StartWithW(p, PChar(S), false) then
+        Inc(p, Length(S));
+    end;
+  end;
+
+begin
+  Result := '';
+  p := PWideChar(ADetail);
+  Cat(AProv);
+  if ACity <> '市辖区' then
+  begin
+    if (Length(ACity) > 0) and (Length(ACounty) > 0) then
+    begin
+      if RightStrW(ACity, 1, false) = RightStrW(ACounty, 1, false) then
+      begin
+        if not AIgnoreCityIfSameEnding then
+          Cat(LeftStrW(ACity, Length(ACity) - 1, false))
+        else if StartWithW(p, PChar(ACity), false) then
+          Inc(p, Length(ACity));
+      end
+      else
+        Cat(ACity);
+    end;
+  end;
+  Cat(ACounty);
+  Cat(ATownship);
+  Cat(AVillage);
+  Result := Result + p;
 end;
 
 initialization

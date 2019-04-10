@@ -42,7 +42,8 @@ type
       AUseToken: Boolean): TQJson;
     function CheckError(AJson: TQJson; ARaiseError: Boolean): Boolean;
     procedure RaiseError(AJson: TQJson);
-    procedure Json2DataSet(ASource: TQJson; ADataSet: TQDataSet);
+    procedure Json2DataSet(ASource: TQJson; AFieldDefs: TFieldDefs;
+      ARecords: TQRecords);
     procedure CloseHandle(AHandle: THandle); override;
     procedure KeepAliveNeeded; override;
   public
@@ -170,18 +171,21 @@ var
   I: Integer;
   ATokenTimeout: Boolean;
   procedure FetchAsStream;
-  var
-    ATemp: TQDataSet;
   begin
-    ATemp := OpenDataSet(ARequest.Command.SQL);
-    if Assigned(ATemp) then
+    AResult := Rest('OpenDataSet', nil, AReqJson, true);
+    CheckError(AResult, false);
+    if FErrorCode = ERROR_TOKEN_TIMEOUT then
     begin
-      try
-        ATemp.SaveToStream(ARequest.Command.DataObject,
-          TQJsonConverter, merAll);
-      finally
-        ReleaseDataSet(ATemp);
-      end;
+      KeepAliveNeeded;
+      FreeAndNil(AResult);
+      FetchAsStream;
+    end
+    else if FErrorCode <> 0 then
+      RaiseError(AResult)
+    else
+    begin
+      Json2DataSet(AResult.ItemByName('result'), FActiveFieldDefs,
+        FActiveRecords);
     end;
   end;
   procedure FetchDataSet;
@@ -200,7 +204,8 @@ var
       RaiseError(AResult)
     else
     begin
-      Json2DataSet(AResult.ItemByName('result'), ARequest.Command.DataObject);
+      Json2DataSet(AResult.ItemByName('result'), FActiveFieldDefs,
+        FActiveRecords);
     end;
   end;
 
@@ -296,7 +301,8 @@ begin
   end;
 end;
 
-procedure TQHttpProvider.Json2DataSet(ASource: TQJson; ADataSet: TQDataSet);
+procedure TQHttpProvider.Json2DataSet(ASource: TQJson; AFieldDefs: TFieldDefs;
+  ARecords: TQRecords);
 var
   AFieldsRoot, ARowsRoot, AItem: TQJson;
   ADefs: TQFieldDefs;
@@ -353,9 +359,9 @@ var
     AFlags: TQJson;
     S: String;
   begin
-    ADataSet.FieldDefs.BeginUpdate;
+    AFieldDefs.BeginUpdate;
     try
-      ADefs := ADataSet.FieldDefs as TQFieldDefs;
+      ADefs := AFieldDefs as TQFieldDefs;
       for I := 0 to AFieldsRoot.Count - 1 do
       begin
         AItem := AFieldsRoot[I];
@@ -397,7 +403,7 @@ var
         end;
       end;
     finally
-      ADataSet.FieldDefs.EndUpdate;
+      AFieldDefs.EndUpdate;
     end;
   end;
   procedure WriteBlobStream(AStream: TStream; AValue: TQJson);
@@ -430,7 +436,8 @@ var
     for I := 0 to ARowsRoot.Count - 1 do
     begin
       AItem := ARowsRoot[I];
-      ARec := ADataSet.AllocRecord;
+      ARec := TQRecord.Create(ADefs);
+      ARec.AddRef;
       for J := 0 to ADefs.Count - 1 do
       begin
         ADef := ADefs[J] as TQFieldDef;

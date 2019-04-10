@@ -23,11 +23,9 @@ type
   IDialogBuilder = interface;
   IDialogContainer = interface;
   // 对话框通知事件，分别对应子项添加、子项删除、父项变更、项目变更
-  TDialogNotifyEvent = (dneItemAdded, dneItemRemoved, dneParentChanged,
-    dneItemChanged);
+  TDialogNotifyEvent = (dneItemAdded, dneItemRemoved, dneParentChanged, dneItemChanged);
   // 子项对齐方式：按行居上，按行居中，按行居下，按列居左，按列居中，按列居右
-  TDialogItemAlignMode = (amVertTop, amVertCenter, amVertBottom, amHorizLeft,
-    amHorizCenter, amHorizRight);
+  TDialogItemAlignMode = (amVertTop, amVertCenter, amVertBottom, amHorizLeft, amHorizCenter, amHorizRight);
 {$IFDEF UNICODE}
   // TNotifyEvent 的匿名版本
   TNotifyCallback = reference to procedure(Sender: TObject);
@@ -41,8 +39,7 @@ type
     // 获取单项
     function GetItems(const AIndex: Integer): IBaseDialogItem;
     property Count: Integer read GetCount;
-    property Items[const AIndex: Integer]: IBaseDialogItem
-      read GetItems; default;
+    property Items[const AIndex: Integer]: IBaseDialogItem read GetItems; default;
   end;
 
   // 基本项目定义
@@ -101,11 +98,9 @@ type
     // 添加项目
     function Add(const AItem: IBaseDialogItem): IDialogContainer;
     // 添加一下控件项目，注意有些控件并不能自动调整合适的大小，需要赋值
-    function AddControl(AClass: TControlClass; APropText: String = '')
-      : IControlDialogItem; overload;
+    function AddControl(AClass: TControlClass; APropText: String = ''): IControlDialogItem; overload;
 {$IFDEF UNICODE}
-    function AddControl(AClass: TControlClass; AOnClick: TNotifyCallback;
-      APropText: String = ''): IControlDialogItem; overload;
+    function AddControl(AClass: TControlClass; AOnClick: TNotifyCallback; APropText: String = ''): IControlDialogItem; overload;
 {$ENDIF}
     // 添加一个子容器
     function AddContainer(AlignMode: TDialogItemAlignMode): IDialogContainer;
@@ -128,12 +123,10 @@ type
     // 子项间隔大小
     function GetItemSpace: Integer;
     procedure SetItemSpace(const V: Integer);
-    property AlignMode: TDialogItemAlignMode read GetAlignMode
-      write SetAlignMode;
+    property AlignMode: TDialogItemAlignMode read GetAlignMode write SetAlignMode;
     property AutoSize: Boolean read GetAutoSize write SetAutoSize;
     property Count: Integer read GetCount;
-    property Items[const AIndex: Integer]: IBaseDialogItem
-      read GetItems; default;
+    property Items[const AIndex: Integer]: IBaseDialogItem read GetItems; default;
     property ItemSpace: Integer read GetItemSpace write SetItemSpace;
 
   end;
@@ -170,10 +163,10 @@ type
     function GetOnResult: TDialogResultEvent;
     procedure SetOnResult(AEvent: TDialogResultEvent);
 {$IFDEF UNICODE}
-    procedure Popup(AControl: TControl;
-      ACallback: TDialogResultCallback); overload;
+    procedure Popup(AControl: TControl; ACallback: TDialogResultCallback); overload;
     procedure Popup(APos: TPoint; ACallback: TDialogResultCallback); overload;
     procedure ShowModal(ACallback: TDialogResultCallback); overload;
+    procedure FixupRefCount(AFix: Integer);
 {$ENDIF}
     // Dialog的PropText定义，注意 Position 属性无效，在 ShowModal 里，始终是poScreenCenter
     function GetPropText: String;
@@ -190,21 +183,17 @@ type
     property Dialog: TForm read GetDialog;
     property CanClose: Boolean read GetCanClose write SetCanClose;
     property CloseDelay: Word read GetCloseDelay write SetCloseDelay;
-    property DisplayRemainTime: Boolean read GetDisplayRemainTime
-      write SetDisplayRemainTime;
+    property DisplayRemainTime: Boolean read GetDisplayRemainTime write SetDisplayRemainTime;
   end;
 
   TDialogIcon = (diNone, diWarning, diHelp, diError, diInformation, diShield);
   // 新建一个对话框接口，如果不指定标题，则为Application.Title
 function NewDialog(ACaption: String = ''): IDialogBuilder; overload;
 function NewDialog(AClass: TFormClass): IDialogBuilder; overload;
-function CustomDialog(const ACaption, ATitle, AMessage: String;
-  AButtons: array of String; AIcon: TDialogIcon; AFlags: Integer = 0;
-  const ACustomProps: String = ''): Integer; overload;
-function CustomDialog(const ACaption, ATitle, AMessage: String;
-  AButtons: array of String; AIconResId: Integer; AIconResFile: String;
-  AIconSize: TSize; AFlags: Integer = 0; const ACustomProps: String = '')
-  : Integer; overload;
+function CustomDialog(const ACaption, ATitle, AMessage: String; AButtons: array of String; AIcon: TDialogIcon;
+  AFlags: Integer = 0; const ACustomProps: String = ''): Integer; overload;
+function CustomDialog(const ACaption, ATitle, AMessage: String; AButtons: array of String; AIconResId: Integer;
+  AIconResFile: String; AIconSize: TSize; AFlags: Integer = 0; const ACustomProps: String = ''): Integer; overload;
 
 implementation
 
@@ -227,8 +216,7 @@ type
     procedure SetGroupName(const Value: String);
     function GetParent: IDialogContainer;
     procedure SetParent(const Value: IDialogContainer);
-    procedure Notify(ASender: IBaseDialogItem;
-      AEvent: TDialogNotifyEvent); virtual;
+    procedure Notify(ASender: IBaseDialogItem; AEvent: TDialogNotifyEvent); virtual;
     function GetBuilder: IDialogBuilder;
     function GetGroup: IDialogItemGroup;
     function GetWidth: Integer;
@@ -253,10 +241,8 @@ type
     function GetBounds: TRect; override;
     procedure SetBounds(const R: TRect); override;
     function CalcSize: TSize; override;
-    procedure Notify(ASender: IBaseDialogItem;
-      AEvent: TDialogNotifyEvent); override;
-    constructor Create(ABuilder: IDialogBuilder;
-      ACtrlClass: TControlClass); overload;
+    procedure Notify(ASender: IBaseDialogItem; AEvent: TDialogNotifyEvent); override;
+    constructor Create(ABuilder: IDialogBuilder; ACtrlClass: TControlClass); overload;
     function GetControl: TControl;
     procedure DoClick(Sender: TObject);
     function GetOnClick: TNotifyEvent;
@@ -282,8 +268,7 @@ type
     procedure SetAlignMode(AMode: TDialogItemAlignMode);
     function GetAutoSize: Boolean;
     procedure SetAutoSize(const AValue: Boolean);
-    constructor Create(ABuilder: IDialogBuilder;
-      ACtrlClass: TControlClass); overload;
+    constructor Create(ABuilder: IDialogBuilder; ACtrlClass: TControlClass); overload;
     function GetItemSpace: Integer;
     procedure SetItemSpace(const V: Integer);
     function ItemSize: TSize;
@@ -291,11 +276,9 @@ type
     constructor Create(ABuilder: IDialogBuilder); overload; override;
     destructor Destroy; override;
     function Add(const AItem: IBaseDialogItem): IDialogContainer;
-    function AddControl(AClass: TControlClass; APropText: String = '')
-      : IControlDialogItem; overload;
+    function AddControl(AClass: TControlClass; APropText: String = ''): IControlDialogItem; overload;
 {$IFDEF UNICODE}
-    function AddControl(AClass: TControlClass; AOnClick: TNotifyCallback;
-      APropText: String = ''): IControlDialogItem; overload;
+    function AddControl(AClass: TControlClass; AOnClick: TNotifyCallback; APropText: String = ''): IControlDialogItem; overload;
 {$ENDIF}
     function AddContainer(AlignMode: TDialogItemAlignMode): IDialogContainer;
     procedure Delete(const AIndex: Integer);
@@ -315,8 +298,7 @@ type
   private
     FControl: TControl;
     FBuilder: IDialogBuilder;
-    procedure Notification(AComponent: TComponent;
-      Operation: TOperation); override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure SetBuilder(const Value: IDialogBuilder);
     procedure SetControl(const Value: TControl);
   public
@@ -336,6 +318,7 @@ type
     FLastDialogWndProc: TWndMethod;
     FPopupHelper: TDialogPopupHelper;
     FLastActiveWnd: THandle;
+    FRefCountFix: Integer;
     FCloseDelay: Word;
     FCanClose: Boolean;
     FDisplayRemainTime: Boolean;
@@ -369,6 +352,8 @@ type
     function CalcControlPopupPos(AControl: TControl): TPoint;
 {$IFDEF UNICODE}
     procedure SetOnResultCallback(ACallback: TDialogResultCallback);
+    procedure FixupRefCount(ADelta: Integer);
+    procedure ApplyRefCountFix;
 {$ENDIF}
   public
     constructor Create(const ACaption: String); overload;
@@ -380,8 +365,7 @@ type
     procedure RequestAlign;
     procedure Realign; override;
 {$IFDEF UNICODE}
-    procedure Popup(AControl: TControl;
-      ACallback: TDialogResultCallback); overload;
+    procedure Popup(AControl: TControl; ACallback: TDialogResultCallback); overload;
     procedure Popup(APos: TPoint; ACallback: TDialogResultCallback); overload;
     procedure ShowModal(ACallback: TDialogResultCallback); overload;
 {$ENDIF}
@@ -391,8 +375,7 @@ type
     property OnResult: TDialogResultEvent read FOnResult write SetOnResult;
     property CanClose: Boolean read FCanClose write SetCanClose;
     property CloseDelay: Word read FCloseDelay write SetCloseDelay;
-    property DisplayRemainTime: Boolean read FDisplayRemainTime
-      write FDisplayRemainTime;
+    property DisplayRemainTime: Boolean read FDisplayRemainTime write FDisplayRemainTime;
   end;
 
 function NewDialog(ACaption: String): IDialogBuilder;
@@ -408,8 +391,7 @@ begin
   Result := TDialogBuilder.Create(AClass);
 end;
 
-function CustomDialog(const ACaption, ATitle, AMessage: String;
-  AButtons: array of String; AIcon: TDialogIcon; AFlags: Integer;
+function CustomDialog(const ACaption, ATitle, AMessage: String; AButtons: array of String; AIcon: TDialogIcon; AFlags: Integer;
   const ACustomProps: String): Integer;
 var
   AIconSize: TSize;
@@ -418,13 +400,11 @@ const
 begin
   AIconSize.cx := 32;
   AIconSize.cy := 32;
-  Result := CustomDialog(ACaption, ATitle, AMessage, AButtons, IconResId[AIcon],
-    user32, AIconSize, AFlags, ACustomProps);
+  Result := CustomDialog(ACaption, ATitle, AMessage, AButtons, IconResId[AIcon], user32, AIconSize, AFlags, ACustomProps);
 end;
 
-function CustomDialog(const ACaption, ATitle, AMessage: String;
-  AButtons: array of String; AIconResId: Integer; AIconResFile: String;
-  AIconSize: TSize; AFlags: Integer; const ACustomProps: String): Integer;
+function CustomDialog(const ACaption, ATitle, AMessage: String; AButtons: array of String; AIconResId: Integer;
+  AIconResFile: String; AIconSize: TSize; AFlags: Integer; const ACustomProps: String): Integer;
 var
   AIcon: TIcon;
   ABuilder: IDialogBuilder;
@@ -458,9 +438,8 @@ begin
           begin
             AutoSize := True;
             AlignWithMargins := True;
-            AIcon.Handle := LoadImage(GetModuleHandle(PChar(AIconResFile)),
-              MAKEINTRESOURCE(AIconResId), IMAGE_ICON, AIconSize.cx,
-              AIconSize.cy, 0);
+            AIcon.Handle := LoadImage(GetModuleHandle(PChar(AIconResFile)), MAKEINTRESOURCE(AIconResId), IMAGE_ICON,
+              AIconSize.cx, AIconSize.cy, 0);
             Picture.Assign(AIcon);
           end;
         finally
@@ -547,8 +526,7 @@ begin
   Builder.GroupCast(Self, dneItemAdded);
 end;
 
-function TDialogContainer.AddContainer(AlignMode: TDialogItemAlignMode)
-  : IDialogContainer;
+function TDialogContainer.AddContainer(AlignMode: TDialogItemAlignMode): IDialogContainer;
 var
   AItem: TDialogContainer;
 begin
@@ -560,24 +538,27 @@ end;
 
 {$IFDEF UNICODE}
 
-function TDialogContainer.AddControl(AClass: TControlClass;
-  AOnClick: TNotifyCallback; APropText: String): IControlDialogItem;
+function TDialogContainer.AddControl(AClass: TControlClass; AOnClick: TNotifyCallback; APropText: String): IControlDialogItem;
 var
   AEvent: TNotifyEvent;
 begin
   AEvent := nil;
-  with TMethod(AEvent) do
+  if Assigned(AOnClick) then
   begin
-    TNotifyCallback(Code) := AOnClick;
-    Data := Pointer(-1);
+    with TMethod(AEvent) do
+    begin
+      TNotifyCallback(Code) := AOnClick;
+      Data := Pointer(-1);
+    end;
+    // 设置匿名函数的调用，Delphi 会在栈上为Builder额外增加个引用计数，这里需要给对应的减下去
+    Builder.FixupRefCount(1);
   end;
   Result := AddControl(AClass, APropText);
   Result.OnClick := AEvent;
 end;
 {$ENDIF}
 
-function TDialogContainer.AddControl(AClass: TControlClass;
-  APropText: String = ''): IControlDialogItem;
+function TDialogContainer.AddControl(AClass: TControlClass; APropText: String = ''): IControlDialogItem;
 var
   AItem: TControlDialogItem;
 begin
@@ -615,8 +596,7 @@ begin
   Builder.GroupCast(Self, dneItemChanged);
 end;
 
-constructor TDialogContainer.Create(ABuilder: IDialogBuilder;
-  ACtrlClass: TControlClass);
+constructor TDialogContainer.Create(ABuilder: IDialogBuilder; ACtrlClass: TControlClass);
 begin
   inherited;
   FItems := TList.Create;
@@ -860,8 +840,7 @@ begin
     Result := Right - Left;
 end;
 
-procedure TBaseDialogItem.Notify(ASender: IBaseDialogItem;
-  AEvent: TDialogNotifyEvent);
+procedure TBaseDialogItem.Notify(ASender: IBaseDialogItem; AEvent: TDialogNotifyEvent);
 begin
 
 end;
@@ -917,6 +896,14 @@ begin
       AGroup.Add(AItem);
   end;
 end;
+{$IFDEF UNICODE}
+
+procedure TDialogBuilder.ApplyRefCountFix;
+begin
+  AtomicDecrement(FRefCount, FRefCountFix);
+  FRefCountFix := 0;
+end;
+{$ENDIF}
 
 function TDialogBuilder.CalcControlPopupPos(AControl: TControl): TPoint;
 var
@@ -998,7 +985,6 @@ begin
   begin
     FStates := FStates - [dbsPopup];
     DoResult;
-    // 减少弹出时增加的引用计数
     _Release;
   end;
 end;
@@ -1016,13 +1002,11 @@ begin
   begin
     if Length(FInitializeCaption) = 0 then
       FInitializeCaption := Dialog.Caption;
-    Dialog.Caption := FInitializeCaption + '-' +
-      RollupTime(CloseDelay - FTimer.Tag);
+    Dialog.Caption := FInitializeCaption + '-' + RollupTime(CloseDelay - FTimer.Tag);
   end;
 end;
 
-procedure TDialogBuilder.DoDialogClose(Sender: TObject;
-  var Action: TCloseAction);
+procedure TDialogBuilder.DoDialogClose(Sender: TObject; var Action: TCloseAction);
 begin
   if not CanClose then
   begin
@@ -1099,6 +1083,12 @@ begin
     FOnResult(Self);
 {$ENDIF}
   end;
+  ApplyRefCountFix;
+end;
+
+procedure TDialogBuilder.FixupRefCount(ADelta: Integer);
+begin
+  Inc(FRefCountFix, ADelta);
 end;
 
 function TDialogBuilder.GetBounds: TRect;
@@ -1154,8 +1144,7 @@ begin
   end;
 end;
 
-procedure TDialogBuilder.GroupCast(ASender: IBaseDialogItem;
-  AEvent: TDialogNotifyEvent);
+procedure TDialogBuilder.GroupCast(ASender: IBaseDialogItem; AEvent: TDialogNotifyEvent);
 var
   AGroup: IDialogItemGroup;
   AIdx: Integer;
@@ -1202,10 +1191,8 @@ begin
   }
   if FLastActiveWnd = 0 then
     FLastActiveWnd := GetActiveWindow;
-  SetClassLong(Dialog.Handle, GCL_STYLE, GetClassLong(Dialog.Handle, GCL_STYLE)
-    or CS_DROPSHADOW);
-  SetWindowPos(Dialog.Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE OR
-    SWP_NOSIZE OR SWP_NOMOVE OR SWP_SHOWWINDOW);
+  SetClassLong(Dialog.Handle, GCL_STYLE, GetClassLong(Dialog.Handle, GCL_STYLE) or CS_DROPSHADOW);
+  SetWindowPos(Dialog.Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE OR SWP_NOSIZE OR SWP_NOMOVE OR SWP_SHOWWINDOW);
   PBoolean(@Dialog.Visible)^ := True;
   Dialog.Perform(CM_VISIBLECHANGED, 0, 0);
   if not Assigned(FAppEvents) then
@@ -1276,11 +1263,9 @@ begin
   begin
     FCanClose := AValue;
     if AValue then
-      EnableMenuItem(GetSystemMenu(Dialog.Handle, false), SC_CLOSE,
-        MF_BYCOMMAND)
+      EnableMenuItem(GetSystemMenu(Dialog.Handle, false), SC_CLOSE, MF_BYCOMMAND)
     else
-      EnableMenuItem(GetSystemMenu(Dialog.Handle, false), SC_CLOSE,
-        MF_DISABLED or MF_GRAYED or MF_BYCOMMAND);
+      EnableMenuItem(GetSystemMenu(Dialog.Handle, false), SC_CLOSE, MF_DISABLED or MF_GRAYED or MF_BYCOMMAND);
   end;
 end;
 
@@ -1296,6 +1281,7 @@ begin
   begin
     if Data = Pointer(-1) then
     begin
+      FixupRefCount(-1);
       TDialogResultCallback(Code) := nil;
       Data := nil;
     end;
@@ -1311,10 +1297,14 @@ var
   AEvent: TDialogResultEvent;
 begin
   AEvent := nil;
-  with TMethod(AEvent) do
+  if Assigned(ACallback) then
   begin
-    Data := Pointer(-1);
-    TDialogResultCallback(Code) := ACallback;
+    with TMethod(AEvent) do
+    begin
+      Data := Pointer(-1);
+      TDialogResultCallback(Code) := ACallback;
+    end;
+    FixupRefCount(1);
   end;
   SetOnResult(AEvent);
 end;
@@ -1365,8 +1355,7 @@ begin
     Realign;
   if CloseDelay > 0 then
     FTimer.Enabled := True;
-  SetClassLong(Dialog.Handle, GCL_STYLE, GetClassLong(Dialog.Handle, GCL_STYLE)
-    and (not CS_DROPSHADOW));
+  SetClassLong(Dialog.Handle, GCL_STYLE, GetClassLong(Dialog.Handle, GCL_STYLE) and (not CS_DROPSHADOW));
   FDialog.ShowModal;
   DoResult;
 end;
@@ -1377,8 +1366,7 @@ begin
   Popup(APos);
 end;
 
-procedure TDialogBuilder.Popup(AControl: TControl;
-  ACallback: TDialogResultCallback);
+procedure TDialogBuilder.Popup(AControl: TControl; ACallback: TDialogResultCallback);
 begin
   SetOnResultCallback(ACallback);
   Popup(AControl);
@@ -1397,8 +1385,7 @@ begin
   end;
 end;
 
-constructor TControlDialogItem.Create(ABuilder: IDialogBuilder;
-  ACtrlClass: TControlClass);
+constructor TControlDialogItem.Create(ABuilder: IDialogBuilder; ACtrlClass: TControlClass);
 var
   AProp: PPropInfo;
   AEvent: TNotifyEvent;
@@ -1483,8 +1470,7 @@ begin
   Result := FPropText;
 end;
 
-procedure TControlDialogItem.Notify(ASender: IBaseDialogItem;
-  AEvent: TDialogNotifyEvent);
+procedure TControlDialogItem.Notify(ASender: IBaseDialogItem; AEvent: TDialogNotifyEvent);
 var
   AContainer: TDialogContainer;
 begin
@@ -1553,8 +1539,7 @@ begin
   inherited;
 end;
 
-procedure TDialogPopupHelper.Notification(AComponent: TComponent;
-  Operation: TOperation);
+procedure TDialogPopupHelper.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited;
   if Operation = opRemove then
