@@ -136,6 +136,8 @@ type
   TDialogResultCallback = reference to procedure(ABuilder: IDialogBuilder);
 {$ENDIF}
   TDialogResultEvent = procedure(ABuilder: IDialogBuilder) of object;
+  TQDialogPopupPosition = (dppDefault, dppLeftTop, dppCenterTop, dppRightTop, dppLeftCenter, dppCenter, dppRightCenter,
+    dppLeftBottom, dppCenterBottom, dppRightBottom);
 
   // 对话框构建工具
   IDialogBuilder = interface(IDialogContainer)
@@ -177,6 +179,10 @@ type
     procedure SetCloseDelay(const ASeconds: Word);
     function GetDisplayRemainTime: Boolean;
     procedure SetDisplayRemainTime(const AValue: Boolean);
+    function GetPopupPosition: TQDialogPopupPosition;
+    procedure SetPopupPosition(const Value: TQDialogPopupPosition);
+    function GetPopupMonitor: TMonitor;
+    procedure SetPopupMonitor(const Value: TMonitor);
     property PropText: String read GetPropText write SetPropText;
     property ModalResult: TModalResult read GetModalResult write SetModalResult;
     property OnResult: TDialogResultEvent read GetOnResult write SetOnResult;
@@ -184,16 +190,21 @@ type
     property CanClose: Boolean read GetCanClose write SetCanClose;
     property CloseDelay: Word read GetCloseDelay write SetCloseDelay;
     property DisplayRemainTime: Boolean read GetDisplayRemainTime write SetDisplayRemainTime;
+    property PopupPosition: TQDialogPopupPosition read GetPopupPosition write SetPopupPosition;
+    property PopupMonitor: TMonitor read GetPopupMonitor write SetPopupMonitor;
   end;
 
   TDialogIcon = (diNone, diWarning, diHelp, diError, diInformation, diShield);
   // 新建一个对话框接口，如果不指定标题，则为Application.Title
 function NewDialog(ACaption: String = ''): IDialogBuilder; overload;
 function NewDialog(AClass: TFormClass): IDialogBuilder; overload;
+function LoadDialogIcon(APicture: TPicture; const AIcon: TDialogIcon; ASize: TSize): Boolean; overload;
+function LoadDialogIcon(APicture: TPicture; const AIconREsFile: String; const AIconResId: Integer; ASize: TSize)
+  : Boolean; overload;
 function CustomDialog(const ACaption, ATitle, AMessage: String; AButtons: array of String; AIcon: TDialogIcon;
   AFlags: Integer = 0; const ACustomProps: String = ''): Integer; overload;
 function CustomDialog(const ACaption, ATitle, AMessage: String; AButtons: array of String; AIconResId: Integer;
-  AIconResFile: String; AIconSize: TSize; AFlags: Integer = 0; const ACustomProps: String = ''): Integer; overload;
+  AIconREsFile: String; AIconSize: TSize; AFlags: Integer = 0; const ACustomProps: String = ''): Integer; overload;
 
 implementation
 
@@ -291,7 +302,7 @@ type
     property ItemSpace: Integer read FItemSpace write FItemSpace;
   end;
 
-  TDialogBuilderState = (dbsAlignRequest, dbsAligning, dbsPopup, dbsModal);
+  TDialogBuilderState = (dbsAlignRequest, dbsAligning, dbsPopuping, dbsPopup, dbsModal);
   TDialogBuilderStates = set of TDialogBuilderState;
 
   TDialogPopupHelper = class(TComponent)
@@ -308,6 +319,8 @@ type
   end;
 
   TDialogBuilder = class(TDialogContainer, IDialogBuilder)
+  private
+
   protected
     FDialog: TForm;
     FGroups: TStringList;
@@ -319,10 +332,12 @@ type
     FPopupHelper: TDialogPopupHelper;
     FLastActiveWnd: THandle;
     FRefCountFix: Integer;
+    FPopupPosition: TQDialogPopupPosition;
     FCloseDelay: Word;
     FCanClose: Boolean;
     FDisplayRemainTime: Boolean;
     FInitializeCaption: String;
+    FPopupMonitor: TMonitor;
     function GetGroups: TStrings;
     procedure ChangeGroup(AItem: IBaseDialogItem; ANewName: String);
     procedure GroupCast(ASender: IBaseDialogItem; AEvent: TDialogNotifyEvent);
@@ -350,11 +365,18 @@ type
     procedure TimerNeeded;
     procedure DoCloseTimer(ASender: TObject);
     function CalcControlPopupPos(AControl: TControl): TPoint;
+    function GetPopupPosition: TQDialogPopupPosition;
+    procedure SetPopupPosition(const Value: TQDialogPopupPosition);
+    function GetPopupMonitor: TMonitor;
+    procedure SetPopupMonitor(const Value: TMonitor);
 {$IFDEF UNICODE}
     procedure SetOnResultCallback(ACallback: TDialogResultCallback);
     procedure FixupRefCount(ADelta: Integer);
     procedure ApplyRefCountFix;
 {$ENDIF}
+    function IsAppVisible(ABringToFrontIfVisible: Boolean): Boolean;
+    procedure BeforePopup;
+    procedure AfterPopup;
   public
     constructor Create(const ACaption: String); overload;
     constructor Create(const AClass: TFormClass); overload;
@@ -371,11 +393,13 @@ type
 {$ENDIF}
     property Dialog: TForm read FDialog;
     property Groups: TStrings read GetGroups;
+    property PopupPosition: TQDialogPopupPosition read GetPopupPosition write SetPopupPosition;
     property ModalResult: TModalResult read GetModalResult write SetModalResult;
     property OnResult: TDialogResultEvent read FOnResult write SetOnResult;
     property CanClose: Boolean read FCanClose write SetCanClose;
     property CloseDelay: Word read FCloseDelay write SetCloseDelay;
     property DisplayRemainTime: Boolean read FDisplayRemainTime write FDisplayRemainTime;
+    property PopupMonitor: TMonitor read GetPopupMonitor write SetPopupMonitor;
   end;
 
 function NewDialog(ACaption: String): IDialogBuilder;
@@ -391,6 +415,30 @@ begin
   Result := TDialogBuilder.Create(AClass);
 end;
 
+function LoadDialogIcon(APicture: TPicture; const AIconREsFile: String; const AIconResId: Integer; ASize: TSize): Boolean;
+var
+  AIcon: TIcon;
+begin
+  AIcon := TIcon.Create;
+  try
+    AIcon.SetSize(ASize.cx, ASize.cy);
+    AIcon.Handle := LoadImage(GetModuleHandle(PChar(AIconREsFile)), MAKEINTRESOURCE(AIconResId), IMAGE_ICON, ASize.cx,
+      ASize.cy, 0);
+    Result := AIcon.HandleAllocated;
+    if Result then
+      APicture.Assign(AIcon);
+  finally
+    FreeAndNil(AIcon);
+  end;
+end;
+
+function LoadDialogIcon(APicture: TPicture; const AIcon: TDialogIcon; ASize: TSize): Boolean;
+const
+  IconResId: array [TDialogIcon] of Integer = (0, 101, 102, 103, 104, 106);
+begin
+  Result := LoadDialogIcon(APicture, user32, IconResId[AIcon], ASize);
+end;
+
 function CustomDialog(const ACaption, ATitle, AMessage: String; AButtons: array of String; AIcon: TDialogIcon; AFlags: Integer;
   const ACustomProps: String): Integer;
 var
@@ -404,7 +452,7 @@ begin
 end;
 
 function CustomDialog(const ACaption, ATitle, AMessage: String; AButtons: array of String; AIconResId: Integer;
-  AIconResFile: String; AIconSize: TSize; AFlags: Integer; const ACustomProps: String): Integer;
+  AIconREsFile: String; AIconSize: TSize; AFlags: Integer; const ACustomProps: String): Integer;
 var
   AIcon: TIcon;
   ABuilder: IDialogBuilder;
@@ -414,6 +462,8 @@ begin
   ABuilder := NewDialog(ACaption);
   ABuilder.ItemSpace := 10;
   ABuilder.AutoSize := True;
+  // ABuilder.Dialog.Padding.SetBounds(5, 10, 5, 5);
+  // ABuilder.Dialog.Color := clWhite;
   // 首行，可能是标题，图标+标题，图标+消息，消息
   with ABuilder.AddContainer(amVertTop) do
   begin
@@ -422,28 +472,21 @@ begin
     begin
       Padding.Left := ABuilder.ItemSpace;
       Padding.Right := ABuilder.ItemSpace;
+      Padding.Top := ABuilder.ItemSpace;
       ParentBackground := false;
       Color := clWhite;
     end;
     with AddContainer(amHorizLeft) do
     begin
       AutoSize := True;
-      if (Length(AIconResFile) > 0) and (AIconResId > 0) then
+      if (Length(AIconREsFile) > 0) and (AIconResId > 0) then
       begin
-        AIcon := TIcon.Create;
-        try
-          AIcon.SetSize(AIconSize.cx, AIconSize.cy);
-          AIconImage := TImage(AddControl(TImage).Control);
-          with AIconImage do
-          begin
-            AutoSize := True;
-            AlignWithMargins := True;
-            AIcon.Handle := LoadImage(GetModuleHandle(PChar(AIconResFile)), MAKEINTRESOURCE(AIconResId), IMAGE_ICON,
-              AIconSize.cx, AIconSize.cy, 0);
-            Picture.Assign(AIcon);
-          end;
-        finally
-          FreeAndNil(AIcon);
+        AIconImage := TImage(AddControl(TImage).Control);
+        with AIconImage do
+        begin
+          AutoSize := True;
+          AlignWithMargins := True;
+          LoadDialogIcon(Picture, AIconREsFile, AIconResId, AIconSize);
         end;
       end;
       if Length(ATitle) > 0 then
@@ -898,30 +941,129 @@ begin
 end;
 {$IFDEF UNICODE}
 
+procedure TDialogBuilder.AfterPopup;
+begin
+  FStates := FStates - [dbsPopuping];
+end;
+
 procedure TDialogBuilder.ApplyRefCountFix;
 begin
   AtomicDecrement(FRefCount, FRefCountFix);
   FRefCountFix := 0;
 end;
+
+procedure TDialogBuilder.BeforePopup;
+begin
+  if dbsPopuping in FStates then
+    Exit;
+  FStates := FStates + [dbsPopuping];
+  if not(dbsPopup in FStates) then // 检测以避免重复调用时出现计数问题
+  begin
+    FStates := FStates + [dbsPopup];
+    _AddRef;
+  end;
+  Dialog.BorderStyle := bsNone;
+  if Dialog.BorderStyle <> bsNone then
+    RequestAlign;
+  IsAppVisible(True);
+  Dialog.BorderStyle := bsNone;
+  Dialog.Position := poDesigned;
+  Dialog.ModalResult := mrNone;
+  if dbsAlignRequest in FStates then
+    Realign;
+  Dialog.FormStyle := fsStayOnTop;
+end;
+
 {$ENDIF}
 
 function TDialogBuilder.CalcControlPopupPos(AControl: TControl): TPoint;
 var
-  AMonitor: TMonitor;
+  R: TRect;
   ASize: TSize;
+  AMonitor: TMonitor;
 begin
-  FLastActiveWnd := GetParentForm(AControl).Handle;
-  Result := AControl.ClientToScreen(Point(0, AControl.Height));
   ASize := ItemSize;
-  AMonitor := Screen.MonitorFromPoint(Result);
-  if Result.X + ASize.cx > AMonitor.BoundsRect.Right then
-    Result.X := AMonitor.BoundsRect.Right - ASize.cx;
-  if Result.Y + ASize.cy > AMonitor.BoundsRect.Bottom then
+  if Assigned(AControl) then
   begin
-    if Result.Y - AControl.Height - ASize.cy > AMonitor.BoundsRect.Top then
-      Result.Y := Result.Y - AControl.Height - ASize.cy
-    else
-      Result.Y := AMonitor.BoundsRect.Bottom - ASize.cy;
+    R := AControl.ClientRect;
+    R.Offset(AControl.ClientOrigin);
+    FLastActiveWnd := GetParentForm(AControl).Handle;
+    AMonitor := Screen.MonitorFromRect(R);
+  end
+  else
+  begin
+    FLastActiveWnd := 0;
+    AMonitor := PopupMonitor;
+    R := AMonitor.WorkareaRect;
+  end;
+  case PopupPosition of
+    dppDefault:
+      begin
+        if Assigned(AControl) then
+        begin
+          Result.X := R.Left;
+          Result.Y := R.Top + R.Height;
+          if Result.X + ASize.cx > AMonitor.BoundsRect.Right then
+            Result.X := AMonitor.BoundsRect.Right - ASize.cx;
+          if Result.Y + ASize.cy > AMonitor.BoundsRect.Bottom then
+          begin
+            if Result.Y - AControl.Height - ASize.cy > AMonitor.BoundsRect.Top then
+              Result.Y := Result.Y - AControl.Height - ASize.cy
+            else
+              Result.Y := AMonitor.BoundsRect.Bottom - ASize.cy;
+          end;
+        end
+        else
+        begin
+          Result.X := R.Left + (R.Width - Dialog.Width) shr 1;
+          Result.Y := R.Top + (R.Height - Dialog.Height) shr 1;
+        end;
+      end;
+    dppLeftTop:
+      begin
+        Result.X := R.Left;
+        Result.Y := R.Top;
+      end;
+    dppCenterTop:
+      begin
+        Result.X := R.Left + (R.Width - Dialog.Width) shr 1;
+        Result.Y := R.Top;
+      end;
+    dppRightTop:
+      begin
+        Result.X := R.Left + R.Width - Dialog.Width;
+        Result.Y := R.Top;
+      end;
+    dppLeftCenter:
+      begin
+        Result.X := R.Left;
+        Result.Y := R.Top + (R.Height - Dialog.Height) shr 1;
+      end;
+    dppCenter:
+      begin
+        Result.X := R.Left + (R.Width - Dialog.Width) shr 1;
+        Result.Y := R.Top + (R.Height - Dialog.Height) shr 1;
+      end;
+    dppRightCenter:
+      begin
+        Result.X := R.Left + R.Width - Dialog.Width;
+        Result.Y := R.Top + (R.Height - Dialog.Height) shr 1;
+      end;
+    dppLeftBottom:
+      begin
+        Result.X := R.Left;
+        Result.Y := R.Top + R.Height - Dialog.Height;
+      end;
+    dppCenterBottom:
+      begin
+        Result.X := R.Left + (R.Width - Dialog.Width) shr 1;
+        Result.Y := R.Top + R.Height - Dialog.Height;
+      end;
+    dppRightBottom:
+      begin
+        Result.X := R.Left + R.Width - Dialog.Width;
+        Result.Y := R.Top + R.Height - Dialog.Height;
+      end;
   end;
 end;
 
@@ -1000,8 +1142,6 @@ begin
   end
   else if DisplayRemainTime then
   begin
-    if Length(FInitializeCaption) = 0 then
-      FInitializeCaption := Dialog.Caption;
     Dialog.Caption := FInitializeCaption + '-' + RollupTime(CloseDelay - FTimer.Tag);
   end;
 end;
@@ -1088,7 +1228,7 @@ end;
 
 procedure TDialogBuilder.FixupRefCount(ADelta: Integer);
 begin
-  Inc(FRefCountFix, ADelta);
+  // Inc(FRefCountFix, ADelta);
 end;
 
 function TDialogBuilder.GetBounds: TRect;
@@ -1131,6 +1271,18 @@ begin
   Result := FOnResult;
 end;
 
+function TDialogBuilder.GetPopupMonitor: TMonitor;
+begin
+  Result := FPopupMonitor;
+  if not Assigned(Result) then
+    Result := Screen.PrimaryMonitor;
+end;
+
+function TDialogBuilder.GetPopupPosition: TQDialogPopupPosition;
+begin
+  Result := FPopupPosition;
+end;
+
 function TDialogBuilder.GroupByName(const AName: String): IDialogItemGroup;
 var
   AIdx: Integer;
@@ -1161,57 +1313,77 @@ begin
   end;
 end;
 
+function TDialogBuilder.IsAppVisible(ABringToFrontIfVisible: Boolean): Boolean;
+var
+  AppHandle: HWND;
+  AForm: TForm;
+  APos: TPoint;
+begin
+  if Application.MainFormOnTaskBar and Assigned(Application.MainForm) then
+    AppHandle := Application.MainForm.Handle
+  else
+    AppHandle := Application.Handle;
+  if IsWindowVisible(AppHandle) then
+  begin
+    if IsIconic(AppHandle) and ABringToFrontIfVisible then
+      Application.Restore;
+  end;
+end;
+
 procedure TDialogBuilder.Popup(APos: TPoint);
+var
+  R: TRect;
 begin
   // 调整好控件的位置
-  if not(dbsPopup in FStates) then // 检测以避免重复调用时出现计数问题
-  begin
-    FStates := FStates + [dbsPopup];
-    _AddRef;
-  end;
-  if Dialog.BorderStyle <> bsNone then
-    RequestAlign;
-  Dialog.BorderStyle := bsNone;
-  Dialog.Position := poDesigned;
-  Dialog.ModalResult := mrNone;
-  if dbsAlignRequest in FStates then
-    Realign;
-  Dialog.SetBounds(APos.X, APos.Y, Dialog.Width, Dialog.Height);
-  Dialog.FormStyle := fsStayOnTop;
-  {
-    VCL 本身并没有内置非活动窗口的显示，无论你调用 Show/Visible，都会让当前窗口变为
-    活动窗口，原来的窗口会失去焦点，所以要做几件事：
-    1、调用 SetWindowPos 以非活动状态显示出窗口
-    2、强制修改窗口的 Visible 属性为 True
-    3、发起 CM_VISIBLECHANGED 消息，以通知相关控件
-    同时，为了避免点击对话框中的控件时，原来的窗口显示为失去焦点的状态，也要处理下
-    消息，具体看 DoDialogWndProc 代码。
-    弹出的对话框在用户点击其它位置时，应自动消失，所以还要检查鼠标消息，并在用户点
-    击非当前位置时自动消失。
-  }
-  if FLastActiveWnd = 0 then
-    FLastActiveWnd := GetActiveWindow;
-  SetClassLong(Dialog.Handle, GCL_STYLE, GetClassLong(Dialog.Handle, GCL_STYLE) or CS_DROPSHADOW);
-  SetWindowPos(Dialog.Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE OR SWP_NOSIZE OR SWP_NOMOVE OR SWP_SHOWWINDOW);
-  PBoolean(@Dialog.Visible)^ := True;
-  Dialog.Perform(CM_VISIBLECHANGED, 0, 0);
-  if not Assigned(FAppEvents) then
-  begin
-    FAppEvents := TApplicationEvents.Create(Dialog);
-    FAppEvents.OnMessage := DoPopupMessage;
+  BeforePopup;
+  try
+    Dialog.SetBounds(APos.X, APos.Y, Dialog.Width, Dialog.Height);
+    {
+      VCL 本身并没有内置非活动窗口的显示，无论你调用 Show/Visible，都会让当前窗口变为
+      活动窗口，原来的窗口会失去焦点，所以要做几件事：
+      1、调用 SetWindowPos 以非活动状态显示出窗口
+      2、强制修改窗口的 Visible 属性为 True
+      3、发起 CM_VISIBLECHANGED 消息，以通知相关控件
+      同时，为了避免点击对话框中的控件时，原来的窗口显示为失去焦点的状态，也要处理下
+      消息，具体看 DoDialogWndProc 代码。
+      弹出的对话框在用户点击其它位置时，应自动消失，所以还要检查鼠标消息，并在用户点
+      击非当前位置时自动消失。
+    }
+    if FLastActiveWnd = 0 then
+      FLastActiveWnd := GetActiveWindow;
+    SetClassLong(Dialog.Handle, GCL_STYLE, GetClassLong(Dialog.Handle, GCL_STYLE) or CS_DROPSHADOW);
+    FInitializeCaption := Dialog.Caption;
+    SetWindowPos(Dialog.Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE OR SWP_NOSIZE OR SWP_NOMOVE OR SWP_SHOWWINDOW);
+    PBoolean(@Dialog.Visible)^ := True;
+    Dialog.Perform(CM_VISIBLECHANGED, 0, 0);
+    if not Assigned(FAppEvents) then
+    begin
+      FAppEvents := TApplicationEvents.Create(Dialog);
+      FAppEvents.OnMessage := DoPopupMessage;
+    end;
+    if CloseDelay > 0 then
+      FTimer.Enabled := True;
+  finally
+    AfterPopup;
   end;
 end;
 
 procedure TDialogBuilder.Popup(AControl: TControl);
+var
+  APos: TPoint;
 begin
+  BeforePopup;
+  if IsAppVisible(True) then
+    APos := CalcControlPopupPos(AControl)
+  else
+    APos := CalcControlPopupPos(nil);
   if not Assigned(FPopupHelper) then
   begin
     FPopupHelper := TDialogPopupHelper.Create(nil);
     FPopupHelper.Builder := Self;
   end;
   FPopupHelper.Control := AControl;
-  FLastActiveWnd := GetParentForm(AControl).Handle;
-  Popup(CalcControlPopupPos(AControl));
+  Popup(APos);
 end;
 
 procedure TDialogBuilder.Realign;
@@ -1309,6 +1481,16 @@ begin
   SetOnResult(AEvent);
 end;
 
+procedure TDialogBuilder.SetPopupMonitor(const Value: TMonitor);
+begin
+  FPopupMonitor := Value;
+end;
+
+procedure TDialogBuilder.SetPopupPosition(const Value: TQDialogPopupPosition);
+begin
+  FPopupPosition := Value;
+end;
+
 procedure TDialogBuilder.SetCloseDelay(const Value: Word);
 begin
   if FCloseDelay <> Value then
@@ -1355,6 +1537,7 @@ begin
     Realign;
   if CloseDelay > 0 then
     FTimer.Enabled := True;
+  FInitializeCaption := Dialog.Caption;
   SetClassLong(Dialog.Handle, GCL_STYLE, GetClassLong(Dialog.Handle, GCL_STYLE) and (not CS_DROPSHADOW));
   FDialog.ShowModal;
   DoResult;

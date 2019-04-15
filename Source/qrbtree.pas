@@ -370,8 +370,6 @@ var
 
 implementation
 
-uses qworker;
-
 const
   RB_RED = 0;
   RB_BLACK = 1;

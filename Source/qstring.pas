@@ -255,7 +255,7 @@ uses classes, sysutils, types{$IF RTLVersion>=21},
     , windows
 {$ENDIF}
 {$IFDEF POSIX}
-    , Posix.String_, Posix.SysTypes, Posix.Time
+    , Posix.String_, Posix.Time, Posix.SysTypes
 {$ENDIF}
 {$IFDEF ANDROID}
     , Androidapi.Log
@@ -1580,17 +1580,6 @@ function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW = ':')
   : QStringW; overload;
 
 function MonthFirstDay(ADate: TDateTime): TDateTime;
-/// <summary>合并地址的不同部分</summary>
-/// <param name="AProv">省份</param>
-/// <param name="ACity">市州</param>
-/// <param name="ACounty">区县</param>
-/// <param name="ATownship">乡镇</param>
-/// <param name="AVillage">村屯</param>
-/// <param name="ADetail">详细地址</param>
-/// <param name="AIgnoreCityIfSameEnding">合并时，如果市级和县级以同一级别结尾，是否忽略市级</param>
-/// <returns>
-/// 返回合并后的地址，如果 ADetail 包含前面的部分，则自动合并掉
-/// </returns>
 function MergeAddr(const AProv, ACity, ACounty, ATownship, AVillage,
   ADetail: String; AIgnoreCityIfSameEnding: Boolean): String;
 
@@ -6749,6 +6738,7 @@ function ParseInt(var S: PQCharW; var ANum: Int64): Integer;
 var
   ps: PQCharW;
   ANeg: Boolean;
+  ALastVal: Int64;
 begin
   ps := S;
   // 跳过16进制开始字符
@@ -6783,15 +6773,17 @@ begin
       end;
     end;
     ANum := 0;
+    ALastVal := 0;
     while (S^ >= '0') and (S^ <= '9') do
     begin
       ANum := ANum * 10 + Ord(S^) - Ord('0');
-      if ANum < 0 then // 溢出？
+      if (ANum div 10) <> ALastVal then // 溢出？
       begin
         Result := 0;
         S := ps;
         Exit;
       end;
+      ALastVal := ANum;
       Inc(S);
     end;
     if ANeg then
@@ -8673,21 +8665,17 @@ var
 {$IFDEF MSWindows}
   TimeZone: TTimeZoneInformation;
 {$ELSE}
-  tmLocal, tmUtc: PTM;
-  t1, t2: time_t;
+  tmLocal: TM;
+  t1: time_t;
 {$ENDIF}
 begin
 {$IFDEF MSWINDOWS}
   GetTimeZoneInformation(TimeZone);
   Result := -TimeZone.Bias;
 {$ELSE}
-  time_r(@t1);
-  t2 := t1;
-  tmLocal := localtime(@t1);
-  t1 := mktime(tm_local);
-  tmUtc := gmtime(@t2);
-  t2 := mktime(tm_utc);
-  Result := (t1 - t2) div 60;
+  t1 := 0;
+  localtime_r(t1, tmLocal);
+  Result := tmLocal.tm_gmtoff div 60 ;
 {$ENDIF}
 end;
 
@@ -9262,7 +9250,7 @@ begin
       Inc(ps);
     end;
     if AQuoter <> #0 then
-      NeedSize(-len-ACount-2)
+      NeedSize(-len - ACount - 2)
     else
       NeedSize(-len);
     if AQuoter <> #0 then

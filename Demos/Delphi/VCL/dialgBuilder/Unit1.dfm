@@ -2,7 +2,7 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Dialog Builder '#31034#20363
-  ClientHeight = 375
+  ClientHeight = 396
   ClientWidth = 574
   Color = clWindow
   Font.Charset = DEFAULT_CHARSET
@@ -16,12 +16,12 @@ object Form1: TForm1
   TextHeight = 13
   object Label1: TLabel
     Left = 24
-    Top = 354
+    Top = 370
     Width = 3
     Height = 13
   end
   object Button1: TButton
-    Left = 16
+    Left = 8
     Top = 8
     Width = 120
     Height = 32
@@ -127,5 +127,54 @@ object Form1: TForm1
     Caption = 'Animate Gauge'
     TabOrder = 11
     OnClick = Button12Click
+  end
+  object GroupBox1: TGroupBox
+    Left = 24
+    Top = 160
+    Width = 521
+    Height = 201
+    Caption = 'Popup position'
+    TabOrder = 12
+    object RadioGroup1: TRadioGroup
+      AlignWithMargins = True
+      Left = 5
+      Top = 18
+      Width = 236
+      Height = 178
+      Align = alLeft
+      Caption = 'Position'
+      Columns = 2
+      ItemIndex = 0
+      Items.Strings = (
+        'dppDefault'
+        'dppLeftTop'
+        'dppCenterTop'
+        'dppRightTop'
+        'dppLeftCenter'
+        'dppCenter'
+        'dppRightCenter'
+        'dppLeftBottom'
+        'dppCenterBottom'
+        'dppRightBottom')
+      TabOrder = 0
+    end
+    object Button13: TButton
+      Left = 336
+      Top = 32
+      Width = 121
+      Height = 57
+      Caption = 'Popup on control'
+      TabOrder = 1
+      OnClick = Button13Click
+    end
+    object Button14: TButton
+      Left = 336
+      Top = 95
+      Width = 121
+      Height = 57
+      Caption = 'Popup on monitor'
+      TabOrder = 2
+      OnClick = Button14Click
+    end
   end
 end

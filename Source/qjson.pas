@@ -21,7 +21,6 @@ interface
   户名：管耸寰
   账号：4367 4209 4324 0179 731
   开户行：建设银行长春团风储蓄所
-
 }
 
 { 修订日志
@@ -37,7 +36,7 @@ interface
 
   2017.1.1
   ==========
-  + 增加 Insert 系列函数，用于在指定的位置插入一个结点（阿木、恢弘建议）
+  + 增加 Insert 系列函数，用于在指定的位置插入一个结点（阿木、恢弘建议）                                     {￥I不【
 
   2016.11.23
   ==========
@@ -307,7 +306,7 @@ interface
   * 修正了Assign函数的一处错误
 }
 // 测试环境仅为Delphi 2007或XE6，其它版本的开发环境，请自行修改
-uses classes, sysutils, math, qstring, typinfo, qrbtree,
+uses classes, sysutils, math, qstring, typinfo, qrbtree, fmtbcd,
 {$IF RTLVersion>27}
   System.NetEncoding{$ELSE}EncdDecd{$IFEND}
 {$IFDEF MSWINDOWS}, windows{$ENDIF}
@@ -353,6 +352,9 @@ type
   /// <term>jdtFloat</term><description>双精度浮点数(Double)</description>
   /// </item>
   /// <item>
+  /// <term>jdtBcd</term><description>BCD编码数字</description>
+  /// </item>
+  /// <item>
   /// <term>jdtBoolean</term><description>布尔</description>
   /// </item>
   /// <item>
@@ -365,8 +367,7 @@ type
   /// <term>jdtObject</term><description>对象</description>
   /// </item>
   /// </list>
-  TQJsonDataType = (jdtUnknown, jdtNull, jdtString, jdtInteger, jdtFloat,
-    jdtBoolean, jdtDateTime, jdtArray, jdtObject);
+  TQJsonDataType = (jdtUnknown, jdtNull, jdtString, jdtInteger, jdtFloat, jdtBcd, jdtBoolean, jdtDateTime, jdtArray, jdtObject);
   TQJson = class;
 {$IF RTLVersion>=21}
   /// <summary>
@@ -377,9 +378,8 @@ type
   /// <param name="AType">属性或字段的类型信息</param>
   /// <param name="Accept">是否记录该属性或字段</param>
   /// <param name="ATag">用户自定义的附加数据成员</param>
-  TQJsonRttiFilterEventA = reference to procedure(ASender: TQJson;
-    AObject: Pointer; AName: QStringW; AType: PTypeInfo; var Accept: Boolean;
-    ATag: Pointer);
+  TQJsonRttiFilterEventA = reference to procedure(ASender: TQJson; AObject: Pointer; AName: QStringW; AType: PTypeInfo;
+    var Accept: Boolean; ATag: Pointer);
   /// <summary>
   /// 结点过滤处理函数，以在XE6上支持匿名函数
   /// </summary>
@@ -387,8 +387,7 @@ type
   /// <param name="AItem">要过滤的对象</param>
   /// <param name="Accept">是否要处理该对象</param>
   /// <param name="ATag">用户附加的数据项</param>
-  TQJsonFilterEventA = reference to procedure(ASender, AItem: TQJson;
-    var Accept: Boolean; ATag: Pointer);
+  TQJsonFilterEventA = reference to procedure(ASender, AItem: TQJson; var Accept: Boolean; ATag: Pointer);
 {$IFEND >=2010}
   /// <summary>
   /// RTTI信息过滤回调函数，在XE6上支持匿名函数，在XE及以前的版本采用事件回调
@@ -398,9 +397,8 @@ type
   /// <param name="AType">属性或字段的类型信息</param>
   /// <param name="Accept">是否记录该属性或字段</param>
   /// <param name="ATag">用户自定义的附加数据成员</param>
-  TQJsonRttiFilterEvent = procedure(ASender: TQJson; AObject: Pointer;
-    AName: QStringW; AType: PTypeInfo; var Accept: Boolean; ATag: Pointer)
-    of object;
+  TQJsonRttiFilterEvent = procedure(ASender: TQJson; AObject: Pointer; AName: QStringW; AType: PTypeInfo; var Accept: Boolean;
+    ATag: Pointer) of object;
   /// <summary>
   /// 结点过滤处理函数，以在XE6上支持匿名函数
   /// </summary>
@@ -408,8 +406,7 @@ type
   /// <param name="AItem">要过滤的对象</param>
   /// <param name="Accept">是否要处理该对象</param>
   /// <param name="ATag">用户附加的数据项</param>
-  TQJsonFilterEvent = procedure(ASender, AItem: TQJson; var Accept: Boolean;
-    ATag: Pointer) of object;
+  TQJsonFilterEvent = procedure(ASender, AItem: TQJson; var Accept: Boolean; ATag: Pointer) of object;
   TListSortCompareEvent = function(Item1, Item2: Pointer): Integer of object;
   PQJson = ^TQJson;
 {$IF RTLVersion>=21}
@@ -479,12 +476,11 @@ type
   /// <term>jesWithComment</term><description>编码时包含注释</description>
   /// </item>
   /// </list>
-  TJsonEncodeSetting = (jesIgnoreNull, jesIgnoreDefault, jesDoFormat,
-    jesDoEscape, jesNullAsString, jesJavaDateTime, jesWithComment);
+  TJsonEncodeSetting = (jesIgnoreNull, jesIgnoreDefault, jesDoFormat, jesDoEscape, jesNullAsString, jesJavaDateTime,
+    jesWithComment);
   TJsonEncodeSettings = set of TJsonEncodeSetting;
 
-  TQJsonEncodeBytesEvent = procedure(const ABytes: TBytes;
-    var AResult: QStringW);
+  TQJsonEncodeBytesEvent = procedure(const ABytes: TBytes; var AResult: QStringW);
   TQJsonDecodeBytesEvent = procedure(const S: QStringW; var AResult: TBytes);
 
   EJsonError = class(Exception)
@@ -507,39 +503,31 @@ type
   TQJsonCommentStyle = (jcsIgnore, jcsInherited, jcsBeforeName, jcsAfterValue);
   TQJsonMergeMethod = (jmmIgnore, jmmAsSource, jmmAppend, jmmReplace);
   TQJsonForEachCallback = procedure(AItem: TQJson; ATag: Pointer) of object;
-  TQJsonMatchFilterCallback = procedure(AItem: TQJson; ATag: Pointer;
-    var Accept: Boolean) of object;
+  TQJsonMatchFilterCallback = procedure(AItem: TQJson; ATag: Pointer; var Accept: Boolean) of object;
 {$IFDEF UNICODE}
   TQJsonForEachCallbackA = reference to procedure(AItem: TQJson);
-  TQJsonMatchFilterCallbackA = reference to procedure(AItem: TQJson;
-    var Accept: Boolean);
+  TQJsonMatchFilterCallbackA = reference to procedure(AItem: TQJson; var Accept: Boolean);
 {$ENDIF}
-  TQJsonMatchSetting = (jmsIgnoreCase, jmsNest, jmsMatchName, jmsMatchPath,
-    jmsMatchValue);
+  TQJsonMatchSetting = (jmsIgnoreCase, jmsNest, jmsMatchName, jmsMatchPath, jmsMatchValue);
   TQJsonMatchSettings = set of TQJsonMatchSetting;
   TQJsonContainerEnumerator = class;
-  IQJsonContainer=interface;
+  IQJsonContainer = interface;
+
   IQJsonContainer = interface
     ['{C9FF8471-19FC-435A-B1A7-21F0D5206720}']
     function GetCount: Integer;
     function GetItems(const AIndex: Integer): TQJson;
-    {$IFDEF UNICODE}
-    function ForEach(ACallback: TQJsonForEachCallback; ATag: Pointer = nil)
-      : IQJsonContainer; overload;
+{$IFDEF UNICODE}
+    function ForEach(ACallback: TQJsonForEachCallback; ATag: Pointer = nil): IQJsonContainer; overload;
 
-    function ForEach(ACallback: TQJsonForEachCallbackA)
-      : IQJsonContainer; overload;
-    function Match(const AFilter: TQJsonMatchFilterCallbackA;
-      ATag: Pointer = nil): IQJsonContainer; overload;
+    function ForEach(ACallback: TQJsonForEachCallbackA): IQJsonContainer; overload;
+    function Match(const AFilter: TQJsonMatchFilterCallbackA; ATag: Pointer = nil): IQJsonContainer; overload;
 
-    function Match(const ARegex: QStringW; ASettings: TQJsonMatchSettings)
-      : IQJsonContainer; overload;
+    function Match(const ARegex: QStringW; ASettings: TQJsonMatchSettings): IQJsonContainer; overload;
     function Match(const AIndexes: array of Integer): IQJsonContainer; overload;
-    function Match(const AStart, AStop, AStep: Integer)
-      : IQJsonContainer; overload;
-    function Match(const AFilter: TQJsonMatchFilterCallback;
-      ATag: Pointer = nil): IQJsonContainer; overload;
-    {$ENDIF}
+    function Match(const AStart, AStop, AStep: Integer): IQJsonContainer; overload;
+    function Match(const AFilter: TQJsonMatchFilterCallback; ATag: Pointer = nil): IQJsonContainer; overload;
+{$ENDIF}
     function GetEnumerator: TQJsonContainerEnumerator;
     function GetIsEmpty: Boolean;
     property Items[const AIndex: Integer]: TQJson read GetItems; default;
@@ -563,21 +551,15 @@ type
     FItems: TQJsonItemList;
     function GetCount: Integer;
     function GetItems(const AIndex: Integer): TQJson;
-    function ForEach(ACallback: TQJsonForEachCallback; ATag: Pointer = nil)
-      : IQJsonContainer; overload;
+    function ForEach(ACallback: TQJsonForEachCallback; ATag: Pointer = nil): IQJsonContainer; overload;
 {$IFDEF UNICODE}
-    function ForEach(ACallback: TQJsonForEachCallbackA)
-      : IQJsonContainer; overload;
-    function Match(const AFilter: TQJsonMatchFilterCallbackA;
-      ATag: Pointer = nil): IQJsonContainer; overload;
+    function ForEach(ACallback: TQJsonForEachCallbackA): IQJsonContainer; overload;
+    function Match(const AFilter: TQJsonMatchFilterCallbackA; ATag: Pointer = nil): IQJsonContainer; overload;
 {$ENDIF}
-    function Match(const ARegex: QStringW; ASettings: TQJsonMatchSettings)
-      : IQJsonContainer; overload;
+    function Match(const ARegex: QStringW; ASettings: TQJsonMatchSettings): IQJsonContainer; overload;
     function Match(const AIndexes: array of Integer): IQJsonContainer; overload;
-    function Match(const AStart, AStop, AStep: Integer)
-      : IQJsonContainer; overload;
-    function Match(const AFilter: TQJsonMatchFilterCallback; ATag: Pointer)
-      : IQJsonContainer; overload;
+    function Match(const AStart, AStop, AStep: Integer): IQJsonContainer; overload;
+    function Match(const AFilter: TQJsonMatchFilterCallback; ATag: Pointer): IQJsonContainer; overload;
     function GetIsEmpty: Boolean;
     function GetEnumerator: TQJsonContainerEnumerator;
   public
@@ -595,6 +577,8 @@ type
   /// 不同的成员来访问。当类型为jdtArray或者是jdtObject时，它可以有子结点.
   /// </summary>
   TQJson = class
+  private
+
   protected
     FName: QStringW;
     FNameHash: Cardinal;
@@ -627,6 +611,8 @@ type
     procedure SetAsInteger(const Value: Integer);
     procedure SetAsString(const Value: QStringW);
     procedure SetAsDateTime(const Value: TDateTime);
+    function GetAsBcd: TBcd;
+    procedure SetAsBcd(const Value: TBcd);
     function GetCount: Integer;
     function GetItems(AIndex: Integer): TQJson;
     class function CharUnescape(var p: PQCharW): QCharW;
@@ -634,17 +620,13 @@ type
     procedure ArrayNeeded(ANewType: TQJsonDataType);
     procedure ValidArray;
     procedure ParseObject(var p: PQCharW);
-    function ParseJsonPair(ABuilder: TQStringCatHelperW;
-      var p: PQCharW): Integer;
+    function ParseJsonPair(ABuilder: TQStringCatHelperW; var p: PQCharW): Integer;
     function ParseName(ABuilder: TQStringCatHelperW; var p: PQCharW): Integer;
     procedure ParseValue(ABuilder: TQStringCatHelperW; var p: PQCharW);
-    function FormatParseError(ACode: Integer; AMsg: QStringW; ps, p: PQCharW)
-      : QStringW;
-    function FormatParseErrorEx(ACode: Integer; AMsg: QStringW; ps, p: PQCharW)
-      : EJsonError;
+    function FormatParseError(ACode: Integer; AMsg: QStringW; ps, p: PQCharW): QStringW;
+    function FormatParseErrorEx(ACode: Integer; AMsg: QStringW; ps, p: PQCharW): EJsonError;
     procedure RaiseParseException(ACode: Integer; ps, p: PQCharW);
-    function TryParseValue(ABuilder: TQStringCatHelperW;
-      var p: PQCharW): Integer;
+    function TryParseValue(ABuilder: TQStringCatHelperW; var p: PQCharW): Integer;
     function BooleanToStr(const b: Boolean): QStringW;
     function GetIsNull: Boolean;
     function GetIsNumeric: Boolean;
@@ -664,11 +646,9 @@ type
     function CreateJson: TQJson; virtual;
     procedure FreeJson(AJson: TQJson); inline;
     procedure CopyValue(ASource: TQJson); inline;
-    procedure InternalRttiFilter(ASender: TQJson; AObject: Pointer;
-      APropName: QStringW; APropType: PTypeInfo; var Accept: Boolean;
-      ATag: Pointer);
-    function InternalEncode(ABuilder: TQStringCatHelperW;
-      ASettings: TJsonEncodeSettings; const AIndent: QStringW)
+    procedure InternalRttiFilter(ASender: TQJson; AObject: Pointer; APropName: QStringW; APropType: PTypeInfo;
+      var Accept: Boolean; ATag: Pointer);
+    function InternalEncode(ABuilder: TQStringCatHelperW; ASettings: TJsonEncodeSettings; const AIndent: QStringW)
       : TQStringCatHelperW;
     function ArrayItemTypeName(ATypeName: QStringW): QStringW;
     function ArrayItemType(ArrType: PTypeInfo): PTypeInfo;
@@ -677,8 +657,7 @@ type
     function GetIsBool: Boolean;
     function GetAsBytes: TBytes;
     procedure SetAsBytes(const Value: TBytes);
-    class function SkipSpaceAndComment(var p: PQCharW; var AComment: QStringW;
-      lastvalidchar: QCharW = #0): Integer;
+    class function SkipSpaceAndComment(var p: PQCharW; var AComment: QStringW; lastvalidchar: QCharW = #0): Integer;
     procedure DoParsed; virtual;
     procedure SetIgnoreCase(const Value: Boolean);
     function HashName(const S: QStringW): TQHashType;
@@ -711,15 +690,12 @@ type
     procedure SetAsBase64Bytes(const Value: TBytes);
     function GetAsHexBytes: TBytes;
     procedure SetAsHexBytes(const Value: TBytes);
-    function InternalGetAsBytes(AConverter: TQJsonDecodeBytesEvent;
-      AEncoding: TTextEncoding; AWriteBom: Boolean): TBytes;
-    procedure InternalSetAsBytes(AConverter: TQJsonEncodeBytesEvent;
-      ABytes: TBytes);
+    function InternalGetAsBytes(AConverter: TQJsonDecodeBytesEvent; AEncoding: TTextEncoding; AWriteBom: Boolean): TBytes;
+    procedure InternalSetAsBytes(AConverter: TQJsonEncodeBytesEvent; ABytes: TBytes);
   public
     /// <summary>构造函数</summary>
     constructor Create; overload;
-    constructor Create(const AName, AValue: QStringW;
-      ADataType: TQJsonDataType = jdtUnknown); overload;
+    constructor Create(const AName, AValue: QStringW; ADataType: TQJsonDataType = jdtUnknown); overload;
     /// <summary>析构函数</summary>
     destructor Destroy; override;
     { <summary>添加一个子结点</summary>
@@ -738,14 +714,12 @@ type
     /// <param name="AValue">要添加的内容的值表达式（字符串）</param>
     /// <param name="ADataType">表达式类型，如果为jdtUnknown，则会自动检测内容类型</param>
     /// <returns>返回创建的结点索引</returns>
-    function Add(AName, AValue: QStringW; ADataType: TQJsonDataType)
-      : Integer; overload;
+    function Add(AName, AValue: QStringW; ADataType: TQJsonDataType): Integer; overload;
     /// <summary>添加一个数组</summary>
     /// <param name="AName">要添加的对象的结点名称</param>
     /// <param name="AItems">要添加的数组内容</param>
     /// <returns>返回创建的结点实例</returns>
-    function Add(const AName: QStringW; AItems: array of const)
-      : TQJson; overload;
+    function Add(const AName: QStringW; AItems: array of const): TQJson; overload;
     { <summary>添加一个子结点</summary>
       <param name="AName">要添加的结点名</param>
       <param name="ADataType">要添加的结点数据类型，如果省略，则自动根据值的内容检测</param>
@@ -798,16 +772,11 @@ type
     function Add(AName: QStringW): TQJson; overload; virtual;
 
     function Insert(AIndex: Integer; const AName: String): TQJson; overload;
-    function Insert(AIndex: Integer; const AName: String;
-      ADataType: TQJsonDataType): TQJson; overload;
-    function Insert(AIndex: Integer; const AName, AValue: String;
-      ADataType: TQJsonDataType = jdtString): TQJson; overload;
-    function Insert(AIndex: Integer; const AName: String; AValue: Extended)
-      : TQJson; overload;
-    function Insert(AIndex: Integer; const AName: String; AValue: Int64)
-      : TQJson; overload;
-    function Insert(AIndex: Integer; const AName: String; AValue: Boolean)
-      : TQJson; overload;
+    function Insert(AIndex: Integer; const AName: String; ADataType: TQJsonDataType): TQJson; overload;
+    function Insert(AIndex: Integer; const AName, AValue: String; ADataType: TQJsonDataType = jdtString): TQJson; overload;
+    function Insert(AIndex: Integer; const AName: String; AValue: Extended): TQJson; overload;
+    function Insert(AIndex: Integer; const AName: String; AValue: Int64): TQJson; overload;
+    function Insert(AIndex: Integer; const AName: String; AValue: Boolean): TQJson; overload;
     procedure Insert(AIndex: Integer; AChild: TQJson); overload;
     /// <summary>强制一个路径存在,如果不存在,则依次创建需要的结点(jdtObject或jdtArray)</summary>
     /// <param name="APath">要添加的结点路径</param>
@@ -837,8 +806,7 @@ type
     /// <param name="AType">子结点的类型</param>
     /// <returns>如果子结点存在，则返回指定的子结点，如果不存在，则添加子结点并返回</returns>
     /// <remarks>与 Add 函数的区别在于它会检查子结点是否存在，以避免重复，而 Add 不检查。与ForcePath的区别在于不会识别名称中的特殊字符，从而允许创建特殊的名称</remarks>
-    function ForceName(AName: QStringW;
-      AType: TQJsonDataType = jdtNull): TQJson;
+    function ForceName(AName: QStringW; AType: TQJsonDataType = jdtNull): TQJson;
     /// <summary>解析指定的JSON字符串</summary>
     /// <param name="p">要解析的字符串</param>
     /// <param name="l">字符串长度，<=0认为是以\0(#0)结尾的C语言标准字符串</param>
@@ -871,8 +839,7 @@ type
     /// <remarks>因为是拷贝，所以新旧对象之间的内容变更没有任何关系，更改任意一个
     /// 对象，不会对另外一个对象造成影响。
     /// </remarks>
-    function CopyIf(const ATag: Pointer; AFilter: TQJsonFilterEventA)
-      : TQJson; overload;
+    function CopyIf(const ATag: Pointer; AFilter: TQJsonFilterEventA): TQJson; overload;
 {$IFEND >=2010}
     /// <summary>拷贝生成一个新的实例</summary>
     /// <param name="ATag">用户附加的标签数据</param>
@@ -881,8 +848,7 @@ type
     /// <remarks>因为是拷贝，所以新旧对象之间的内容变更没有任何关系，更改任意一个
     /// 对象，不会对另外一个对象造成影响。
     /// </remarks>
-    function CopyIf(const ATag: Pointer; AFilter: TQJsonFilterEvent)
-      : TQJson; overload;
+    function CopyIf(const ATag: Pointer; AFilter: TQJsonFilterEvent): TQJson; overload;
     /// <summary>克隆生成一个新的实例</summary>
     /// <returns>返回新的拷贝实例</returns>
     /// <remarks>因为实际上执行的是拷贝，所以新旧对象之间的内容变更没有任何关系，
@@ -896,10 +862,8 @@ type
     /// <param name="AIndent">ADoFormat参数为True时，缩进内容，默认为两个空格</param>
     /// <returns>返回编码后的字符串</returns>
     /// <remarks>AsJson等价于Encode(True,'  ')</remarks>
-    function Encode(ADoFormat: Boolean; ADoEscape: Boolean = False;
-      AIndent: QStringW = '  '): QStringW; overload;
-    function Encode(ASettings: TJsonEncodeSettings; AIndent: QStringW = '  ')
-      : QStringW; overload;
+    function Encode(ADoFormat: Boolean; ADoEscape: Boolean = False; AIndent: QStringW = '  '): QStringW; overload;
+    function Encode(ASettings: TJsonEncodeSettings; AIndent: QStringW = '  '): QStringW; overload;
     /// <summary>获取指定名称获取结点的值的字符串表示</summary>
     /// <param name="AName">结点名称</param>
     /// <param name="ADefVal">默认值</param>
@@ -966,18 +930,15 @@ type
     /// <param name="ANest">是否递归查找子结点</param>
     /// <returns>返回找到的结点数量，如果未找到，返回0</returns>
     /// <remarks>此函数不支持按数组下标方式检索</remarks>
-    function ItemByName(const AName: QStringW; AList: TQJsonItemList;
-      ANest: Boolean = False): Integer; overload;
+    function ItemByName(const AName: QStringW; AList: TQJsonItemList; ANest: Boolean = False): Integer; overload;
 {$IFDEF ENABLE_REGEX}
     /// <summary>获取符合指定名称规则的结点到列表中</summary>
     /// <param name="ARegex">正则表达式</param>
     /// <param name="AList">用于保存结点的列表对象</param>
     /// <param name="ANest">是否递归查找子结点</param>
     /// <returns>返回找到的结点数量，如果未找到，返回0</returns>
-    function ItemByRegex(const ARegex: QStringW; AList: TQJsonItemList;
-      ANest: Boolean = False): Integer; overload;
-    function Match(const ARegex: QStringW; AMatches: TQJsonMatchSettings)
-      : IQJsonContainer;
+    function ItemByRegex(const ARegex: QStringW; AList: TQJsonItemList; ANest: Boolean = False): Integer; overload;
+    function Match(const ARegex: QStringW; AMatches: TQJsonMatchSettings): IQJsonContainer;
 {$ENDIF}
     /// <summary>获取指定路径的JSON对象</summary>
     /// <param name="APath">路径，以"."或"/"或"\"分隔</param>
@@ -1010,8 +971,7 @@ type
     /// <param name="ATag">用户自己附加的额外标记</param>
     /// <param name="ANest">是否嵌套调用，如果为false，则只对当前子结点过滤</param>
     /// <param name="AFilter">过滤回调函数，如果为nil，等价于Clear</param>
-    procedure DeleteIf(const ATag: Pointer; ANest: Boolean;
-      AFilter: TQJsonFilterEventA); overload;
+    procedure DeleteIf(const ATag: Pointer; ANest: Boolean; AFilter: TQJsonFilterEventA); overload;
 {$IFEND >=2010}
     /// <summary>
     /// 删除符合条件的子结点
@@ -1019,8 +979,7 @@ type
     /// <param name="ATag">用户自己附加的额外标记</param>
     /// <param name="ANest">是否嵌套调用，如果为false，则只对当前子结点过滤</param>
     /// <param name="AFilter">过滤回调函数，如果为nil，等价于Clear</param>
-    procedure DeleteIf(const ATag: Pointer; ANest: Boolean;
-      AFilter: TQJsonFilterEvent); overload;
+    procedure DeleteIf(const ATag: Pointer; ANest: Boolean; AFilter: TQJsonFilterEvent); overload;
     /// <summary>查找指定名称的结点的索引</summary>
     /// <param name="AName">要查找的结点名称</param>
     /// <returns>返回索引值，未找到返回-1</returns>
@@ -1029,34 +988,29 @@ type
     /// <param name="AValue">要查找的结点值</param>
     /// <param name="AStrict">是否按严格模式比较</param>
     /// <returns>返回索引值，未找到返回-1</returns>
-    function IndexOfValue(const AValue: Variant;
-      AStrict: Boolean = False): Integer;
+    function IndexOfValue(const AValue: Variant; AStrict: Boolean = False): Integer;
     /// <summary>遍历所有的子结点</summary>
     /// <param name="ACallback">遍历回调函数</param>
     /// <param name="ANest">是否嵌套调用，如果为false，则只对当前子结点过滤</param>
     /// <param name="ATag">用户自定义的附加额外标记</param>
-    procedure ForEach(ACallback: TQJsonFilterEvent; ANest: Boolean;
-      const ATag: Pointer); overload;
+    procedure ForEach(ACallback: TQJsonFilterEvent; ANest: Boolean; const ATag: Pointer); overload;
 {$IF RTLVersion>=21}
     /// <summary>遍历所有的子结点</summary>
     /// <param name="ACallback">遍历回调函数</param>
     /// <param name="ANest">是否嵌套调用，如果为false，则只对当前子结点过滤</param>
     /// <param name="ATag">用户自定义的附加额外标记</param>
-    procedure ForEach(ACallback: TQJsonFilterEventA; ANest: Boolean;
-      const ATag: Pointer); overload;
+    procedure ForEach(ACallback: TQJsonFilterEventA; ANest: Boolean; const ATag: Pointer); overload;
     /// <summary>遍历结点查找符合条件的结点</summary>
     /// <param name="ATag">用户自定义的附加额外标记</param>
     /// <param name="ANest">是否嵌套调用，如果为false，则只对当前子结点过滤</param>
     /// <param name="AFilter">过滤回调函数，如果为nil，则返回nil</param>
-    function FindIf(const ATag: Pointer; ANest: Boolean;
-      AFilter: TQJsonFilterEventA): TQJson; overload;
+    function FindIf(const ATag: Pointer; ANest: Boolean; AFilter: TQJsonFilterEventA): TQJson; overload;
 {$IFEND >=2010}
     /// <summary>遍历结点查找符合条件的结点</summary>
     /// <param name="ATag">用户自定义的附加额外标记</param>
     /// <param name="ANest">是否嵌套调用，如果为false，则只对当前子结点过滤</param>
     /// <param name="AFilter">过滤回调函数，如果为nil，则返回nil</param>
-    function FindIf(const ATag: Pointer; ANest: Boolean;
-      AFilter: TQJsonFilterEvent): TQJson; overload;
+    function FindIf(const ATag: Pointer; ANest: Boolean; AFilter: TQJsonFilterEvent): TQJson; overload;
     /// <summary>清除所有的结点</summary>
     procedure Clear; virtual;
     /// <summary>保存当前对象内容到流中</summary>
@@ -1065,28 +1019,25 @@ type
     /// <param name="AWriteBom">是否写入BOM</param>
     /// <param name="ADoFormat">是否格式化Json结果</param>
     /// <remarks>注意当前结点的名称不会被写入</remarks>
-    procedure SaveToStream(AStream: TStream; AEncoding: TTextEncoding = teUtf8;
-      AWriteBom: Boolean = True; ADoFormat: Boolean = True);
+    procedure SaveToStream(AStream: TStream; AEncoding: TTextEncoding = teUtf8; AWriteBom: Boolean = True;
+      ADoFormat: Boolean = True);
     /// <summary>从流的当前位置开始加载JSON对象</summary>
     /// <param name="AStream">源数据流</param>
     /// <param name="AEncoding">源文件编码，如果为teUnknown，则自动判断</param>
     /// <remarks>流的当前位置到结束的长度必需大于2字节，否则无意义</remarks>
-    procedure LoadFromStream(AStream: TStream;
-      AEncoding: TTextEncoding = teUnknown);
+    procedure LoadFromStream(AStream: TStream; AEncoding: TTextEncoding = teUnknown);
     /// <summary>保存当前对象内容到文件中</summary>
     /// <param name="AFileName">文件名</param>
     /// <param name="AEncoding">编码格式</param>
     /// <param name="AWriteBOM">是否写入UTF-8的BOM</param>
     /// <param name="ADoFormat">是否格式化Json结果</param>
     /// <remarks>注意当前结点的名称不会被写入</remarks>
-    procedure SaveToFile(const AFileName: String;
-      AEncoding: TTextEncoding = teUtf8; AWriteBom: Boolean = True;
+    procedure SaveToFile(const AFileName: String; AEncoding: TTextEncoding = teUtf8; AWriteBom: Boolean = True;
       ADoFormat: Boolean = True);
     /// <summary>从指定的文件中加载当前对象</summary>
     /// <param name="AFileName">要加载的文件名</param>
     /// <param name="AEncoding">源文件编码，如果为teUnknown，则自动判断</param>
-    procedure LoadFromFile(const AFileName: String;
-      AEncoding: TTextEncoding = teUnknown);
+    procedure LoadFromFile(const AFileName: String; AEncoding: TTextEncoding = teUnknown);
     /// / <summary>重置值为Null，等价于直接设置DataType为jdtNull</summary>
     procedure ResetNull;
     function Escape(const S: QStringW): QStringW;
@@ -1128,20 +1079,17 @@ type
     /// <param name="AClearCollections">是否在恢复TCollection对象的元素时先清理已有的元素,默认为trur</param>
     /// <remarks>实际上参数只支持对象，记录由于目前无法直接转换为TValue，所以没
     /// 意义，而其它类型因为是值拷贝，实际就算赋值了也返回不了，因此无意义</remarks>
-    procedure ToRtti(AInstance: TValue;
-      AClearCollections: Boolean = True); overload;
+    procedure ToRtti(AInstance: TValue; AClearCollections: Boolean = True); overload;
     /// <summary>从当前JSON中按指定的类型信息还原到指定的地址</summary>
     /// <param name="ADest">目的地址</param>
     /// <param name="AType">对象或结构体的类型信息</param>
     /// <param name="AClearCollections">是否在恢复TCollection对象的元素时先清理已有的元素,默认为trur</param>
     /// <remarks>ADest对应的应是记录或对象，其它类型不受支持</remarks>
-    procedure ToRtti(ADest: Pointer; AType: PTypeInfo;
-      AClearCollections: Boolean = True); overload;
+    procedure ToRtti(ADest: Pointer; AType: PTypeInfo; AClearCollections: Boolean = True); overload;
     /// <summary>从当前的JSON中还原到指定的记录实例中</summary>
     /// <param name="ARecord">目的记录实例</param>
     /// <param name="AClearCollections">是否在恢复TCollection对象的元素时先清理已有的元素,默认为trur</param>
-    procedure ToRecord<T: record >(var ARecord: T;
-      AClearCollections: Boolean = True);
+    procedure ToRecord<T: record >(var ARecord: T; AClearCollections: Boolean = True);
 {$IFEND}
     /// <summary>将指定索引的子结点移除</summary>
     /// <param name="AItemIndex">要移除的子结点索引</param>
@@ -1189,24 +1137,21 @@ type
     /// <param name="AParent">目标父结点</param>
     /// <param name="APathDelimiter">路径分隔符</param>
     /// <returns>返回相对路径</returns>
-    function GetRelPath(AParent: TQJson; APathDelimiter: QCharW = '\')
-      : QStringW;
+    function GetRelPath(AParent: TQJson; APathDelimiter: QCharW = '\'): QStringW;
     /// <summary>排序子结点</summary>
     /// <param name="AByName">是否按名称排序</param>
     /// <param name="ANest">是否排序子结点</param>
     /// <param name="AByType">子结点排序的类型依据，如果为jdtUnknown，则自动检测，否则按指定的类型排序</param>
     /// <param name="AOnCompare">排序比较方法，如果不指定，则按默认规则排序，否则根据它来排序</param>
     /// <remarks>AByType如果不为jdtUnknown，则你必需保证子结点的值能够转换为目标类型</remarks>
-    procedure Sort(AByName, ANest: Boolean; AByType: TQJsonDataType;
-      AOnCompare: TListSortCompareEvent); overload;
+    procedure Sort(AByName, ANest: Boolean; AByType: TQJsonDataType; AOnCompare: TListSortCompareEvent); overload;
     /// <summary>排序子结点</summary>
     /// <param name="AByName">是否按名称排序</param>
     /// <param name="ANest">是否排序子结点</param>
     /// <param name="AByType">子结点排序的类型依据，如果为jdtUnknown，则自动检测，否则按指定的类型排序</param>
     /// <param name="AOnCompare">排序比较方法，如果不指定，则按默认规则排序，否则根据它来排序</param>
     /// <remarks>AByType如果不为jdtUnknown，则你必需保证子结点的值能够转换为目标类型</remarks>
-    procedure Sort(AByName, ANest: Boolean; AByType: TQJsonDataType;
-      AOnCompare: TListSortCompare); overload;
+    procedure Sort(AByName, ANest: Boolean; AByType: TQJsonDataType; AOnCompare: TListSortCompare); overload;
 {$IF RTLVersion>=21}
     /// <summary>排序子结点</summary>
     /// <param name="AByName">是否按名称排序</param>
@@ -1214,8 +1159,7 @@ type
     /// <param name="AByType">子结点排序的类型依据，如果为jdtUnknown，则自动检测，否则按指定的类型排序</param>
     /// <param name="AOnCompare">排序比较方法，如果不指定，则按默认规则排序，否则根据它来排序</param>
     /// <remarks>AByType如果不为jdtUnknown，则你必需保证子结点的值能够转换为目标类型</remarks>
-    procedure Sort(AByName, ANest: Boolean; AByType: TQJsonDataType;
-      AOnCompare: TListSortCompareFunc); overload;
+    procedure Sort(AByName, ANest: Boolean; AByType: TQJsonDataType; AOnCompare: TListSortCompareFunc); overload;
 {$IFEND}
     /// <summary>逆转结点顺序</summary>
     /// <param name="ANest">是否嵌套逆转</param>
@@ -1234,8 +1178,7 @@ type
     /// <param name="ANest">是否嵌套检查子结点</param>
     /// <param name="AStrict">是否严格要求类型匹配</param>
     /// <returns>包含，返回true，否则，返回false</returns>
-    function ContainsValue(const AValue: Variant; ANest: Boolean = False;
-      AStrict: Boolean = False): Boolean;
+    function ContainsValue(const AValue: Variant; ANest: Boolean = False; AStrict: Boolean = False): Boolean;
     /// <summary>判断是否包含指定路径的子结点</summary>
     /// <param name="APath">要查找的结点名称</param>
     /// <returns>包含，返回true，失败，返回false</returns>
@@ -1268,17 +1211,12 @@ type
     /// <param name="ADetach">是否从父结点中移除自己</param>
     procedure Reset(ADetach: Boolean); virtual;
     // 转换一个Json值为字符串
-    class function BuildJsonString(ABuilder: TQStringCatHelperW; var p: PQCharW)
-      : Boolean; overload;
+    class function BuildJsonString(ABuilder: TQStringCatHelperW; var p: PQCharW): Boolean; overload;
     class function BuildJsonString(S: QStringW): QStringW; overload;
-    class function BuildJsonString(ABuilder: TQStringCatHelperW; S: QStringW)
-      : Boolean; overload;
-    class procedure JsonCat(ABuilder: TQStringCatHelperW; const S: QStringW;
-      ADoEscape: Boolean); overload;
-    class function JsonCat(const S: QStringW; ADoEscape: Boolean)
-      : QStringW; overload;
-    class function JsonEscape(const S: QStringW; ADoEscape: Boolean)
-      : QStringW; overload;
+    class function BuildJsonString(ABuilder: TQStringCatHelperW; S: QStringW): Boolean; overload;
+    class procedure JsonCat(ABuilder: TQStringCatHelperW; const S: QStringW; ADoEscape: Boolean); overload;
+    class function JsonCat(const S: QStringW; ADoEscape: Boolean): QStringW; overload;
+    class function JsonEscape(const S: QStringW; ADoEscape: Boolean): QStringW; overload;
     class function JsonUnescape(const S: QStringW): QStringW;
     class function EncodeDateTime(const AValue: TDateTime): QStringW;
     procedure Replace(AIndex: Integer; ANewItem: TQJson); virtual;
@@ -1317,6 +1255,8 @@ type
     property AsInt64: Int64 read GetAsInt64 write SetAsInt64;
     /// <summary>将当前结点当作浮点类型来访问</summary>
     property AsFloat: Extended read GetAsFloat write SetAsFloat;
+    /// <summary>将当前结点当作BCD值来访问
+    property AsBcd: TBcd read GetAsBcd write SetAsBcd;
     /// <summary>将当前结点当作日期时间类型来访问</summary>
     property AsDateTime: TDateTime read GetAsDateTime write SetAsDateTime;
     /// <summary>将当前结点当作字符串类型访问</summary>
@@ -1347,8 +1287,7 @@ type
     /// <summary>根JSON结点</summary>
     property Root: TQJson read GetRoot;
     /// <summary>注释样式</summary>
-    property CommentStyle: TQJsonCommentStyle read FCommentStyle
-      write FCommentStyle;
+    property CommentStyle: TQJsonCommentStyle read FCommentStyle write FCommentStyle;
     /// <summary>注释内容</summary>
     property Comment: QStringW read FComment write FComment;
     // Super Object 兼容访问模式
@@ -1407,13 +1346,11 @@ type
     FWriteBom: Boolean;
     FLast: PQStreamHelperStack;
     FStringHelper: TQStringCatHelperW;
-    procedure InternalWriteString(S: QStringW;
-      ADoAppend: Boolean = True); inline;
+    procedure InternalWriteString(S: QStringW; ADoAppend: Boolean = True); inline;
     procedure Push;
     procedure Pop;
   public
-    procedure BeginWrite(AStream: TStream; AEncoding: TTextEncoding;
-      ADoEscape: Boolean = False; AWriteBom: Boolean = True);
+    procedure BeginWrite(AStream: TStream; AEncoding: TTextEncoding; ADoEscape: Boolean = False; AWriteBom: Boolean = True);
     procedure EndWrite;
     procedure BeginObject; overload;
     procedure BeginObject(const AName: QStringW); overload;
@@ -1437,15 +1374,13 @@ type
     procedure Write(const AName: QStringW; AValue: TBytes); overload;
     procedure Write(const AName: QStringW; AValue: Boolean); overload;
     procedure WriteDateTime(const AName: QStringW; AValue: TDateTime); overload;
-    procedure Write(const AName: QStringW; const p: PByte;
-      const l: Integer); overload;
+    procedure Write(const AName: QStringW; const p: PByte; const l: Integer); overload;
     procedure WriteNull(const AName: QStringW); overload;
     property DoEscape: Boolean read FDoEscape write FDoEscape;
   end;
 
   TJsonDatePrecision = (jdpMillisecond, jdpSecond);
-  TJsonIntToTimeStyle = (tsDeny, tsSecondsFrom1970, tsSecondsFrom1899,
-    tsMsFrom1970, tsMsFrom1899);
+  TJsonIntToTimeStyle = (tsDeny, tsSecondsFrom1970, tsSecondsFrom1899, tsMsFrom1970, tsMsFrom1899);
 
 const
   JSON_NO_TIMEZONE = -128;
@@ -1536,8 +1471,7 @@ resourcestring
   SSupportFloat = 'NaN/+∞/-∞不受JSON规范支持。';
   SParamMissed = '参数 %s 同名的结点未找到。';
   SMethodMissed = '指定的函数 %s 不存在。';
-  SMissRttiTypeDefine =
-    '无法找到 %s 的RTTI类型信息，尝试将对应的类型单独定义(如array[0..1] of Byte改为TByteArr=array[0..1]，然后用TByteArr声明)。';
+  SMissRttiTypeDefine = '无法找到 %s 的RTTI类型信息，尝试将对应的类型单独定义(如array[0..1] of Byte改为TByteArr=array[0..1]，然后用TByteArr声明)。';
   SUnsupportPropertyType = '不支持的属性类型。';
   SArrayTypeMissed = '未知的数组元素类型。';
   SUnknownError = '未知的错误。';
@@ -1550,8 +1484,8 @@ resourcestring
   SUnsupportVarType = '不支持的变体类型 %d 。';
 
 const
-  JsonTypeName: array [TQJsonDataType] of QStringW = ('Unknown', 'Null',
-    'String', 'Integer', 'Float', 'Boolean', 'DateTime', 'Array', 'Object');
+  JsonTypeName: array [TQJsonDataType] of QStringW = ('Unknown', 'Null', 'String', 'Integer', 'Float', 'Bcd', 'Boolean',
+    'DateTime', 'Array', 'Object');
   EParse_Unknown = -1;
   EParse_BadStringStart = 1;
   EParse_BadJson = 2;
@@ -1561,6 +1495,8 @@ const
   EParse_BadNameStart = 6;
   EParse_BadNameEnd = 7;
   EParse_NameNotFound = 8;
+  MaxInt64: Int64 = 9223372036854775807;
+  MinInt64: Int64 = -9223372036854775808;
 
 procedure DoEncodeAsBase64(const ABytes: TBytes; var AResult: QStringW);
 {$IF RTLVersion<=27}
@@ -1652,8 +1588,7 @@ begin
   AIgnoreCase := AItem1.IgnoreCase;
   if AIgnoreCase <> AItem2.IgnoreCase then
     AIgnoreCase := False;
-  Result := StrCmpW(PWideChar(AItem1.Name), PWideChar(AItem2.Name),
-    AIgnoreCase);
+  Result := StrCmpW(PWideChar(AItem1.Name), PWideChar(AItem2.Name), AIgnoreCase);
 end;
 
 function TQJson.DoCompareValueBoolean(Item1, Item2: Pointer): Integer;
@@ -1754,8 +1689,7 @@ begin
   AIgnoreCase := AItem1.IgnoreCase;
   if AIgnoreCase <> AItem2.IgnoreCase then
     AIgnoreCase := False;
-  Result := StrCmpW(PWideChar(AItem1.AsString), PWideChar(AItem2.AsString),
-    AIgnoreCase);
+  Result := StrCmpW(PWideChar(AItem1.AsString), PWideChar(AItem2.AsString), AIgnoreCase);
 end;
 { TQJson }
 
@@ -1833,8 +1767,7 @@ begin
   ANode.FIgnoreCase := FIgnoreCase;
 end;
 
-function TQJson.Add(AName, AValue: QStringW; ADataType: TQJsonDataType)
-  : Integer;
+function TQJson.Add(AName, AValue: QStringW; ADataType: TQJsonDataType): Integer;
 var
   ANode: TQJson;
 begin
@@ -2034,8 +1967,7 @@ begin
     Result := CharFalse;
 end;
 
-class function TQJson.BuildJsonString(ABuilder: TQStringCatHelperW;
-  S: QStringW): Boolean;
+class function TQJson.BuildJsonString(ABuilder: TQStringCatHelperW; S: QStringW): Boolean;
 var
   p: PQCharW;
 begin
@@ -2058,8 +1990,7 @@ begin
   end;
 end;
 
-class function TQJson.BuildJsonString(ABuilder: TQStringCatHelperW;
-  var p: PQCharW): Boolean;
+class function TQJson.BuildJsonString(ABuilder: TQStringCatHelperW; var p: PQCharW): Boolean;
 var
   AQuoter: QCharW;
   ps: PQCharW;
@@ -2143,8 +2074,7 @@ begin
     Result := ADefVal;
 end;
 
-class procedure TQJson.JsonCat(ABuilder: TQStringCatHelperW; const S: QStringW;
-  ADoEscape: Boolean);
+class procedure TQJson.JsonCat(ABuilder: TQStringCatHelperW; const S: QStringW; ADoEscape: Boolean);
 var
   ps, p, pd: PQCharW;
   ADelta: Integer;
@@ -2409,16 +2339,13 @@ begin
     'u':
       begin
         // \uXXXX
-        if IsHexChar(p[1]) and IsHexChar(p[2]) and IsHexChar(p[3]) and
-          IsHexChar(p[4]) then
+        if IsHexChar(p[1]) and IsHexChar(p[2]) and IsHexChar(p[3]) and IsHexChar(p[4]) then
         begin
-          Result := WideChar((HexValue(p[1]) shl 12) or (HexValue(p[2]) shl 8)
-            or (HexValue(p[3]) shl 4) or HexValue(p[4]));
+          Result := WideChar((HexValue(p[1]) shl 12) or (HexValue(p[2]) shl 8) or (HexValue(p[3]) shl 4) or HexValue(p[4]));
           Inc(p, 5);
         end
         else
-          raise Exception.CreateFmt(SCharNeeded,
-            ['0-9A-Fa-f', StrDupW(p, 0, 4)]);
+          raise Exception.CreateFmt(SCharNeeded, ['0-9A-Fa-f', StrDupW(p, 0, 4)]);
       end
   else
     begin
@@ -2472,8 +2399,7 @@ begin
   end;
 end;
 
-function TQJson.ContainsValue(const AValue: Variant;
-  ANest, AStrict: Boolean): Boolean;
+function TQJson.ContainsValue(const AValue: Variant; ANest, AStrict: Boolean): Boolean;
 var
   I, H: Integer;
   AItem: TQJson;
@@ -2485,13 +2411,10 @@ var
     begin
       if AItem.DataType = jdtString then
         Result := StrCmpW(PWideChar(AItem.AsString),
-          PWideChar({$IFNDEF UNICODE}QStringW({$ENDIF}VarToStr
-          (AValue){$IFNDEF UNICODE}){$ENDIF}), IgnoreCase) = 0
-      else if (AItem.DataType in [jdtInteger, jdtFloat, jdtBoolean]) and
-        VarIsNumeric(AValue) then
+          PWideChar({$IFNDEF UNICODE}QStringW({$ENDIF}VarToStr(AValue){$IFNDEF UNICODE}){$ENDIF}), IgnoreCase) = 0
+      else if (AItem.DataType in [jdtInteger, jdtFloat, jdtBoolean]) and VarIsNumeric(AValue) then
         Result := (AItem.AsVariant = AValue)
-      else if (AItem.DataType = jdtDateTime) and
-        (FindVarData(AValue)^.VType = varDate) then
+      else if (AItem.DataType = jdtDateTime) and (FindVarData(AValue)^.VType = varDate) then
         Result := SameValue(AItem.AsDateTime, VarToDateTime(AValue))
       else
         Result := False;
@@ -2534,8 +2457,7 @@ begin
 end;
 {$IF RTLVersion>=21}
 
-function TQJson.CopyIf(const ATag: Pointer;
-  AFilter: TQJsonFilterEventA): TQJson;
+function TQJson.CopyIf(const ATag: Pointer; AFilter: TQJsonFilterEventA): TQJson;
   procedure NestCopy(AParentSource, AParentDest: TQJson);
   var
     I: Integer;
@@ -2549,8 +2471,7 @@ function TQJson.CopyIf(const ATag: Pointer;
       AFilter(Self, AChildSource, Accept, ATag);
       if Accept then
       begin
-        AChildDest := AParentDest.Add(AChildSource.FName,
-          AChildSource.DataType);
+        AChildDest := AParentDest.Add(AChildSource.FName, AChildSource.DataType);
         if AChildSource.DataType in [jdtArray, jdtObject] then
         begin
           AChildDest.DataType := AChildSource.DataType;
@@ -2593,8 +2514,7 @@ function TQJson.CopyIf(const ATag: Pointer; AFilter: TQJsonFilterEvent): TQJson;
       AFilter(Self, AChildSource, Accept, ATag);
       if Accept then
       begin
-        AChildDest := AParentDest.Add(AChildSource.FName,
-          AChildSource.DataType);
+        AChildDest := AParentDest.Add(AChildSource.FName, AChildSource.DataType);
         if AChildSource.DataType in [jdtArray, jdtObject] then
           NestCopy(AChildSource, AChildDest)
         else
@@ -2630,8 +2550,7 @@ begin
     Move(PQCharW(ASource.FValue)^, PQCharW(FValue)^, l shl 1);
 end;
 
-constructor TQJson.Create(const AName, AValue: QStringW;
-  ADataType: TQJsonDataType);
+constructor TQJson.Create(const AName, AValue: QStringW; ADataType: TQJsonDataType);
 begin
   inherited Create;
   FName := AName;
@@ -2696,8 +2615,7 @@ begin
 end;
 {$IF RTLVersion>=21}
 
-procedure TQJson.DeleteIf(const ATag: Pointer; ANest: Boolean;
-  AFilter: TQJsonFilterEventA);
+procedure TQJson.DeleteIf(const ATag: Pointer; ANest: Boolean; AFilter: TQJsonFilterEventA);
   procedure DeleteChildren(AParent: TQJson);
   var
     I: Integer;
@@ -2727,8 +2645,7 @@ begin
 end;
 {$IFEND >=2010}
 
-procedure TQJson.DeleteIf(const ATag: Pointer; ANest: Boolean;
-  AFilter: TQJsonFilterEvent);
+procedure TQJson.DeleteIf(const ATag: Pointer; ANest: Boolean; AFilter: TQJsonFilterEvent);
   procedure DeleteChildren(AParent: TQJson);
   var
     I: Integer;
@@ -2833,8 +2750,7 @@ begin
 
 end;
 
-function TQJson.Encode(ADoFormat: Boolean; ADoEscape: Boolean;
-  AIndent: QStringW): QStringW;
+function TQJson.Encode(ADoFormat: Boolean; ADoEscape: Boolean; AIndent: QStringW): QStringW;
 var
   ASettings: TJsonEncodeSettings;
 begin
@@ -2846,8 +2762,7 @@ begin
   Result := Encode(ASettings, AIndent);
 end;
 
-function TQJson.Encode(ASettings: TJsonEncodeSettings; AIndent: QStringW)
-  : QStringW;
+function TQJson.Encode(ASettings: TJsonEncodeSettings; AIndent: QStringW): QStringW;
 var
   ABuilder: TQStringCatHelperW;
 begin
@@ -2929,8 +2844,7 @@ end;
 
 {$IF RTLVersion>=21}
 
-function TQJson.FindIf(const ATag: Pointer; ANest: Boolean;
-  AFilter: TQJsonFilterEventA): TQJson;
+function TQJson.FindIf(const ATag: Pointer; ANest: Boolean; AFilter: TQJsonFilterEventA): TQJson;
   function DoFind(AParent: TQJson): TQJson;
   var
     I: Integer;
@@ -2972,8 +2886,7 @@ begin
   end;
 end;
 
-function TQJson.FindIf(const ATag: Pointer; ANest: Boolean;
-  AFilter: TQJsonFilterEvent): TQJson;
+function TQJson.FindIf(const ATag: Pointer; ANest: Boolean; AFilter: TQJsonFilterEvent): TQJson;
   function DoFind(AParent: TQJson): TQJson;
   var
     I: Integer;
@@ -3118,8 +3031,7 @@ begin
   end;
 end;
 
-procedure TQJson.ForEach(ACallback: TQJsonFilterEvent; ANest: Boolean;
-  const ATag: Pointer);
+procedure TQJson.ForEach(ACallback: TQJsonFilterEvent; ANest: Boolean; const ATag: Pointer);
 var
   AContinue: Boolean;
   procedure DoEnum(AParent: TQJson);
@@ -3147,8 +3059,7 @@ begin
 end;
 {$IF RTLVersion>=21}
 
-procedure TQJson.ForEach(ACallback: TQJsonFilterEventA; ANest: Boolean;
-  const ATag: Pointer);
+procedure TQJson.ForEach(ACallback: TQJsonFilterEventA; ANest: Boolean; const ATag: Pointer);
 var
   AContinue: Boolean;
   procedure DoEnum(AParent: TQJson);
@@ -3176,8 +3087,7 @@ begin
 end;
 {$IFEND}
 
-function TQJson.FormatParseError(ACode: Integer; AMsg: QStringW; ps, p: PQCharW)
-  : QStringW;
+function TQJson.FormatParseError(ACode: Integer; AMsg: QStringW; ps, p: PQCharW): QStringW;
 var
   ACol, ARow: Integer;
   ALine: QStringW;
@@ -3197,8 +3107,7 @@ var
     end
     else if Length(ALine) >= 50 then
       pls := pe - 50;
-    ALine := StrDupX(pls, pe - pls) + SLineBreak + StringReplicateW('0',
-      (IntPtr(pl) - IntPtr(pls)) shr 1 - 1) + '^';
+    ALine := StrDupX(pls, pe - pls) + SLineBreak + StringReplicateW('0', (IntPtr(pl) - IntPtr(pls)) shr 1 - 1) + '^';
   end;
 
 begin
@@ -3216,8 +3125,7 @@ begin
     SetLength(Result, 0);
 end;
 
-function TQJson.FormatParseErrorEx(ACode: Integer; AMsg: QStringW;
-  ps, p: PQCharW): EJsonError;
+function TQJson.FormatParseErrorEx(ACode: Integer; AMsg: QStringW; ps, p: PQCharW): EJsonError;
 var
   ACol, ARow: Integer;
   ALine: QStringW;
@@ -3237,8 +3145,7 @@ var
     end
     else if Length(ALine) >= 50 then
       pls := pe - 50;
-    ALine := StrDupX(pls, pe - pls) + SLineBreak + StringReplicateW('0',
-      (IntPtr(pl) - IntPtr(pls)) shr 1 - 1) + '^';
+    ALine := StrDupX(pls, pe - pls) + SLineBreak + StringReplicateW('0', (IntPtr(pl) - IntPtr(pls)) shr 1 - 1) + '^';
   end;
 
 begin
@@ -3250,8 +3157,7 @@ begin
     begin
       ErrorLine;
     end;
-    Result := EJsonError.Create(Format(SJsonParseError,
-      [ARow, ACol, AMsg, ALine]));
+    Result := EJsonError.Create(Format(SJsonParseError, [ARow, ACol, AMsg, ALine]));
     Result.FRow := ARow;
     Result.FCol := ACol;
   end
@@ -3387,58 +3293,44 @@ var
         // 如果是从结构体，则记录其成员，如果是对象，则只记录其公开的属性，特殊处理TStrings和TCollection
         case AFields[J].FieldType.TypeKind of
           tkInteger:
-            Add(AFields[J].Name).AsInteger := AFields[J].GetValue(ASource)
-              .AsInteger;
+            Add(AFields[J].Name).AsInteger := AFields[J].GetValue(ASource).AsInteger;
 {$IFNDEF NEXTGEN}tkString, tkLString, tkWString,
 {$ENDIF !NEXTGEN}tkUString:
-            Add(AFields[J].Name).AsString :=
-              AFields[J].GetValue(ASource).AsString;
+            Add(AFields[J].Name).AsString := AFields[J].GetValue(ASource).AsString;
           tkEnumeration:
             begin
-              if GetTypeData(AFields[J].FieldType.Handle)
-                .BaseType^ = TypeInfo(Boolean) then
-                Add(AFields[J].Name).AsBoolean := AFields[J].GetValue(ASource)
-                  .AsBoolean
+              if GetTypeData(AFields[J].FieldType.Handle).BaseType^ = TypeInfo(Boolean) then
+                Add(AFields[J].Name).AsBoolean := AFields[J].GetValue(ASource).AsBoolean
               else if JsonRttiEnumAsInt then
-                Add(AFields[J].Name).AsInteger := AFields[J].GetValue(ASource)
-                  .AsOrdinal
+                Add(AFields[J].Name).AsInteger := AFields[J].GetValue(ASource).AsOrdinal
               else
-                Add(AFields[J].Name).AsString :=
-                  AFields[J].GetValue(ASource).ToString;
+                Add(AFields[J].Name).AsString := AFields[J].GetValue(ASource).ToString;
             end;
           tkSet:
             begin
               if JsonRttiEnumAsInt then
-                Add(AFields[J].Name).AsInt64 :=
-                  SetAsOrd(AFields[J].GetValue(ASource))
+                Add(AFields[J].Name).AsInt64 := SetAsOrd(AFields[J].GetValue(ASource))
               else
-                Add(AFields[J].Name).AsString :=
-                  AFields[J].GetValue(ASource).ToString;
+                Add(AFields[J].Name).AsString := AFields[J].GetValue(ASource).ToString;
             end;
           tkChar, tkWChar:
-            Add(AFields[J].Name).AsString :=
-              AFields[J].GetValue(ASource).ToString;
+            Add(AFields[J].Name).AsString := AFields[J].GetValue(ASource).ToString;
           tkFloat:
             begin
-              if (AFields[J].FieldType.Handle = TypeInfo(TDateTime)) or
-                (AFields[J].FieldType.Handle = TypeInfo(TTime)) or
+              if (AFields[J].FieldType.Handle = TypeInfo(TDateTime)) or (AFields[J].FieldType.Handle = TypeInfo(TTime)) or
                 (AFields[J].FieldType.Handle = TypeInfo(TDate)) then
               begin
                 // 判断一个数值是否是一个有效的值
 
-                Add(AFields[J].Name).AsDateTime := AFields[J].GetValue(ASource)
-                  .AsExtended
+                Add(AFields[J].Name).AsDateTime := AFields[J].GetValue(ASource).AsExtended
               end
               else
-                Add(AFields[J].Name).AsFloat := AFields[J].GetValue(ASource)
-                  .AsExtended;
+                Add(AFields[J].Name).AsFloat := AFields[J].GetValue(ASource).AsExtended;
             end;
           tkInt64:
-            Add(AFields[J].Name).AsInt64 :=
-              AFields[J].GetValue(ASource).AsInt64;
+            Add(AFields[J].Name).AsInt64 := AFields[J].GetValue(ASource).AsInt64;
           tkVariant:
-            Add(AFields[J].Name).AsVariant := AFields[J].GetValue(ASource)
-              .AsVariant;
+            Add(AFields[J].Name).AsVariant := AFields[J].GetValue(ASource).AsVariant;
           tkArray, tkDynArray:
             begin
               with Add(AFields[J].Name, jdtArray) do
@@ -3459,20 +3351,15 @@ var
               else if AObj is TCollection then
                 AddCollection(AddArray(AFields[J].Name), AObj as TCollection)
               else // 其它类型的对象不保存
-                Add(AFields[J].Name, jdtObject)
-                  .FromRtti(AObj, AFields[J].FieldType.Handle);
+                Add(AFields[J].Name, jdtObject).FromRtti(AObj, AFields[J].FieldType.Handle);
             end;
           tkRecord:
             begin
               DataType := jdtObject;
               if AFields[J].FieldType.Handle = TypeInfo(TGuid) then
-                Add(AFields[J].Name).AsString :=
-                  GUIDToString
-                  (PGuid(Pointer(IntPtr(ASource) + AFields[J].Offset))^)
+                Add(AFields[J].Name).AsString := GUIDToString(PGuid(Pointer(IntPtr(ASource) + AFields[J].Offset))^)
               else
-                Add(AFields[J].Name)
-                  .FromRtti(Pointer(IntPtr(ASource) + AFields[J].Offset),
-                  AFields[J].FieldType.Handle);
+                Add(AFields[J].Name).FromRtti(Pointer(IntPtr(ASource) + AFields[J].Offset), AFields[J].FieldType.Handle);
             end;
         end;
       end
@@ -3504,9 +3391,8 @@ var
       try
         for J := 0 to ACount - 1 do
         begin
-          if Assigned(APropList[J].GetProc) and Assigned(APropList[J].SetProc)
-            and (not(APropList[J].PropType^.Kind in [tkMethod, tkInterface,
-            tkClassRef, tkPointer, tkProcedure])) then
+          if Assigned(APropList[J].GetProc) and Assigned(APropList[J].SetProc) and
+            (not(APropList[J].PropType^.Kind in [tkMethod, tkInterface, tkClassRef, tkPointer, tkProcedure])) then
           begin
 {$IF RTLVersion>25}
             AName := APropList[J].NameFld.ToString;
@@ -3530,8 +3416,7 @@ var
                 Add(AName).AsInt64 := GetOrdProp(AObj, APropList[J]);
               tkFloat:
                 begin
-                  if (APropList[J].PropType^ = TypeInfo(TDateTime)) or
-                    (APropList[J].PropType^ = TypeInfo(TTime)) or
+                  if (APropList[J].PropType^ = TypeInfo(TDateTime)) or (APropList[J].PropType^ = TypeInfo(TTime)) or
                     (APropList[J].PropType^ = TypeInfo(TDate)) then
                   begin
                     // 判断一个数值是否是一个有效的值
@@ -3544,8 +3429,7 @@ var
                 Add(AName).AsString := GetStrProp(AObj, APropList[J]);
               tkEnumeration:
                 begin
-                  if GetTypeData(APropList[J]^.PropType^)
-                    ^.BaseType^ = TypeInfo(Boolean) then
+                  if GetTypeData(APropList[J]^.PropType^)^.BaseType^ = TypeInfo(Boolean) then
                     Add(AName).AsBoolean := GetOrdProp(AObj, APropList[J]) <> 0
                   else if JsonRttiEnumAsInt then
                     Add(AName).AsInteger := GetOrdProp(AObj, APropList[J])
@@ -3657,11 +3541,22 @@ begin
   Result := InternalGetAsBytes(DoDecodeAsBase64, teUtf8, False);
 end;
 
+function TQJson.GetAsBcd: TBcd;
+begin
+  if DataType = jdtBcd then
+    Result := PBcd(FValue)^
+  else if DataType = jdtString then
+    Result := StrToBcd(FValue)
+  else if DataType = jdtFloat then
+    Result := AsFloat
+  else
+    Result := AsInt64
+end;
+
 function TQJson.GetAsBoolean: Boolean;
 begin
   if not TryGetAsBoolean(Result) then
-    raise Exception.Create(Format(SBadConvert, [JsonTypeName[DataType],
-      'Boolean']));
+    raise Exception.Create(Format(SBadConvert, [JsonTypeName[DataType], 'Boolean']));
 end;
 
 function TQJson.GetAsBytes: TBytes;
@@ -3675,15 +3570,13 @@ end;
 function TQJson.GetAsDateTime: TDateTime;
 begin
   if not TryGetAsDateTime(Result) then
-    raise Exception.Create(Format(SBadConvert, [JsonTypeName[DataType],
-      'DateTime']));
+    raise Exception.Create(Format(SBadConvert, [JsonTypeName[DataType], 'DateTime']));
 end;
 
 function TQJson.GetAsFloat: Extended;
 begin
   if not TryGetAsFloat(Result) then
-    raise Exception.Create(Format(SBadConvert, [JsonTypeName[DataType],
-      'Numeric']))
+    raise Exception.Create(Format(SBadConvert, [JsonTypeName[DataType], 'Numeric']))
 end;
 
 function TQJson.GetAsHexBytes: TBytes;
@@ -3694,8 +3587,7 @@ end;
 function TQJson.GetAsInt64: Int64;
 begin
   if not TryGetAsInt64(Result) then
-    raise Exception.Create(Format(SBadConvert, [JsonTypeName[DataType],
-      'Numeric']))
+    raise Exception.Create(Format(SBadConvert, [JsonTypeName[DataType], 'Numeric']))
 end;
 
 function TQJson.GetAsInteger: Integer;
@@ -3808,8 +3700,7 @@ begin
   if not Result then
   begin
     if DataType = jdtString then
-      Result := ParseDateTime(PQCharW(FValue), ATime) or
-        ParseJsonTime(PQCharW(FValue), ATime) or
+      Result := ParseDateTime(PQCharW(FValue), ATime) or ParseJsonTime(PQCharW(FValue), ATime) or
         ParseWebTime(PQCharW(FValue), ATime);
   end;
 end;
@@ -3967,6 +3858,8 @@ begin
       Result := IntToStr(PInt64(FValue)^);
     jdtFloat:
       Result := FloatToStr(PExtended(FValue)^);
+    jdtBcd:
+      Result := BcdToStr(PBcd(FValue)^);
     jdtDateTime:
       ValueAsDateTime;
     jdtBoolean:
@@ -4042,8 +3935,7 @@ var
   var
     T: TDateTime;
   begin
-    if ParseDateTime(PWideChar(S), T) or ParseJsonTime(PWideChar(S), T) or
-      ParseWebTime(PQCharW(FValue), T) then
+    if ParseDateTime(PWideChar(S), T) or ParseJsonTime(PWideChar(S), T) or ParseWebTime(PQCharW(FValue), T) then
       Result := SameValue(T, V)
     else
       Result := False;
@@ -4066,8 +3958,7 @@ var
     if VarIsArray(V) then
     begin
       Result := (ANode.DataType in [jdtObject, jdtArray]) and
-        (ANode.Count = VarArrayHighBound(V, VarArrayDimCount(V)) -
-        VarArrayLowBound(V, VarArrayDimCount(V)) + 1);
+        (ANode.Count = VarArrayHighBound(V, VarArrayDimCount(V)) - VarArrayLowBound(V, VarArrayDimCount(V)) + 1);
       if Result then
       begin
         for J := 0 to ANode.Count - 1 do
@@ -4088,8 +3979,7 @@ var
       case VarType(V) of
         varEmpty, varNull, varUnknown:
           Result := ANode.IsNull;
-        varSmallInt, varInteger, varByte, varShortInt, varWord, varLongWord,
-          varInt64{$IF RtlVersion>=26}
+        varSmallInt, varInteger, varByte, varShortInt, varWord, varLongWord, varInt64{$IF RtlVersion>=26}
           , varUInt64{$IFEND}:
           begin
             if ANode.DataType <> jdtString then
@@ -4150,15 +4040,13 @@ begin
   end;
 end;
 
-function TQJson.Insert(AIndex: Integer; const AName, AValue: String;
-  ADataType: TQJsonDataType): TQJson;
+function TQJson.Insert(AIndex: Integer; const AName, AValue: String; ADataType: TQJsonDataType): TQJson;
 begin
   Result := Insert(AIndex, AName);
   Result.FromType(AValue, ADataType);
 end;
 
-function TQJson.Insert(AIndex: Integer; const AName: String;
-  ADataType: TQJsonDataType): TQJson;
+function TQJson.Insert(AIndex: Integer; const AName: String; ADataType: TQJsonDataType): TQJson;
 begin
   Result := CreateJson;
   Insert(AIndex, Result);
@@ -4171,8 +4059,7 @@ begin
   Result := Insert(AIndex, AName, jdtUnknown);
 end;
 
-function TQJson.Insert(AIndex: Integer; const AName: String;
-  AValue: Extended): TQJson;
+function TQJson.Insert(AIndex: Integer; const AName: String; AValue: Extended): TQJson;
 begin
   Result := Insert(AIndex, AName);
   Result.AsFloat := AValue;
@@ -4197,15 +4084,13 @@ begin
   FItems.Insert(AIndex, AChild);
 end;
 
-function TQJson.Insert(AIndex: Integer; const AName: String;
-  AValue: Boolean): TQJson;
+function TQJson.Insert(AIndex: Integer; const AName: String; AValue: Boolean): TQJson;
 begin
   Result := Insert(AIndex, AName);
   Result.AsBoolean := AValue;
 end;
 
-function TQJson.Insert(AIndex: Integer; const AName: String;
-  AValue: Int64): TQJson;
+function TQJson.Insert(AIndex: Integer; const AName: String; AValue: Int64): TQJson;
 begin
   Result := Insert(AIndex, AName);
   Result.AsInt64 := AValue;
@@ -4239,8 +4124,8 @@ begin
     Result := ADefVal;
 end;
 
-function TQJson.InternalEncode(ABuilder: TQStringCatHelperW;
-  ASettings: TJsonEncodeSettings; const AIndent: QStringW): TQStringCatHelperW;
+function TQJson.InternalEncode(ABuilder: TQStringCatHelperW; ASettings: TJsonEncodeSettings; const AIndent: QStringW)
+  : TQStringCatHelperW;
   procedure StrictJsonTime(ATime: TDateTime);
   var
     MS: Int64; // 时区信息不保存
@@ -4316,12 +4201,9 @@ function TQJson.InternalEncode(ABuilder: TQStringCatHelperW;
     AChild: TQJson;
   begin
     if (jesWithComment in ASettings) and (Length(ANode.Comment) > 0) and
-      ((ANode.CommentStyle = jcsBeforeName) or
-      ((ANode.CommentStyle = jcsInherited) and (CommentStyle = jcsBeforeName)))
-    then
+      ((ANode.CommentStyle = jcsBeforeName) or ((ANode.CommentStyle = jcsInherited) and (CommentStyle = jcsBeforeName))) then
       AddComment(ANode.Comment);
-    if (ANode.Parent <> nil) and (ANode.Parent.DataType <> jdtArray) and
-      (ANode <> Self) then
+    if (ANode.Parent <> nil) and (ANode.Parent.DataType <> jdtArray) and (ANode <> Self) then
     begin
       if jesDoFormat in ASettings then
         ABuilder.Replicate(AIndent, ALevel);
@@ -4426,9 +4308,7 @@ function TQJson.InternalEncode(ABuilder: TQStringCatHelperW;
         end;
     end;
     if (jesWithComment in ASettings) and (Length(ANode.Comment) > 0) and
-      ((ANode.CommentStyle = jcsAfterValue) or
-      ((ANode.CommentStyle = jcsInherited) and (CommentStyle = jcsAfterValue)))
-    then
+      ((ANode.CommentStyle = jcsAfterValue) or ((ANode.CommentStyle = jcsInherited) and (CommentStyle = jcsAfterValue))) then
     begin
       AddComment(ANode.Comment);
       if jesDoFormat in ASettings then
@@ -4442,8 +4322,7 @@ begin
   DoEncode(Self, 0);
 end;
 
-function TQJson.InternalGetAsBytes(AConverter: TQJsonDecodeBytesEvent;
-  AEncoding: TTextEncoding; AWriteBom: Boolean): TBytes;
+function TQJson.InternalGetAsBytes(AConverter: TQJsonDecodeBytesEvent; AEncoding: TTextEncoding; AWriteBom: Boolean): TBytes;
 var
   I: Integer;
   AItem: TQJson;
@@ -4523,8 +4402,7 @@ begin
     for I := 0 to Count - 1 do
     begin
       AItem := Items[I];
-      if (AItem.DataType = jdtInteger) and (AItem.AsInteger >= 0) and
-        (AItem.AsInteger <= 255) then
+      if (AItem.DataType = jdtInteger) and (AItem.AsInteger >= 0) and (AItem.AsInteger <= 255) then
         Result[I] := AItem.AsInteger
       else
         raise Exception.CreateFmt(SConvertError, ['jdtArray', 'Bytes']);
@@ -4534,9 +4412,8 @@ begin
     raise Exception.CreateFmt(SConvertError, [JsonTypeName[DataType], 'Bytes']);
 end;
 
-procedure TQJson.InternalRttiFilter(ASender: TQJson; AObject: Pointer;
-  APropName: QStringW; APropType: PTypeInfo; var Accept: Boolean;
-  ATag: Pointer);
+procedure TQJson.InternalRttiFilter(ASender: TQJson; AObject: Pointer; APropName: QStringW; APropType: PTypeInfo;
+  var Accept: Boolean; ATag: Pointer);
 var
   ATagData: PQJsonInternalTagData;
   procedure DoNameFilter;
@@ -4547,8 +4424,7 @@ var
     begin
       Accept := False;
       ps := StrIStrW(PQCharW(ATagData.AcceptNames), PQCharW(APropName));
-      if (ps <> nil) and ((ps = PQCharW(ATagData.AcceptNames)) or (ps[-1] = ',')
-        or (ps[-1] = ';')) then
+      if (ps <> nil) and ((ps = PQCharW(ATagData.AcceptNames)) or (ps[-1] = ',') or (ps[-1] = ';')) then
       begin
         ps := ps + Length(APropName);
         Accept := (ps^ = ',') or (ps^ = ';') or (ps^ = #0);
@@ -4558,8 +4434,7 @@ var
     begin
       ps := StrIStrW(PQCharW(ATagData.IgnoreNames), PQCharW(APropName));
       Accept := True;
-      if (ps <> nil) and ((ps = PQCharW(ATagData.IgnoreNames)) or (ps[-1] = ',')
-        or (ps[-1] = ';')) then
+      if (ps <> nil) and ((ps = PQCharW(ATagData.IgnoreNames)) or (ps[-1] = ',') or (ps[-1] = ';')) then
       begin
         ps := ps + Length(APropName);
         Accept := not((ps^ = ',') or (ps^ = ';') or (ps^ = #0));
@@ -4577,14 +4452,12 @@ begin
 {$IF RTLVersion>=21}
   if ATagData.TagType = ttAnonEvent then
   begin
-    ATagData.OnEvent(ASender, AObject, APropName, APropType, Accept,
-      ATagData.Tag);
+    ATagData.OnEvent(ASender, AObject, APropName, APropType, Accept, ATagData.Tag);
   end;
 {$IFEND >=2010}
 end;
 
-procedure TQJson.InternalSetAsBytes(AConverter: TQJsonEncodeBytesEvent;
-  ABytes: TBytes);
+procedure TQJson.InternalSetAsBytes(AConverter: TQJsonEncodeBytesEvent; ABytes: TBytes);
 var
   S: QStringW;
 begin
@@ -4608,8 +4481,7 @@ begin
       for J := 0 to H2 do
       begin
         AItem2 := AJson[J];
-        if (AItem1.Name = AItem2.Name) and (AItem1.DataType = AItem2.DataType)
-        then
+        if (AItem1.Name = AItem2.Name) and (AItem1.DataType = AItem2.DataType) then
         begin
           if AItem1.DataType in [jdtArray, jdtObject] then
           begin
@@ -4693,8 +4565,7 @@ begin
   end;
 end;
 
-function TQJson.ItemByName(const AName: QStringW; AList: TQJsonItemList;
-  ANest: Boolean): Integer;
+function TQJson.ItemByName(const AName: QStringW; AList: TQJsonItemList; ANest: Boolean): Integer;
 var
   AHash: Cardinal;
   l: Integer;
@@ -4752,8 +4623,7 @@ begin
   Result := nil;
   while Assigned(AParent) and (p^ <> #0) do
   begin
-    AName := JavaUnescape(DecodeTokenW(p, PathDelimiters, WideChar(0),
-      False), False);
+    AName := JavaUnescape(DecodeTokenW(p, PathDelimiters, WideChar(0), False), False);
     if Length(AName) > 0 then
     begin
       // 查找的是数组？
@@ -4768,8 +4638,7 @@ begin
         else
         begin
           SkipUntilW(ws, ArrayStart);
-          Result := AParent.ItemByName
-            (StrDupX(pn, (IntPtr(ws) - IntPtr(pn)) shr 1));
+          Result := AParent.ItemByName(StrDupX(pn, (IntPtr(ws) - IntPtr(pn)) shr 1));
         end;
         if Result <> nil then
         begin
@@ -4823,8 +4692,7 @@ begin
 end;
 {$IFDEF ENABLE_REGEX}
 
-function TQJson.ItemByRegex(const ARegex: QStringW; AList: TQJsonItemList;
-  ANest: Boolean): Integer;
+function TQJson.ItemByRegex(const ARegex: QStringW; AList: TQJsonItemList; ANest: Boolean): Integer;
 var
   ANode: TQJson;
   APcre: TPerlRegEx;
@@ -4871,8 +4739,7 @@ begin
   end;
 end;
 
-function TQJson.Match(const ARegex: QStringW; AMatches: TQJsonMatchSettings)
-  : IQJsonContainer;
+function TQJson.Match(const ARegex: QStringW; AMatches: TQJsonMatchSettings): IQJsonContainer;
 var
   T: TQJsonContainer;
 begin
@@ -4899,8 +4766,7 @@ begin
   end;
 end;
 
-class function TQJson.JsonEscape(const S: QStringW; ADoEscape: Boolean)
-  : QStringW;
+class function TQJson.JsonEscape(const S: QStringW; ADoEscape: Boolean): QStringW;
 begin
   Result := JsonCat(S, ADoEscape);
 end;
@@ -4910,8 +4776,7 @@ begin
   Result := BuildJsonString(S);
 end;
 
-procedure TQJson.LoadFromFile(const AFileName: String;
-  AEncoding: TTextEncoding);
+procedure TQJson.LoadFromFile(const AFileName: String; AEncoding: TTextEncoding);
 var
   AStream: TFileStream;
 begin
@@ -4996,10 +4861,7 @@ begin
   else
   begin
     if Parent = ANewParent then
-      begin
-      Parent.FItems.Move(ItemIndex,AIndex);
       Exit;
-      end;
     if IsParentOf(ANewParent) then
       raise Exception.Create(SCantMoveToChild);
     if ANewParent.DataType in [jdtArray, jdtObject] then
@@ -5175,8 +5037,7 @@ begin
   end;
 end;
 
-function TQJson.ParseJsonPair(ABuilder: TQStringCatHelperW;
-  var p: PQCharW): Integer;
+function TQJson.ParseJsonPair(ABuilder: TQStringCatHelperW; var p: PQCharW): Integer;
 const
   SpaceWithSemicolon: PWideChar = ': '#9#10#13#$3000;
   CommaWithSpace: PWideChar = ', '#9#10#13#$3000;
@@ -5316,8 +5177,7 @@ begin
   end;
 end;
 
-function TQJson.ParseName(ABuilder: TQStringCatHelperW; var p: PQCharW)
-  : Integer;
+function TQJson.ParseName(ABuilder: TQStringCatHelperW; var p: PQCharW): Integer;
 var
   AInQuoter: Boolean;
   AComment: QStringW;
@@ -5504,8 +5364,7 @@ begin
   end;
 end;
 
-procedure TQJson.SaveToFile(const AFileName: String; AEncoding: TTextEncoding;
-  AWriteBom, ADoFormat: Boolean);
+procedure TQJson.SaveToFile(const AFileName: String; AEncoding: TTextEncoding; AWriteBom, ADoFormat: Boolean);
 var
   AStream: TMemoryStream;
 begin
@@ -5518,8 +5377,7 @@ begin
   end;
 end;
 
-procedure TQJson.SaveToStream(AStream: TStream; AEncoding: TTextEncoding;
-  AWriteBom, ADoFormat: Boolean);
+procedure TQJson.SaveToStream(AStream: TStream; AEncoding: TTextEncoding; AWriteBom, ADoFormat: Boolean);
 var
   S: QStringW;
 begin
@@ -5570,6 +5428,12 @@ end;
 procedure TQJson.SetAsBase64Bytes(const Value: TBytes);
 begin
   InternalSetAsBytes(DoEncodeAsBase64, Value);
+end;
+
+procedure TQJson.SetAsBcd(const Value: TBcd);
+begin
+  DataType := jdtBcd;
+  PBcd(FValue)^ := Value;
 end;
 
 procedure TQJson.SetAsBoolean(const Value: Boolean);
@@ -5680,8 +5544,7 @@ begin
   begin
     ArrayNeeded(jdtArray);
     Clear;
-    for I := VarArrayLowBound(Value, VarArrayDimCount(Value))
-      to VarArrayHighBound(Value, VarArrayDimCount(Value)) do
+    for I := VarArrayLowBound(Value, VarArrayDimCount(Value)) to VarArrayHighBound(Value, VarArrayDimCount(Value)) do
       Add.AsVariant := Value[I];
   end
   else
@@ -5690,8 +5553,7 @@ begin
     case AType of
       varEmpty, varNull, varUnknown:
         ResetNull;
-      varSmallInt, varInteger, varByte, varShortInt, varWord,
-        varLongWord, varInt64:
+      varSmallInt, varInteger, varByte, varShortInt, varWord, varLongWord, varInt64:
         AsInt64 := Value;
       varSingle, varDouble, varCurrency:
         AsFloat := Value;
@@ -5742,6 +5604,11 @@ begin
         begin
           SetLength(FValue, SizeOf(Extended) shr 1);
           PExtended(FValue)^ := 0;
+        end;
+      jdtBcd:
+        begin
+          SetLength(FValue, SizeOf(TBcd) shr 1);
+          PBcd(FValue)^ := 0;
         end;
       jdtBoolean:
         begin
@@ -5888,8 +5755,7 @@ begin
   end;
 end;
 
-class function TQJson.SkipSpaceAndComment(var p: PQCharW;
-  var AComment: QStringW; lastvalidchar: QCharW = #0): Integer;
+class function TQJson.SkipSpaceAndComment(var p: PQCharW; var AComment: QStringW; lastvalidchar: QCharW = #0): Integer;
 var
   ps: PQCharW;
 begin
@@ -5919,8 +5785,7 @@ begin
         begin
           if (p[0] = '*') and (p[1] = '/') then
           begin
-            AComment := AComment + StrDupX(ps, (IntPtr(p) - IntPtr(ps)) shr 1) +
-              SLineBreak;
+            AComment := AComment + StrDupX(ps, (IntPtr(p) - IntPtr(ps)) shr 1) + SLineBreak;
             Inc(p, 2);
             SkipSpaceW(p);
             Break;
@@ -5936,8 +5801,7 @@ begin
       end;
     end;
   end
-  else if ((p^ = CharObjectEnd) or (p^ = CharArrayEnd)) and
-    (lastvalidchar = CharComma) then
+  else if ((p^ = CharObjectEnd) or (p^ = CharArrayEnd)) and (lastvalidchar = CharComma) then
   begin
     Result := EParse_EndCharNeeded;
     Exit;
@@ -5946,8 +5810,7 @@ begin
     SetLength(AComment, Length(AComment) - Length(SLineBreak));
 end;
 
-procedure TQJson.Sort(AByName, ANest: Boolean; AByType: TQJsonDataType;
-  AOnCompare: TListSortCompareEvent);
+procedure TQJson.Sort(AByName, ANest: Boolean; AByType: TQJsonDataType; AOnCompare: TListSortCompareEvent);
   function DoCompare(Item1, Item2: Pointer): Integer;
   var
     AMethod: TMethod absolute AOnCompare;
@@ -6092,8 +5955,7 @@ begin
   end;
 end;
 
-procedure TQJson.Sort(AByName, ANest: Boolean; AByType: TQJsonDataType;
-  AOnCompare: TListSortCompare);
+procedure TQJson.Sort(AByName, ANest: Boolean; AByType: TQJsonDataType; AOnCompare: TListSortCompare);
 var
   AEvent: TListSortCompareEvent;
   AMethod: TMethod absolute AEvent;
@@ -6104,8 +5966,7 @@ begin
 end;
 {$IF RTLVersion>=21)}
 
-procedure TQJson.Sort(AByName, ANest: Boolean; AByType: TQJsonDataType;
-  AOnCompare: TListSortCompareFunc);
+procedure TQJson.Sort(AByName, ANest: Boolean; AByType: TQJsonDataType; AOnCompare: TListSortCompareFunc);
 var
   AEvent: TListSortCompareEvent;
   AMethod: TMethod absolute AEvent;
@@ -6184,8 +6045,7 @@ begin
         begin
           if AParamItem.IsObject then // 参数有类型修饰信息
           begin
-            if AParamItem.HasChild('Type', AItemType) and
-              AParamItem.HasChild('Value', AItemValue) then
+            if AParamItem.HasChild('Type', AItemType) and AParamItem.HasChild('Value', AItemValue) then
             begin
               case TTypeKind(AItemType.AsInteger) of
                 tkInteger:
@@ -6249,14 +6109,12 @@ begin
   if AInstance.IsEmpty then
     Exit;
   if AInstance.Kind = tkRecord then
-    ToRtti(AInstance.GetReferenceToRawData, AInstance.TypeInfo,
-      AClearCollections)
+    ToRtti(AInstance.GetReferenceToRawData, AInstance.TypeInfo, AClearCollections)
   else if AInstance.Kind = tkClass then
     ToRtti(AInstance.AsObject, AInstance.TypeInfo, AClearCollections)
 end;
 
-procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
-  AClearCollections: Boolean);
+procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo; AClearCollections: Boolean);
 
   procedure LoadCollection(AJson: TQJson; ACollection: TCollection);
   var
@@ -6293,15 +6151,13 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
               AFields[J].SetValue(ABaseAddr, AChild.AsInteger);
 {$IFNDEF NEXTGEN}
             tkString:
-              PShortString(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                ShortString(AChild.AsString);
+              PShortString(IntPtr(ABaseAddr) + AFields[J].Offset)^ := ShortString(AChild.AsString);
 {$ENDIF !NEXTGEN}
             tkUString{$IFNDEF NEXTGEN}, tkLString, tkWString{$ENDIF !NEXTGEN}:
               AFields[J].SetValue(ABaseAddr, AChild.AsString);
             tkEnumeration:
               begin
-                if GetTypeData(AFields[J].FieldType.Handle)
-                  ^.BaseType^ = TypeInfo(Boolean) then
+                if GetTypeData(AFields[J].FieldType.Handle)^.BaseType^ = TypeInfo(Boolean) then
                   AFields[J].SetValue(ABaseAddr, AChild.AsBoolean)
                 else
                 begin
@@ -6309,62 +6165,50 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
                     otSByte:
                       begin
                         if AChild.DataType = jdtInteger then
-                          PShortint(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                            AChild.AsInteger
+                          PShortint(IntPtr(ABaseAddr) + AFields[J].Offset)^ := AChild.AsInteger
                         else
                           PShortint(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                            GetEnumValue(AFields[J].FieldType.Handle,
-                            AChild.AsString);
+                            GetEnumValue(AFields[J].FieldType.Handle, AChild.AsString);
                       end;
                     otUByte:
                       begin
                         if AChild.DataType = jdtInteger then
-                          PByte(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                            AChild.AsInteger
+                          PByte(IntPtr(ABaseAddr) + AFields[J].Offset)^ := AChild.AsInteger
                         else
                           PByte(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                            GetEnumValue(AFields[J].FieldType.Handle,
-                            AChild.AsString);
+                            GetEnumValue(AFields[J].FieldType.Handle, AChild.AsString);
                       end;
                     otSWord:
                       begin
                         if AChild.DataType = jdtInteger then
-                          PSmallint(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                            AChild.AsInteger
+                          PSmallint(IntPtr(ABaseAddr) + AFields[J].Offset)^ := AChild.AsInteger
                         else
                           PSmallint(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                            GetEnumValue(AFields[J].FieldType.Handle,
-                            AChild.AsString);
+                            GetEnumValue(AFields[J].FieldType.Handle, AChild.AsString);
                       end;
                     otUWord:
                       begin
                         if AChild.DataType = jdtInteger then
-                          PWord(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                            AChild.AsInteger
+                          PWord(IntPtr(ABaseAddr) + AFields[J].Offset)^ := AChild.AsInteger
                         else
                           PWord(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                            GetEnumValue(AFields[J].FieldType.Handle,
-                            AChild.AsString);
+                            GetEnumValue(AFields[J].FieldType.Handle, AChild.AsString);
                       end;
                     otSLong:
                       begin
                         if AChild.DataType = jdtInteger then
-                          PInteger(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                            AChild.AsInteger
+                          PInteger(IntPtr(ABaseAddr) + AFields[J].Offset)^ := AChild.AsInteger
                         else
                           PInteger(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                            GetEnumValue(AFields[J].FieldType.Handle,
-                            AChild.AsString);
+                            GetEnumValue(AFields[J].FieldType.Handle, AChild.AsString);
                       end;
                     otULong:
                       begin
                         if AChild.DataType = jdtInteger then
-                          PCardinal(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                            AChild.AsInteger
+                          PCardinal(IntPtr(ABaseAddr) + AFields[J].Offset)^ := AChild.AsInteger
                         else
                           PCardinal(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                            GetEnumValue(AFields[J].FieldType.Handle,
-                            AChild.AsString);
+                            GetEnumValue(AFields[J].FieldType.Handle, AChild.AsString);
                       end;
                   end;
                 end;
@@ -6375,70 +6219,57 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
                   otSByte:
                     begin
                       if AChild.DataType = jdtInteger then
-                        PShortint(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                          AChild.AsInteger
+                        PShortint(IntPtr(ABaseAddr) + AFields[J].Offset)^ := AChild.AsInteger
                       else
                         PShortint(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                          StringToSet(AFields[J].FieldType.Handle,
-                          AChild.AsString);
+                          StringToSet(AFields[J].FieldType.Handle, AChild.AsString);
                     end;
                   otUByte:
                     begin
                       if AChild.DataType = jdtInteger then
-                        PByte(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                          AChild.AsInteger
+                        PByte(IntPtr(ABaseAddr) + AFields[J].Offset)^ := AChild.AsInteger
                       else
                         PByte(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                          StringToSet(AFields[J].FieldType.Handle,
-                          AChild.AsString);
+                          StringToSet(AFields[J].FieldType.Handle, AChild.AsString);
                     end;
                   otSWord:
                     begin
                       if AChild.DataType = jdtInteger then
-                        PSmallint(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                          AChild.AsInteger
+                        PSmallint(IntPtr(ABaseAddr) + AFields[J].Offset)^ := AChild.AsInteger
                       else
                         PSmallint(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                          StringToSet(AFields[J].FieldType.Handle,
-                          AChild.AsString);
+                          StringToSet(AFields[J].FieldType.Handle, AChild.AsString);
                     end;
                   otUWord:
                     begin
                       if AChild.DataType = jdtInteger then
-                        PWord(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                          AChild.AsInteger
+                        PWord(IntPtr(ABaseAddr) + AFields[J].Offset)^ := AChild.AsInteger
                       else
                         PWord(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                          StringToSet(AFields[J].FieldType.Handle,
-                          AChild.AsString);
+                          StringToSet(AFields[J].FieldType.Handle, AChild.AsString);
                     end;
                   otSLong:
                     begin
                       if AChild.DataType = jdtInteger then
-                        PInteger(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                          AChild.AsInteger
+                        PInteger(IntPtr(ABaseAddr) + AFields[J].Offset)^ := AChild.AsInteger
                       else
                         PInteger(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                          StringToSet(AFields[J].FieldType.Handle,
-                          AChild.AsString);
+                          StringToSet(AFields[J].FieldType.Handle, AChild.AsString);
                     end;
                   otULong:
                     begin
                       if AChild.DataType = jdtInteger then
-                        PCardinal(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                          AChild.AsInteger
+                        PCardinal(IntPtr(ABaseAddr) + AFields[J].Offset)^ := AChild.AsInteger
                       else
                         PCardinal(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                          StringToSet(AFields[J].FieldType.Handle,
-                          AChild.AsString);
+                          StringToSet(AFields[J].FieldType.Handle, AChild.AsString);
                     end;
                 end;
               end;
             tkChar, tkWChar:
               AFields[J].SetValue(ABaseAddr, AChild.AsString);
             tkFloat:
-              if (AFields[J].FieldType.Handle = TypeInfo(TDateTime)) or
-                (AFields[J].FieldType.Handle = TypeInfo(TTime)) or
+              if (AFields[J].FieldType.Handle = TypeInfo(TDateTime)) or (AFields[J].FieldType.Handle = TypeInfo(TTime)) or
                 (AFields[J].FieldType.Handle = TypeInfo(TDate)) then
               begin
                 if AChild.IsDateTime then
@@ -6451,49 +6282,37 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
                   begin
                     case JsonIntToTimeStyle of
                       tsDeny:
-                        raise Exception.CreateFmt(SBadConvert,
-                          [AChild.AsString, JsonTypeName[jdtDateTime]]);
+                        raise Exception.CreateFmt(SBadConvert, [AChild.AsString, JsonTypeName[jdtDateTime]]);
                       tsSecondsFrom1970: // Unix
                         begin
                           if (JsonTimezone >= -12) and (JsonTimezone <= 12) then
-                            AFields[J].SetValue(ABaseAddr,
-                              IncHour(UnixToDateTime(AChild.AsInt64),
-                              JsonTimezone))
+                            AFields[J].SetValue(ABaseAddr, IncHour(UnixToDateTime(AChild.AsInt64), JsonTimezone))
                           else
-                            AFields[J].SetValue(ABaseAddr,
-                              UnixToDateTime(AChild.AsInt64));
+                            AFields[J].SetValue(ABaseAddr, UnixToDateTime(AChild.AsInt64));
                         end;
                       tsSecondsFrom1899:
                         begin
                           if (JsonTimezone >= -12) and (JsonTimezone <= 12) then
-                            AFields[J].SetValue(ABaseAddr,
-                              IncHour(AChild.AsInt64 / 86400, JsonTimezone))
+                            AFields[J].SetValue(ABaseAddr, IncHour(AChild.AsInt64 / 86400, JsonTimezone))
                           else
-                            AFields[J].SetValue(ABaseAddr,
-                              AChild.AsInt64 / 86400);
+                            AFields[J].SetValue(ABaseAddr, AChild.AsInt64 / 86400);
                         end;
                       tsMsFrom1970:
                         begin
                           if (JsonTimezone >= -12) and (JsonTimezone <= 12) then
-                            AFields[J].SetValue(ABaseAddr,
-                              IncHour(IncMilliSecond(UnixDateDelta,
-                              AChild.AsInt64), JsonTimezone))
+                            AFields[J].SetValue(ABaseAddr, IncHour(IncMilliSecond(UnixDateDelta, AChild.AsInt64), JsonTimezone))
                           else
-                            AFields[J].SetValue(ABaseAddr,
-                              IncMilliSecond(UnixDateDelta, AChild.AsInt64));
+                            AFields[J].SetValue(ABaseAddr, IncMilliSecond(UnixDateDelta, AChild.AsInt64));
                         end;
                       tsMsFrom1899:
                         if (JsonTimezone >= -12) and (JsonTimezone <= 12) then
-                          AFields[J].SetValue(ABaseAddr,
-                            IncHour(AChild.AsInt64 / 86400000, JsonTimezone))
+                          AFields[J].SetValue(ABaseAddr, IncHour(AChild.AsInt64 / 86400000, JsonTimezone))
                         else
-                          AFields[J].SetValue(ABaseAddr,
-                            AChild.AsInt64 / 86400000);
+                          AFields[J].SetValue(ABaseAddr, AChild.AsInt64 / 86400000);
                     end;
                   end
                   else
-                    raise Exception.CreateFmt(SBadConvert,
-                      [AChild.AsString, JsonTypeName[AChild.DataType]]);
+                    raise Exception.CreateFmt(SBadConvert, [AChild.AsString, JsonTypeName[AChild.DataType]]);
                 end;
               end
               else
@@ -6501,11 +6320,9 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
             tkInt64:
               AFields[J].SetValue(ABaseAddr, AChild.AsInt64);
             tkVariant:
-              PVariant(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                AChild.AsVariant;
+              PVariant(IntPtr(ABaseAddr) + AFields[J].Offset)^ := AChild.AsVariant;
             tkArray, tkDynArray:
-              AChild.ToRtti(Pointer(IntPtr(ABaseAddr) + AFields[J].Offset),
-                AFields[J].FieldType.Handle);
+              AChild.ToRtti(Pointer(IntPtr(ABaseAddr) + AFields[J].Offset), AFields[J].FieldType.Handle);
             tkClass:
               begin
                 AObj := AFields[J].GetValue(ABaseAddr).AsObject;
@@ -6518,11 +6335,9 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
               end;
             tkRecord:
               if AFields[J].FieldType.Handle = TypeInfo(TGuid) then
-                PGuid(IntPtr(ABaseAddr) + AFields[J].Offset)^ :=
-                  StringToGuid(AChild.AsString)
+                PGuid(IntPtr(ABaseAddr) + AFields[J].Offset)^ := StringToGuid(AChild.AsString)
               else
-                AChild.ToRtti(Pointer(IntPtr(ABaseAddr) + AFields[J].Offset),
-                  AFields[J].FieldType.Handle);
+                AChild.ToRtti(Pointer(IntPtr(ABaseAddr) + AFields[J].Offset), AFields[J].FieldType.Handle);
           end;
         end;
       end;
@@ -6566,8 +6381,7 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
             tkRecord, tkArray, tkDynArray:
               // tkArray,tkDynArray类型的属性没见过,tkRecord存疑
               begin
-                AChild.ToRtti(Pointer(GetOrdProp(AObj, AProp)),
-                  AProp.PropType^);
+                AChild.ToRtti(Pointer(GetOrdProp(AObj, AProp)), AProp.PropType^);
               end;
             tkInteger:
               begin
@@ -6585,8 +6399,7 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
               end;
             tkFloat:
               begin
-                if (AProp.PropType^ = TypeInfo(TDateTime)) or
-                  (AProp.PropType^ = TypeInfo(TTime)) or
+                if (AProp.PropType^ = TypeInfo(TDateTime)) or (AProp.PropType^ = TypeInfo(TTime)) or
                   (AProp.PropType^ = TypeInfo(TDate)) then
                   SetFloatProp(AObj, AProp, AChild.AsDateTime)
                 else
@@ -6596,8 +6409,7 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
               SetStrProp(AObj, AProp, AChild.AsString);
             tkEnumeration:
               begin
-                if GetTypeData(AProp.PropType^)^.BaseType^ = TypeInfo(Boolean)
-                then
+                if GetTypeData(AProp.PropType^)^.BaseType^ = TypeInfo(Boolean) then
                   SetOrdProp(AObj, AProp, Integer(AChild.AsBoolean))
                 else if AChild.DataType = jdtInteger then
                   SetOrdProp(AObj, AProp, AChild.AsInteger)
@@ -6696,8 +6508,7 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
                       if AChild.DataType = jdtInteger then
                         PShortint(pi)^ := AChild.AsInteger
                       else
-                        PShortint(pi)^ := GetEnumValue(ASubTypeInfo,
-                          AChild.AsString);
+                        PShortint(pi)^ := GetEnumValue(ASubTypeInfo, AChild.AsString);
                     end;
                   otUByte:
                     begin
@@ -6711,32 +6522,28 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
                       if AChild.DataType = jdtInteger then
                         PSmallint(pi)^ := AChild.AsInteger
                       else
-                        PSmallint(pi)^ := GetEnumValue(ASubTypeInfo,
-                          AChild.AsString);
+                        PSmallint(pi)^ := GetEnumValue(ASubTypeInfo, AChild.AsString);
                     end;
                   otUWord:
                     begin
                       if AChild.DataType = jdtInteger then
                         PWord(pi)^ := AChild.AsInteger
                       else
-                        PWord(pi)^ := GetEnumValue(ASubTypeInfo,
-                          AChild.AsString);
+                        PWord(pi)^ := GetEnumValue(ASubTypeInfo, AChild.AsString);
                     end;
                   otSLong:
                     begin
                       if AChild.DataType = jdtInteger then
                         PInteger(pi)^ := AChild.AsInteger
                       else
-                        PInteger(pi)^ := GetEnumValue(ASubTypeInfo,
-                          AChild.AsString);
+                        PInteger(pi)^ := GetEnumValue(ASubTypeInfo, AChild.AsString);
                     end;
                   otULong:
                     begin
                       if AChild.DataType = jdtInteger then
                         PCardinal(pi)^ := AChild.AsInteger
                       else
-                        PCardinal(pi)^ := GetEnumValue(ASubTypeInfo,
-                          Items[I].AsString);
+                        PCardinal(pi)^ := GetEnumValue(ASubTypeInfo, Items[I].AsString);
                     end;
                 end;
               end;
@@ -6766,8 +6573,7 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
                     if AChild.DataType = jdtInteger then
                       PShortint(pi)^ := AChild.AsInteger
                     else
-                      PShortint(pi)^ := StringToSet(ASubTypeInfo,
-                        AChild.AsString);
+                      PShortint(pi)^ := StringToSet(ASubTypeInfo, AChild.AsString);
                   end;
                 otUByte:
                   begin
@@ -6781,8 +6587,7 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
                     if AChild.DataType = jdtInteger then
                       PSmallint(pi)^ := AChild.AsInteger
                     else
-                      PSmallint(pi)^ := StringToSet(ASubTypeInfo,
-                        AChild.AsString);
+                      PSmallint(pi)^ := StringToSet(ASubTypeInfo, AChild.AsString);
                   end;
                 otUWord:
                   begin
@@ -6796,16 +6601,14 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
                     if AChild.DataType = jdtInteger then
                       PInteger(pi)^ := AChild.AsInteger
                     else
-                      PInteger(pi)^ := StringToSet(ASubTypeInfo,
-                        AChild.AsString);
+                      PInteger(pi)^ := StringToSet(ASubTypeInfo, AChild.AsString);
                   end;
                 otULong:
                   begin
                     if AChild.DataType = jdtInteger then
                       PCardinal(pi)^ := AChild.AsInteger
                     else
-                      PCardinal(pi)^ := StringToSet(ASubTypeInfo,
-                        Items[I].AsString);
+                      PCardinal(pi)^ := StringToSet(ASubTypeInfo, Items[I].AsString);
                   end;
               end;
             end;
@@ -6943,8 +6746,7 @@ procedure TQJson.ToRtti(ADest: Pointer; AType: PTypeInfo;
                     if AChild.DataType = jdtInteger then
                       PCardinal(pi)^ := AChild.AsInteger
                     else
-                      PCardinal(pi)^ :=
-                        GetEnumValue(ASubType, Items[I].AsString);
+                      PCardinal(pi)^ := GetEnumValue(ASubType, Items[I].AsString);
                   end;
               end;
             end;
@@ -7155,6 +6957,8 @@ begin
     AValue := not SameValue(AsFloat, 0, 5E-324)
   else if DataType = jdtInteger then
     AValue := AsInt64 <> 0
+  else if DataType = jdtBcd then
+    AValue := AsBcd <> 0
   else
     Result := False;
 end;
@@ -7167,14 +6971,15 @@ begin
   else if DataType = jdtString then
   begin
     if Length(FValue) > 0 then
-      Result := ParseDateTime(PWideChar(FValue), AValue) or
-        ParseJsonTime(PWideChar(FValue), AValue) or
+      Result := ParseDateTime(PWideChar(FValue), AValue) or ParseJsonTime(PWideChar(FValue), AValue) or
         ParseWebTime(PQCharW(FValue), AValue)
     else
       Result := False;
   end
   else if DataType = jdtInteger then
     AValue := AsInt64
+  else if DataType=jdtBcd then
+    AValue:=BcdToDouble(AsBcd)
   else if DataType in [jdtNull, jdtUnknown] then
     AValue := 0
   else
@@ -7195,6 +7000,8 @@ begin
   Result := True;
   if DataType in [jdtFloat, jdtDateTime] then
     AValue := PExtended(FValue)^
+  else if DataType = jdtBcd then
+    AValue := BcdToDouble(PBcd(FValue)^)
   else if DataType = jdtBoolean then
     AValue := Integer(AsBoolean)
   else if DataType = jdtString then
@@ -7216,6 +7023,8 @@ begin
     AValue := PInt64(FValue)^
   else if DataType in [jdtFloat, jdtDateTime] then
     AValue := Trunc(PExtended(FValue)^)
+  else if (DataType = jdtBcd) and (PBcd(FValue)^ >= MinInt64) and (PBcd(FValue)^ <= MaxInt64) then
+    AValue := StrToInt64(NameOfW(BcdToStr(PBcd(FValue)^), '.'))
   else if DataType = jdtBoolean then
     AValue := Integer(AsBoolean)
   else if DataType = jdtString then
@@ -7235,16 +7044,37 @@ begin
   Result := TryParse(PQCharW(S), Length(S));
 end;
 
-function TQJson.TryParseValue(ABuilder: TQStringCatHelperW;
-  var p: PQCharW): Integer;
+function TQJson.TryParseValue(ABuilder: TQStringCatHelperW; var p: PQCharW): Integer;
 var
   ANum: Extended;
   AComment: QStringW;
   AIsFloat: Boolean;
 const
   JsonEndChars: PWideChar = ',]}';
-  MaxInt64: Int64 = 9223372036854775807;
-  MinInt64: Int64 = -9223372036854775808;
+  function ParseBcd: Boolean;
+  var
+    pl: PQCharW;
+  begin
+    pl := p;
+    if pl^ = '-' then
+      Inc(pl)
+    else if pl^ = '+' then
+      Inc(pl);
+    while pl^ <> #0 do
+    begin
+      if (pl^ >= '0') and (pl^ <= '9') then
+        Inc(pl)
+      else
+        Break;
+    end;
+    Result := CharInW(pl, JsonEndChars);
+    if Result then
+    begin
+      AsBcd := StrToBcd(StrDupX(p, pl - p));
+      p := pl;
+    end;
+  end;
+
 begin
   Result := 0;
   if p^ = '"' then
@@ -7301,7 +7131,7 @@ begin
   end
   else if (p^ = '[') or (p^ = '{') then
     Result := ParseJsonPair(ABuilder, p)
-  else
+  else if not ParseBcd then
     Result := 2;
 end;
 
@@ -7461,8 +7291,7 @@ procedure TQHashedJson.DoJsonNameChanged(AJson: TQJson);
         AItem := AList.Data;
         if AItem = AJson then
         begin
-          TQHashedJson(AJson.Parent).FHashTable.ChangeHash(AJson,
-            AJson.FNameHash, AHash);
+          TQHashedJson(AJson.Parent).FHashTable.ChangeHash(AJson, AJson.FNameHash, AHash);
           AJson.FNameHash := AHash;
           Break;
         end
@@ -7625,8 +7454,7 @@ begin
   Push;
 end;
 
-procedure TQJsonStreamHelper.BeginWrite(AStream: TStream;
-  AEncoding: TTextEncoding; ADoEscape, AWriteBom: Boolean);
+procedure TQJsonStreamHelper.BeginWrite(AStream: TStream; AEncoding: TTextEncoding; ADoEscape, AWriteBom: Boolean);
 begin
   FStream := AStream;
   FEncoding := AEncoding;
@@ -7684,8 +7512,7 @@ procedure TQJsonStreamHelper.EndWrite;
   const
     Utf16BEBom: Word = $FFFE;
   begin
-    ExchangeByteOrder(PQCharA(FStringHelper.Start),
-      FStringHelper.Position shl 1);
+    ExchangeByteOrder(PQCharA(FStringHelper.Start), FStringHelper.Position shl 1);
     if FWriteBom then
       FStream.Write(Utf16BEBom, 2);
     FStream.Write(FStringHelper.Start^, FStringHelper.Position shl 1);
@@ -7710,8 +7537,7 @@ begin
   FreeAndNil(FStringHelper);
 end;
 
-procedure TQJsonStreamHelper.InternalWriteString(S: QStringW;
-  ADoAppend: Boolean);
+procedure TQJsonStreamHelper.InternalWriteString(S: QStringW; ADoAppend: Boolean);
 begin
   FStringHelper.Cat(S);
   if ADoAppend then
@@ -7882,8 +7708,7 @@ begin
   Write(AValue);
 end;
 
-procedure TQJsonStreamHelper.Write(const AName: QStringW; const p: PByte;
-  const l: Integer);
+procedure TQJsonStreamHelper.Write(const AName: QStringW; const p: PByte; const l: Integer);
 begin
   WriteName(AName);
   Write(p, l);
@@ -7901,8 +7726,7 @@ begin
   Write(AValue);
 end;
 
-procedure TQJsonStreamHelper.WriteDateTime(const AName: QStringW;
-  AValue: TDateTime);
+procedure TQJsonStreamHelper.WriteDateTime(const AName: QStringW; AValue: TDateTime);
 begin
   WriteName(AName);
   WriteDateTime(AValue);
@@ -7910,8 +7734,7 @@ end;
 
 { TQJsonContainer }
 
-function TQJsonContainer.ForEach(ACallback: TQJsonForEachCallback;
-  ATag: Pointer): IQJsonContainer;
+function TQJsonContainer.ForEach(ACallback: TQJsonForEachCallback; ATag: Pointer): IQJsonContainer;
 var
   I: Integer;
 begin
@@ -7944,8 +7767,7 @@ begin
 end;
 {$IFDEF UNICODE}
 
-function TQJsonContainer.ForEach(ACallback: TQJsonForEachCallbackA)
-  : IQJsonContainer;
+function TQJsonContainer.ForEach(ACallback: TQJsonForEachCallbackA): IQJsonContainer;
 var
   I: Integer;
 begin
@@ -7957,8 +7779,7 @@ begin
   end;
 end;
 
-function TQJsonContainer.Match(const AFilter: TQJsonMatchFilterCallbackA;
-  ATag: Pointer): IQJsonContainer;
+function TQJsonContainer.Match(const AFilter: TQJsonMatchFilterCallbackA; ATag: Pointer): IQJsonContainer;
 var
   I: Integer;
   T: TQJsonContainer;
@@ -8001,8 +7822,7 @@ begin
   Result := FItems[AIndex];
 end;
 
-function TQJsonContainer.Match(const AFilter: TQJsonMatchFilterCallback;
-  ATag: Pointer): IQJsonContainer;
+function TQJsonContainer.Match(const AFilter: TQJsonMatchFilterCallback; ATag: Pointer): IQJsonContainer;
 var
   I: Integer;
   T: TQJsonContainer;
@@ -8024,8 +7844,7 @@ begin
     Result := Self;
 end;
 
-function TQJsonContainer.Match(const AStart, AStop, AStep: Integer)
-  : IQJsonContainer;
+function TQJsonContainer.Match(const AStart, AStop, AStep: Integer): IQJsonContainer;
 var
   I, c: Integer;
   T: TQJsonContainer;
@@ -8057,8 +7876,7 @@ begin
   end;
 end;
 
-function TQJsonContainer.Match(const AIndexes: array of Integer)
-  : IQJsonContainer;
+function TQJsonContainer.Match(const AIndexes: array of Integer): IQJsonContainer;
 var
   I, c: Integer;
   T: TQJsonContainer;
@@ -8073,8 +7891,7 @@ begin
   end;
 end;
 
-function TQJsonContainer.Match(const ARegex: QStringW;
-  ASettings: TQJsonMatchSettings): IQJsonContainer;
+function TQJsonContainer.Match(const ARegex: QStringW; ASettings: TQJsonMatchSettings): IQJsonContainer;
 var
   AReg: TPerlRegEx;
   T: TQJsonContainer;

@@ -23,6 +23,10 @@ type
     Button10: TButton;
     Button11: TButton;
     Button12: TButton;
+    GroupBox1: TGroupBox;
+    RadioGroup1: TRadioGroup;
+    Button13: TButton;
+    Button14: TButton;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -35,11 +39,13 @@ type
     procedure Button10Click(Sender: TObject);
     procedure Button11Click(Sender: TObject);
     procedure Button12Click(Sender: TObject);
+    procedure Button13Click(Sender: TObject);
+    procedure Button14Click(Sender: TObject);
   private
     { Private declarations }
     FBuilder: IDialogBuilder;
     FEditor: TEdit;
-    procedure DoDialogResult(FBuilder: IDialogBuilder);
+    procedure DoDialogResult(ABuilder: IDialogBuilder);
     procedure ValidBuilder;
     procedure LoadUser32Icon(APicture: TPicture; AResId: Integer);
   public
@@ -55,8 +61,7 @@ implementation
 
 procedure TForm1.Button10Click(Sender: TObject);
 begin
-  CustomDialog('自动关闭窗口', '这个窗口将在5秒后关闭', 'AFlags 参数低16位为倒计时秒数', ['立即关闭'],
-    diInformation, CDF_DISPLAY_REMAIN_TIME or 5);
+  CustomDialog('自动关闭窗口', '这个窗口将在5秒后关闭', 'AFlags 参数低16位为倒计时秒数', ['立即关闭'], diInformation, CDF_DISPLAY_REMAIN_TIME or 5);
 end;
 
 procedure TForm1.Button11Click(Sender: TObject);
@@ -70,6 +75,7 @@ begin
   ABuilder := NewDialog('进度窗口');
   ABuilder.ItemSpace := 10;
   ABuilder.AutoSize := True;
+  ABuilder.Dialog.Padding.SetBounds(5, 5, 5, 5);
   AHint := TLabel(ABuilder.AddControl(TLabel).Control);
   AHint.Caption := '正在处理，已完成0%...';
   AHint.AlignWithMargins := True;
@@ -111,10 +117,7 @@ var
 begin
   ABuilder := NewDialog;
   ABuilder.AutoSize := True;
-  ABuilder.Dialog.Padding.Left := 5;
-  ABuilder.Dialog.Padding.Top := 5;
-  ABuilder.Dialog.Padding.Right := 5;
-  ABuilder.Dialog.Padding.Bottom := 5;
+  ABuilder.Dialog.Padding.SetBounds(5, 5, 5, 5);
   for I := 0 to 5 do
   begin
     with ABuilder.AddContainer(amHorizLeft) do
@@ -151,6 +154,20 @@ begin
   end;
 end;
 
+procedure TForm1.Button13Click(Sender: TObject);
+begin
+  ValidBuilder;
+  FBuilder.PopupPosition := TQDialogPopupPosition(RadioGroup1.ItemIndex);
+  FBuilder.Popup(GroupBox1);
+end;
+
+procedure TForm1.Button14Click(Sender: TObject);
+begin
+  ValidBuilder;
+  FBuilder.PopupPosition := TQDialogPopupPosition(RadioGroup1.ItemIndex);
+  FBuilder.Popup(nil);
+end;
+
 procedure TForm1.Button1Click(Sender: TObject);
 begin
   ValidBuilder;
@@ -171,11 +188,10 @@ var
 begin
   // 此示例演示通过PropText定义属性及用户定义大小单选列表处理的问题
   ABuilder := NewDialog('单选项目');
+  ABuilder.Dialog.Padding.SetBounds(5, 5, 5, 5);
   ABuilder.PropText := '{"Width":300,"Height":150}';
-  ABuilder.AddControl(TRadioButton,
-    '{"Caption":"这个是项目一","AlignWithMargins":True,"Margins":{"Left":10},"Height":30}');
-  ABuilder.AddControl(TRadioButton,
-    '{"Caption":"这个是项目二","AlignWithMargins":True,"Margins":{"Left":10},"Height":30}');
+  ABuilder.AddControl(TRadioButton, '{"Caption":"这个是项目一","AlignWithMargins":True,"Margins":{"Left":10},"Height":30}');
+  ABuilder.AddControl(TRadioButton, '{"Caption":"这个是项目二","AlignWithMargins":True,"Margins":{"Left":10},"Height":30}');
   with ABuilder.AddContainer(amHorizRight) do
   begin
     Height := 32;
@@ -189,8 +205,7 @@ begin
     begin
       if Supports(ABuilder[I], IControlDialogItem, ACtrl) then
       begin
-        if (ACtrl.Control is TRadioButton) and
-          (TRadioButton(ACtrl.Control).Checked) then
+        if (ACtrl.Control is TRadioButton) and (TRadioButton(ACtrl.Control).Checked) then
         begin
           ShowMessage(TRadioButton(ACtrl.Control).Caption + ' 被选择');
           Break;
@@ -207,6 +222,7 @@ begin
   ABuilder := NewDialog('下拉示例');
   ABuilder.ItemSpace := 10;
   ABuilder.AutoSize := True;
+  ABuilder.Dialog.Padding.SetBounds(5, 5, 5, 5);
   with TLabel(ABuilder.AddControl(TLabel).Control) do
   begin
     Caption := '起床换衣服了！！！';
@@ -238,33 +254,28 @@ begin
   // 本示例演示分组的用法
   ABuilder := NewDialog('分组示例');
   ABuilder.AutoSize := True;
+  ABuilder.Dialog.Padding.SetBounds(5, 5, 5, 5);
   // 添加第一组RadioButton
   with ABuilder.AddContainer(amVertTop) do
   begin
     ItemSpace := 10;
     AutoSize := True;
-    AddControl(TLabel,
-      '{"Caption":"第一组","Color":"clGray","Transparent":False,"Font":{"Color":"clWhite","Size":11}}');
-    AddControl(TRadioButton,
-      '{"Caption":"这个是第一组的第一项","AlignWithMargins":True,"Margins":{"Left":10},"Height":30}')
-      .GroupName := 'Group1';
-    AddControl(TRadioButton,
-      '{"Caption":"这个是第一组的第二项","AlignWithMargins":True,"Margins":{"Left":10},"Height":30}')
-      .GroupName := 'Group1';
+    AddControl(TLabel, '{"Caption":"第一组","Color":"clGray","Transparent":False,"Font":{"Color":"clWhite","Size":11}}');
+    AddControl(TRadioButton, '{"Caption":"这个是第一组的第一项","AlignWithMargins":True,"Margins":{"Left":10},"Height":30}').GroupName
+      := 'Group1';
+    AddControl(TRadioButton, '{"Caption":"这个是第一组的第二项","AlignWithMargins":True,"Margins":{"Left":10},"Height":30}').GroupName
+      := 'Group1';
   end;
   // 添加第二组RadioButton
   with ABuilder.AddContainer(amVertTop) do
   begin
     AutoSize := True;
     ItemSpace := 10;
-    AddControl(TLabel,
-      '{"Caption":"第二组","Color":"clGray","Transparent":False,"Font":{"Color":"clWhite","Size":11}}');
-    AddControl(TRadioButton,
-      '{"Caption":"这个是第二组的第一项","AlignWithMargins":True,"Margins":{"Left":10},"Height":30}')
-      .GroupName := 'Group2';
-    AddControl(TRadioButton,
-      '{"Caption":"这个是第二组的第二项","AlignWithMargins":True,"Margins":{"Left":10},"Height":30}')
-      .GroupName := 'Group2';
+    AddControl(TLabel, '{"Caption":"第二组","Color":"clGray","Transparent":False,"Font":{"Color":"clWhite","Size":11}}');
+    AddControl(TRadioButton, '{"Caption":"这个是第二组的第一项","AlignWithMargins":True,"Margins":{"Left":10},"Height":30}').GroupName
+      := 'Group2';
+    AddControl(TRadioButton, '{"Caption":"这个是第二组的第二项","AlignWithMargins":True,"Margins":{"Left":10},"Height":30}').GroupName
+      := 'Group2';
   end;
   with ABuilder.AddContainer(amHorizRight) do
   begin
@@ -304,6 +315,7 @@ begin
   ABuilder := NewDialog('警告');
   ABuilder.AutoSize := True;
   ABuilder.ItemSpace := 5;
+  ABuilder.Dialog.Padding.SetBounds(5, 5, 5, 5);
   with ABuilder.AddContainer(amHorizLeft) do
   begin
     AutoSize := True;
@@ -342,8 +354,7 @@ end;
 
 procedure TForm1.Button8Click(Sender: TObject);
 begin
-  case CustomDialog('定制提醒', '您定制的大衣已经被别人抢走了！',
-    '选择接下来您要进行的操作：'#13#10#13#10'抢回来 - 尝试抢回，也可能失败'#13#10'放弃 - 放弃吧，总可以，至少还可以相信命运',
+  case CustomDialog('定制提醒', '您定制的大衣已经被别人抢走了！', '选择接下来您要进行的操作：'#13#10#13#10'抢回来 - 尝试抢回，也可能失败'#13#10'放弃 - 放弃吧，总可以，至少还可以相信命运',
     ['抢回来', '放弃'], diWarning) of
     0:
       ShowMessage('勇士啊，可对方已经把大衣烧掉了');
@@ -356,13 +367,14 @@ end;
 
 procedure TForm1.Button9Click(Sender: TObject);
 begin
-  CustomDialog('定制图标', '这个图标来自于shell32.dll', '', ['确定'], 48, 'shell32',
-    TSize.Create(64, 64));
+  CustomDialog('定制图标', '这个图标来自于shell32.dll', '', ['确定'], 48, 'shell32', TSize.Create(64, 64));
 end;
 
-procedure TForm1.DoDialogResult(FBuilder: IDialogBuilder);
+procedure TForm1.DoDialogResult(ABuilder: IDialogBuilder);
 begin
   Label1.Caption := '编辑结果：' + FEditor.Text;
+  if ABuilder=FBuilder then
+    FBuilder:=nil;
 end;
 
 procedure TForm1.LoadUser32Icon(APicture: TPicture; AResId: Integer);
@@ -379,12 +391,12 @@ begin
 end;
 
 procedure TForm1.ValidBuilder;
-
 begin
   if not Assigned(FBuilder) then
   begin
     FBuilder := NewDialog('DialogBuilder 示例');
     FBuilder.AutoSize := True;
+    FBuilder.Dialog.Padding.SetBounds(5, 5, 5, 5);
     with FBuilder.AddContainer(amHorizLeft) do
     begin
       Height := 32;
@@ -405,8 +417,7 @@ begin
       end;
     end;
     // 示例：使用基于 JSON 的属性定义
-    FBuilder.AddControl(TLabel,
-      '{"AlignWithMargins":True,"Caption":"请输入您的姓名.","Font":{"Color":"clGray"}}');
+    FBuilder.AddControl(TLabel, '{"AlignWithMargins":True,"Caption":"请输入您的姓名.","Font":{"Color":"clGray"}}');
     with FBuilder.AddControl(TEdit, '{"AlignWithMargins":true}') do
     begin
       FEditor := TEdit(Control);
