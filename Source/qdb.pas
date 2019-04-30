@@ -1001,12 +1001,15 @@ type
     pidAndroid{$IFEND}{$IF RTLVersion>=29} or pidiOSDevice32 or
     pidiOSDevice64{$IFEND})]
 {$IFEND}
+  TQDataSetPostOption = (poResort, poRefilter);
+  TQDataSetPostOptions = set of TQDataSetPostOption;
 
   TQDataSet = class(TDataSet, IQRecords)
   private
     procedure SetMasterFields(const Value: QStringW);
     procedure SetMasterSource(const Value: TDataSource);
     function GetMasterSource: TDataSource;
+    procedure SetPostOptions(const Value: TQDataSetPostOptions);
   protected
     FProvider: TQProvider; // 数据提供者
     FConverter: TQConverter; // 数据转换器
@@ -1025,6 +1028,7 @@ type
     FRecordNo: Integer; // 当前记录索引
     FEditingRow: TQRecord; // 当前插入的记录，用来避免重复拷贝
     FRecordsets: array of TQDataSet;
+    FPostOptions: TQDataSetPostOptions;
     // 克隆支持
     FClones: TQDataSetList; // 从自己克隆出去的数据集列表
     FCloneSource: TQDataSet; // 自己做为克隆后的数据集，那么指向来源数据集
@@ -1439,6 +1443,8 @@ type
     /// <summary>批量模式切换开关，在批量模式下，数据变更不会提交，除非手动调用ApplyChanges</summary>
     property BatchMode: Boolean read FBatchMode write FBatchMode default True;
     property Checks: TQLocalChecks read FChecks;
+    property PostOptions: TQDataSetPostOptions read FPostOptions
+      write SetPostOptions;
     property Active default False;
     property AllowEditActions: TQDataSetEditActions read FAllowEditActions
       write SetAllowEditActions;
@@ -3477,6 +3483,7 @@ begin
   FMasterLink.OnMasterChange := MasterChanged;
   FMasterLink.OnMasterDisable := MasterDisabled;
   FOpenBy := dsomByCreate;
+  FPostOptions := [poResort, poRefilter];
 end;
 
 function TQDataSet.CreateBlobStream(Field: TField;
@@ -5313,10 +5320,13 @@ begin
   if Filtered then
   begin
     FFilteredRecords.Clean;
-    if Assigned(OnFilterRecord) then
-      OnFilterRecord(Self, Result)
-    else if Assigned(FFilterExp) then
-      Result := FFilterExp.Accept(RealRecord(ABuf), FilterOptions);
+    if poRefilter in PostOptions then
+    begin
+      if Assigned(OnFilterRecord) then
+        OnFilterRecord(Self, Result)
+      else if Assigned(FFilterExp) then
+        Result := FFilterExp.Accept(RealRecord(ABuf), FilterOptions);
+    end;
     if Result then
     begin
       if ABuf.FFilteredIndex = -1 then
@@ -5335,7 +5345,8 @@ procedure TQDataSet.InternalAddToSorted(ABuf: TQRecord);
 var
   AIndex: Integer;
 begin
-  if Length(FSort) > 0 then
+  if ((Length(FSort) > 0) or Assigned(OnCustomSort)) and
+    (poResort in PostOptions) then
   begin
     if ABuf.SortedIndex <> -1 then
       FSortedRecords.Delete(ABuf.SortedIndex);
@@ -5477,7 +5488,10 @@ begin
   while L <= H do
   begin
     I := (L + H) shr 1;
-    C := SortCompare(AExp, ASorted[I], ABuf);
+    if Assigned(OnCustomSort) then
+      OnCustomSort(Self, ASorted[I], ABuf, C)
+    else
+      C := SortCompare(AExp, ASorted[I], ABuf);
     if C < 0 then
       L := I + 1
     else
@@ -5861,11 +5875,13 @@ var
         // 如果是新增的记录，则记录到变更里
         FEditingRow.FChangedIndex := ChangedRecords.Add(FEditingRow);
     end;
+
     if InternalAddToFiltered(FEditingRow) then
     begin
       InternalAddToSorted(FEditingRow);
       InternalSetToRecord(FEditingRow);
     end;
+
     if State = dsEdit then
       CloneNotify(FEditingRow, rcnModified)
     else
@@ -6531,7 +6547,7 @@ begin
   FActiveRecords.Clean;
   if (Buffer <> FEditingRow) and Assigned(Buffer.Bookmark) then
     Buffer := Buffer.Bookmark;
-  if Length(FSort) > 0 then
+  if (Length(FSort) > 0) or Assigned(OnCustomSort) then
     FRecordNo := Buffer.FSortedIndex
   else if Filtered then
     FRecordNo := Buffer.FFilteredIndex
@@ -7802,6 +7818,28 @@ begin
     FRecordNo := -1;
     Resync([]);
     FPageSize := 0;
+  end;
+end;
+
+procedure TQDataSet.SetPostOptions(const Value: TQDataSetPostOptions);
+begin
+  if FPostOptions <> Value then
+  begin
+    if Active then
+    begin
+      CheckBrowseMode;
+      if poRefilter in Value then
+      begin
+        if not(poRefilter in FPostOptions) then
+          FilterRecords(False, True);
+      end;
+      if poResort in Value then
+      begin
+        if not(poResort in FPostOptions) then
+          DoSort(True);
+      end;
+    end;
+    FPostOptions := Value;
   end;
 end;
 
