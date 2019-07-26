@@ -1186,6 +1186,13 @@ procedure TDialogBuilder.DoPopupMessage(var Msg: tagMSG; var Handled: Boolean);
     else
       DoClosePopup(Self);
   end;
+  function IsDropDown: Boolean;
+  begin
+    if (Screen.ActiveControl is TComboBox) then
+      Result := SendMessage(TComboBox(Screen.ActiveControl).Handle, CB_GETDROPPEDSTATE, 0, 0)<>0
+    else
+      Result := false;
+  end;
 
 begin
   case Msg.message of
@@ -1193,7 +1200,7 @@ begin
       begin
         if not PtInRect(Dialog.BoundsRect, Mouse.CursorPos) then
         begin
-          if dbsPopup in FStates then
+          if (dbsPopup in FStates) and (not IsDropDown) then
             DoClosePopup(Self);
         end;
       end;
@@ -1612,12 +1619,12 @@ begin
     with TMethod(FOnClick) do
     begin
       if Data = Pointer(-1) then
-        TNotifyCallback(Code)(Self)
+        TNotifyCallback(Code)(FControl)
       else
-        FOnClick(Self);
+        FOnClick(FControl);
     end;
 {$ELSE}
-    FOnClick(Self);
+    FOnClick(FControl);
 {$ENDIF}
   end;
 end;

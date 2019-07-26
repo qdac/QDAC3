@@ -2742,7 +2742,7 @@ var
     begin
       for I := 0 to AItem.FAttrs.Count - 1 do
         ABuilder.Cat(Space, 1).Cat(AItem.Attrs[I].FName).Cat(ValueStart, 2)
-          .Cat(XMLEncode(AItem.Attrs[I].FValue,true,false)).Cat(Quoter);
+          .Cat(XMLEncode(AItem.Attrs[I].FValue, True, False)).Cat(Quoter);
     end;
     if AItem.Count = 0 then
     begin
@@ -2786,7 +2786,7 @@ var
             begin
               // if ADoFormat then
               // ABuilder.Replicate(AIndent, ALevel);
-              ABuilder.Cat(XMLEncode(ANode.FName,false, True));
+              ABuilder.Cat(XMLEncode(ANode.FName, False, True));
               if ADoFormat and (I < AItem.Count - 1) then
                 ABuilder.Cat(SLineBreak);
             end;
@@ -2824,7 +2824,7 @@ var
   end;
   function DefaultTagNeeded: Boolean;
   var
-    I, C: Integer;
+    I, c: Integer;
   begin
     if NodeType = xntNode then
     begin
@@ -2837,15 +2837,15 @@ var
             Result := Items[0].NodeType in [xntText, xntCData]
         else
           begin
-            C := 0;
+            c := 0;
             for I := 0 to Count - 1 do
             begin
               if Items[I].NodeType <> xntComment then
-                Inc(C);
-              if C > 1 then
+                Inc(c);
+              if c > 1 then
                 Break;
             end;
-            Result := C > 1;
+            Result := c > 1;
           end;
         end;
       end

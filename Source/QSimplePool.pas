@@ -62,6 +62,7 @@ type
     destructor Destroy; override;
     procedure Push(p: Pointer);
     function Pop: Pointer;
+    procedure Clear;
     property Count: Integer read FCount;
     property Size: Integer read FSize write SetSize;
     property OnNewItem: TQSimplePoolNewItemEvent read FOnNewItem
@@ -125,6 +126,23 @@ begin
     PQSimplePoolItemNotifyA(@TMethod(FOnReset).Code)^ := AOnReset;
     TMethod(FOnReset).Data := Pointer(-1);
   end;
+end;
+
+procedure TQSimplePool.Clear;
+var
+  I:Integer;
+begin
+FLocker.Enter;
+try
+  for I := 0 to FCount-1 do
+    begin
+    DoFree(FPool[I]);
+    FPool[I]:=nil;
+    end;
+  FCount:=0;
+finally
+  FLocker.Leave;
+end;
 end;
 
 constructor TQSimplePool.Create(AMaxSize: Integer;
@@ -260,6 +278,7 @@ begin
   else
     DoFree(p);
 end;
+
 
 procedure TQSimplePool.SetSize(const Value: Integer);
 var

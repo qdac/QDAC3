@@ -2,300 +2,210 @@ unit qdac_ssl;
 
 interface
 
-uses classes, sysutils, qdac_openssl;
+uses classes, sysutils, syncobjs;
 
 type
-  TQSSLItem = class;
+  IQSSLFactory = interface;
 
-  TQSSLManager = class
+  IQSSLX509 = interface
+    ['{99B324F9-D274-4ADC-9AC0-C1E58E1B000D}']
+  end;
+
+  PQSSLStack = Pointer;
+
+  IQSSLContext = interface
+    ['{6135E5C8-895A-4BAD-93CD-4B37FA8ACD38}']
+  end;
+
+  TQSSLFileFormat = (ffUnknown, ffPEM, ffCER64, ffCRT64, ffDER, ffCER, ffCRT, ffP7B, ffP7R, ffSPC, ffPFX, ffP12);
+
+  IQSSLCA = interface
+    ['{42D82B35-F2E6-4CEF-98C9-C01AE26B12D1}']
+    procedure LoadFromFile(const AFileName: String);
+    procedure SaveToFile(const AFileName: String);
+    procedure LoadFromStream(AStream: TStream);
+    procedure SaveToStream(AStream: TStream);
+    function GetFileName: String;
+    procedure SetFileName(const AFileName: String);
+    function GetData: TBytes;
+    procedure SetData(const AData: TBytes);
+    function GetPassword: String;
+    procedure SetPassword(const AValue: String);
+    function GetFormat: TQSSLFileFormat;
+    procedure SetFormat(const AValue: TQSSLFileFormat);
+    function Exists: Boolean;
+    property FileName: String read GetFileName write SetFileName;
+    property Data: TBytes read GetData write SetData;
+    property Password: String read GetPassword write SetPassword;
+    property Format: TQSSLFileFormat read GetFormat write SetFormat;
+  end;
+
+  IQSSLKey = interface(IQSSLCA)
+    ['{8ABDDEE5-1480-43D7-98D4-B4ECD9B0B10E}']
+  end;
+
+  IQSSLItem = interface
+    ['{F05A2E31-99AF-400D-BAE7-C33A5C66654C}']
+    function GetHandle: THandle;
+    procedure SetHandle(AHandle: THandle);
+    function Accept: Boolean;
+    function Connect: Boolean;
+    procedure Shutdown;
+    function Read(var ABuf; ACount: Integer): Integer;
+    function Write(const ABuf; ACount: Integer): Integer;
+    function GetPrivateKey: IQSSLKey;
+    function GetPrivateCA: IQSSLCA;
+    function GetRootCA: IQSSLCA;
+    function GetCipherBits: Integer;
+    function GetCipherName: String;
+    function GetFactory: IQSSLFactory;
+    property Handle: THandle read GetHandle write SetHandle;
+    property PrivateKey: IQSSLKey read GetPrivateKey;
+    property PrivateCA: IQSSLCA read GetPrivateCA;
+    property RootCA: IQSSLCA read GetRootCA;
+    property CipherBits: Integer read GetCipherBits;
+    property CipherName: String read GetCipherName;
+  end;
+
+  IQSSLFactory = interface
+    ['{F58D9C76-4C0A-4104-9B15-2D54C61AA0E7}']
+    function NewItem: IQSSLItem;
+    function NewFactory: IQSSLFactory;
+    function GetRootCA: IQSSLCA;
+    function GetPrivateCA: IQSSLCA;
+    function GetPrivateKey: IQSSLKey;
+    function GetName: String;
+    function GetLastError: Integer;
+    function GetLastErrorMsg: String;
+    function GetVerifyPeer: Boolean;
+    procedure SetVerifyPeer(const AValue: Boolean);
+    function GetRootCAPath: String;
+    property VerifyPeer: Boolean read GetVerifyPeer write SetVerifyPeer;
+    property LastError: Integer read GetLastError;
+    property LastErrorMsg: String read GetLastErrorMsg;
+    property Name: String read GetName;
+    property RootCA: IQSSLCA read GetRootCA;
+    property PrivateCA: IQSSLCA read GetPrivateCA;
+    property PrivateKey: IQSSLKey read GetPrivateKey;
+  end;
+
+  ESSLError = class(Exception)
+
+  end;
+
+  TQSSLManager = class sealed
   private
     class function GetCurrent: TQSSLManager; static;
+    class function GetActiveFactory: IQSSLFactory; static;
   protected
-    FContext: PSSL_CTX;
-    FPassword: String;
-    FCAFile: String;
-    FCARootFile: String;
-    FPrivateKeyFile: String;
-    FInitialized: Boolean;
-    class var FCurrent: TQSSLManager;
+  class var
+    FCurrent: TQSSLManager;
+    FLocker: TCriticalSection;
+
+  var
+    FFactories: array of IQSSLFactory;
+    FActiveIndex: Integer;
+    function InternalGetActiveFactory: IQSSLFactory;
   public
     constructor Create;
     destructor Destroy; override;
-    procedure LoadCAFiles(const ACAFile: String = '');
-    procedure LoadKey(const APrivateKeyFile: String = '');
-    function NewItem: TQSSLItem;
-    property Password: String read FPassword write FPassword;
-    property PrivateKeyFile: String read FPrivateKeyFile write FPrivateKeyFile;
-    property CAFile: String read FCAFile write FCAFile;
-    property CARootFile: String read FCARootFile write FCARootFile;
-    property Initialized: Boolean read FInitialized;
+    procedure RegisterFactory(const AItem: IQSSLFactory);
+    procedure UnregisterFactory(const AItem: IQSSLFactory);
+    class procedure Lock;
+    class procedure Unlock;
+    class property ActiveFactory: IQSSLFactory read GetActiveFactory;
     class property Current: TQSSLManager read GetCurrent;
-  end;
-
-  TQSSLMode = (EnablePartialWrite, AcceptMovingWriteBuffer, AutoReply, NoAutoChain);
-  TQSSLModes = set of TQSSLMode;
-
-  TQSSLItem = class
-  private
-    FSSL: PSSL;
-    FHandle: THandle;
-    FOwner: TQSSLManager;
-    FModes: TQSSLModes;
-    function GetCipherBits: Integer;
-    function GetCipherName: String;
-    function GetCurentCipher: Pointer;
-    function GetPeerCertificate: PX509;
-    function GetVerified: Boolean;
-    procedure SetModes(const Value: TQSSLModes);
-    function GetSSLErrrCode: Integer;
-    function GetLastSSLErrorMsg: String;
-  public
-    constructor Create(AOwner: TQSSLManager); overload;
-    destructor Destroy; override;
-    function Bind(AHandle: THandle): Boolean;
-    function Accept: Boolean;
-    function Connect: Boolean;
-    function Shutdown: Boolean;
-    function Read(var ABuf; ACount: Integer): Integer;
-    function Peek(var ABuf; ACount: Integer): Integer;
-    function Write(const ABuf; ACount: Integer): Integer;
-    function Pending: Integer;
-    property PeerCertificate: PX509 read GetPeerCertificate;
-    property CurrentCipher: Pointer read GetCurentCipher;
-    property CipherName: String read GetCipherName;
-    property CipherBits: Integer read GetCipherBits;
-    property Verified: Boolean read GetVerified;
-    property Modes: TQSSLModes read FModes write SetModes;
-    property LastError: Integer read GetSSLErrrCode;
-    property LastErrorMsg: String read GetLastSSLErrorMsg;
   end;
 
 implementation
 
-uses qstring;
-
-resourcestring
-  SInitFailed = '初始化加密库失败，无法加载 %s/%s/%s 之一，请检查其是否存在。';
-  SCreateContextError = '初始化 SSL 上下文失败。';
-  SLoadCAError = '加载 CA 证书 %s 失败，请检查证书是否有效。';
-  { TQSSLManager }
+{ TQSSLManager }
 
 constructor TQSSLManager.Create;
-
 begin
   inherited;
-  FInitialized := InitSSLInterface;
-  if FInitialized then
-  begin
-    // 服务器方法
-    SslLibraryInit;
-    SslLoadErrorStrings;
-    OPENSSLaddallalgorithms();
-    SslLoadErrorStrings;
-    // 创建SSL上下文
-    FContext := SslCtxNew(SslMethodV23);
-    if FContext = nil then
-      raise Exception.Create(SCreateContextError);
-  end;
 end;
 
 destructor TQSSLManager.Destroy;
+var
+  I: Integer;
 begin
-  if Assigned(FContext) then
-  begin
-    try
-      begin
-        SSLFree(FContext);
-      end;
-    finally
-      FContext := nil;
-    end;
-  end;
+  for I := 0 to High(FFactories) do
+    FFactories[I] := nil;
   inherited;
+end;
+
+class function TQSSLManager.GetActiveFactory: IQSSLFactory;
+begin
+  Result := Current.InternalGetActiveFactory;
 end;
 
 class function TQSSLManager.GetCurrent: TQSSLManager;
 begin
   if not Assigned(FCurrent) then
   begin
-    Result := TQSSLManager.Create;
-    if AtomicCmpExchange(Pointer(FCurrent), Pointer(Result), nil) <> nil then
-      FreeAndNil(Result);
+    FCurrent := TQSSLManager.Create;
+    TQSSLManager.FLocker := TCriticalSection.Create;
   end;
   Result := FCurrent;
 end;
 
-procedure TQSSLManager.LoadCAFiles(const ACAFile: String);
-var
-  AStatus: Integer;
-  ACipherList: StringA;
+function TQSSLManager.InternalGetActiveFactory: IQSSLFactory;
 begin
-  if Length(ACAFile) > 0 then
-    FCARootFile := ACAFile;
-  ACipherList := 'DEFAULT';
-  SslCtxSetCipherList(FContext, ACipherList);
-  // 设置证书文件口令
-  SslCtxSetDefaultPasswdCbUserdata(FContext, PCharA(StringA(FPassword)));
-  // 加载可信任的 CA 证书
-  if Length(CAFile) > 0 then
+  if Length(FFactories) > 0 then
   begin
-    AStatus := SslCtxLoadVerifyLocations(FContext, StringA(CAFile), './');
-    if AStatus <= 0 then
-      raise Exception.CreateFmt(SLoadCAError, [CAFile]);
-  end;
-  // 加载自己的证书
-  if Length(CARootFile) > 0 then
-  begin
-    AStatus := SslCtxUseCertificateFile(FContext, StringA(CARootFile), SSL_FILETYPE_PEM);
-    if AStatus <= 0 then
-      raise Exception.CreateFmt(SLoadCAError, [CAFile]);
-  end;
-end;
-
-procedure TQSSLManager.LoadKey(const APrivateKeyFile: String);
-var
-  AStatus: Integer;
-begin
-  PrivateKeyFile := APrivateKeyFile;
-  // 加载自己的私钥
-  if Length(PrivateKeyFile) > 0 then
-  begin
-    AStatus := SslCtxUsePrivateKeyFile(FContext, StringA(PrivateKeyFile), SSL_FILETYPE_PEM);
-    if AStatus <= 0 then
-      raise Exception.CreateFmt(SLoadCAError, [CAFile]);
-    // 判定私钥是否正确
-    if SslCtxCheckPrivateKeyFile(FContext) = 0 then
-      raise Exception.CreateFmt(SLoadCAError, [CAFile]);
-  end;
-end;
-
-function TQSSLManager.NewItem: TQSSLItem;
-begin
-  Result := TQSSLItem.Create(Self);
-end;
-
-{ TQSSLItem }
-
-function TQSSLItem.Accept: Boolean;
-begin
-  Result := SSLAccept(FSSL) > 0;
-end;
-
-function TQSSLItem.Bind(AHandle: THandle): Boolean;
-begin
-  if FHandle <> AHandle then
-  begin
-    FHandle := AHandle;
-    if FHandle <> 0 then
-      Result := SslSetFd(FSSL, AHandle) > 0;
+    if (FActiveIndex >= 0) and (FActiveIndex < Length(FFactories)) then
+      Result := FFactories[FActiveIndex]
+    else
+    begin
+      Result := FFactories[0];
+      FActiveIndex := 0;
+    end;
   end
   else
-    Result := True;
+    Result := nil;
 end;
 
-function TQSSLItem.Connect: Boolean;
-var
-  ACode: Integer;
+class procedure TQSSLManager.Lock;
 begin
-  ACode := SSLConnect(FSSL);
-  if ACode = -1 then
+  FLocker.Enter;
+end;
+
+procedure TQSSLManager.RegisterFactory(const AItem: IQSSLFactory);
+begin
+  if Assigned(AItem) then
   begin
-    while LastError in [SSL_ERROR_WANT_READ, SSL_ERROR_WANT_WRITE] do
+    SetLength(FFactories, Length(FFactories) + 1);
+    FFactories[High(FFactories)] := AItem;
+  end;
+end;
+
+class procedure TQSSLManager.Unlock;
+begin
+  FLocker.Leave;
+end;
+
+procedure TQSSLManager.UnregisterFactory(const AItem: IQSSLFactory);
+var
+  I: Integer;
+begin
+  for I := Low(FFactories) to High(FFactories) do
+  begin
+    if FFactories[I] = AItem then
     begin
-      Sleep(10);
+      Delete(FFactories, I, 1);
+      Break;
     end;
   end;
-  Result := ACode > 0;
 end;
 
-constructor TQSSLItem.Create(AOwner: TQSSLManager);
-begin
-  inherited Create;
-  FOwner := AOwner;
-  FSSL := SslNew(AOwner.FContext);
-end;
+initialization
 
-destructor TQSSLItem.Destroy;
-begin
-  SslShutdown(FSSL);
-  SSLFree(FSSL);
-  inherited;
-end;
+finalization
 
-function TQSSLItem.GetCipherBits: Integer;
-begin
-  if SSLCipherGetBits(FSSL, Result) <= 0 then
-    Result := -1;
-end;
-
-function TQSSLItem.GetCipherName: String;
-begin
-  Result := SSLCipherGetName(FSSL);
-end;
-
-function TQSSLItem.GetCurentCipher: Pointer;
-begin
-  Result := SSLGetCurrentCipher(FSSL);
-end;
-
-function TQSSLItem.GetLastSSLErrorMsg: String;
-begin
-  Result := qstring.Utf8Decode(PQCharA(ERR_error_string(LastError, nil)));
-end;
-
-function TQSSLItem.GetPeerCertificate: PX509;
-begin
-  Result := SslGetPeerCertificate(FSSL);
-end;
-
-function TQSSLItem.GetSSLErrrCode: Integer;
-begin
-  if SSLGetError(FSSL, Result) <= 0 then
-    Result := SSL_ERROR_SSL;
-end;
-
-function TQSSLItem.GetVerified: Boolean;
-begin
-  Result := SSLGetVerifyResult(FSSL) > 0;
-end;
-
-function TQSSLItem.Peek(var ABuf; ACount: Integer): Integer;
-begin
-  Result := SSLPeek(FSSL, @ABuf, ACount);
-end;
-
-function TQSSLItem.Pending: Integer;
-begin
-  Result := SSLPending(FSSL);
-end;
-
-function TQSSLItem.Read(var ABuf; ACount: Integer): Integer;
-begin
-  Result := SSLRead(FSSL, @ABuf, ACount);
-end;
-
-procedure TQSSLItem.SetModes(const Value: TQSSLModes);
-var
-  AValue: Integer;
-  I: TQSSLMode;
-begin
-  AValue := 0;
-  for I := Low(TQSSLMode) to High(TQSSLMode) do
+if Assigned(TQSSLManager.FCurrent) then
   begin
-    if I in Value then
-      AValue := AValue or (1 shl Ord(I));
+  FreeAndNil(TQSSLManager.FCurrent);
+  FreeAndNil(TQSSLManager.FLocker);
   end;
-  SSLSetMode(FSSL, AValue);
-end;
-
-function TQSSLItem.Shutdown: Boolean;
-begin
-  Result := SslShutdown(FSSL) > 0;
-end;
-
-function TQSSLItem.Write(const ABuf; ACount: Integer): Integer;
-begin
-  Result := SSLWrite(FSSL, @ABuf, ACount);
-end;
-
 end.

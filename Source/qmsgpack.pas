@@ -214,7 +214,7 @@ interface
   * 首个正式版本发布，目前与RTTI相关的几个函数暂时不可用
 }
 uses classes, sysutils, math, qstring, qrbtree, typinfo,
-  variants, varutils
+  variants, varutils,System.DateUtils
 {$IFDEF UNICODE}, Generics.Collections{$ENDIF}{$IF RTLVersion>=21},
   Rtti{$IFEND >=2010}
 {$IF RTLVersion<22}// 2007-2010
@@ -3307,6 +3307,7 @@ procedure TQMsgPack.InternalParse(var p: PByte; l: Integer; AToKey: Boolean);
 var
   ps: PByte;
   I: Integer;
+  sec,nsec: Int64;
   ACount: Cardinal;
   AChild: TQMsgPack;
 begin
@@ -3466,13 +3467,22 @@ begin
         $C7: // Ext8
           begin
             Inc(p);
-            DataType := mptExtended;
             ACount := p^;
             SetLength(FValue, ACount);
             Inc(p);
             FExtType := p^;
             Inc(p);
             Move(p^, FValue[0], ACount);
+            if (ACount = 12) and (FExtType = -1) then //96位时间格式
+            begin
+              DataType := mptDateTime;
+              nsec := ExchangeByteOrder(PCardinal(@FValue[0])^);
+              sec := ExchangeByteOrder(PCardinal(@FValue[4])^);
+              //转换成本地时间
+              PDouble(FValue)^ := TTimeZone.Local.ToLocalTime((sec+nsec/(1000*1000*1000))/ 86400+UnixDateDelta);
+            end
+            else DataType := mptExtended;
+
             Inc(p, ACount);
           end;
         $C8: // Ext16
@@ -3619,21 +3629,36 @@ begin
         $D6: // Fixed Ext32,4B
           begin
             Inc(p);
-            DataType := mptExtended;
-            SetLength(FValue, 4);
             FExtType := p^;
+            SetLength(FValue, 4);
             Inc(p);
             PCardinal(@FValue[0])^ := PCardinal(p)^;
+            if FExtType = -1 then
+            begin
+              sec := ExchangeByteOrder(PCardinal(@FValue[0])^);
+              DataType := mptDateTime;
+              //转换成本地时间
+              PDouble(FValue)^ := TTimeZone.Local.ToLocalTime(sec / 86400+UnixDateDelta);
+            end
+            else  DataType := mptExtended;
             Inc(p, 4);
           end;
         $D7: // Fixed Ext64,8B
           begin
             Inc(p);
-            DataType := mptExtended;
-            SetLength(FValue, 8);
             FExtType := p^;
             Inc(p);
+            SetLength(FValue, 8);
             PInt64(@FValue[0])^ := PInt64(p)^;
+            if FExtType = -1 then
+            begin
+              sec := ExchangeByteOrder(PInt64(@FValue[0])^);
+              nsec := int64(sec shr 34);
+              sec := sec and $00000003ffffffff;
+              DataType := mptDateTime;
+              PDouble(FValue)^ := TTimeZone.Local.ToLocalTime((sec+nsec/(1000*1000*1000))/ 86400+UnixDateDelta);
+            end
+            else DataType := mptExtended;
             Inc(p, 8);
           end;
         $D8: // Fixed Ext 128bit,16B

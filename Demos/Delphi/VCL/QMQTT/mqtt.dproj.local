@@ -1,9 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Transactions>
-    <Transaction>1899-12-30 00:00:00.000.776,C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.dfm=C:\User\MQTTClient\main.dfm</Transaction>
-    <Transaction>1899-12-30 00:00:00.000.393,C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Project1.dproj=C:\User\MQTTClient\mqtt.dproj</Transaction>
-    <Transaction>1899-12-30 00:00:00.000.997,C:\User\MQTTClient\QMqttClient.pas=C:\User\QDAC3\Source\QMqttClient.pas</Transaction>
-    <Transaction>1899-12-30 00:00:00.000.727,C:\User\QDAC3\Source\QMqttClient.pas=C:\User\MQTTClient\messageClient.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.826,=C:\User\MQTTClient\messageClient.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.486,C:\User\QDAC3\Source\qdac_ssl_sbb.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.727,C:\User\MQTTClient\messageClient.pas=C:\User\QDAC3\Source\QMqttClient.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.314,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.870,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.830,C:\User\MQTTClient\qdac_ssl.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.393,C:\User\MQTTClient\mqtt.dproj=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.776,C:\User\MQTTClient\main.dfm=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.809,C:\User\QDAC3\Source\qdac_ssl_sbb.pas=C:\User\MQTTClient\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.524,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.461,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.116,=C:\User\MQTTClient\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.997,C:\User\QDAC3\Source\QMqttClient.pas=C:\User\MQTTClient\QMqttClient.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.988,=C:\User\MQTTClient\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.905,C:\User\MQTTClient\QMqttClient.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.497,C:\User\MQTTClient\Unit1.pas=C:\User\MQTTClient\qdac_ssl.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.815,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.016,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.708,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.776,C:\User\MQTTClient\main.pas=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.498,=C:\Users\Administrator\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
   </Transactions>
 </BorlandProject>

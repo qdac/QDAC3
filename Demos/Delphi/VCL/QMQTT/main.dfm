@@ -12,13 +12,14 @@ object Form1: TForm1
   Font.Style = []
   OldCreateOrder = False
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   PixelsPerInch = 120
   TextHeight = 16
   object Panel1: TPanel
     Left = 0
     Top = 0
     Width = 934
-    Height = 68
+    Height = 73
     Align = alTop
     BevelOuter = bvNone
     ShowCaption = False
@@ -41,7 +42,7 @@ object Form1: TForm1
       EditLabel.Caption = #26381#21153#22120#22320#22336':'
       LabelPosition = lpLeft
       TabOrder = 0
-      Text = '16e09j0.mqtt.iot.gz.baidubce.com'
+      Text = 'iot-acc.huaweicloud.com'
     end
     object leServerPort: TLabeledEdit
       Left = 290
@@ -53,7 +54,7 @@ object Form1: TForm1
       EditLabel.Caption = #31471#21475#21495':'
       LabelPosition = lpLeft
       TabOrder = 1
-      Text = '1883'
+      Text = '8883'
     end
     object leUserName: TLabeledEdit
       Left = 416
@@ -65,7 +66,7 @@ object Form1: TForm1
       EditLabel.Caption = #29992#25143#21517':'
       LabelPosition = lpLeft
       TabOrder = 2
-      Text = '16e09j0/guest'
+      Text = '59086eb7-d65f-4ffb-a91e-f9e4f40419bc'
     end
     object lePassword: TLabeledEdit
       Left = 599
@@ -78,14 +79,14 @@ object Form1: TForm1
       LabelPosition = lpLeft
       PasswordChar = '*'
       TabOrder = 3
-      Text = 'ZLZPvc0i9Tavm2EL'
+      Text = '4b0d12138fa20965f6f13078d2324e18961cf2c1b4d6a0c9233c232e860fb686'
     end
     object Button1: TButton
       AlignWithMargins = True
       Left = 824
       Top = 8
       Width = 107
-      Height = 52
+      Height = 57
       Margins.Top = 8
       Margins.Bottom = 8
       Align = alRight
@@ -113,10 +114,10 @@ object Form1: TForm1
     object edtClientId: TEdit
       Left = 86
       Top = 41
-      Width = 198
+      Width = 259
       Height = 24
       TabOrder = 7
-      Text = 'qdac_test'
+      Text = '59086eb7-d65f-4ffb-a91e-f9e4f40419bc_0_0_2019043015'
     end
     object chkSSL: TCheckBox
       Left = 368
@@ -124,6 +125,8 @@ object Form1: TForm1
       Width = 97
       Height = 17
       Caption = 'SSL'
+      Checked = True
+      State = cbChecked
       TabOrder = 8
       OnClick = chkSSLClick
     end
@@ -140,21 +143,12 @@ object Form1: TForm1
         '3.1.1'
         '5.0')
     end
-    object Button2: TButton
-      Left = 287
-      Top = 40
-      Width = 75
-      Height = 25
-      Caption = #25442#19968#20010
-      TabOrder = 10
-      OnClick = Button2Click
-    end
   end
   object Panel2: TPanel
     Left = 0
-    Top = 68
+    Top = 73
     Width = 934
-    Height = 428
+    Height = 423
     Align = alClient
     BevelOuter = bvNone
     ShowCaption = False
@@ -162,7 +156,7 @@ object Form1: TForm1
     object Splitter1: TSplitter
       Left = 490
       Top = 0
-      Height = 428
+      Height = 423
       ExplicitLeft = 464
       ExplicitTop = 192
       ExplicitHeight = 100
@@ -171,7 +165,7 @@ object Form1: TForm1
       Left = 0
       Top = 0
       Width = 490
-      Height = 428
+      Height = 423
       Align = alLeft
       BevelOuter = bvLowered
       ShowCaption = False
@@ -180,60 +174,28 @@ object Form1: TForm1
         Left = 1
         Top = 1
         Width = 488
-        Height = 32
+        Height = 64
         Align = alTop
         TabOrder = 0
-        object Label1: TLabel
-          AlignWithMargins = True
-          Left = 4
-          Top = 4
-          Width = 65
-          Height = 24
-          Align = alLeft
-          Caption = #25509#25910#20027#39064':'
-          Layout = tlCenter
-          ExplicitHeight = 16
-        end
-        object btnSubscribe: TButton
-          AlignWithMargins = True
-          Left = 224
-          Top = 4
-          Width = 75
-          Height = 24
-          Align = alRight
-          Caption = #35746#38405
-          TabOrder = 0
-          OnClick = btnSubscribeClick
-        end
-        object edtSubscribeTopic: TEdit
-          AlignWithMargins = True
-          Left = 75
-          Top = 4
-          Width = 143
-          Height = 24
-          Align = alClient
-          TabOrder = 1
-          Text = '/Topic1,/Topic2'
-        end
         object Panel9: TPanel
-          Left = 302
-          Top = 1
-          Width = 185
-          Height = 30
-          Align = alRight
+          Left = 1
+          Top = 29
+          Width = 486
+          Height = 34
+          Align = alClient
           BevelOuter = bvNone
           ShowCaption = False
-          TabOrder = 2
+          TabOrder = 0
           object Label5: TLabel
             Left = 8
-            Top = 8
+            Top = 7
             Width = 63
             Height = 16
             Caption = 'QoS '#32423#21035':'
           end
           object cbxRecvQoSLevel: TComboBox
             Left = 77
-            Top = 3
+            Top = 4
             Width = 100
             Height = 22
             Style = csOwnerDrawFixed
@@ -245,13 +207,65 @@ object Form1: TForm1
               #33267#23569#19968#27425
               #21482#21457#19968#27425)
           end
+          object btnUnsubscribe: TButton
+            AlignWithMargins = True
+            Left = 264
+            Top = 3
+            Width = 75
+            Height = 24
+            Caption = #21462#28040#35746#38405
+            TabOrder = 1
+            OnClick = btnUnsubscribeClick
+          end
+          object btnSubscribe: TButton
+            AlignWithMargins = True
+            Left = 183
+            Top = 3
+            Width = 75
+            Height = 24
+            Caption = #35746#38405
+            TabOrder = 2
+            OnClick = btnSubscribeClick
+          end
+        end
+        object Panel10: TPanel
+          Left = 1
+          Top = 1
+          Width = 486
+          Height = 28
+          Align = alTop
+          BevelOuter = bvNone
+          Caption = 'Panel10'
+          TabOrder = 1
+          object Label1: TLabel
+            AlignWithMargins = True
+            Left = 3
+            Top = 3
+            Width = 65
+            Height = 22
+            Align = alLeft
+            Caption = #25509#25910#20027#39064':'
+            Layout = tlCenter
+            ExplicitHeight = 16
+          end
+          object edtSubscribeTopic: TEdit
+            AlignWithMargins = True
+            Left = 74
+            Top = 3
+            Width = 409
+            Height = 22
+            Align = alClient
+            TabOrder = 0
+            Text = '/Topic1,/Topic2'
+            ExplicitHeight = 24
+          end
         end
       end
       object Memo1: TMemo
         Left = 1
-        Top = 33
+        Top = 65
         Width = 488
-        Height = 394
+        Height = 357
         Align = alClient
         TabOrder = 1
       end
@@ -260,7 +274,7 @@ object Form1: TForm1
       Left = 493
       Top = 0
       Width = 441
-      Height = 428
+      Height = 423
       Align = alClient
       BevelOuter = bvLowered
       ShowCaption = False
@@ -327,7 +341,7 @@ object Form1: TForm1
       end
       object Panel7: TPanel
         Left = 1
-        Top = 395
+        Top = 390
         Width = 439
         Height = 32
         Align = alBottom
@@ -369,7 +383,7 @@ object Form1: TForm1
         Left = 1
         Top = 33
         Width = 439
-        Height = 362
+        Height = 357
         Align = alClient
         TabOrder = 2
       end

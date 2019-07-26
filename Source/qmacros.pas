@@ -1542,6 +1542,7 @@ function TQMacroManager.Replace(AHandle: TQMacroComplied): QStringW;
             begin
               if AItem.Macro.Value.ReplaceId <> FReplaceId then
               begin
+                AItem.Macro.FParams := AItem.Params;
                 DoFetchValue(AItem.Macro, AItem.Quoter);
                 AItem.Macro.Value.ReplaceId := FReplaceId;
               end;

@@ -128,13 +128,16 @@ type
 
   TVKStateHandler = class(TComponent)
   protected
+    class var FContentRect: TRect;
+  protected
     FVKMsgId: Integer; // TVKStateChangeMessage 消息的订阅ID
     FSizeMsgId: Integer; // TSizeChangedMessage 消息的订阅ID
     FIdleMsgId: Integer;
     FLastIdleTick: Cardinal;
     FLastControl: TControl;
-    [Weak]
-    FLastFocused: IControl;
+    FLastControlForm: TCommonCustomForm;
+    FLastRect: TRectF;
+    [Weak] FLastFocused: IControl;
     FCaretTarget: TPointF;
     FAdjusting: Boolean;
     procedure DoVKVisibleChanged(const Sender: TObject;
@@ -147,6 +150,7 @@ type
       AVKVisible: Boolean);
     function NeedAdjust(ACtrl: TControl; var ACaretRect: TRectF): Boolean;
     procedure AdjustIfNeeded;
+    procedure Restore;
   public
     constructor Create(AOwner: TComponent); overload; override;
     destructor Destroy; override;
@@ -181,6 +185,7 @@ begin
   AView := TAndroidHelper.Activity.getWindow.getDecorView;
   AView.getDrawingRect(ContentRect);
   Content := JRectToRectF(ContentRect);
+  TVKStateHandler.FContentRect := Content.Truncate;
   AView.getDrawingRect(TotalRect);
   Total := JRectToRectF(TotalRect);
   Result.Left := Trunc(Total.Left);
@@ -277,8 +282,7 @@ end;
 
 /// 根据MainActivity的可视区域和绘图区域大小来确定是否显示了虚拟键盘
 function IsVKVisible: Boolean;
-var
-  R: TRect;
+{$IFDEF NEXTGEN}var R: TRect; {$ENDIF}
 begin
 {$IFDEF NEXTGEN}
   Result := GetVKBounds(R);
@@ -370,6 +374,14 @@ begin
       FLastControl.FreeNotification(Self);
     end;
     AForm := (ACtrl.Root as TCommonCustomForm);
+    if FLastControlForm <> AForm then
+    begin
+      if Assigned(FLastControlForm) then
+        FLastControlForm.RemoveFreeNotification(Self);
+      FLastControlForm := AForm;
+      FLastControlForm.FreeNotification(Self);
+      FLastRect := AForm.Padding.Rect;
+    end;
     if NeedAdjust(ACtrl, ACaretRect) then
     begin
       if (ACaretRect.Bottom > AVKBounds.Top) or (AForm.Padding.Top < 0) or
@@ -377,16 +389,15 @@ begin
         ADelta := Trunc(ACaretRect.Bottom - AVKBounds.Top)
       else
         ADelta := 0;
-      AForm.Padding.Rect := RectF(0, AForm.Padding.Top - ADelta, 0,
-        AForm.Padding.Bottom - ADelta);
+      //移不动？
+      if AForm.Padding.Bottom + ADelta < AVKBounds.Height then
+        AForm.Padding.Rect := RectF(AForm.Padding.Left, AForm.Padding.Top - ADelta,
+          AForm.Padding.Right, AForm.Padding.Bottom + ADelta);
     end;
   end
   else if Assigned(FLastControl) then
   begin
-    AForm := (FLastControl.Root as TCommonCustomForm);
-    AForm.Padding.Rect := RectF(0, 0, 0, 0);
-    FLastControl := nil;
-    FLastFocused := nil;
+    Restore;
   end;
 end;
 
@@ -516,7 +527,7 @@ var
         if not AChild.LocalRect.Contains(pt) then
           Result := false;
       end
-      else if AChild.ClipChildren and AChild.LocalRect.Contains(pt) then
+      else if AChild.ClipChildren and not AChild.LocalRect.Contains(pt) then
         Result := false;
       pt := pt + AChild.Position.Point;
       AChild := AChild.ParentControl;
@@ -564,11 +575,32 @@ begin
     if AComponent = FLastControl then
     begin
       FLastControl.RemoveFreeNotification(Self);
-      FLastControl := nil;
-      FLastFocused := nil;
+      Restore;
+    end else if AComponent = FLastControlForm then
+    begin
+      FLastControlForm.RemoveFreeNotification(Self);
+      Restore;
     end
   end;
   inherited;
+end;
+
+procedure TVKStateHandler.Restore;
+var
+  AForm: TCommonCustomForm;
+begin
+  if Assigned(FLastControl) then
+    AForm := (FLastControl.Root as TCommonCustomForm)
+  else
+    AForm := nil;
+  if (not Assigned(AForm)) and Assigned(FLastControlForm) then
+    AForm := FLastControlForm;
+  if Assigned(AForm) and (AForm.Padding.Rect <> FLastRect) then
+    AForm.Padding.Rect := FLastRect;
+
+  FLastControl := nil;
+  FLastControlForm := nil;
+  FLastFocused := nil;
 end;
 
 { TVKNextHelper }

@@ -17,10 +17,8 @@ uses classes, sysutils, qstring, qmsgpack, qjson, qxml, db, qvalue, fmtbcd, qdb;
 
 type
 {$IF RTLVersion>=23}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64{$IF RTLVersion>=24} or
-    pidOSX32{$IFEND}{$IF RTLVersion>=25} or pidiOSSimulator or
-    pidiOSDevice{$IFEND}{$IF RTLVersion>=26} or
-    pidAndroid{$IFEND}{$IF RTLVersion>=29} or pidiOSDevice32 or
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64{$IF RTLVersion>=24} or pidOSX32{$IFEND}{$IF RTLVersion>=25} or
+    pidiOSSimulator or pidiOSDevice{$IFEND}{$IF RTLVersion>=26} or pidAndroid{$IFEND}{$IF RTLVersion>=29} or pidiOSDevice32 or
     pidiOSDevice64{$IFEND})]
 {$IFEND}
 
@@ -40,10 +38,8 @@ type
     procedure AfterImport; override;
   end;
 {$IF RTLVersion>=23}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64{$IF RTLVersion>=24} or
-    pidOSX32{$IFEND}{$IF RTLVersion>=25} or pidiOSSimulator or
-    pidiOSDevice{$IFEND}{$IF RTLVersion>=26} or
-    pidAndroid{$IFEND}{$IF RTLVersion>=29} or pidiOSDevice32 or
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64{$IF RTLVersion>=24} or pidOSX32{$IFEND}{$IF RTLVersion>=25} or
+    pidiOSSimulator or pidiOSDevice{$IFEND}{$IF RTLVersion>=26} or pidAndroid{$IFEND}{$IF RTLVersion>=29} or pidiOSDevice32 or
     pidiOSDevice64{$IFEND})]
 {$IFEND}
 
@@ -52,7 +48,7 @@ type
   protected
     FJson, FDSRoot, FActiveDS, FActiveRecs: TQJson;
     FRecordIndex: Integer;
-    FLoadingDefs: TQFieldDefs;
+    FFieldDefs: TQFieldDefs;
     FJsonText: PQStringW;
     procedure BeforeExport; override;
     procedure SaveFieldDefs(ADefs: TQFieldDefs); override;
@@ -64,7 +60,7 @@ type
     procedure AfterImport; override;
     function GetAsJson: QStringW;
   public
-    property AsJson:QStringW read GetAsJson;
+    property AsJson: QStringW read GetAsJson;
   end;
 
   TQBinaryStreamHeader = packed record
@@ -90,10 +86,8 @@ type
     FieldSize: Integer;
   end;
 {$IF RTLVersion>=23}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64{$IF RTLVersion>=24} or
-    pidOSX32{$IFEND}{$IF RTLVersion>=25} or pidiOSSimulator or
-    pidiOSDevice{$IFEND}{$IF RTLVersion>=26} or
-    pidAndroid{$IFEND}{$IF RTLVersion>=29} or pidiOSDevice32 or
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64{$IF RTLVersion>=24} or pidOSX32{$IFEND}{$IF RTLVersion>=25} or
+    pidiOSSimulator or pidiOSDevice{$IFEND}{$IF RTLVersion>=26} or pidAndroid{$IFEND}{$IF RTLVersion>=29} or pidiOSDevice32 or
     pidiOSDevice64{$IFEND})]
 {$IFEND}
 
@@ -236,8 +230,7 @@ var
   AColVal: PQColumnValue;
   I, AIdx: Integer;
   AChanges: TQBits;
-  procedure ReadValue(AValueItem: TQMsgPack; ADefs: TQFieldDefs; AIdx: Integer;
-    var AValue: TQValue);
+  procedure ReadValue(AValueItem: TQMsgPack; ADefs: TQFieldDefs; AIdx: Integer; var AValue: TQValue);
   var
     J: Integer;
     ADef: TQFieldDef;
@@ -249,8 +242,7 @@ var
       begin
         AValue.ArrayNeeded(ADef.Count);
         for J := 0 to ADef.Count - 1 do
-          ReadValue(AValueItem[J], ADef.ChildDefs as TQFieldDefs, J,
-            AValue.Items[J]^);
+          ReadValue(AValueItem[J], ADef.ChildDefs as TQFieldDefs, J, AValue.Items[J]^);
       end
       else
         raise EConvertError.Create(SBadFileFormat);
@@ -325,12 +317,10 @@ begin
           AColVal := @ARec.Values[I];
           ReadValue(AItem[AIdx], FLoadingDefs, I, AColVal.NewValue);
           Inc(AIdx);
-          if (ARec.Status = usInserted) or
-            (AColVal.OldValue.ValueType <> AColVal.NewValue.ValueType) then
+          if (ARec.Status = usInserted) or (AColVal.OldValue.ValueType <> AColVal.NewValue.ValueType) then
             AColVal.Changed := True
           else if not AColVal.OldValue.IsNull then
-            AColVal.Changed := (FLoadingDefs[I] as TQFieldDef)
-              .ValueComparor(@AColVal.OldValue, @AColVal.NewValue) <> 0
+            AColVal.Changed := (FLoadingDefs[I] as TQFieldDef).ValueComparor(@AColVal.OldValue, @AColVal.NewValue) <> 0
         end;
       end;
     end;
@@ -423,10 +413,10 @@ var
 begin
   Result := True;
   if not Assigned(FActiveDS) then
-    begin
+  begin
     FActiveDS := FDSRoot.Add;
     FActiveRecs := FActiveDS.AddArray('Records');
-    end;
+  end;
   ARoot := FActiveRecs.Add;
   ARoot.Add('Status').AsInteger := Integer(ARec.Status);;
   if ARec.Status <> usInserted then
@@ -454,7 +444,7 @@ begin
   if Assigned(FStream) then
     FJson.SaveToStream(FStream, teUtf8, True, False)
   else if Assigned(FJsonText) then
-    FJsonText^:=FJson.Encode(false,true);
+    FJsonText^ := FJson.Encode(False, True);
   FreeObject(FJson);
   inherited;
 end;
@@ -565,7 +555,7 @@ var
 begin
   inherited;
   FActiveDS := FDSRoot[FActiveDataSet];
-  FLoadingDefs := AFieldDefs;
+  FFieldDefs := AFieldDefs;
   LoadDefs(FActiveDS.ItemByName('Fields'), AFieldDefs);
   FActiveRecs := FActiveDS.ItemByName('Records');
   FRecordIndex := -1;
@@ -577,8 +567,7 @@ var
   AColVal: PQColumnValue;
   I, ANewIdx: Integer;
   AChanges: TQBits;
-  procedure ReadValue(AValueItem: TQJson; ADefs: TQFieldDefs; AIdx: Integer;
-    var AValue: TQValue);
+  procedure ReadValue(AValueItem: TQJson; ADefs: TQFieldDefs; AIdx: Integer; var AValue: TQValue);
   var
     J: Integer;
     ADef: TQFieldDef;
@@ -590,8 +579,7 @@ var
       begin
         AValue.ArrayNeeded(ADef.Count);
         for J := 0 to ADef.Count - 1 do
-          ReadValue(AValueItem[J], ADef.ChildDefs as TQFieldDefs, J,
-            AValue.Items[J]^);
+          ReadValue(AValueItem[J], ADef.ChildDefs as TQFieldDefs, J, AValue.Items[J]^);
       end
       else
         raise EConvertError.Create(SBadFileFormat);
@@ -647,7 +635,7 @@ begin
       if AItem = nil then
         raise EConvertError.Create(SBadFileFormat);
       for I := 0 to High(ARec.Values) do
-        ReadValue(AItem[I], FLoadingDefs, I, ARec.Values[I].OldValue);
+        ReadValue(AItem[I], FFieldDefs, I, ARec.Values[I].OldValue);
     end;
     if not(ARec.Status in [usUnmodified, usDeleted]) then // 已经删除和未修改的记录不需要新值
     begin
@@ -664,14 +652,12 @@ begin
         if AChanges[I] then
         begin
           AColVal := @ARec.Values[I];
-          ReadValue(AItem[ANewIdx], FLoadingDefs, I, AColVal.NewValue);
+          ReadValue(AItem[ANewIdx], FFieldDefs, I, AColVal.NewValue);
           Inc(ANewIdx);
-          if (ARec.Status = usInserted) or
-            (AColVal.OldValue.ValueType <> AColVal.NewValue.ValueType) then
+          if (ARec.Status = usInserted) or (AColVal.OldValue.ValueType <> AColVal.NewValue.ValueType) then
             AColVal.Changed := True
           else if not AColVal.OldValue.IsNull then
-            AColVal.Changed := (FLoadingDefs[I] as TQFieldDef)
-              .ValueComparor(@AColVal.OldValue, @AColVal.NewValue) <> 0
+            AColVal.Changed := (FFieldDefs[I] as TQFieldDef).ValueComparor(@AColVal.OldValue, @AColVal.NewValue) <> 0
         end;
       end;
     end;
@@ -723,6 +709,7 @@ var
 begin
   inherited;
   FActiveDS := FDSRoot.Add;
+  FFieldDefs := ADefs;
   SaveDefs(FActiveDS.Add('Fields'), ADefs);
   if ExportRanges <> [merMeta] then
     FActiveRecs := FActiveDS.AddArray('Records');
@@ -733,6 +720,19 @@ var
   ARoot, AItem: TQJson;
   I: Integer;
   AChanges: TQBits;
+  function IsTextStream(AStream: TStream): Boolean;
+  var
+    ABom: array [0 .. 2] of Byte;
+  begin
+    AStream.Position := 0;
+    Result:=false;
+    if AStream.Read(ABom, 3) >= 2 then
+    begin
+      Result := ((ABom[0] = $FF) and (ABom[1] = $FE)) or ((ABom[0] = $FE) and (ABom[1] = $FF)) or
+        ((ABom[0] = $EF) and (ABom[1] = $BB) and (ABom[2] = $BF));
+    end;
+    AStream.Position:=0;
+  end;
   procedure WriteValue(const AValue: TQValue);
   begin
     case AValue.ValueType of
@@ -755,7 +755,14 @@ var
       vdtString:
         AItem.Add.AsString := AValue.Value.AsString^;
       vdtStream:
-        AItem.Add.ValueFromStream(AValue.Value.AsStream, 0);
+        begin
+          // 检查是否是字符串类型，如果是的话，直接转字符串
+          if Assigned(FFieldDefs) and (FFieldDefs[I].DataType in [ftMemo, ftWideMemo]) or IsTextStream(AValue.Value.AsStream)
+          then
+            AItem.Add.AsString := LoadTextW(AValue.Value.AsStream)
+          else
+            AItem.Add.ValueFromStream(AValue.Value.AsStream, 0);
+        end;
       vdtArray:
         raise Exception.Create('Unsupport Array type now.');
     end;
@@ -763,10 +770,10 @@ var
 
 begin
   if not Assigned(FActiveDS) then
-    begin
+  begin
     FActiveDS := FDSRoot.Add;
     FActiveRecs := FActiveDS.AddArray('Records');
-    end;
+  end;
   ARoot := FActiveRecs.Add('Row');
   ARoot.Add('Status').AsInteger := Integer(ARec.Status);
   if ARec.Status <> usInserted then

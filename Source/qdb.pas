@@ -4276,6 +4276,8 @@ var
             // >50ms，就启用多线程过滤
             Result := True;
         end;
+        if not Result then
+          FilterInMainThread(AMaxTest, AFilterSource.Count - AMaxTest);
       end
       else
         AMaxTest := 0;
@@ -4288,10 +4290,7 @@ var
     ARec: TQRecord;
     ATempState: TDataSetState;
   begin
-    if Length(Sort) > 0 then
-      AFilterSource := FSortedRecords
-    else
-      AFilterSource := FOriginRecords;
+    AFilterSource := FSortedRecords;
     ATempState := SetTempState(dsFilter);
     try
       ActiveRecordsChanged;
@@ -4314,8 +4313,8 @@ var
             ARec.FFilteredIndex := FFilteredRecords.Add(ARec);
         end;
       end;
-      if AFilterSource = FSortedRecords then
-        FSortedRecords.Assign(FFilteredRecords);
+      if Length(Sort) > 0 then
+        DoSort(False);
     finally
       RestoreState(ATempState);
     end;
@@ -4835,11 +4834,10 @@ begin
     gmNext:
       begin
         Inc(FRecordNo);
-
         if FRecordNo >= RecordCount then
         begin
           Result := grEOF;
-          if CurrentRecord = 0 then
+          if (CurrentRecord = 0) or (FRecordNo > RecordCount) then
             Dec(FRecordNo);
         end
         else
@@ -4851,8 +4849,8 @@ begin
         if FRecordNo < 0 then
         begin
           Result := grBOF;
-          if CurrentRecord < 0 then
-            Inc(FRecordNo);
+          // if CurrentRecord < 0 then
+          Inc(FRecordNo);
         end
         else if FRecordNo < RecordCount then
         begin

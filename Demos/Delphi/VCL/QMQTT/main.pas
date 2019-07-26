@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  QMqttClient, QLog;
+  QMqttClient, QJson, QLog, qdac_ssl_ics;
 
 type
   TForm1 = class(TForm)
@@ -48,7 +48,8 @@ type
     pnlStatus: TPanel;
     chkSSL: TCheckBox;
     cbxVersion: TComboBox;
-    Button2: TButton;
+    btnUnsubscribe: TButton;
+    Panel10: TPanel;
     procedure Button1Click(Sender: TObject);
     procedure btnSubscribeClick(Sender: TObject);
     procedure btnPublishClick(Sender: TObject);
@@ -58,29 +59,28 @@ type
     procedure tmStaticsTimer(Sender: TObject);
     procedure Panel1Click(Sender: TObject);
     procedure chkSSLClick(Sender: TObject);
-    procedure Button2Click(Sender: TObject);
+    procedure btnUnsubscribeClick(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     { Private declarations }
     FClient: TQMQTTMessageClient;
     procedure DoClientConnecting(ASender: TQMQTTMessageClient);
     procedure DoClientConnected(ASender: TQMQTTMessageClient);
     procedure DoClientDisconnected(ASender: TQMQTTMessageClient);
-    procedure DoClientError(ASender: TQMQTTMessageClient;
-      const AErrorCode: Integer; const AErrorMsg: String);
-    procedure DoSubscribeDone(ASender: TQMQTTMessageClient;
-      const AResults: TQMQTTSubscribeResults);
-    procedure DoBeforePublish(ASender: TQMQTTMessageClient;
-      const ATopic: String; const AReq: PQMQTTMessage);
-    procedure DoAfterPublished(ASender: TQMQTTMessageClient;
-      const ATopic: String; const AReq: PQMQTTMessage);
-    procedure DoRecvTopic(ASender: TQMQTTMessageClient; const ATopic: String;
-      const AReq: PQMQTTMessage);
-    procedure DoStdTopicTest(ASender: TQMQTTMessageClient; const ATopic: String;
-      const AReq: PQMQTTMessage);
-    procedure DoPatternTopicTest(ASender: TQMQTTMessageClient;
-      const ATopic: String; const AReq: PQMQTTMessage);
-    procedure DoRegexTopicTest(ASender: TQMQTTMessageClient;
-      const ATopic: String; const AReq: PQMQTTMessage);
+    procedure DoClientError(ASender: TQMQTTMessageClient; const AErrorCode: Integer; const AErrorMsg: String);
+    procedure DoSubscribeDone(ASender: TQMQTTMessageClient; const AResults: TQMQTTSubscribeResults);
+    procedure DoBeforePublish(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
+    procedure DoAfterPublished(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
+    procedure DoRecvTopic(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
+    procedure DoStdTopicTest(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
+    procedure DoPatternTopicTest(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
+    procedure DoRegexTopicTest(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
+    procedure DoMultiDispatch1(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
+    procedure DoMultiDispatch2(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
+    procedure DoBeforeUnsubscribe(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
+    procedure DoAfterUnsubscribe(ASender: TQMQTTMessageClient; const ATopic: String);
+    procedure SaveSettings;
+    procedure LoadSettings;
   public
     { Public declarations }
   end;
@@ -96,8 +96,7 @@ uses qstring;
 procedure TForm1.btnPublishClick(Sender: TObject);
 begin
   if Assigned(FClient) then
-    FClient.Publish(edtPublishTopic.Text, edtMessage.Text,
-      TQMQTTQoSLevel(cbxQoSLevel.ItemIndex));
+    FClient.Publish(edtPublishTopic.Text, edtMessage.Text, TQMQTTQoSLevel(cbxQoSLevel.ItemIndex));
 end;
 
 procedure TForm1.btnSubscribeClick(Sender: TObject);
@@ -123,6 +122,29 @@ begin
   end;
 end;
 
+procedure TForm1.btnUnsubscribeClick(Sender: TObject);
+var
+  ATopics: TArray<String>;
+  S: String;
+  p: PChar;
+  C: Integer;
+begin
+  if Assigned(FClient) then
+  begin
+    SetLength(ATopics, 4);
+    S := edtSubscribeTopic.Text;
+    p := PChar(S);
+    C := 0;
+    while p^ <> #0 do
+    begin
+      ATopics[C] := DecodeTokenW(p, ',', #0, true);
+      Inc(C);
+    end;
+    SetLength(ATopics, C);
+    FClient.Unsubscribe(ATopics);
+  end;
+end;
+
 procedure TForm1.Button1Click(Sender: TObject);
 begin
   if Button1.Caption = '连接' then
@@ -137,6 +159,8 @@ begin
     FClient.UserName := leUserName.Text;
     FClient.Password := lePassword.Text;
     FClient.UseSSL := chkSSL.Checked;
+    // if FClient.UseSSL then
+    // FClient.SSLManager.LoadCAFiles('root.pem');
     if cbxVersion.ItemIndex = 1 then
     begin
       FClient.ProtocolVersion := pv5_0;
@@ -154,6 +178,8 @@ begin
     FClient.AfterSubscribed := DoSubscribeDone;
     FClient.BeforePublish := DoBeforePublish;
     FClient.AfterPublished := DoAfterPublished;
+    FClient.BeforeUnsubscribe := DoBeforeUnsubscribe;
+    FClient.AfterUnsubscribed := DoAfterUnsubscribe;
     FClient.OnError := DoClientError;
     FClient.OnRecvTopic := DoRecvTopic;
     // 在这里添加自己的订阅，由于这个是要发送到服务器端的，所以不支持正则，但可以使用主题过滤表达式匹配
@@ -163,6 +189,8 @@ begin
     FClient.RegisterDispatch('/Topic/Dispatch', DoStdTopicTest);
     FClient.RegisterDispatch('/+/Dispatch', DoPatternTopicTest, mtPattern);
     FClient.RegisterDispatch('/Topic\d', DoRegexTopicTest, mtRegex);
+    FClient.RegisterDispatch('/Topic1', DoMultiDispatch1, mtFull);
+    FClient.RegisterDispatch('/Topic1', DoMultiDispatch2, mtFull);
     // 启动后台工作
     FClient.Start;
   end
@@ -171,11 +199,6 @@ begin
     FClient.Stop;
     Button1.Caption := '连接';
   end;
-end;
-
-procedure TForm1.Button2Click(Sender: TObject);
-begin
-edtClientId.Text:=RandomString(16,[rctAlpha]);
 end;
 
 procedure TForm1.chkAutoSendClick(Sender: TObject);
@@ -191,86 +214,93 @@ begin
     leServerPort.Text := '1883';
 end;
 
-procedure TForm1.DoAfterPublished(ASender: TQMQTTMessageClient;
-  const ATopic: String; const AReq: PQMQTTMessage);
+procedure TForm1.DoAfterPublished(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
 begin
-  Memo2.Lines.Add('发布 ' + ATopic + ' ID=' + IntToStr(AReq.TopicId) + ',大小:' +
-    IntToStr(AReq.Size) + ' 完成');
+  Memo2.Lines.Add('发布 ' + ATopic + ' ID=' + IntToStr(AReq.TopicId) + ',大小:' + IntToStr(AReq.Size) + ' 完成');
 end;
 
-procedure TForm1.DoBeforePublish(ASender: TQMQTTMessageClient;
-  const ATopic: String; const AReq: PQMQTTMessage);
+procedure TForm1.DoAfterUnsubscribe(ASender: TQMQTTMessageClient; const ATopic: String);
 begin
-  Memo2.Lines.Add('正在发布 ' + ATopic + ' ID=' + IntToStr(AReq.TopicId) + ',大小:' +
-    IntToStr(AReq.Size) + ' ...');
+  Memo1.Lines.Add('订阅 ' + ATopic + ' 已取消');
+end;
+
+procedure TForm1.DoBeforePublish(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
+begin
+  Memo2.Lines.Add('正在发布 ' + ATopic + ' ID=' + IntToStr(AReq.TopicId) + ',大小:' + IntToStr(AReq.Size) + ' ...');
+end;
+
+procedure TForm1.DoBeforeUnsubscribe(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
+begin
+  Memo1.Lines.Add('正在取消订阅 ' + ATopic + '...');
 end;
 
 procedure TForm1.DoClientConnected(ASender: TQMQTTMessageClient);
 begin
-  Memo1.Lines.Add(ASender.ServerHost + ':' + IntToStr(ASender.ServerPort) +
-    ' 连接成功.');
+  Memo1.Lines.Add(ASender.ServerHost + ':' + IntToStr(ASender.ServerPort) + ' 连接成功.');
   Button1.Caption := '断开';
 end;
 
 procedure TForm1.DoClientConnecting(ASender: TQMQTTMessageClient);
 begin
-  Memo1.Lines.Add('正在连接 ' + ASender.ServerHost + ':' +
-    IntToStr(ASender.ServerPort));
+  Memo1.Lines.Add('正在连接 ' + ASender.ServerHost + ':' + IntToStr(ASender.ServerPort));
 end;
 
 procedure TForm1.DoClientDisconnected(ASender: TQMQTTMessageClient);
 begin
-  Memo1.Lines.Add('连接 ' + ASender.ServerHost + ':' +
-    IntToStr(ASender.ServerPort) + '已断开');
+  Memo1.Lines.Add('连接 ' + ASender.ServerHost + ':' + IntToStr(ASender.ServerPort) + '已断开');
 end;
 
-procedure TForm1.DoClientError(ASender: TQMQTTMessageClient;
-  const AErrorCode: Integer; const AErrorMsg: String);
+procedure TForm1.DoClientError(ASender: TQMQTTMessageClient; const AErrorCode: Integer; const AErrorMsg: String);
 begin
   Memo1.Lines.Add('错误:' + AErrorMsg + ',代码:' + IntToStr(AErrorCode));
 end;
 
-procedure TForm1.DoPatternTopicTest(ASender: TQMQTTMessageClient;
-  const ATopic: String; const AReq: PQMQTTMessage);
+procedure TForm1.DoMultiDispatch1(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
 begin
-  Memo1.Lines.Add('通过主题词模式匹配派发:' + ATopic + SLineBreak + '  ID:' +
-    IntToStr(AReq.TopicId) + SLineBreak + '  内容:' + AReq.TopicText);
+  Memo1.Lines.Add('Dispatch1 接收到Topic:' + ATopic + SLineBreak + '  ID:' + IntToStr(AReq.TopicId) + SLineBreak + '  内容(' +
+    RollupSize(AReq.TopicContentSize) + '):' + AReq.TopicText);
 end;
 
-procedure TForm1.DoRecvTopic(ASender: TQMQTTMessageClient; const ATopic: String;
-  const AReq: PQMQTTMessage);
+procedure TForm1.DoMultiDispatch2(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
 begin
-  Memo1.Lines.Add('接收到Topic:' + ATopic + SLineBreak + '  ID:' +
-    IntToStr(AReq.TopicId) + SLineBreak + '  内容:' + AReq.TopicText);
+  Memo1.Lines.Add('Dispatch2 接收到Topic:' + ATopic + SLineBreak + '  ID:' + IntToStr(AReq.TopicId) + SLineBreak + '  内容(' +
+    RollupSize(AReq.TopicContentSize) + '):' + AReq.TopicText);
 end;
 
-procedure TForm1.DoRegexTopicTest(ASender: TQMQTTMessageClient;
-  const ATopic: String; const AReq: PQMQTTMessage);
+procedure TForm1.DoPatternTopicTest(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
 begin
-  Memo1.Lines.Add('通过主题词正则匹配派发:' + ATopic + SLineBreak + '  ID:' +
-    IntToStr(AReq.TopicId) + SLineBreak + '  内容:' + AReq.TopicText);
+  Memo1.Lines.Add('通过主题词模式匹配派发:' + ATopic + SLineBreak + '  ID:' + IntToStr(AReq.TopicId) + SLineBreak + '  内容(' +
+    RollupSize(AReq.TopicContentSize) + '):' + AReq.TopicText);
 end;
 
-procedure TForm1.DoStdTopicTest(ASender: TQMQTTMessageClient;
-  const ATopic: String; const AReq: PQMQTTMessage);
+procedure TForm1.DoRecvTopic(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
 begin
-  Memo1.Lines.Add('通过主题词派发:' + ATopic + SLineBreak + '  ID:' +
-    IntToStr(AReq.TopicId) + SLineBreak + '  内容:' + AReq.TopicText);
+  Memo1.Lines.Add('接收到Topic:' + ATopic + SLineBreak + '  ID:' + IntToStr(AReq.TopicId) + SLineBreak + '  内容(' +
+    RollupSize(AReq.TopicContentSize) + '):' + AReq.TopicText);
 end;
 
-procedure TForm1.DoSubscribeDone(ASender: TQMQTTMessageClient;
-  const AResults: TQMQTTSubscribeResults);
+procedure TForm1.DoRegexTopicTest(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
+begin
+  Memo1.Lines.Add('通过主题词正则匹配派发:' + ATopic + SLineBreak + '  ID:' + IntToStr(AReq.TopicId) + SLineBreak + '  内容(' +
+    RollupSize(AReq.TopicContentSize) + '):' + AReq.TopicText);
+end;
+
+procedure TForm1.DoStdTopicTest(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
+begin
+  Memo1.Lines.Add('通过主题词派发:' + ATopic + SLineBreak + '  ID:' + IntToStr(AReq.TopicId) + SLineBreak + '  内容(' +
+    RollupSize(AReq.TopicContentSize) + '):' + AReq.TopicText);
+end;
+
+procedure TForm1.DoSubscribeDone(ASender: TQMQTTMessageClient; const AResults: TQMQTTSubscribeResults);
 var
   I: Integer;
 begin
   for I := 0 to High(AResults) do
   begin
     if AResults[I].Success then
-      Memo1.Lines.Add(AResults[I].Topic + ' -> QoS ' +
-        IntToStr(Ord(AResults[I].Qos)) + ' 订阅完成')
+      Memo1.Lines.Add(AResults[I].Topic + ' -> QoS ' + IntToStr(Ord(AResults[I].Qos)) + ' 订阅完成')
     else
-      Memo1.Lines.Add(AResults[I].Topic + ' -> QoS ' +
-        IntToStr(Ord(AResults[I].Qos)) + ' 订阅失败');
+      Memo1.Lines.Add(AResults[I].Topic + ' -> QoS ' + IntToStr(Ord(AResults[I].Qos)) + ' 订阅失败');
   end;
 end;
 
@@ -279,10 +309,50 @@ begin
   SetDefaultLogFile('', 2097152, false);
 end;
 
+procedure TForm1.FormDestroy(Sender: TObject);
+begin
+  if Assigned(FClient) then
+    FClient.AfterDisconnected := nil;
+end;
+
+procedure TForm1.LoadSettings;
+var
+  AJson: TQJson;
+begin
+  AJson := TQJson.Create;
+  try
+    if FileExists('mqtt.config') then
+      AJson.LoadFromFile('mqtt.config');
+    leServerHost.Text := AJson.ValueByName('host', '');
+    leServerPort.Text := AJson.ValueByName('port', '1883');
+    leUserName.Text := AJson.ValueByName('user', '');
+    lePassword.Text := AJson.ValueByName('pass', '');
+  finally
+    FreeAndNil(AJson);
+  end;
+end;
+
 procedure TForm1.Panel1Click(Sender: TObject);
 begin
   if Assigned(FClient) then
     FClient.Publish('/Topic1', StringReplicateW('0', 16848), qlMax1);
+end;
+
+procedure TForm1.SaveSettings;
+var
+  AJson: TQJson;
+begin
+  AJson := TQJson.Create;
+  try
+    AJson.Add('host').AsString := leServerHost.Text;
+    AJson.Add('port').AsString := leServerPort.Text;
+    AJson.Add('user').AsString := leUserName.Text;
+    AJson.Add('pass').AsString := lePassword.Text;
+    AJson.SaveToFile('mqtt.config');
+  finally
+    FreeAndNil(AJson);
+  end;
+
 end;
 
 procedure TForm1.tmSendTimer(Sender: TObject);
@@ -304,8 +374,7 @@ end;
 procedure TForm1.tmStaticsTimer(Sender: TObject);
 begin
   if Assigned(FClient) then
-    pnlStatus.Caption := '收到主题:' + IntToStr(FClient.RecvTopics) + ' 发布主题:' +
-      IntToStr(FClient.SentTopics);
+    pnlStatus.Caption := '收到主题:' + IntToStr(FClient.RecvTopics) + ' 发布主题:' + IntToStr(FClient.SentTopics);
 end;
 
 end.

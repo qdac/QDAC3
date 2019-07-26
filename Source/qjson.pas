@@ -3545,12 +3545,8 @@ function TQJson.GetAsBcd: TBcd;
 begin
   if DataType = jdtBcd then
     Result := PBcd(FValue)^
-  else if DataType = jdtString then
-    Result := StrToBcd(FValue)
-  else if DataType = jdtFloat then
-    Result := AsFloat
   else
-    Result := AsInt64
+    Result := StrToBcd(AsString)
 end;
 
 function TQJson.GetAsBoolean: Boolean;
@@ -3907,9 +3903,7 @@ begin
   if l > 0 then
     AHash := HashName(AName)
   else
-  begin
-    Exit;
-  end;
+    AHash := 0;
   for I := 0 to Count - 1 do
   begin
     AItem := Items[I];
@@ -4861,7 +4855,10 @@ begin
   else
   begin
     if Parent = ANewParent then
+      begin
+      Parent.FItems.Move(ItemIndex,AIndex);
       Exit;
+      end;
     if IsParentOf(ANewParent) then
       raise Exception.Create(SCantMoveToChild);
     if ANewParent.DataType in [jdtArray, jdtObject] then
@@ -5608,7 +5605,7 @@ begin
       jdtBcd:
         begin
           SetLength(FValue, SizeOf(TBcd) shr 1);
-          PBcd(FValue)^ := 0;
+          PBcd(FValue)^ := IntegerToBcd(0);
         end;
       jdtBoolean:
         begin
@@ -6958,7 +6955,7 @@ begin
   else if DataType = jdtInteger then
     AValue := AsInt64 <> 0
   else if DataType = jdtBcd then
-    AValue := AsBcd <> 0
+    AValue := BcdToStr(AsBcd) <> '0'
   else
     Result := False;
 end;
@@ -6978,8 +6975,8 @@ begin
   end
   else if DataType = jdtInteger then
     AValue := AsInt64
-  else if DataType=jdtBcd then
-    AValue:=BcdToDouble(AsBcd)
+  else if DataType = jdtBcd then
+    AValue := BcdToDouble(PBcd(FValue)^)
   else if DataType in [jdtNull, jdtUnknown] then
     AValue := 0
   else
@@ -7149,7 +7146,7 @@ var
 begin
   AChild := ItemByName(AName);
   if Assigned(AChild) then
-    Result := AChild.Value
+    Result := AChild.AsString
   else
     Result := ADefVal;
 end;
@@ -7160,7 +7157,7 @@ var
 begin
   AItem := ItemByPath(APath);
   if Assigned(AItem) then
-    Result := AItem.Value
+    Result := AItem.AsString
   else
     Result := ADefVal;
 end;

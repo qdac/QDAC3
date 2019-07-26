@@ -388,6 +388,7 @@ type
 {$ENDIF}
     class function UpperCase(S: PQCharA): QStringA; overload; static;
     class function LowerCase(S: PQCharA): QStringA; overload; static;
+    class function Create(const p: PQCharA; AIsUtf8: Boolean): QStringA; static;
     function UpperCase: QStringA; overload;
     function LowerCase: QStringA; overload;
     // 字符串比较
@@ -395,8 +396,7 @@ type
     function From(const S: QStringA; AOffset: Integer = 0): PQStringA; overload;
     function Cat(p: PQCharA; ALen: Integer): PQStringA; overload;
     function Cat(const S: QStringA): PQStringA; overload;
-    property Chars[AIndex: Integer]: QCharA read GetChars
-      write SetChars; default;
+    property Chars[AIndex: Integer]: QCharA read GetChars write SetChars; default;
     property Length: Integer read GetLength write SetLength;
     property IsUtf8: Boolean read GetIsUtf8 write SetIsUtf8;
     property Data: PByte read GetData;
@@ -442,10 +442,8 @@ type
     procedure LoadFromFile(const AFileName: QStringW);
     procedure LoadFromStream(const AStream: TStream);
     procedure IncSize(ADelta: Integer);
-    function Cat(p: PQCharW; len: Integer; AQuoter: QCharW = #0)
-      : TQStringCatHelperW; overload;
-    function Cat(const S: QStringW; AQuoter: QCharW = #0)
-      : TQStringCatHelperW; overload;
+    function Cat(p: PQCharW; len: Integer; AQuoter: QCharW = #0): TQStringCatHelperW; overload;
+    function Cat(const S: QStringW; AQuoter: QCharW = #0): TQStringCatHelperW; overload;
     function Cat(c: QCharW): TQStringCatHelperW; overload;
     function Cat(const V: Int64): TQStringCatHelperW; overload;
     function Cat(const V: Double): TQStringCatHelperW; overload;
@@ -495,13 +493,11 @@ type
     function Cat(const V: AnsiChar): TQBytesCatHelper; overload;
     function Cat(const V: AnsiString): TQBytesCatHelper; overload;
 {$ENDIF}
-    function Cat(const V: QStringA; ACStyle: Boolean = false)
-      : TQBytesCatHelper; overload;
+    function Cat(const V: QStringA; ACStyle: Boolean = false): TQBytesCatHelper; overload;
     function Cat(const c: QCharW): TQBytesCatHelper; overload;
     function Cat(const S: QStringW): TQBytesCatHelper; overload;
     function Cat(const ABytes: TBytes): TQBytesCatHelper; overload;
-    function Cat(const AData: Pointer; const ALen: Integer)
-      : TQBytesCatHelper; overload;
+    function Cat(const AData: Pointer; const ALen: Integer): TQBytesCatHelper; overload;
     function Cat(const V: Single): TQBytesCatHelper; overload;
     function Cat(const V: Double): TQBytesCatHelper; overload;
     function Cat(const V: Boolean): TQBytesCatHelper; overload;
@@ -510,48 +506,28 @@ type
     function Cat(const V: Variant): TQBytesCatHelper; overload;
     function Replicate(const ABytes: TBytes; ACount: Integer): TQBytesCatHelper;
     function Back(ALen: Integer): TQBytesCatHelper;
-    function Insert(AIndex: Cardinal; const AData: Pointer; const ALen: Integer)
-      : TQBytesCatHelper; overload;
-    function Insert(AIndex: Cardinal; const V: Byte): TQBytesCatHelper;
-      overload;
-    function Insert(AIndex: Cardinal; const V: Shortint)
-      : TQBytesCatHelper; overload;
-    function Insert(AIndex: Cardinal; const V: Word): TQBytesCatHelper;
-      overload;
-    function Insert(AIndex: Cardinal; const V: Smallint)
-      : TQBytesCatHelper; overload;
-    function Insert(AIndex: Cardinal; const V: Cardinal)
-      : TQBytesCatHelper; overload;
-    function Insert(AIndex: Cardinal; const V: Integer)
-      : TQBytesCatHelper; overload;
-    function Insert(AIndex: Cardinal; const V: Int64)
-      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const AData: Pointer; const ALen: Integer): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Byte): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Shortint): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Word): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Smallint): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Cardinal): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Integer): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Int64): TQBytesCatHelper; overload;
 {$IFNDEF NEXTGEN}
-    function Insert(AIndex: Cardinal; const V: AnsiChar)
-      : TQBytesCatHelper; overload;
-    function Insert(AIndex: Cardinal; const V: AnsiString)
-      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: AnsiChar): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: AnsiString): TQBytesCatHelper; overload;
 {$ENDIF}
-    function Insert(AIndex: Cardinal; const V: QStringA;
-      ACStyle: Boolean = false): TQBytesCatHelper; overload;
-    function Insert(AIndex: Cardinal; const c: QCharW)
-      : TQBytesCatHelper; overload;
-    function Insert(AIndex: Cardinal; const S: QStringW)
-      : TQBytesCatHelper; overload;
-    function Insert(AIndex: Cardinal; const ABytes: TBytes)
-      : TQBytesCatHelper; overload;
-    function Insert(AIndex: Cardinal; const V: Single)
-      : TQBytesCatHelper; overload;
-    function Insert(AIndex: Cardinal; const V: Double)
-      : TQBytesCatHelper; overload;
-    function Insert(AIndex: Cardinal; const V: Boolean)
-      : TQBytesCatHelper; overload;
-    function Insert(AIndex: Cardinal; const V: Currency)
-      : TQBytesCatHelper; overload;
-    function Insert(AIndex: Cardinal; const V: TGuid)
-      : TQBytesCatHelper; overload;
-    function Insert(AIndex: Cardinal; const V: Variant)
-      : TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: QStringA; ACStyle: Boolean = false): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const c: QCharW): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const S: QStringW): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const ABytes: TBytes): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Single): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Double): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Boolean): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Currency): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: TGuid): TQBytesCatHelper; overload;
+    function Insert(AIndex: Cardinal; const V: Variant): TQBytesCatHelper; overload;
     function Delete(AStart, ACount: Cardinal): TQBytesCatHelper;
     procedure Reset;
     property Value: TBytes read GetValue;
@@ -595,13 +571,10 @@ type
     constructor Create(AObject: Pointer); overload;
     destructor Destroy; override;
     class function Bind(AObject: TObject): IQPtr; overload;
-    class function Bind(AData: Pointer; AOnFree: TQPtrFreeEvent)
-      : IQPtr; overload;
-    class function Bind(AData: Pointer; AOnFree: TQPtrFreeEventG)
-      : IQPtr; overload;
+    class function Bind(AData: Pointer; AOnFree: TQPtrFreeEvent): IQPtr; overload;
+    class function Bind(AData: Pointer; AOnFree: TQPtrFreeEventG): IQPtr; overload;
 {$IFDEF UNICODE}
-    class function Bind(AData: Pointer; AOnFree: TQPtrFreeEventA)
-      : IQPtr; overload;
+    class function Bind(AData: Pointer; AOnFree: TQPtrFreeEventA): IQPtr; overload;
 {$ENDIF}
     function Get: Pointer;
   end;
@@ -624,12 +597,10 @@ type
     destructor Destroy; override;
   end;
 
-  TQPagedListSortCompare = procedure(p1, p2: Pointer; var AResult: Integer)
-    of object;
+  TQPagedListSortCompare = procedure(p1, p2: Pointer; var AResult: Integer) of object;
   TQPagedListSortCompareG = procedure(p1, p2: Pointer; var AResult: Integer);
 {$IFDEF UNICODE}
-  TQPagedListSortCompareA = reference to procedure(p1, p2: Pointer;
-    var AResult: Integer);
+  TQPagedListSortCompareA = reference to procedure(p1, p2: Pointer; var AResult: Integer);
   PQPagedListSortCompareA = ^TQPagedListSortCompareA;
 {$ENDIF}
   TQPagedList = class;
@@ -719,12 +690,10 @@ type
     destructor Destroy; override;
 {$IF RTLVersion<26}
     /// <summary>拷贝函数，参考TList.Assign</summary>
-    procedure Assign(ListA: TList; AOperator: TListAssignOp = laCopy;
-      ListB: TList = nil); overload;
+    procedure Assign(ListA: TList; AOperator: TListAssignOp = laCopy; ListB: TList = nil); overload;
 {$IFEND}
     /// <summary>拷贝函数，参考TList.Assign</summary>
-    procedure Assign(ListA: TQPagedList; AOperator: TListAssignOp = laCopy;
-      ListB: TQPagedList = nil); overload;
+    procedure Assign(ListA: TQPagedList; AOperator: TListAssignOp = laCopy; ListB: TQPagedList = nil); overload;
     /// <summary>添加一个元素</summary>
     /// <param name="p">要添加的元素</param>
     /// <returns>返回新元素的索引值</returns>
@@ -748,8 +717,7 @@ type
     /// <param name="pp">要插入的元素</param>
     /// <param name="ACount">pp参数指向的元素个数</param>
     /// <remarks>如果指定的排序规则，则AIndex参数被忽略</remarks>
-    procedure BatchInsert(AIndex: Integer; pp: PPointer;
-      ACount: Integer); overload;
+    procedure BatchInsert(AIndex: Integer; pp: PPointer; ACount: Integer); overload;
     /// <summary>在指定的位置插入一个新元素</summary>
     /// <param name="AIndex">要插入的位置，如果小于等于0，插入起始位置，如果大于等于Count，则插入末尾</param>
     /// <param name="p">要插入的元素</param>
@@ -819,11 +787,9 @@ type
     /// <summary>元素个数</summary>
     property count: Integer read FCount;
     /// <summary>元素列表</summary>
-    property Items[AIndex: Integer]: Pointer read GetItems
-      write SetItems; default;
+    property Items[AIndex: Integer]: Pointer read GetItems write SetItems; default;
     /// <summary>元素比较规则，如果指定，则元素自动排序</summary>
-    property OnCompare: TQPagedListSortCompare read FOnCompare
-      write SetOnCompare;
+    property OnCompare: TQPagedListSortCompare read FOnCompare write SetOnCompare;
     /// <summary>兼容TList设置，对 TQPagedList 无意义</summary>
     property Capacity: Integer read GetCapacity write SetCapacity;
     /// <summary>获取所有的元素值数组</summary>
@@ -892,8 +858,7 @@ type
     procedure SetIsSet(AIndex: Integer; const Value: Boolean);
   public
     property Size: Integer read GetSize write SetSize;
-    property IsSet[AIndex: Integer]: Boolean read GetIsSet
-      write SetIsSet; default;
+    property IsSet[AIndex: Integer]: Boolean read GetIsSet write SetIsSet; default;
     property Bytes: TBytes read FBits write FBits;
   end;
 
@@ -906,20 +871,15 @@ type
     function Write(const Buffer; count: Longint): Longint; override;
   end;
 
-  TQFilterCharEvent = procedure(const AChar, AIndex: Cardinal;
-    var Accept: Boolean; ATag: Pointer) of object;
+  TQFilterCharEvent = procedure(const AChar, AIndex: Cardinal; var Accept: Boolean; ATag: Pointer) of object;
 {$IFDEF UNICODE}
-  TQFilterCharEventA = reference to procedure(const c, AIndex: Cardinal;
-    var Accept: Boolean; ATag: Pointer);
+  TQFilterCharEventA = reference to procedure(const c, AIndex: Cardinal; var Accept: Boolean; ATag: Pointer);
 {$ENDIF}
-  TQNumberType = (nftFloat, nftHexPrec, nftDelphiHex, nftCHex, nftBasicHex,
-    nftNegative, nftPositive);
+  TQNumberType = (nftFloat, nftHexPrec, nftDelphiHex, nftCHex, nftBasicHex, nftNegative, nftPositive);
   TQNumberTypes = set of TQNumberType;
 
-  TPasswordStrongLevel = (pslLowest, pslLower, pslNormal, pslHigher,
-    pslHighest);
-  TPasswordRule = (prIncNumber, prIncLowerCase, prIncUpperCase, prIncChart,
-    prIncUnicode, prRepeat, prSimpleOrder);
+  TPasswordStrongLevel = (pslLowest, pslLower, pslNormal, pslHigher, pslHighest);
+  TPasswordRule = (prIncNumber, prIncLowerCase, prIncUpperCase, prIncChart, prIncUnicode, prRepeat, prSimpleOrder);
   TPasswordRules = set of TPasswordRule;
 
   // 舍入方法：mrmNone - 不舍入，mrmSimple - 四舍五入,mrmBank - 银行家舍入法（四舍六入五成双）
@@ -967,8 +927,7 @@ type
   /// 用于 IsHumanName 判断名称是否有效时，用户可以自定义判定特定字符是否允许的全局回调函数，AChar 为要检查的字符，Accept
   /// 为检查结果，AHandled 用于记录用户是否已经判定，如果已经判定，设置为true，默认为false，走默认判定。
   /// </summary>
-  TQCustomNameCharTest = procedure(AChar: Cardinal;
-    var Accept, AHandled: Boolean);
+  TQCustomNameCharTest = procedure(AChar: Cardinal; var Accept, AHandled: Boolean);
   /// <summary>
   /// TRandCharType 用于生成随机字符串时确定字符串包含的字符范围
   /// </summary>
@@ -1006,13 +965,13 @@ type
     hsMale);
   TMemCompFunction = function(p1, p2: Pointer; L1, L2: Integer): Integer;
   TCNSpellCallback = function(const p: PQCharW): QCharW;
+  TUrlBookmarkEncode = (ubeOnlyLast, ubeNone, ubeAll);
   // UTF8编码与Unicode编码转换函数，使用自己的实现
 function Utf8Decode(p: PQCharA; l: Integer): QStringW; overload;
 function Utf8Decode(const p: QStringA): QStringW; overload;
 function Utf8Encode(p: PQCharW; l: Integer): QStringA; overload;
 function Utf8Encode(const p: QStringW): QStringA; overload;
-function Utf8Encode(ps: PQCharW; sl: Integer; pd: PQCharA; dl: Integer)
-  : Integer; overload;
+function Utf8Encode(ps: PQCharW; sl: Integer; pd: PQCharA; dl: Integer): Integer; overload;
 // Ansi编码与Unicode编码转换函数，使用系统的TEncoding实现
 function AnsiEncode(p: PQCharW; l: Integer): QStringA; overload;
 function AnsiEncode(const p: QStringW): QStringA; overload;
@@ -1037,19 +996,13 @@ function CharCodeW(c: PQCharW): Cardinal;
 function CharAdd(const w: WideChar; ADelta: Integer): WideChar; inline;
 function CharDelta(const c1, c2: WideChar): Integer; inline;
 // 检查字符是否在指定的列表中
-function CharInA(const c: PQCharA; const List: array of QCharA;
-  ACharLen: PInteger = nil): Boolean;
-function CharInW(const c: PQCharW; const List: array of QCharW;
-  ACharLen: PInteger = nil): Boolean; overload;
-function CharInW(const c, List: PQCharW; ACharLen: PInteger = nil)
-  : Boolean; overload;
-function CharInU(const c: PQCharA; const List: array of QCharA;
-  ACharLen: PInteger = nil): Boolean;
+function CharInA(const c: PQCharA; const List: array of QCharA; ACharLen: PInteger = nil): Boolean;
+function CharInW(const c: PQCharW; const List: array of QCharW; ACharLen: PInteger = nil): Boolean; overload;
+function CharInW(const c, List: PQCharW; ACharLen: PInteger = nil): Boolean; overload;
+function CharInU(const c: PQCharA; const List: array of QCharA; ACharLen: PInteger = nil): Boolean;
 
-function StrInW(const S: QStringW; const Values: array of QStringW;
-  AIgnoreCase: Boolean = false): Integer; overload;
-function StrInW(const S: QStringW; Values: TStrings;
-  AIgnoreCase: Boolean = false): Integer; overload;
+function StrInW(const S: QStringW; const Values: array of QStringW; AIgnoreCase: Boolean = false): Integer; overload;
+function StrInW(const S: QStringW; Values: TStrings; AIgnoreCase: Boolean = false): Integer; overload;
 // 检查是否是空白字符
 function IsSpaceA(const c: PQCharA; ASpaceSize: PInteger = nil): Boolean;
 function IsSpaceW(const c: PQCharW; ASpaceSize: PInteger = nil): Boolean;
@@ -1064,14 +1017,12 @@ function QuotedStrA(const S: QStringA; const AQuoter: QCharA = $27): QStringA;
 function QuotedStrW(const S: QStringW; const AQuoter: QCharW = #$27): QStringW;
 function SQLQuoted(const S: QStringW; ADoEscape: Boolean = True): QStringW;
 function DequotedStrA(const S: QStringA; const AQuoter: QCharA = $27): QStringA;
-function DequotedStrW(const S: QStringW; const AQuoter: QCharW = #$27)
-  : QStringW;
+function DequotedStrW(const S: QStringW; const AQuoter: QCharW = #$27): QStringW;
 
 // 跳过列表中的字符
 function SkipCharA(var p: PQCharA; const List: array of QCharA): Integer;
 function SkipCharU(var p: PQCharA; const List: array of QCharA): Integer;
-function SkipCharW(var p: PQCharW; const List: array of QCharA)
-  : Integer; overload;
+function SkipCharW(var p: PQCharW; const List: array of QCharA): Integer; overload;
 function SkipCharW(var p: PQCharW; const List: PQCharW): Integer; overload;
 
 // 跳过空白字符，对于 Ansi编码，跳过的是#9#10#13#161#161，对于UCS编码，跳过的是#9#10#13#$A0#$3000
@@ -1083,14 +1034,10 @@ function SkipLineA(var p: PQCharA): Integer;
 function SkipLineU(var p: PQCharA): Integer;
 function SkipLineW(var p: PQCharW): Integer;
 // 跳过直接遇到指定的字符
-function SkipUntilA(var p: PQCharA; AExpects: array of QCharA;
-  AQuoter: QCharA = 0): Integer;
-function SkipUntilU(var p: PQCharA; AExpects: array of QCharA;
-  AQuoter: QCharA = 0): Integer;
-function SkipUntilW(var p: PQCharW; AExpects: array of QCharW;
-  AQuoter: QCharW = #0): Integer; overload;
-function SkipUntilW(var p: PQCharW; AExpects: PQCharW; AQuoter: QCharW = #0)
-  : Integer; overload;
+function SkipUntilA(var p: PQCharA; AExpects: array of QCharA; AQuoter: QCharA = 0): Integer;
+function SkipUntilU(var p: PQCharA; AExpects: array of QCharA; AQuoter: QCharA = 0): Integer;
+function SkipUntilW(var p: PQCharW; AExpects: array of QCharW; AQuoter: QCharW = #0): Integer; overload;
+function SkipUntilW(var p: PQCharW; AExpects: PQCharW; AQuoter: QCharW = #0): Integer; overload;
 function BackUntilW(var p: PQCharW; AExpects, AStartPos: PQCharW): Integer;
 // 查找字符所在行列号，返回行的起始地址
 function StrPosA(Start, Current: PQCharA; var ACol, ARow: Integer): PQCharA;
@@ -1098,55 +1045,41 @@ function StrPosU(Start, Current: PQCharA; var ACol, ARow: Integer): PQCharA;
 function StrPosW(Start, Current: PQCharW; var ACol, ARow: Integer): PQCharW;
 
 // 字符串分解
-function DecodeTokenA(var p: PQCharA; ADelimiters: array of QCharA;
-  AQuoter: QCharA; AIgnoreSpace: Boolean): QStringA;
-function DecodeTokenU(var p: PQCharA; ADelimiters: array of QCharA;
-  AQuoter: QCharA; AIgnoreSpace: Boolean): QStringA;
-function DecodeTokenW(var p: PQCharW; ADelimiters: array of QCharW;
-  AQuoter: QCharW; AIgnoreSpace: Boolean; ASkipDelimiters: Boolean = True)
-  : QStringW; overload;
-function DecodeTokenW(var p: PQCharW; ADelimiters: PQCharW; AQuoter: QCharW;
-  AIgnoreSpace: Boolean; ASkipDelimiters: Boolean = True): QStringW; overload;
-function DecodeTokenW(var S: QStringW; ADelimiters: PQCharW; AQuoter: QCharW;
-  AIgnoreCase, ARemove: Boolean; ASkipDelimiters: Boolean = True)
-  : QStringW; overload;
-function SplitTokenW(AList: TStrings; p: PQCharW; ADelimiters: PQCharW;
-  AQuoter: QCharW; AIgnoreSpace: Boolean): Integer; overload;
-function SplitTokenW(AList: TStrings; const S: QStringW; ADelimiters: PQCharW;
-  AQuoter: QCharW; AIgnoreSpace: Boolean): Integer; overload;
-function SplitTokenW(const S: QStringW; ADelimiters: PQCharW; AQuoter: QCharW;
-  AIgnoreSpace: Boolean): TQStringArray; overload;
+function DecodeTokenA(var p: PQCharA; ADelimiters: array of QCharA; AQuoter: QCharA; AIgnoreSpace: Boolean): QStringA;
+function DecodeTokenU(var p: PQCharA; ADelimiters: array of QCharA; AQuoter: QCharA; AIgnoreSpace: Boolean): QStringA;
+function DecodeTokenW(var p: PQCharW; ADelimiters: array of QCharW; AQuoter: QCharW; AIgnoreSpace: Boolean;
+  ASkipDelimiters: Boolean = True): QStringW; overload;
+function DecodeTokenW(var p: PQCharW; ADelimiters: PQCharW; AQuoter: QCharW; AIgnoreSpace: Boolean;
+  ASkipDelimiters: Boolean = True): QStringW; overload;
+function DecodeTokenW(var S: QStringW; ADelimiters: PQCharW; AQuoter: QCharW; AIgnoreCase, ARemove: Boolean;
+  ASkipDelimiters: Boolean = True): QStringW; overload;
+function SplitTokenW(AList: TStrings; p: PQCharW; ADelimiters: PQCharW; AQuoter: QCharW; AIgnoreSpace: Boolean)
+  : Integer; overload;
+function SplitTokenW(AList: TStrings; const S: QStringW; ADelimiters: PQCharW; AQuoter: QCharW; AIgnoreSpace: Boolean)
+  : Integer; overload;
+function SplitTokenW(const S: QStringW; ADelimiters: PQCharW; AQuoter: QCharW; AIgnoreSpace: Boolean): TQStringArray; overload;
 
-function StrBeforeW(var source: PQCharW; const ASpliter: QStringW;
-  AIgnoreCase, ARemove: Boolean; AMustMatch: Boolean = false)
+function StrBeforeW(var source: PQCharW; const ASpliter: QStringW; AIgnoreCase, ARemove: Boolean; AMustMatch: Boolean = false)
   : QStringW; overload;
-function StrBeforeW(var source: QStringW; const ASpliter: QStringW;
-  AIgnoreCase, ARemove: Boolean; AMustMatch: Boolean = false)
+function StrBeforeW(var source: QStringW; const ASpliter: QStringW; AIgnoreCase, ARemove: Boolean; AMustMatch: Boolean = false)
   : QStringW; overload;
-function SplitByStrW(AList: TStrings; ASource: QStringW;
-  const ASpliter: QStringW; AIgnoreCase: Boolean): Integer;
-function LeftStrW(const S: QStringW; AMaxCount: Integer; ACheckExt: Boolean)
-  : QStringW; overload;
-function LeftStrW(var S: QStringW; const ADelimiters: QStringW;
-  ARemove: Boolean): QStringW; overload;
-function RightStrW(const S: QStringW; AMaxCount: Integer; ACheckExt: Boolean)
-  : QStringW; overload;
-function RightStrW(var S: QStringW; const ADelimiters: QStringW;
-  ARemove: Boolean): QStringW; overload;
-function StrBetween(var S: PQCharW; AStartTag, AEndTag: QStringW;
-  AIgnoreCase: Boolean): QStringW; overload;
-function StrBetweenTimes(const S, ADelimiter: QStringW; AIgnoreCase: Boolean;
-  AStartTimes: Integer = 0; AStopTimes: Integer = 1): QStringW;
-function TokenWithIndex(var S: PQCharW; AIndex: Integer; ADelimiters: PQCharW;
-  AQuoter: QCharW; AIgnoreSapce: Boolean): QStringW;
+function SplitByStrW(AList: TStrings; ASource: QStringW; const ASpliter: QStringW; AIgnoreCase: Boolean): Integer;
+function LeftStrW(const S: QStringW; AMaxCount: Integer; ACheckExt: Boolean): QStringW; overload;
+function LeftStrW(var S: QStringW; const ADelimiters: QStringW; ARemove: Boolean): QStringW; overload;
+function RightStrW(const S: QStringW; AMaxCount: Integer; ACheckExt: Boolean): QStringW; overload;
+function RightStrW(var S: QStringW; const ADelimiters: QStringW; ARemove: Boolean): QStringW; overload;
+function StrBetween(var S: PQCharW; AStartTag, AEndTag: QStringW; AIgnoreCase: Boolean): QStringW; overload;
+function StrBetweenTimes(const S, ADelimiter: QStringW; AIgnoreCase: Boolean; AStartTimes: Integer = 0; AStopTimes: Integer = 1)
+  : QStringW;
+function TokenWithIndex(var S: PQCharW; AIndex: Integer; ADelimiters: PQCharW; AQuoter: QCharW; AIgnoreSapce: Boolean)
+  : QStringW;
 
 // 获取一行
-function DecodeLineA(var p: PQCharA; ASkipEmpty: Boolean = True;
-  AMaxSize: Integer = MaxInt): QStringA;
-function DecodeLineU(var p: PQCharA; ASkipEmpty: Boolean = True;
-  AMaxSize: Integer = MaxInt): QStringA;
-function DecodeLineW(var p: PQCharW; ASkipEmpty: Boolean = True;
-  AMaxSize: Integer = MaxInt; AQuoterChar: QCharW = #0): QStringW;
+function DecodeLineA(var p: PQCharA; ASkipEmpty: Boolean = True; AMaxSize: Integer = MaxInt): QStringA;
+function DecodeLineU(var p: PQCharA; ASkipEmpty: Boolean = True; AMaxSize: Integer = MaxInt): QStringA;
+function DecodeLineW(var p: PQCharW; ASkipEmpty: Boolean = True; AMaxSize: Integer = MaxInt; AQuoterChar: QCharW = #0)
+  : QStringW; overload;
+function DecodeLineW(AStream: TStream; AEncoding: TTextEncoding; var ALine: QStringW): Boolean; overload;
 // 大小写转换
 function CharUpperA(c: QCharA): QCharA; inline;
 function CharUpperW(c: QCharW): QCharW; inline;
@@ -1166,39 +1099,25 @@ function SameCharsA(s1, s2: PQCharA; AIgnoreCase: Boolean): Integer;
 function SameCharsU(s1, s2: PQCharA; AIgnoreCase: Boolean): Integer;
 function SameCharsW(s1, s2: PQCharW; AIgnoreCase: Boolean): Integer;
 // 加载文本
-function LoadTextA(const AFileName: String;
-  AEncoding: TTextEncoding = teUnknown): QStringA; overload;
-function LoadTextA(AStream: TStream; AEncoding: TTextEncoding = teUnknown)
-  : QStringA; overload;
-function LoadTextU(const AFileName: String;
-  AEncoding: TTextEncoding = teUnknown): QStringA; overload;
-function LoadTextU(AStream: TStream; AEncoding: TTextEncoding = teUnknown)
-  : QStringA; overload;
-function LoadTextW(const AFileName: String;
-  AEncoding: TTextEncoding = teUnknown): QStringW; overload;
-function LoadTextW(AStream: TStream; AEncoding: TTextEncoding = teUnknown)
-  : QStringW; overload;
+function LoadTextA(const AFileName: String; AEncoding: TTextEncoding = teUnknown): QStringA; overload;
+function LoadTextA(AStream: TStream; AEncoding: TTextEncoding = teUnknown): QStringA; overload;
+function LoadTextU(const AFileName: String; AEncoding: TTextEncoding = teUnknown): QStringA; overload;
+function LoadTextU(AStream: TStream; AEncoding: TTextEncoding = teUnknown): QStringA; overload;
+function LoadTextW(const AFileName: String; AEncoding: TTextEncoding = teUnknown): QStringW; overload;
+function LoadTextW(AStream: TStream; AEncoding: TTextEncoding = teUnknown): QStringW; overload;
 // 检测文本编码并加载文本内容，注意对于没有BOM的文本的检测不是100%，尤其在没有BOM
 // 时难以区分Unicode和Ansi编码的字符
-function DecodeText(p: Pointer; ASize: Integer;
-  AEncoding: TTextEncoding = teUnknown): QStringW;
+function DecodeText(p: Pointer; ASize: Integer; AEncoding: TTextEncoding = teUnknown): QStringW;
 // 保存文本
 procedure SaveTextA(const AFileName: String; const S: QStringA); overload;
 procedure SaveTextA(AStream: TStream; const S: QStringA); overload;
-procedure SaveTextU(const AFileName: String; const S: QStringA;
-  AWriteBom: Boolean = True); overload;
-procedure SaveTextU(const AFileName: String; const S: QStringW;
-  AWriteBom: Boolean = True); overload;
-procedure SaveTextU(AStream: TStream; const S: QStringA;
-  AWriteBom: Boolean = True); overload;
-procedure SaveTextU(AStream: TStream; const S: QStringW;
-  AWriteBom: Boolean = True); overload;
-procedure SaveTextW(const AFileName: String; const S: QStringW;
-  AWriteBom: Boolean = True); overload;
-procedure SaveTextW(AStream: TStream; const S: QStringW;
-  AWriteBom: Boolean = True); overload;
-procedure SaveTextWBE(AStream: TStream; const S: QStringW;
-  AWriteBom: Boolean = True); overload;
+procedure SaveTextU(const AFileName: String; const S: QStringA; AWriteBom: Boolean = True); overload;
+procedure SaveTextU(const AFileName: String; const S: QStringW; AWriteBom: Boolean = True); overload;
+procedure SaveTextU(AStream: TStream; const S: QStringA; AWriteBom: Boolean = True); overload;
+procedure SaveTextU(AStream: TStream; const S: QStringW; AWriteBom: Boolean = True); overload;
+procedure SaveTextW(const AFileName: String; const S: QStringW; AWriteBom: Boolean = True); overload;
+procedure SaveTextW(AStream: TStream; const S: QStringW; AWriteBom: Boolean = True); overload;
+procedure SaveTextWBE(AStream: TStream; const S: QStringW; AWriteBom: Boolean = True); overload;
 // 子串查找
 function StrStrA(s1, s2: PQCharA): PQCharA;
 function StrIStrA(s1, s2: PQCharA): PQCharA;
@@ -1211,37 +1130,30 @@ function StrIStrW(s1, s2: PQCharW): PQCharW;
 function StrLikeX(var S: PQCharW; pat: PQCharW; AIgnoreCase: Boolean): PQCharW;
 function StrLikeW(S, pat: PQCharW; AIgnoreCase: Boolean): Boolean; overload;
 // 计算子串的起始位置
-function PosA(sub, S: PQCharA; AIgnoreCase: Boolean; AStartPos: Integer = 1)
-  : Integer; overload;
-function PosA(sub, S: QStringA; AIgnoreCase: Boolean; AStartPos: Integer = 1)
-  : Integer; overload;
+function PosA(sub, S: PQCharA; AIgnoreCase: Boolean; AStartPos: Integer = 1): Integer; overload;
+function PosA(sub, S: QStringA; AIgnoreCase: Boolean; AStartPos: Integer = 1): Integer; overload;
 /// <summary>Pos函数的增强版本实现</summary>
 /// <param name="sub">要查找的子字符串</param>
 /// <param name="S">用来查找的原字符串</param>
 /// <param name="AIgnoreCase">是否忽略大小写</param>
 /// <param name="AStartPos">起始位置，第一个字符位置为1</param>
 /// <returns>找到，返回子串的起始位置，失败，返回0<returns>
-function PosW(sub, S: PQCharW; AIgnoreCase: Boolean; AStartPos: Integer = 1)
-  : Integer; overload;
+function PosW(sub, S: PQCharW; AIgnoreCase: Boolean; AStartPos: Integer = 1): Integer; overload;
 /// <param name="sub">要查找的子字符串</param>
 /// <param name="S">用来查找的原字符串</param>
 /// <param name="AIgnoreCase">是否忽略大小写</param>
 /// <param name="AStartPos">起始位置，第一个字符位置为1</param>
 /// <returns>找到，返回子串的起始位置，失败，返回0<returns>
-function PosW(sub, S: QStringW; AIgnoreCase: Boolean; AStartPos: Integer = 1)
-  : Integer; overload;
+function PosW(sub, S: QStringW; AIgnoreCase: Boolean; AStartPos: Integer = 1): Integer; overload;
 // 字符串复制
 function StrDupX(const S: PQCharW; ACount: Integer): QStringW;
-function StrDupW(const S: PQCharW; AOffset: Integer = 0;
-  const ACount: Integer = MaxInt): QStringW;
+function StrDupW(const S: PQCharW; AOffset: Integer = 0; const ACount: Integer = MaxInt): QStringW;
 procedure StrCpyW(d: PQCharW; S: PQCharW; ACount: Integer = -1);
 // 字符串比较
 function StrCmpA(const s1, s2: PQCharA; AIgnoreCase: Boolean): Integer;
 function StrCmpW(const s1, s2: PQCharW; AIgnoreCase: Boolean): Integer;
-function StrNCmpW(const s1, s2: PQCharW; AIgnoreCase: Boolean;
-  ALength: Integer): Integer;
-function NaturalCompareW(s1, s2: PQCharW; AIgnoreCase: Boolean;
-  AIgnoreSpace: Boolean = True): Integer;
+function StrNCmpW(const s1, s2: PQCharW; AIgnoreCase: Boolean; ALength: Integer): Integer;
+function NaturalCompareW(s1, s2: PQCharW; AIgnoreCase: Boolean; AIgnoreSpace: Boolean = True): Integer;
 // 十六进制相关函数
 function IsHexChar(c: QCharW): Boolean; inline;
 function IsOctChar(c: QCharW): Boolean; inline;
@@ -1252,15 +1164,13 @@ function TryStrToGuid(const S: QStringW; var AGuid: TGuid): Boolean;
 function TryStrToIPV4(const S: QStringW; var AIPV4:
 {$IFDEF MSWINDOWS}Integer{$ELSE}Cardinal{$ENDIF}): Boolean;
 /// StringReplace 增强
-function StringReplaceW(const S, Old, New: QStringW; AFlags: TReplaceFlags)
-  : QStringW; overload;
+function StringReplaceW(const S, Old, New: QStringW; AFlags: TReplaceFlags): QStringW; overload;
 /// <summary>替换指定范围内的字符为指定的字符</summary>
 /// <param name="AChar">占位字符</param>
 /// <param name="AFrom">开始位置，从0开始</param>
 /// <param name="ACount">替换数量</param>
 /// <returns>返回替换后的字符串</returns>
-function StringReplaceW(const S: QStringW; const AChar: QCharW;
-  AFrom, ACount: Integer): QStringW; overload;
+function StringReplaceW(const S: QStringW; const AChar: QCharW; AFrom, ACount: Integer): QStringW; overload;
 /// <summary>使用指定的内容替换AStartTag和EndTag之间的内容</summary>
 /// <params>
 /// <param name="S">要查找替换的字符串</param>
@@ -1272,13 +1182,11 @@ function StringReplaceW(const S: QStringW; const AChar: QCharW;
 /// <param name="AMaxTimes">最大替换次数，默认为1</param>
 /// </params>
 /// <returns>返回替换后的内容</returns>
-function StringReplaceWithW(const S, AStartTag, AEndTag, AReplaced: QStringW;
-  AWithTag, AIgnoreCase: Boolean; AMaxTimes: Cardinal = 1): QStringW;
+function StringReplaceWithW(const S, AStartTag, AEndTag, AReplaced: QStringW; AWithTag, AIgnoreCase: Boolean;
+  AMaxTimes: Cardinal = 1): QStringW;
 /// 重复指定的字符N次
-function StringReplicateW(const S: QStringW; ACount: Integer)
-  : QStringW; overload;
-function StringReplicateW(const S, AChar: QStringW; AExpectLength: Integer)
-  : QStringW; overload;
+function StringReplicateW(const S: QStringW; ACount: Integer): QStringW; overload;
+function StringReplicateW(const S, AChar: QStringW; AExpectLength: Integer): QStringW; overload;
 /// <summary>
 /// 将字符串中指定的字符按其在第二个参数中出现的位置替换为第三个参数同样位置的字符
 /// </summary>
@@ -1305,23 +1213,20 @@ function Translate(const S, AToReplace, AReplacement: QStringW): QStringW;
 /// <param name="S">要过滤的字符串</param>
 /// <param name="AcceptChars">允许的字符列表</param>
 /// <returns>返回过滤后的结果</returns>
-function FilterCharW(const S: QStringW; AcceptChars: QStringW)
-  : QStringW; overload;
+function FilterCharW(const S: QStringW; AcceptChars: QStringW): QStringW; overload;
 /// <summary>过滤掉字符串内容中不需要的字符</summary>
 /// <param name="S">要过滤的字符串</param>
 /// <param name="AOnValidate">用于过滤的回调函数</param>
 /// <param name="ATag">用户自定义的附加参数，会传递给AOnValidate事件</param>
 /// <returns>返回过滤后的结果</returns>
-function FilterCharW(const S: QStringW; AOnValidate: TQFilterCharEvent;
-  ATag: Pointer = nil): QStringW; overload;
+function FilterCharW(const S: QStringW; AOnValidate: TQFilterCharEvent; ATag: Pointer = nil): QStringW; overload;
 {$IFDEF UNICODE}
 /// <summary>过滤掉字符串内容中不需要的字符</summary>
 /// <param name="S">要过滤的字符串</param>
 /// <param name="AOnValidate">用于过滤的回调函数</param>
 /// <param name="ATag">用户自定义的附加参数，会传递给AOnValidate事件</param>
 /// <returns>返回过滤后的结果</returns>
-function FilterCharW(const S: QStringW; AOnValidate: TQFilterCharEventA;
-  ATag: Pointer = nil): QStringW; overload;
+function FilterCharW(const S: QStringW; AOnValidate: TQFilterCharEventA; ATag: Pointer = nil): QStringW; overload;
 {$ENDIF}
 /// <summary>过滤掉所有非数值类型的字符，从而将其格式化一个相对标准的浮点数</summary>
 /// <param name="S">要过滤的字符串</param>
@@ -1350,8 +1255,7 @@ function TraditionalChineseToSimple(S: QStringW): QStringW;
 /// <param name="ARoundMethod">金额舍入到分时的算法</param>
 /// <param name="AEndDigts">小数点后的位数，-16~4 之间</param>
 /// <returns>返回格式化后的字符串</returns>
-function CapMoney(AVal: Currency; AFlags: Integer;
-  ANegText, AStartText, AEndText: QStringW; AGroupNum: Integer;
+function CapMoney(AVal: Currency; AFlags: Integer; ANegText, AStartText, AEndText: QStringW; AGroupNum: Integer;
   ARoundMethod: TMoneyRoundMethod; AEndDigits: Integer = 2): QStringW;
 
 /// <summary>
@@ -1372,8 +1276,7 @@ function CapMoney(AVal: Currency; AFlags: Integer;
 /// <param name="AOnTest">
 /// 用户自定义测试规则回调
 /// </param>
-function IsHumanName(S: QStringW; AllowChars: TNameCharSet;
-  AMinLen: Integer = 2; AMaxLen: Integer = 15;
+function IsHumanName(S: QStringW; AllowChars: TNameCharSet; AMinLen: Integer = 2; AMaxLen: Integer = 15;
   AOnTest: TQCustomNameCharTest = nil): Boolean;
 /// <summary>
 /// 判断指定的字符串是否是一个中国人姓名
@@ -1392,62 +1295,46 @@ function IsChineseAddr(S: QStringW; AMinLength: Integer = 3): Boolean;
 /// </summary>
 function IsNoChineseAddr(S: QStringW; AMinLength: Integer = 3): Boolean;
 /// 查找指定的二进制内容出现的起始位置
-function MemScan(S: Pointer; len_s: Integer; sub: Pointer;
-  len_sub: Integer): Pointer;
+function MemScan(S: Pointer; len_s: Integer; sub: Pointer; len_sub: Integer): Pointer;
 function BinaryCmp(const p1, p2: Pointer; len: Integer): Integer;
 {$IFNDEF WIN64}inline; {$ENDIF}
 // 下面的函数只能Unicode版本，没有Ansi和UTF-8版本，如果需要，再加入
 // 分解名称-值对
-function NameOfW(const S: QStringW; ASpliter: QCharW;
-  AEmptyIfMissed: Boolean = false): QStringW;
-function ValueOfW(const S: QStringW; ASpliter: QCharW;
-  AEmptyIfMissed: Boolean = false): QStringW;
-function IndexOfNameW(AList: TStrings; const AName: QStringW;
-  ASpliter: QCharW): Integer;
-function IndexOfValueW(AList: TStrings; const AValue: QStringW;
-  ASpliter: QCharW): Integer;
+function NameOfW(const S: QStringW; ASpliter: QCharW; AEmptyIfMissed: Boolean = false): QStringW;
+function ValueOfW(const S: QStringW; ASpliter: QCharW; AEmptyIfMissed: Boolean = false): QStringW;
+function IndexOfNameW(AList: TStrings; const AName: QStringW; ASpliter: QCharW): Integer;
+function IndexOfValueW(AList: TStrings; const AValue: QStringW; ASpliter: QCharW): Integer;
 
 function DeleteCharW(const ASource, ADeletes: QStringW): QStringW;
-function DeleteSideCharsW(const ASource: QStringW; ADeletes: QStringW;
-  AIgnoreCase: Boolean = false): QStringW;
-function DeleteRightW(const S, ADelete: QStringW; AIgnoreCase: Boolean = false;
-  ACount: Integer = MaxInt): QStringW;
-function DeleteLeftW(const S, ADelete: QStringW; AIgnoreCase: Boolean = false;
-  ACount: Integer = MaxInt): QStringW;
+function DeleteSideCharsW(const ASource: QStringW; ADeletes: QStringW; AIgnoreCase: Boolean = false): QStringW;
+function DeleteRightW(const S, ADelete: QStringW; AIgnoreCase: Boolean = false; ACount: Integer = MaxInt): QStringW;
+function DeleteLeftW(const S, ADelete: QStringW; AIgnoreCase: Boolean = false; ACount: Integer = MaxInt): QStringW;
 function ContainsCharW(const S, ACharList: QStringW): Boolean;
 function HtmlEscape(const S: QStringW): QStringW;
 function HtmlUnescape(const S: QStringW): QStringW;
 function JavaEscape(const S: QStringW; ADoEscape: Boolean): QStringW;
 function JavaUnescape(const S: QStringW; AStrictEscape: Boolean): QStringW;
 function HtmlTrimText(const S: QStringW): QStringW;
-function UrlEncode(const ABytes: PByte; l: Integer; ASpacesAsPlus: Boolean;
-  AEncodePercent: Boolean = false): QStringW; overload;
-function UrlEncode(const ABytes: TBytes; ASpacesAsPlus: Boolean;
-  AEncodePercent: Boolean = false): QStringW; overload;
-function UrlEncode(const S: QStringW; ASpacesAsPlus: Boolean;
-  AUtf8Encode: Boolean = True; AEncodePercent: Boolean = false)
-  : QStringW; overload;
-function UrlDecode(const AUrl: QStringW;
-  var AScheme, AHost, ADocument: QStringW; var APort: Word; AParams: TStrings;
+function UrlEncode(const ABytes: PByte; l: Integer; ASpacesAsPlus: Boolean; AEncodePercent: Boolean = false;
+  ABookmarkEncode: TUrlBookmarkEncode = ubeOnlyLast): QStringW; overload;
+function UrlEncode(const ABytes: TBytes; ASpacesAsPlus: Boolean; AEncodePercent: Boolean = false;
+  ABookmarkEncode: TUrlBookmarkEncode = ubeOnlyLast): QStringW; overload;
+function UrlEncode(const S: QStringW; ASpacesAsPlus: Boolean; AUtf8Encode: Boolean = True; AEncodePercent: Boolean = false;
+  ABookmarkEncode: TUrlBookmarkEncode = ubeOnlyLast): QStringW; overload;
+function UrlDecode(const AUrl: QStringW; var AScheme, AHost, ADocument: QStringW; var APort: Word; AParams: TStrings;
   AUtf8Encode: Boolean = True): Boolean;
 
-function LeftStrCount(const S: QStringW; const sub: QStringW;
-  AIgnoreCase: Boolean): Integer;
-function RightPosW(const S: QStringW; const sub: QStringW;
-  AIgnoreCase: Boolean): Integer;
+function LeftStrCount(const S: QStringW; const sub: QStringW; AIgnoreCase: Boolean): Integer;
+function RightPosW(const S: QStringW; const sub: QStringW; AIgnoreCase: Boolean): Integer;
 // 下面是一些辅助函数
 function ParseInt(var S: PQCharW; var ANum: Int64): Integer;
 function ParseHex(var p: PQCharW; var Value: Int64): Integer;
-function ParseNumeric(var S: PQCharW; var ANum: Extended): Boolean;
-  overload; inline;
-function ParseNumeric(var S: PQCharW; var ANum: Extended; var AIsFloat: Boolean)
-  : Boolean; overload;
+function ParseNumeric(var S: PQCharW; var ANum: Extended): Boolean; overload; inline;
+function ParseNumeric(var S: PQCharW; var ANum: Extended; var AIsFloat: Boolean): Boolean; overload;
 function ParseDateTime(S: PWideChar; var AResult: TDateTime): Boolean;
 function ParseWebTime(p: PWideChar; var AResult: TDateTime): Boolean;
-function DateTimeFromString(AStr: String; var AResult: TDateTime;
-  AFormat: String = ''): Boolean; overload;
-function DateTimeFromString(Str: String; AFormat: String = '';
-  ADef: TDateTime = 0): TDateTime; overload;
+function DateTimeFromString(AStr: String; var AResult: TDateTime; AFormat: String = ''): Boolean; overload;
+function DateTimeFromString(Str: String; AFormat: String = ''; ADef: TDateTime = 0): TDateTime; overload;
 // 获取当前时区偏移，单位为分钟，如中国为东8区，值为480
 function GetTimeZone: Integer;
 // 获取当前时区偏移文本表示，如中国为东8区，值为+0800
@@ -1456,8 +1343,7 @@ function EncodeWebTime(ATime: TDateTime): QStringW;
 
 function RollupSize(ASize: Int64): QStringW;
 function RollupTime(ASeconds: Int64; AHideZero: Boolean = True): QStringW;
-function DetectTextEncoding(const p: Pointer; l: Integer; var b: Boolean)
-  : TTextEncoding;
+function DetectTextEncoding(const p: Pointer; l: Integer; var b: Boolean): TTextEncoding;
 procedure ExchangeByteOrder(p: PQCharA; l: Integer); overload;
 function ExchangeByteOrder(V: Smallint): Smallint; overload; inline;
 function ExchangeByteOrder(V: Word): Word; overload; inline;
@@ -1474,25 +1360,18 @@ function AtomicAnd(var Dest: Integer; const AMask: Integer): Integer;
 function AtomicOr(var Dest: Integer; const AMask: Integer): Integer;
 {$IF RTLVersion<24}
 // 为与XE6兼容，InterlockedCompareExchange等价
-function AtomicCmpExchange(var Target: Integer; Value: Integer;
-  Comparand: Integer): Integer; inline; overload;
-function AtomicCmpExchange(var Target: Pointer; Value: Pointer;
-  Comparand: Pointer): Pointer; inline; overload;
+function AtomicCmpExchange(var Target: Integer; Value: Integer; Comparand: Integer): Integer; inline; overload;
+function AtomicCmpExchange(var Target: Pointer; Value: Pointer; Comparand: Pointer): Pointer; inline; overload;
 // 等价于InterlockedExchanged
-function AtomicExchange(var Target: Integer; Value: Integer): Integer;
-  inline; overload;
-function AtomicExchange(var Target: Pointer; Value: Pointer): Pointer;
-  inline; overload;
+function AtomicExchange(var Target: Integer; Value: Integer): Integer; inline; overload;
+function AtomicExchange(var Target: Pointer; Value: Pointer): Pointer; inline; overload;
 
-function AtomicIncrement(var Target: Integer; const Value: Integer = 1)
-  : Integer; inline;
+function AtomicIncrement(var Target: Integer; const Value: Integer = 1): Integer; inline;
 function AtomicDecrement(var Target: Integer): Integer; inline;
 {$IFEND <XE5}
 //
-function BinToHex(p: Pointer; l: Integer; ALowerCase: Boolean = false)
-  : QStringW; overload;
-function BinToHex(const ABytes: TBytes; ALowerCase: Boolean = false)
-  : QStringW; overload;
+function BinToHex(p: Pointer; l: Integer; ALowerCase: Boolean = false): QStringW; overload;
+function BinToHex(const ABytes: TBytes; ALowerCase: Boolean = false): QStringW; overload;
 function HexToBin(const S: QStringW): TBytes; overload;
 procedure HexToBin(const S: QStringW; var AResult: TBytes); overload;
 // 计算指定内容的哈希值
@@ -1508,8 +1387,7 @@ function PasswordScale(const S: QStringW): Integer; overload;
 /// <param name="S">密码</param>
 /// <param name="ARules">检测到的密码规则项目</param>
 /// <returns>返回一个>=0的密码强度值</returns>
-function PasswordScale(const S: QStringW; var ARules: TPasswordRules)
-  : Integer; overload;
+function PasswordScale(const S: QStringW; var ARules: TPasswordRules): Integer; overload;
 /// <summary>将指定的密码强度系数转换为强度等级</summary>
 /// <param name="AScale">通过PasswordScale得到的强度等级</param>
 /// <returns>返回转换后的强度等级</returns>
@@ -1536,8 +1414,7 @@ function IsChineseIdNo(CardNo: QStringW): Boolean;
 /// <param name="Birthday">出生日期</param>
 /// <param name="IsFemale">性别，男为true，女为false</param>
 /// <returns>身份证号有效，返回true，并通过参数返回各个部分，否则，返回false</returns>
-function DecodeChineseId(CardNo: QStringW; var AreaCode: QStringW;
-  var Birthday: TDateTime; var IsFemale: Boolean): Boolean;
+function DecodeChineseId(CardNo: QStringW; var AreaCode: QStringW; var Birthday: TDateTime; var IsFemale: Boolean): Boolean;
 function AreaCodeOfChineseId(CardNo: QStringW): QStringW;
 function AgeOfChineseId(CardNo: QStringW; ACalcDate: TDateTime = 0): Integer;
 function BirthdayOfChineseId(CardNo: QStringW): TDateTime;
@@ -1569,19 +1446,16 @@ function MethodEqual(const Left, Right: TMethod): Boolean; inline;
 /// </returns>
 function UrlMerge(const ABase, ARel: QStringW): QStringW;
 procedure Debugout(const AMsg: QStringW); overload;
-procedure Debugout(const AFmt: QStringW;
-  const AParams: array of const); overload;
-function RandomString(ALen: Cardinal; ACharTypes: TRandCharTypes = [];
-  AllTypesNeeded: Boolean = false): QStringW;
+procedure Debugout(const AFmt: QStringW; const AParams: array of const); overload;
+function RandomString(ALen: Cardinal; ACharTypes: TRandCharTypes = []; AllTypesNeeded: Boolean = false): QStringW;
 
-function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW;
-  AIgnoreCase: Boolean; var ASwitchChar: QCharW): QStringW; overload;
-function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW = ':')
+function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW; AIgnoreCase: Boolean; var ASwitchChar: QCharW)
   : QStringW; overload;
+function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW = ':'): QStringW; overload;
 
 function MonthFirstDay(ADate: TDateTime): TDateTime;
-function MergeAddr(const AProv, ACity, ACounty, ATownship, AVillage,
-  ADetail: String; AIgnoreCityIfSameEnding: Boolean): String;
+function MergeAddr(const AProv, ACity, ACounty, ATownship, AVillage, ADetail: QStringW; AIgnoreCityIfSameEnding: Boolean)
+  : QStringW;
 
 var
   JavaFormatUtf8: Boolean;
@@ -1591,12 +1465,9 @@ var
 
 const
   SLineBreak: PQCharW = {$IFDEF MSWINDOWS}#13#10{$ELSE}#10{$ENDIF};
-  DefaultNumberSet = [nftFloat, nftDelphiHex, nftCHex, nftBasicHex, nftHexPrec,
-    nftNegative, nftPositive];
-  HexChars: array [0 .. 15] of QCharW = ('0', '1', '2', '3', '4', '5', '6', '7',
-    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F');
-  LowerHexChars: array [0 .. 15] of QCharW = ('0', '1', '2', '3', '4', '5', '6',
-    '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f');
+  DefaultNumberSet = [nftFloat, nftDelphiHex, nftCHex, nftBasicHex, nftHexPrec, nftNegative, nftPositive];
+  HexChars: array [0 .. 15] of QCharW = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F');
+  LowerHexChars: array [0 .. 15] of QCharW = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f');
 
 implementation
 
@@ -1640,28 +1511,17 @@ var
   // GBK汉字拼音首字母表
   GBKSpells: array [0 .. 22] of TGBKCharSpell = (
     (
-      SpellChar: 'A'; StartChar: $B0A1; EndChar: $B0C4;
-    ), (SpellChar: 'B'; StartChar: $B0C5; EndChar: $B2C0;
-    ), (SpellChar: 'C'; StartChar: $B2C1; EndChar: $B4ED;
-    ), (SpellChar: 'D'; StartChar: $B4EE; EndChar: $B6E9;
-    ), (SpellChar: 'E'; StartChar: $B6EA; EndChar: $B7A1;
-    ), (SpellChar: 'F'; StartChar: $B7A2; EndChar: $B8C0;
-    ), (SpellChar: 'G'; StartChar: $B8C1; EndChar: $B9FD;
-    ), (SpellChar: 'H'; StartChar: $B9FE; EndChar: $BBF6;
-    ), (SpellChar: 'J'; StartChar: $BBF7; EndChar: $BFA5;
-    ), (SpellChar: 'K'; StartChar: $BFA6; EndChar: $C0AB;
-    ), (SpellChar: 'L'; StartChar: $C0AC; EndChar: $C2E7;
-    ), (SpellChar: 'M'; StartChar: $C2E8; EndChar: $C4C2;
-    ), (SpellChar: 'N'; StartChar: $C4C3; EndChar: $C5B5;
-    ), (SpellChar: 'O'; StartChar: $C5B6; EndChar: $C5BD;
-    ), (SpellChar: 'P'; StartChar: $C5BE; EndChar: $C6D9;
-    ), (SpellChar: 'Q'; StartChar: $C6DA; EndChar: $C8BA;
-    ), (SpellChar: 'R'; StartChar: $C8BB; EndChar: $C8F5;
-    ), (SpellChar: 'S'; StartChar: $C8F6; EndChar: $CBF0;
-    ), (SpellChar: 'T'; StartChar: $CBFA; EndChar: $CDD9;
-    ), (SpellChar: 'W'; StartChar: $CDDA; EndChar: $CEF3;
-    ), (SpellChar: 'X'; StartChar: $CEF4; EndChar: $D188;
-    ), (SpellChar: 'Y'; StartChar: $D1B9; EndChar: $D4D0;
+      SpellChar: 'A'; StartChar: $B0A1; EndChar: $B0C4;), (SpellChar: 'B'; StartChar: $B0C5; EndChar: $B2C0;
+    ), (SpellChar: 'C'; StartChar: $B2C1; EndChar: $B4ED;), (SpellChar: 'D'; StartChar: $B4EE; EndChar: $B6E9;
+    ), (SpellChar: 'E'; StartChar: $B6EA; EndChar: $B7A1;), (SpellChar: 'F'; StartChar: $B7A2; EndChar: $B8C0;
+    ), (SpellChar: 'G'; StartChar: $B8C1; EndChar: $B9FD;), (SpellChar: 'H'; StartChar: $B9FE; EndChar: $BBF6;
+    ), (SpellChar: 'J'; StartChar: $BBF7; EndChar: $BFA5;), (SpellChar: 'K'; StartChar: $BFA6; EndChar: $C0AB;
+    ), (SpellChar: 'L'; StartChar: $C0AC; EndChar: $C2E7;), (SpellChar: 'M'; StartChar: $C2E8; EndChar: $C4C2;
+    ), (SpellChar: 'N'; StartChar: $C4C3; EndChar: $C5B5;), (SpellChar: 'O'; StartChar: $C5B6; EndChar: $C5BD;
+    ), (SpellChar: 'P'; StartChar: $C5BE; EndChar: $C6D9;), (SpellChar: 'Q'; StartChar: $C6DA; EndChar: $C8BA;
+    ), (SpellChar: 'R'; StartChar: $C8BB; EndChar: $C8F5;), (SpellChar: 'S'; StartChar: $C8F6; EndChar: $CBF0;
+    ), (SpellChar: 'T'; StartChar: $CBFA; EndChar: $CDD9;), (SpellChar: 'W'; StartChar: $CDDA; EndChar: $CEF3;
+    ), (SpellChar: 'X'; StartChar: $CEF4; EndChar: $D188;), (SpellChar: 'Y'; StartChar: $D1B9; EndChar: $D4D0;
     ), (SpellChar: 'Z'; StartChar: $D4D1; EndChar: $D7F9;));
 {$IFDEF MSWINDOWS}
   hMsvcrtl: HMODULE;
@@ -1675,8 +1535,7 @@ var
 const
   // HTML转义表
 
-  HtmlEscapeChars: array [32 .. 255] of String = ('&nbsp;', #33, '&quot;', #35,
-    #36, #37, '&amp;', '&apos;', #40, #41, //
+  HtmlEscapeChars: array [32 .. 255] of String = ('&nbsp;', #33, '&quot;', #35, #36, #37, '&amp;', '&apos;', #40, #41, //
     #42, #43, #44, #45, #46, #47, #48, #49, #50, #51, //
     #52, #53, #54, #55, #56, #57, #58, #59, '&lt;', #61, //
     '&gt;', #63, #64, #65, #66, #67, #68, #69, #70, #71, //
@@ -1689,24 +1548,15 @@ const
     #132, #133, #134, #135, #136, #137, #138, #139, #140, #141, //
     #142, #143, #144, #145, #146, #147, #148, #149, #150, #151, //
     #152, #153, #154, #155, #156, #157, #158, #159, #160, '&iexcl;', //
-    '&cent;', '&pound;', '&curren;', '&yen;', '&brvbar;', '&sect;', '&uml;',
-    '&copy;', '&ordf;', '&laquo;', //
-    '&not;', '&shy;', '&reg;', '&macr;', '&deg;', '&plusmn;', #178, #179,
-    '&acute;', '&micro;', //
-    '&para;', '&middot;', '&cedil;', #185, '&ordm;', '&raquo;', #188, #189,
-    #190, '&iquest;', //
-    '&Agrave;', '&Aacute;', '&circ;', '&Atilde;', #196, '&ring;', '&AElig;',
-    '&Ccedil;', '&Egrave;', '&Eacute;', //
-    '&Ecirc;', '&Euml;', '&Igrave;', '&Iacute;', '&Icirc;', '&Iuml;', '&ETH;',
-    '&Ntilde;', '&Ograve;', '&Oacute;', //
-    '&Ocirc;', '&Otilde;', '&Ouml;', '&times;', '&Oslash;', '&Ugrave;',
-    '&Uacute;', '&Ucirc;', '&Uuml;', '&Yacute;', //
-    '&THORN;', '&szlig;', '&agrave;', '&aacute;', #226, '&atilde;', '&auml;',
-    '&aring;', '&aelig;', '&ccedil;', //
-    '&egrave;', '&eacute;', '&ecirc;', '&euml;', '&igrave;', '&iacute;',
-    '&icirc;', '&iuml;', '&ieth;', '&ntilde;', '&ograve;', '&oacute;',
-    '&ocirc;', '&otilde;', '&ouml;', '&divide;', '&oslash;', '&ugrave;',
-    '&uacute;', '&ucirc;', //
+    '&cent;', '&pound;', '&curren;', '&yen;', '&brvbar;', '&sect;', '&uml;', '&copy;', '&ordf;', '&laquo;', //
+    '&not;', '&shy;', '&reg;', '&macr;', '&deg;', '&plusmn;', #178, #179, '&acute;', '&micro;', //
+    '&para;', '&middot;', '&cedil;', #185, '&ordm;', '&raquo;', #188, #189, #190, '&iquest;', //
+    '&Agrave;', '&Aacute;', '&circ;', '&Atilde;', #196, '&ring;', '&AElig;', '&Ccedil;', '&Egrave;', '&Eacute;', //
+    '&Ecirc;', '&Euml;', '&Igrave;', '&Iacute;', '&Icirc;', '&Iuml;', '&ETH;', '&Ntilde;', '&Ograve;', '&Oacute;', //
+    '&Ocirc;', '&Otilde;', '&Ouml;', '&times;', '&Oslash;', '&Ugrave;', '&Uacute;', '&Ucirc;', '&Uuml;', '&Yacute;', //
+    '&THORN;', '&szlig;', '&agrave;', '&aacute;', #226, '&atilde;', '&auml;', '&aring;', '&aelig;', '&ccedil;', //
+    '&egrave;', '&eacute;', '&ecirc;', '&euml;', '&igrave;', '&iacute;', '&icirc;', '&iuml;', '&ieth;', '&ntilde;', '&ograve;',
+    '&oacute;', '&ocirc;', '&otilde;', '&ouml;', '&divide;', '&oslash;', '&ugrave;', '&uacute;', '&ucirc;', //
     '&uuml;', '&yacute;', '&thorn;', '&yuml;');
   // QString函数
 
@@ -1734,8 +1584,7 @@ begin
   end;
 end;
 
-function Utf8Decode(p: PQCharA; l: Integer; var AResult: QStringW;
-  var ABadAt: PQCharA): Boolean; overload;
+function Utf8Decode(p: PQCharA; l: Integer; var AResult: QStringW; var ABadAt: PQCharA): Boolean; overload;
 var
   ps, pe: PByte;
   pd, pds: PWord;
@@ -1853,8 +1702,7 @@ begin
   end;
 {$IFDEF MSWINDOWS}
   SetLength(AResult, l);
-  SetLength(AResult, MultiByteToWideChar(CP_UTF8, 8, PAnsiChar(p), l,
-    PQCharW(AResult), l)); // 8==>MB_ERR_INVALID_CHARS
+  SetLength(AResult, MultiByteToWideChar(CP_UTF8, 8, PAnsiChar(p), l, PQCharW(AResult), l)); // 8==>MB_ERR_INVALID_CHARS
   Result := Length(AResult) <> 0;
   if not Result then
     _Utf8Decode;
@@ -1939,8 +1787,7 @@ begin
   end;
 end;
 
-function Utf8Encode(ps: PQCharW; sl: Integer; pd: PQCharA; dl: Integer)
-  : Integer;
+function Utf8Encode(ps: PQCharW; sl: Integer; pd: PQCharA; dl: Integer): Integer;
 {$IFNDEF MSWINDOWS}
 var
   pds: PQCharA;
@@ -1953,8 +1800,7 @@ begin
   begin
 {$IFDEF MSWINDOWS}
     // Windows下直接调用操作系统的API
-    Result := WideCharToMultiByte(CP_UTF8, 0, ps, sl, PAnsiChar(pd), dl,
-      nil, nil);
+    Result := WideCharToMultiByte(CP_UTF8, 0, ps, sl, PAnsiChar(pd), dl, nil, nil);
 {$ELSE}
     pds := pd;
     while sl > 0 do
@@ -2079,14 +1925,12 @@ begin
   begin
 {$IFDEF MSWINDOWS}
     Result.Length := WideCharToMultiByte(CP_ACP, 0, p, l, nil, 0, nil, nil);
-    WideCharToMultiByte(CP_ACP, 0, p, l, LPSTR(Result.Data), Result.Length,
-      nil, nil);
+    WideCharToMultiByte(CP_ACP, 0, p, l, LPSTR(Result.Data), Result.Length, nil, nil);
 {$ELSE}
     Result.Length := l shl 1;
     Result.FValue[0] := 0;
     Move(p^, PQCharA(Result)^, l shl 1);
-    Result := TEncoding.Convert(TEncoding.Unicode, TEncoding.ANSI,
-      Result.FValue, 1, l shl 1);
+    Result := TEncoding.Convert(TEncoding.Unicode, TEncoding.ANSI, Result.FValue, 1, l shl 1);
 {$ENDIF}
   end
   else
@@ -2121,10 +1965,8 @@ begin
   if l > 0 then
   begin
 {$IFDEF MSWINDOWS}
-    System.SetLength(Result, MultiByteToWideChar(CP_ACP, 0, PAnsiChar(p),
-      l, nil, 0));
-    MultiByteToWideChar(CP_ACP, 0, PAnsiChar(p), l, PWideChar(Result),
-      Length(Result));
+    System.SetLength(Result, MultiByteToWideChar(CP_ACP, 0, PAnsiChar(p), l, nil, 0));
+    MultiByteToWideChar(CP_ACP, 0, PAnsiChar(p), l, PWideChar(Result), Length(Result));
 {$ELSE}
     System.SetLength(ABytes, l);
     Move(p^, PByte(@ABytes[0])^, l);
@@ -2328,8 +2170,7 @@ end;
 
 function CharSizeW(c: PQCharW): Integer;
 begin
-  if (c[0] >= #$D800) and (c[0] <= #$DBFF) and (c[1] >= #$DC00) and
-    (c[1] <= #$DFFF) then
+  if (c[0] >= #$D800) and (c[0] <= #$DBFF) and (c[1] >= #$DC00) and (c[1] <= #$DFFF) then
     Result := 2
   else
     Result := 1;
@@ -2543,8 +2384,7 @@ begin
   end;
 end;
 
-function CharInA(const c: PQCharA; const List: array of QCharA;
-  ACharLen: PInteger): Boolean;
+function CharInA(const c: PQCharA; const List: array of QCharA; ACharLen: PInteger): Boolean;
 var
   I, count: Integer;
   Lens: TIntArray;
@@ -2581,8 +2421,7 @@ begin
   end;
 end;
 
-function CharInW(const c: PQCharW; const List: array of QCharW;
-  ACharLen: PInteger): Boolean;
+function CharInW(const c: PQCharW; const List: array of QCharW; ACharLen: PInteger): Boolean;
 var
   I, count: Integer;
   Lens: TIntArray;
@@ -2662,8 +2501,7 @@ begin
   end;
 end;
 
-function CharInU(const c: PQCharA; const List: array of QCharA;
-  ACharLen: PInteger): Boolean;
+function CharInU(const c: PQCharA; const List: array of QCharA; ACharLen: PInteger): Boolean;
 var
   I, count: Integer;
   Lens: TIntArray;
@@ -2686,8 +2524,7 @@ begin
   end;
 end;
 
-function StrInW(const S: QStringW; const Values: array of QStringW;
-  AIgnoreCase: Boolean): Integer;
+function StrInW(const S: QStringW; const Values: array of QStringW; AIgnoreCase: Boolean): Integer;
 var
   I: Integer;
 begin
@@ -2702,8 +2539,7 @@ begin
   end
 end;
 
-function StrInW(const S: QStringW; Values: TStrings;
-  AIgnoreCase: Boolean = false): Integer;
+function StrInW(const S: QStringW; Values: TStrings; AIgnoreCase: Boolean = false): Integer;
 var
   I: Integer;
 begin
@@ -2738,8 +2574,7 @@ end;
 
 function IsSpaceW(const c: PQCharW; ASpaceSize: PInteger): Boolean;
 begin
-  Result := (c^ = #9) or (c^ = #10) or (c^ = #13) or (c^ = #32) or (c^ = #$A0)
-    or (c^ = #$3000);
+  Result := (c^ = #9) or (c^ = #10) or (c^ = #13) or (c^ = #32) or (c^ = #$A0) or (c^ = #$3000);
   if Result and Assigned(ASpaceSize) then
     ASpaceSize^ := 1;
 end;
@@ -2753,8 +2588,7 @@ begin
     if Assigned(ASpaceSize) then
       ASpaceSize^ := 1;
   end
-  else if (c^ = 227) and (PQCharA(IntPtr(c) + 1)^ = 128) and
-    (PQCharA(IntPtr(c) + 2)^ = 128) then
+  else if (c^ = 227) and (PQCharA(IntPtr(c) + 1)^ = 128) and (PQCharA(IntPtr(c) + 2)^ = 128) then
   begin
     Result := True;
     if Assigned(ASpaceSize) then
@@ -2939,8 +2773,7 @@ function DequotedStrW(const S: QStringW; const AQuoter: QCharW): QStringW;
 var
   p, pe, pd, pds: PQCharW;
 begin
-  if (Length(S) > 0) and (PQCharW(S)[0] = AQuoter) and
-    (PQCharW(S)[Length(S) - 1] = AQuoter) then
+  if (Length(S) > 0) and (PQCharW(S)[0] = AQuoter) and (PQCharW(S)[Length(S) - 1] = AQuoter) then
   begin
     p := PQCharW(S);
     pe := p;
@@ -3268,8 +3101,7 @@ begin
   end;
 end;
 
-function DecodeTokenA(var p: PQCharA; ADelimiters: array of QCharA;
-  AQuoter: QCharA; AIgnoreSpace: Boolean): QStringA;
+function DecodeTokenA(var p: PQCharA; ADelimiters: array of QCharA; AQuoter: QCharA; AIgnoreSpace: Boolean): QStringA;
 var
   S: PQCharA;
   l: Integer;
@@ -3314,8 +3146,7 @@ begin
     Inc(p, l);
 end;
 
-function DecodeTokenU(var p: PQCharA; ADelimiters: array of QCharA;
-  AQuoter: QCharA; AIgnoreSpace: Boolean): QStringA;
+function DecodeTokenU(var p: PQCharA; ADelimiters: array of QCharA; AQuoter: QCharA; AIgnoreSpace: Boolean): QStringA;
 var
   S: PQCharA;
   l: Integer;
@@ -3360,8 +3191,8 @@ begin
     Inc(p, l);
 end;
 
-function DecodeTokenW(var p: PQCharW; ADelimiters: array of QCharW;
-  AQuoter: QCharW; AIgnoreSpace: Boolean; ASkipDelimiters: Boolean): QStringW;
+function DecodeTokenW(var p: PQCharW; ADelimiters: array of QCharW; AQuoter: QCharW; AIgnoreSpace: Boolean;
+  ASkipDelimiters: Boolean): QStringW;
 var
   S: PQCharW;
   l: Integer;
@@ -3411,8 +3242,8 @@ begin
     SkipSpaceW(p);
 end;
 
-function DecodeTokenW(var p: PQCharW; ADelimiters: PQCharW; AQuoter: QCharW;
-  AIgnoreSpace: Boolean; ASkipDelimiters: Boolean): QStringW;
+function DecodeTokenW(var p: PQCharW; ADelimiters: PQCharW; AQuoter: QCharW; AIgnoreSpace: Boolean; ASkipDelimiters: Boolean)
+  : QStringW;
 var
   S: PQCharW;
   l: Integer;
@@ -3462,8 +3293,8 @@ begin
     SkipSpaceW(p);
 end;
 
-function DecodeTokenW(var S: QStringW; ADelimiters: PQCharW; AQuoter: QCharW;
-  AIgnoreCase, ARemove, ASkipDelimiters: Boolean): QStringW;
+function DecodeTokenW(var S: QStringW; ADelimiters: PQCharW; AQuoter: QCharW; AIgnoreCase, ARemove, ASkipDelimiters: Boolean)
+  : QStringW;
 var
   p: PQCharW;
 begin
@@ -3473,8 +3304,7 @@ begin
     S := StrDupX(p, Length(S) - (p - PQCharW(S)));
 end;
 
-function SplitTokenW(AList: TStrings; p: PQCharW; ADelimiters: PQCharW;
-  AQuoter: QCharW; AIgnoreSpace: Boolean): Integer;
+function SplitTokenW(AList: TStrings; p: PQCharW; ADelimiters: PQCharW; AQuoter: QCharW; AIgnoreSpace: Boolean): Integer;
 begin
   Result := 0;
   AList.BeginUpdate;
@@ -3489,14 +3319,12 @@ begin
   end;
 end;
 
-function SplitTokenW(AList: TStrings; const S: QStringW; ADelimiters: PQCharW;
-  AQuoter: QCharW; AIgnoreSpace: Boolean): Integer;
+function SplitTokenW(AList: TStrings; const S: QStringW; ADelimiters: PQCharW; AQuoter: QCharW; AIgnoreSpace: Boolean): Integer;
 begin
   Result := SplitTokenW(AList, PQCharW(S), ADelimiters, AQuoter, AIgnoreSpace);
 end;
 
-function SplitTokenW(const S: QStringW; ADelimiters: PQCharW; AQuoter: QCharW;
-  AIgnoreSpace: Boolean): TQStringArray;
+function SplitTokenW(const S: QStringW; ADelimiters: PQCharW; AQuoter: QCharW; AIgnoreSpace: Boolean): TQStringArray;
 var
   l: Integer;
   p: PQCharW;
@@ -3513,8 +3341,8 @@ begin
   SetLength(Result, l);
 end;
 
-function StrBeforeW(var source: PQCharW; const ASpliter: QStringW;
-  AIgnoreCase, ARemove: Boolean; AMustMatch: Boolean = false): QStringW;
+function StrBeforeW(var source: PQCharW; const ASpliter: QStringW; AIgnoreCase, ARemove: Boolean; AMustMatch: Boolean = false)
+  : QStringW;
 var
   pe: PQCharW;
   len: Integer;
@@ -3548,8 +3376,8 @@ begin
     SetLength(Result, 0);
 end;
 
-function StrBeforeW(var source: QStringW; const ASpliter: QStringW;
-  AIgnoreCase, ARemove: Boolean; AMustMatch: Boolean): QStringW;
+function StrBeforeW(var source: QStringW; const ASpliter: QStringW; AIgnoreCase, ARemove: Boolean; AMustMatch: Boolean)
+  : QStringW;
 var
   p, pe: PQCharW;
   len: Integer;
@@ -3581,8 +3409,7 @@ begin
     SetLength(Result, 0);
 end;
 
-function SplitByStrW(AList: TStrings; ASource: QStringW;
-  const ASpliter: QStringW; AIgnoreCase: Boolean): Integer;
+function SplitByStrW(AList: TStrings; ASource: QStringW; const ASpliter: QStringW; AIgnoreCase: Boolean): Integer;
 var
   p: PQCharW;
 begin
@@ -3628,8 +3455,7 @@ begin
     Result := S;
 end;
 
-function DecodeLineA(var p: PQCharA; ASkipEmpty: Boolean; AMaxSize: Integer)
-  : QStringA;
+function DecodeLineA(var p: PQCharA; ASkipEmpty: Boolean; AMaxSize: Integer): QStringA;
 var
   ps: PQCharA;
 begin
@@ -3677,8 +3503,7 @@ begin
   end;
   if Result.Length > AMaxSize then
   begin
-    Move(Result.FValue[Result.Length - AMaxSize + 3], Result.FValue[4],
-      AMaxSize - 3);
+    Move(Result.FValue[Result.Length - AMaxSize + 3], Result.FValue[4], AMaxSize - 3);
     Result.FValue[1] := $2E;
     // ...
     Result.FValue[2] := $2E;
@@ -3686,8 +3511,7 @@ begin
   end;
 end;
 
-function DecodeLineU(var p: PQCharA; ASkipEmpty: Boolean; AMaxSize: Integer)
-  : QStringA;
+function DecodeLineU(var p: PQCharA; ASkipEmpty: Boolean; AMaxSize: Integer): QStringA;
 begin
   Result := DecodeLineA(p, ASkipEmpty, MaxInt);
   if Result.Length > 0 then
@@ -3695,8 +3519,7 @@ begin
     Result.FValue[0] := 1;
     if Result.Length > AMaxSize then
     begin
-      Move(Result.FValue[Result.Length - AMaxSize + 3], Result.FValue[4],
-        AMaxSize - 3);
+      Move(Result.FValue[Result.Length - AMaxSize + 3], Result.FValue[4], AMaxSize - 3);
       Result.FValue[1] := $2E;
       // ...
       Result.FValue[2] := $2E;
@@ -3705,8 +3528,7 @@ begin
   end;
 end;
 
-function DecodeLineW(var p: PQCharW; ASkipEmpty: Boolean; AMaxSize: Integer;
-  AQuoterChar: QCharW): QStringW;
+function DecodeLineW(var p: PQCharW; ASkipEmpty: Boolean; AMaxSize: Integer; AQuoterChar: QCharW): QStringW;
 var
   ps: PQCharW;
 begin
@@ -3779,8 +3601,66 @@ begin
     Result := '...' + RightStrW(Result, AMaxSize - 3, True);
 end;
 
-function LeftStrW(const S: QStringW; AMaxCount: Integer; ACheckExt: Boolean)
-  : QStringW;
+function DecodeLineW(AStream: TStream; AEncoding: TTextEncoding; var ALine: QStringW): Boolean;
+var
+  ABuf: array [0 .. 4095] of Byte;
+  APos: Int64;
+  AReaded, I, ACount: Integer;
+  pd: PQCharW;
+  procedure NeedSize(ADelta: Integer);
+  begin
+    if Length(ALine) < (ACount + (ADelta shr 1)) then
+    begin
+      SetLength(ALine, Length(ALine) + 4096);
+      pd := PQCharW(ALine);
+      Inc(pd, ACount);
+    end;
+  end;
+  procedure Append(ADelta: Integer);
+  begin
+    NeedSize(ADelta);
+    Move(ABuf[0], pd^, ADelta);
+    pd := PQCharW(IntPtr(pd) + ADelta);
+    Inc(ACount, ADelta shr 1);
+  end;
+
+begin
+  APos := AStream.Position;
+  ACount := 0;
+  Result := false;
+  SetLength(ALine, 4096);
+  pd := PQCharW(ALine);
+  repeat
+    AReaded := AStream.Read(ABuf[0], 4096);
+    for I := 0 to AReaded - 1 do
+    begin
+      if ABuf[I] = 10 then
+      begin
+        Append(I);
+        if AEncoding = teUnicode16LE then
+          AStream.Seek(I - AReaded + 2, soFromCurrent)
+        else
+          AStream.Seek(I - AReaded + 1, soFromCurrent);
+        Result := True;
+        Break;
+      end;
+    end;
+    if not Result then
+      Append(AReaded);
+  until Result or (AStream.Position = AStream.Size);
+  Result := ACount > 0;
+  if AEncoding <> teUnicode16LE then
+    ALine := DecodeText(PQCharW(ALine), Length(ALine) shl 1, AEncoding)
+  else
+  begin
+    pd := PQCharW(ALine);
+    if PQCharW(IntPtr(pd) + (ACount shl 1) - 2)^ = #13 then
+      Dec(ACount, 1);
+    SetLength(ALine, ACount);
+  end;
+end;
+
+function LeftStrW(const S: QStringW; AMaxCount: Integer; ACheckExt: Boolean): QStringW;
 var
   ps, p: PQCharW;
   l: Integer;
@@ -3821,14 +3701,12 @@ begin
     SetLength(Result, 0);
 end;
 
-function LeftStrW(var S: QStringW; const ADelimiters: QStringW;
-  ARemove: Boolean): QStringW;
+function LeftStrW(var S: QStringW; const ADelimiters: QStringW; ARemove: Boolean): QStringW;
 begin
   Result := DecodeTokenW(S, PQCharW(ADelimiters), QCharW(#0), false, ARemove);
 end;
 
-function RightStrW(const S: QStringW; AMaxCount: Integer; ACheckExt: Boolean)
-  : QStringW;
+function RightStrW(const S: QStringW; AMaxCount: Integer; ACheckExt: Boolean): QStringW;
 var
   ps, p: PQCharW;
   l: Integer;
@@ -3871,8 +3749,7 @@ begin
     SetLength(Result, 0);
 end;
 
-function RightStrW(var S: QStringW; const ADelimiters: QStringW;
-  ARemove: Boolean): QStringW;
+function RightStrW(var S: QStringW; const ADelimiters: QStringW; ARemove: Boolean): QStringW;
 var
   ps, pe, pd: PQCharW;
 begin
@@ -3885,10 +3762,9 @@ begin
     if CharInW(pe, pd) then
     begin
       Inc(pe);
-      Result := StrDupX(pe, (IntPtr(ps) + (Length(S) shl 1) -
-        IntPtr(pe)) shr 1);
+      Result := StrDupX(pe, (IntPtr(ps) + (Length(S) shl 1) - IntPtr(pe)) shr 1);
       if ARemove then
-        S := StrDupX(ps, (IntPtr(pe) - IntPtr(ps)) shr 1);
+        S := StrDupX(ps, (IntPtr(pe) - IntPtr(ps) - 1) shr 1);
       Exit;
     end;
   end;
@@ -3897,8 +3773,7 @@ begin
     SetLength(S, 0);
 end;
 
-function StrBetween(var S: PQCharW; AStartTag, AEndTag: QStringW;
-  AIgnoreCase: Boolean): QStringW;
+function StrBetween(var S: PQCharW; AStartTag, AEndTag: QStringW; AIgnoreCase: Boolean): QStringW;
 var
   ps, pe: PQCharW;
   l: Integer;
@@ -3963,16 +3838,14 @@ begin
   end;
 end;
 
-function StrStrX(s1, s2: PQCharW; L1, L2: Integer;
-  AIgnoreCase: Boolean): PQCharW;
+function StrStrX(s1, s2: PQCharW; L1, L2: Integer; AIgnoreCase: Boolean): PQCharW;
 var
   p1, p2: PQCharW;
 begin
   Result := nil;
   while (s1^ <> #0) and (L1 >= L2) do
   begin
-    if (s1^ = s2^) or
-      (AIgnoreCase and (qstring.CharUpperW(s1^) = qstring.CharUpperW(s2^))) then
+    if (s1^ = s2^) or (AIgnoreCase and (qstring.CharUpperW(s1^) = qstring.CharUpperW(s2^))) then
     begin
       p1 := s1;
       p2 := s2;
@@ -3984,9 +3857,7 @@ begin
           Result := s1;
           Exit;
         end
-        else if (p1^ = p2^) or
-          (AIgnoreCase and (qstring.CharUpperW(p1^) = qstring.CharUpperW(p2^)))
-        then
+        else if (p1^ = p2^) or (AIgnoreCase and (qstring.CharUpperW(p1^) = qstring.CharUpperW(p2^))) then
           continue
         else
           Break;
@@ -3996,8 +3867,7 @@ begin
   end;
 end;
 
-function StrStrRX(s1, s2: PQCharW; L1, L2: Integer;
-  AIgnoreCase: Boolean): PQCharW;
+function StrStrRX(s1, s2: PQCharW; L1, L2: Integer; AIgnoreCase: Boolean): PQCharW;
 var
   ps1, ps2, p1, p2: PQCharW;
 begin
@@ -4008,9 +3878,7 @@ begin
   s2 := s2 - L2;
   while (ps1 >= s1) and (L1 >= L2) do
   begin
-    if (ps1^ = ps2^) or
-      (AIgnoreCase and (qstring.CharUpperW(ps1^) = qstring.CharUpperW(ps2^)))
-    then
+    if (ps1^ = ps2^) or (AIgnoreCase and (qstring.CharUpperW(ps1^) = qstring.CharUpperW(ps2^))) then
     begin
       p1 := ps1;
       p2 := ps2;
@@ -4018,9 +3886,7 @@ begin
       begin
         Dec(p1);
         Dec(p2);
-        if (p1^ = p2^) or
-          (AIgnoreCase and (qstring.CharUpperW(p1^) = qstring.CharUpperW(p2^)))
-        then
+        if (p1^ = p2^) or (AIgnoreCase and (qstring.CharUpperW(p1^) = qstring.CharUpperW(p2^))) then
           continue
         else
           Break;
@@ -4035,8 +3901,8 @@ begin
   end;
 end;
 
-function StrBetweenTimes(const S, ADelimiter: QStringW; AIgnoreCase: Boolean;
-  AStartTimes: Integer = 0; AStopTimes: Integer = 1): QStringW;
+function StrBetweenTimes(const S, ADelimiter: QStringW; AIgnoreCase: Boolean; AStartTimes: Integer = 0; AStopTimes: Integer = 1)
+  : QStringW;
 var
   p, ps, pl, pd: PQCharW;
   L1, L2, ATimes: Integer;
@@ -4118,8 +3984,8 @@ begin
   end;
 end;
 
-function TokenWithIndex(var S: PQCharW; AIndex: Integer; ADelimiters: PQCharW;
-  AQuoter: QCharW; AIgnoreSapce: Boolean): QStringW;
+function TokenWithIndex(var S: PQCharW; AIndex: Integer; ADelimiters: PQCharW; AQuoter: QCharW; AIgnoreSapce: Boolean)
+  : QStringW;
 begin
   SetLength(Result, 0);
   while (AIndex >= 0) and (S^ <> #0) do
@@ -4135,8 +4001,7 @@ begin
   end;
 end;
 
-function SkipUntilA(var p: PQCharA; AExpects: array of QCharA;
-  AQuoter: QCharA): Integer;
+function SkipUntilA(var p: PQCharA; AExpects: array of QCharA; AQuoter: QCharA): Integer;
 var
   ps: PQCharA;
 begin
@@ -4174,8 +4039,7 @@ begin
   Result := IntPtr(p) - IntPtr(ps);
 end;
 
-function SkipUntilU(var p: PQCharA; AExpects: array of QCharA;
-  AQuoter: QCharA): Integer;
+function SkipUntilU(var p: PQCharA; AExpects: array of QCharA; AQuoter: QCharA): Integer;
 var
   ps: PQCharA;
 begin
@@ -4213,8 +4077,7 @@ begin
   Result := IntPtr(p) - IntPtr(ps);
 end;
 
-function SkipUntilW(var p: PQCharW; AExpects: array of QCharW;
-  AQuoter: QCharW): Integer;
+function SkipUntilW(var p: PQCharW; AExpects: array of QCharW; AQuoter: QCharW): Integer;
 var
   ps: PQCharW;
 begin
@@ -4252,8 +4115,7 @@ begin
   Result := IntPtr(p) - IntPtr(ps);
 end;
 
-function SkipUntilW(var p: PQCharW; AExpects: PQCharW; AQuoter: QCharW)
-  : Integer;
+function SkipUntilW(var p: PQCharW; AExpects: PQCharW; AQuoter: QCharW): Integer;
 var
   ps: PQCharW;
 begin
@@ -4426,8 +4288,7 @@ begin
   begin
     if AIgnoreCase then
     begin
-      while (s1^ <> 0) and (s2^ <> 0) and
-        ((s1^ = s2^) or (CharUpperA(s1^) = CharUpperA(s2^))) do
+      while (s1^ <> 0) and (s2^ <> 0) and ((s1^ = s2^) or (CharUpperA(s1^) = CharUpperA(s2^))) do
       begin
         Inc(Result);
         Inc(s1);
@@ -4476,8 +4337,7 @@ begin
   begin
     if AIgnoreCase then
     begin
-      while (s1^ <> 0) and (s2^ <> 0) and
-        ((s1^ = s2^) or (CharUpperA(s1^) = CharUpperA(s2^))) do
+      while (s1^ <> 0) and (s2^ <> 0) and ((s1^ = s2^) or (CharUpperA(s1^) = CharUpperA(s2^))) do
       begin
         ACharSize := CompareSubSeq;
         if ACharSize <> 0 then
@@ -4515,8 +4375,7 @@ begin
   begin
     if AIgnoreCase then
     begin
-      while (s1^ <> #0) and (s2^ <> #0) and
-        ((s1^ = s2^) or (CharUpperW(s1^) = CharUpperW(s2^))) do
+      while (s1^ <> #0) and (s2^ <> #0) and ((s1^ = s2^) or (CharUpperW(s1^) = CharUpperW(s2^))) do
       begin
         Inc(Result);
         Inc(s1);
@@ -4535,8 +4394,7 @@ begin
   end;
 end;
 
-function DetectTextEncoding(const p: Pointer; l: Integer; var b: Boolean)
-  : TTextEncoding;
+function DetectTextEncoding(const p: Pointer; l: Integer; var b: Boolean): TTextEncoding;
 var
   pAnsi: PByte;
   pWide: PWideChar;
@@ -4587,8 +4445,7 @@ begin
       Result := teUnicode16BE
     else if l >= 3 then
     begin
-      if (pAnsi^ = $EF) and (PByte(IntPtr(pAnsi) + 1)^ = $BB) and
-        (PByte(IntPtr(pAnsi) + 2)^ = $BF) then // UTF-8编码
+      if (pAnsi^ = $EF) and (PByte(IntPtr(pAnsi) + 1)^ = $BB) and (PByte(IntPtr(pAnsi) + 2)^ = $BF) then // UTF-8编码
         Result := teUTF8
       else // 检测字符中是否有符合UFT-8编码规则的字符，11...
       begin
@@ -4783,8 +4640,7 @@ begin
         teUTF8:
           begin
             if ASize >= 3 then
-              ABomExists := (ABuffer[0] = $EF) and (ABuffer[1] = $BB) and
-                (ABuffer[2] = $BF)
+              ABomExists := (ABuffer[0] = $EF) and (ABuffer[1] = $BB) and (ABuffer[2] = $BF)
             else
               ABomExists := false;
           end;
@@ -4855,8 +4711,7 @@ begin
         teUTF8:
           begin
             if ASize > 3 then
-              ABomExists := (ABuffer[0] = $EF) and (ABuffer[1] = $BB) and
-                (ABuffer[2] = $BF)
+              ABomExists := (ABuffer[0] = $EF) and (ABuffer[1] = $BB) and (ABuffer[2] = $BF)
             else
               ABomExists := false;
           end;
@@ -4907,8 +4762,7 @@ begin
   end;
 end;
 
-function DecodeText(p: Pointer; ASize: Integer; AEncoding: TTextEncoding)
-  : QStringW;
+function DecodeText(p: Pointer; ASize: Integer; AEncoding: TTextEncoding): QStringW;
 var
   ABomExists: Boolean;
   pb: PByte;
@@ -4935,8 +4789,7 @@ begin
       Inc(pb, 2);
       Dec(ASize, 2);
     end
-    else if (ASize > 2) and (ByteOf(0) = $EF) and (ByteOf(1) = $BB) and
-      (ByteOf(2) = $BF) then
+    else if (ASize > 2) and (ByteOf(0) = $EF) and (ByteOf(1) = $BB) and (ByteOf(2) = $BF) then
     begin
       AEncoding := teUTF8;
       Inc(pb, 3);
@@ -4965,17 +4818,25 @@ begin
     SetLength(Result, 0);
 end;
 
-function LoadTextW(AStream: TStream; AEncoding: TTextEncoding)
-  : QStringW; overload;
+function LoadTextW(AStream: TStream; AEncoding: TTextEncoding): QStringW; overload;
 var
-  ASize: Integer;
+  AReaded, ASize: Int64;
+  ANeedRead: Integer;
   ABuffer: TBytes;
 begin
   ASize := AStream.Size - AStream.Position;
   if ASize > 0 then
   begin
     SetLength(ABuffer, ASize);
-    AStream.ReadBuffer((@ABuffer[0])^, ASize);
+    AReaded := 0;
+    repeat
+      if ASize - AReaded > MaxInt then
+        ANeedRead := MaxInt
+      else
+        ANeedRead := ASize - AReaded;
+      AStream.ReadBuffer((@ABuffer[AReaded])^, ANeedRead);
+      Inc(AReaded, ANeedRead);
+    until AReaded = ASize;
     Result := DecodeText(@ABuffer[0], ASize, AEncoding);
   end
   else
@@ -5010,8 +4871,7 @@ begin
     Utf8Save;
 end;
 
-procedure SaveTextU(const AFileName: String; const S: QStringA;
-  AWriteBom: Boolean);
+procedure SaveTextU(const AFileName: String; const S: QStringA; AWriteBom: Boolean);
 var
   AStream: TFileStream;
 begin
@@ -5023,8 +4883,7 @@ begin
   end;
 end;
 
-procedure SaveTextU(const AFileName: String; const S: QStringW;
-  AWriteBom: Boolean); overload;
+procedure SaveTextU(const AFileName: String; const S: QStringW; AWriteBom: Boolean); overload;
 begin
   SaveTextU(AFileName, qstring.Utf8Encode(S), AWriteBom);
 end;
@@ -5057,14 +4916,12 @@ begin
     SaveAnsi;
 end;
 
-procedure SaveTextU(AStream: TStream; const S: QStringW;
-  AWriteBom: Boolean); overload;
+procedure SaveTextU(AStream: TStream; const S: QStringW; AWriteBom: Boolean); overload;
 begin
   SaveTextU(AStream, qstring.Utf8Encode(S), AWriteBom);
 end;
 
-procedure SaveTextW(const AFileName: String; const S: QStringW;
-  AWriteBom: Boolean);
+procedure SaveTextW(const AFileName: String; const S: QStringW; AWriteBom: Boolean);
 var
   AStream: TFileStream;
 begin
@@ -5291,8 +5148,7 @@ begin
   end;
 end;
 
-function PosA(sub, S: PQCharA; AIgnoreCase: Boolean;
-  AStartPos: Integer): Integer;
+function PosA(sub, S: PQCharA; AIgnoreCase: Boolean; AStartPos: Integer): Integer;
 begin
   if AStartPos > 0 then
     Inc(S, AStartPos - 1);
@@ -5306,14 +5162,12 @@ begin
     Result := 0;
 end;
 
-function PosA(sub, S: QStringA; AIgnoreCase: Boolean;
-  AStartPos: Integer): Integer;
+function PosA(sub, S: QStringA; AIgnoreCase: Boolean; AStartPos: Integer): Integer;
 begin
   Result := PosA(PQCharA(sub), PQCharA(S), AIgnoreCase, AStartPos);
 end;
 
-function PosW(sub, S: PQCharW; AIgnoreCase: Boolean;
-  AStartPos: Integer): Integer;
+function PosW(sub, S: PQCharW; AIgnoreCase: Boolean; AStartPos: Integer): Integer;
 begin
   if AStartPos > 0 then
     Inc(S, AStartPos - 1);
@@ -5327,8 +5181,7 @@ begin
     Result := 0;
 end;
 
-function PosW(sub, S: QStringW; AIgnoreCase: Boolean; AStartPos: Integer)
-  : Integer; overload;
+function PosW(sub, S: QStringW; AIgnoreCase: Boolean; AStartPos: Integer): Integer; overload;
 begin
   Result := PosW(PQCharW(sub), PQCharW(S), AIgnoreCase, AStartPos);
 end;
@@ -5339,8 +5192,7 @@ begin
   Move(S^, PQCharW(Result)^, ACount shl 1);
 end;
 
-function StrDupW(const S: PQCharW; AOffset: Integer; const ACount: Integer)
-  : QStringW;
+function StrDupW(const S: PQCharW; AOffset: Integer; const ACount: Integer): QStringW;
 var
   c, ACharSize: Integer;
   p, pds, pd: PQCharW;
@@ -5461,8 +5313,7 @@ begin
   end;
 end;
 
-function StrNCmpW(const s1, s2: PQCharW; AIgnoreCase: Boolean;
-  ALength: Integer): Integer;
+function StrNCmpW(const s1, s2: PQCharW; AIgnoreCase: Boolean; ALength: Integer): Integer;
 var
   p1, p2: PQCharW;
   c1, c2: QCharW;
@@ -5519,14 +5370,12 @@ end;
 /// <param name="AIgnoreCase">比较时是否忽略大小写</param>
 /// <param name="AIgnoreSpace">比较时是否忽略空白字符</param>
 /// <remarks>本比较考虑中文全角的情况，认为中文全角符号和对应的半角符号是相等的值</remarks>
-function NaturalCompareW(s1, s2: PQCharW;
-  AIgnoreCase, AIgnoreSpace: Boolean): Integer;
+function NaturalCompareW(s1, s2: PQCharW; AIgnoreCase, AIgnoreSpace: Boolean): Integer;
 var
   N1, N2: Int64;
   L1, L2: Integer;
   c1, c2: QCharW;
-  function FetchNumeric(p: PQCharW; var AResult: Int64;
-    var ALen: Integer): Boolean;
+  function FetchNumeric(p: PQCharW; var AResult: Int64; var ALen: Integer): Boolean;
   var
     ps: PQCharW;
   const
@@ -5633,8 +5482,7 @@ end;
 
 function IsHexChar(c: QCharW): Boolean; inline;
 begin
-  Result := ((c >= '0') and (c <= '9')) or ((c >= 'a') and (c <= 'f')) or
-    ((c >= 'A') and (c <= 'F'));
+  Result := ((c >= '0') and (c <= '9')) or ((c >= 'a') and (c <= 'f')) or ((c >= 'A') and (c <= 'F'));
 end;
 
 function IsOctChar(c: WideChar): Boolean; inline;
@@ -5813,8 +5661,7 @@ begin
   end;
 end;
 
-function StringReplaceWX(const S, Old, New: QStringW; AFlags: TReplaceFlags)
-  : QStringW;
+function StringReplaceWX(const S, Old, New: QStringW; AFlags: TReplaceFlags): QStringW;
 var
   ps, pse, pr, pd, po, pn, pns: PQCharW;
   LO, LN, LS, I, ACount: Integer;
@@ -5891,8 +5738,7 @@ begin
   end;
 end;
 
-function StringReplaceW(const S, Old, New: QStringW; AFlags: TReplaceFlags)
-  : QStringW;
+function StringReplaceW(const S, Old, New: QStringW; AFlags: TReplaceFlags): QStringW;
 {$IF RTLVersion>30}// Berlin 开始直接使用系统自带的替换函数
 begin
   Result := StringReplace(S, Old, New, AFlags);
@@ -5961,8 +5807,7 @@ begin
 end;
 {$IFEND}
 
-function StringReplaceW(const S: QStringW; const AChar: QCharW;
-  AFrom, ACount: Integer): QStringW;
+function StringReplaceW(const S: QStringW; const AChar: QCharW; AFrom, ACount: Integer): QStringW;
 var
   p, pd: PQCharW;
   l: Integer;
@@ -6004,8 +5849,8 @@ begin
   end;
 end;
 
-function StringReplaceWithW(const S, AStartTag, AEndTag, AReplaced: QStringW;
-  AWithTag, AIgnoreCase: Boolean; AMaxTimes: Cardinal): QStringW;
+function StringReplaceWithW(const S, AStartTag, AEndTag, AReplaced: QStringW; AWithTag, AIgnoreCase: Boolean;
+  AMaxTimes: Cardinal): QStringW;
 var
   po, pe, pws, pwe, pd, pStart, pEnd, pReplaced: PQCharW;
   l, dl, LS, LE, LR: Integer;
@@ -6113,8 +5958,7 @@ begin
     SetLength(Result, 0);
 end;
 
-function StringReplicateW(const S, AChar: QStringW; AExpectLength: Integer)
-  : QStringW;
+function StringReplicateW(const S, AChar: QStringW; AExpectLength: Integer): QStringW;
 begin
   if Length(S) < AExpectLength then
     Result := S + StringReplicateW(AChar, AExpectLength - Length(S))
@@ -6165,8 +6009,7 @@ begin
   end;
 end;
 
-function FilterCharW(const S: QStringW; AcceptChars: QStringW)
-  : QStringW; overload;
+function FilterCharW(const S: QStringW; AcceptChars: QStringW): QStringW; overload;
 var
   ps, pd, pc, pds: PQCharW;
   l: Integer;
@@ -6199,8 +6042,7 @@ begin
   end;
 end;
 
-function FilterCharW(const S: QStringW; AOnValidate: TQFilterCharEvent;
-  ATag: Pointer): QStringW; overload;
+function FilterCharW(const S: QStringW; AOnValidate: TQFilterCharEvent; ATag: Pointer): QStringW; overload;
 var
   ps, pd, pds: PQCharW;
   l, I: Integer;
@@ -6240,8 +6082,7 @@ begin
 end;
 {$IFDEF UNICODE}
 
-function FilterCharW(const S: QStringW; AOnValidate: TQFilterCharEventA;
-  ATag: Pointer): QStringW; overload;
+function FilterCharW(const S: QStringW; AOnValidate: TQFilterCharEventA; ATag: Pointer): QStringW; overload;
 var
   ps, pd, pds: PQCharW;
   l, I: Integer;
@@ -6288,8 +6129,7 @@ var
   AIsHex: Boolean;
   procedure NegPosCheck;
   begin
-    if ((p^ = '+') and (nftPositive in Accepts)) or
-      ((p^ = '-') and (nftNegative in Accepts)) then
+    if ((p^ = '+') and (nftPositive in Accepts)) or ((p^ = '-') and (nftNegative in Accepts)) then
     begin
       pd^ := p^;
       Inc(p);
@@ -6377,8 +6217,7 @@ begin
         end;
       end;
     end
-    else if AIsHex and ((Ord(p^) in [Ord('a') .. Ord('f')]) or
-      (Ord(p^) in [Ord('A') .. Ord('F')])) then
+    else if AIsHex and ((Ord(p^) in [Ord('a') .. Ord('f')]) or (Ord(p^) in [Ord('A') .. Ord('F')])) then
     begin
       pd^ := p^;
       Inc(pd);
@@ -6388,8 +6227,7 @@ begin
   SetLength(Result, (IntPtr(pd) - IntPtr(pds)) shr 1);
 end;
 
-function MemScan(S: Pointer; len_s: Integer; sub: Pointer;
-  len_sub: Integer): Pointer;
+function MemScan(S: Pointer; len_s: Integer; sub: Pointer; len_sub: Integer): Pointer;
 var
   pb_s, pb_sub, pc_sub, pc_s: PByte;
   remain: Integer;
@@ -6607,8 +6445,7 @@ end;
 
 procedure SkipHex(var S: PQCharW);
 begin
-  while ((S^ >= '0') and (S^ <= '9')) or ((S^ >= 'a') and (S^ <= 'f')) or
-    ((S^ >= 'A') and (S^ <= 'F')) do
+  while ((S^ >= '0') and (S^ <= '9')) or ((S^ >= 'a') and (S^ <= 'f')) or ((S^ >= 'A') and (S^ <= 'F')) do
     Inc(S);
 end;
 
@@ -6632,8 +6469,7 @@ begin
   Result := p - ps;
 end;
 
-function LeftStrCount(const S: QStringW; const sub: QStringW;
-  AIgnoreCase: Boolean): Integer;
+function LeftStrCount(const S: QStringW; const sub: QStringW; AIgnoreCase: Boolean): Integer;
 var
   ps, psub: PQCharW;
   l: Integer;
@@ -6669,8 +6505,7 @@ begin
   end;
 end;
 
-function RightPosW(const S: QStringW; const sub: QStringW;
-  AIgnoreCase: Boolean): Integer;
+function RightPosW(const S: QStringW; const sub: QStringW; AIgnoreCase: Boolean): Integer;
 var
   ps, pe, psub, psube, pc, pt: PQCharW;
   LS, lsub: Integer;
@@ -6692,8 +6527,7 @@ begin
         begin
           pt := psube - 1;
           pc := pe - 1;
-          while (pt >= psub) and
-            ((pc^ = pt^) or (CharUpperW(pc^) = CharUpperW(pt^))) do
+          while (pt >= psub) and ((pc^ = pt^) or (CharUpperW(pc^) = CharUpperW(pt^))) do
           begin
             Dec(pt);
             Dec(pc);
@@ -6792,8 +6626,7 @@ begin
   end;
 end;
 
-function ParseNumeric(var S: PQCharW; var ANum: Extended;
-  var AIsFloat: Boolean): Boolean;
+function ParseNumeric(var S: PQCharW; var ANum: Extended; var AIsFloat: Boolean): Boolean;
 var
   ps: PQCharW;
   function ParseHexInt: Boolean;
@@ -6885,8 +6718,7 @@ begin
   Result := ParseNumeric(S, ANum, AIsFloat);
 end;
 
-function NameOfW(const S: QStringW; ASpliter: QCharW; AEmptyIfMissed: Boolean)
-  : QStringW;
+function NameOfW(const S: QStringW; ASpliter: QCharW; AEmptyIfMissed: Boolean): QStringW;
 var
   p: PQCharW;
 begin
@@ -6896,8 +6728,7 @@ begin
     Result := '';
 end;
 
-function ValueOfW(const S: QStringW; ASpliter: QCharW; AEmptyIfMissed: Boolean)
-  : QStringW;
+function ValueOfW(const S: QStringW; ASpliter: QCharW; AEmptyIfMissed: Boolean): QStringW;
 var
   p: PQCharW;
   l: Integer;
@@ -6923,8 +6754,7 @@ begin
   end;
 end;
 
-function IndexOfNameW(AList: TStrings; const AName: QStringW;
-  ASpliter: QCharW): Integer;
+function IndexOfNameW(AList: TStrings; const AName: QStringW; ASpliter: QCharW): Integer;
 var
   I: Integer;
 begin
@@ -6939,8 +6769,7 @@ begin
   end;
 end;
 
-function IndexOfValueW(AList: TStrings; const AValue: QStringW;
-  ASpliter: QCharW): Integer;
+function IndexOfValueW(AList: TStrings; const AValue: QStringW; ASpliter: QCharW): Integer;
 var
   I: Integer;
 begin
@@ -6983,8 +6812,7 @@ begin
     Result := ASource;
 end;
 
-function DeleteSideCharsW(const ASource: QStringW; ADeletes: QStringW;
-  AIgnoreCase: Boolean): QStringW;
+function DeleteSideCharsW(const ASource: QStringW; ADeletes: QStringW; AIgnoreCase: Boolean): QStringW;
 var
   ps, pd, pe: PQCharW;
   ATemp: QStringW;
@@ -7028,8 +6856,7 @@ begin
   end;
 end;
 
-function DeleteRightW(const S, ADelete: QStringW; AIgnoreCase: Boolean = false;
-  ACount: Integer = MaxInt): QStringW;
+function DeleteRightW(const S, ADelete: QStringW; AIgnoreCase: Boolean = false; ACount: Integer = MaxInt): QStringW;
 var
   ps, pd, pe: PQCharW;
   LS, LD: Integer;
@@ -7078,8 +6905,7 @@ begin
     Result := S;
 end;
 
-function DeleteLeftW(const S, ADelete: QStringW; AIgnoreCase: Boolean = false;
-  ACount: Integer = MaxInt): QStringW;
+function DeleteLeftW(const S, ADelete: QStringW; AIgnoreCase: Boolean = false; ACount: Integer = MaxInt): QStringW;
 var
   ps, pd: PQCharW;
   LS, LD: Integer;
@@ -7338,8 +7164,7 @@ begin
             end;
           'u': // \uxxxx
             begin
-              if IsHexChar(p[1]) and IsHexChar(p[2]) and IsHexChar(p[3]) and
-                IsHexChar(p[4]) then
+              if IsHexChar(p[1]) and IsHexChar(p[2]) and IsHexChar(p[3]) and IsHexChar(p[4]) then
               begin
                 Dec(ASize, 5);
                 Inc(p, 5);
@@ -7349,9 +7174,8 @@ begin
             end;
           'U': // \Uxxxxxxxx
             begin
-              if IsHexChar(p[1]) and IsHexChar(p[2]) and IsHexChar(p[3]) and
-                IsHexChar(p[4]) and IsHexChar(p[5]) and IsHexChar(p[6]) and
-                IsHexChar(p[7]) and IsHexChar(p[8]) then
+              if IsHexChar(p[1]) and IsHexChar(p[2]) and IsHexChar(p[3]) and IsHexChar(p[4]) and IsHexChar(p[5]) and
+                IsHexChar(p[6]) and IsHexChar(p[7]) and IsHexChar(p[8]) then
               begin
                 Dec(ASize, 9);
                 Inc(p, 9);
@@ -7434,21 +7258,15 @@ begin
               end;
             'u': // \uxxxx
               begin
-                pd^ := WideChar((HexValue(p[1]) shl 12) or
-                  (HexValue(p[2]) shl 8) or (HexValue(p[3]) shl 4) or
-                  HexValue(p[4]));
+                pd^ := WideChar((HexValue(p[1]) shl 12) or (HexValue(p[2]) shl 8) or (HexValue(p[3]) shl 4) or HexValue(p[4]));
                 Inc(p, 4);
               end;
             'U':
               // \Uxxxxxxxx
               begin
-                pd^ := WideChar((HexValue(p[1]) shl 12) or
-                  (HexValue(p[2]) shl 8) or (HexValue(p[3]) shl 4) or
-                  HexValue(p[4]));
+                pd^ := WideChar((HexValue(p[1]) shl 12) or (HexValue(p[2]) shl 8) or (HexValue(p[3]) shl 4) or HexValue(p[4]));
                 Inc(pd);
-                pd^ := WideChar((HexValue(p[5]) shl 12) or
-                  (HexValue(p[6]) shl 8) or (HexValue(p[7]) shl 4) or
-                  HexValue(p[8]));
+                pd^ := WideChar((HexValue(p[5]) shl 12) or (HexValue(p[6]) shl 8) or (HexValue(p[7]) shl 4) or HexValue(p[8]));
                 Inc(p, 8);
               end
           else
@@ -7536,8 +7354,7 @@ type
 
 function UnescapeHtmlChar(var p: PQCharW): QCharW;
 const
-  HtmlUnescapeTable: array [0 .. 94] of THTMLEscapeHashItem =
-    ((Hash: 1667591796; Char: 162; Next: 255), // 0:0:&cent;
+  HtmlUnescapeTable: array [0 .. 94] of THTMLEscapeHashItem = ((Hash: 1667591796; Char: 162; Next: 255), // 0:0:&cent;
     (Hash: 1768257635; Char: 161; Next: 10), // 1:15:&iexcl;
     (Hash: 1886352750; Char: 163; Next: 34), // 2:55:&pound;
     (Hash: 1869900140; Char: 245; Next: 255), // 3:3:&otilde;
@@ -7770,8 +7587,8 @@ begin
     Result := '';
 end;
 
-function UrlEncode(const ABytes: PByte; l: Integer;
-  ASpacesAsPlus, AEncodePercent: Boolean): QStringW; overload;
+function UrlEncode(const ABytes: PByte; l: Integer; ASpacesAsPlus, AEncodePercent: Boolean; ABookmarkEncode: TUrlBookmarkEncode)
+  : QStringW; overload;
 const
   SafeChars: array [33 .. 127] of Byte = ( //
     0, 0, 0, 0, 0, 0, 0, 0, //
@@ -7786,36 +7603,39 @@ const
     1, 1, 1, 1, 1, 1, 1, 1, //
     1, 1, 1, 1, 1, 1, 1, 1, //
     1, 1, 0, 0, 0, 1, 0);
-  HexChars: array [0 .. 15] of QCharW = ('0', '1', '2', '3', '4', '5', '6', '7',
-    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F');
+  HexChars: array [0 .. 15] of QCharW = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F');
 var
   c: Integer;
+  ABookmarkCount: Integer;
   ps, pe: PByte;
   pd: PQCharW;
 begin
   // 计算实际的长度
   c := 0;
+  ABookmarkCount:=0;
   ps := PByte(ABytes);
   pe := PByte(IntPtr(ps) + l);
   while IntPtr(ps) < IntPtr(pe) do
   begin
-    if (not AEncodePercent) and (ps^ = Ord('%')) and
-      (IntPtr(pe) - IntPtr(ps) > 2) and
-      (PByte(IntPtr(ps) + 1)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
-      Ord('0') .. Ord('9')]) and
-      (PByte(IntPtr(ps) + 2)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
-      Ord('0') .. Ord('9')]) then // 原来就是%xx?     %09%32
+    if (not AEncodePercent) and (ps^ = Ord('%')) and (IntPtr(pe) - IntPtr(ps) > 2) and
+      (PByte(IntPtr(ps) + 1)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'), Ord('0') .. Ord('9')]) and
+      (PByte(IntPtr(ps) + 2)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'), Ord('0') .. Ord('9')]) then // 原来就是%xx?     %09%32
       Inc(ps, 3)
     else
     begin
       if (ps^ = Ord('%')) and (not AEncodePercent) then
       // 有非%xx这种，说明未编码过%，需要强制编码
       begin
-        Result := UrlEncode(ABytes, l, ASpacesAsPlus, True);
+        Result := UrlEncode(ABytes, l, ASpacesAsPlus, True, ABookmarkEncode);
         Exit;
       end;
       if (ps^ = 32) and ASpacesAsPlus then
         Inc(ps)
+      else if ps^ = Ord('#') then
+        begin
+        Inc(ps);
+        Inc(ABookmarkCount);
+        end
       else
       begin
         if (ps^ < 32) or (ps^ > 127) or (SafeChars[ps^] = 0) then
@@ -7824,17 +7644,21 @@ begin
       end;
     end;
   end;
+  if ABookmarkCount > 0 then
+  begin
+    if ABookmarkEncode = ubeAll then
+      Inc(c, ABookmarkCount)
+    else if ABookmarkEncode = ubeOnlyLast then
+      Inc(c);
+  end;
   SetLength(Result, l + (c shl 1));
   pd := PQCharW(Result);
   ps := ABytes;
   while IntPtr(ps) < IntPtr(pe) do
   begin
-    if (not AEncodePercent) and (ps^ = Ord('%')) and
-      (IntPtr(pe) - IntPtr(ps) > 2) and
-      (PByte(IntPtr(ps) + 1)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
-      Ord('0') .. Ord('9')]) and
-      (PByte(IntPtr(ps) + 2)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'),
-      Ord('0') .. Ord('9')]) then // 原来就是%xx?
+    if (not AEncodePercent) and (ps^ = Ord('%')) and (IntPtr(pe) - IntPtr(ps) > 2) and
+      (PByte(IntPtr(ps) + 1)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'), Ord('0') .. Ord('9')]) and
+      (PByte(IntPtr(ps) + 2)^ in [Ord('a') .. Ord('f'), Ord('A') .. Ord('F'), Ord('0') .. Ord('9')]) then // 原来就是%xx?
     begin
       pd^ := '%';
       Inc(pd);
@@ -7848,7 +7672,19 @@ begin
     end
     else
     begin
-      if (ps^ in [33 .. 127]) and (SafeChars[ps^] <> 0) then
+      if (ABookmarkEncode <> ubeNone) and (ps^ = Ord('#')) then
+      begin
+        if (ABookmarkCount = 1) or (ABookmarkEncode = ubeAll) then
+        begin
+          pd^ := '%';
+          Inc(pd);
+          pd^ := HexChars[(ps^ shr 4) and $0F];
+          Inc(pd);
+          pd^ := HexChars[ps^ and $0F];
+        end;
+        Dec(ABookmarkCount);
+      end
+      else if (ps^ in [33 .. 127]) and (SafeChars[ps^] <> 0) then
         pd^ := QCharW(ps^)
       else if (ps^ = 32) and ASpacesAsPlus then
         pd^ := '+'
@@ -7866,17 +7702,17 @@ begin
   end;
 end;
 
-function UrlEncode(const ABytes: TBytes; ASpacesAsPlus, AEncodePercent: Boolean)
+function UrlEncode(const ABytes: TBytes; ASpacesAsPlus, AEncodePercent: Boolean; ABookmarkEncode: TUrlBookmarkEncode)
   : QStringW; overload;
 begin
   if Length(ABytes) > 0 then
-    Result := UrlEncode(@ABytes[0], Length(ABytes), ASpacesAsPlus)
+    Result := UrlEncode(@ABytes[0], Length(ABytes), ASpacesAsPlus, AEncodePercent,ABookmarkEncode)
   else
     SetLength(Result, 0);
 end;
 
-function UrlEncode(const S: QStringW; ASpacesAsPlus, AUtf8Encode,
-  AEncodePercent: Boolean): QStringW; overload;
+function UrlEncode(const S: QStringW; ASpacesAsPlus, AUtf8Encode, AEncodePercent: Boolean; ABookmarkEncode: TUrlBookmarkEncode)
+  : QStringW; overload;
 var
   ABytes: QStringA;
 begin
@@ -7886,15 +7722,13 @@ begin
       ABytes := qstring.Utf8Encode(S)
     else
       ABytes := AnsiEncode(S);
-    Result := UrlEncode(PByte(PQCharA(ABytes)), ABytes.Length, ASpacesAsPlus,
-      AEncodePercent);
+    Result := UrlEncode(PByte(PQCharA(ABytes)), ABytes.Length, ASpacesAsPlus, AEncodePercent, ABookmarkEncode);
   end
   else
     Result := S;
 end;
 
-function UrlDecode(const AUrl: QStringW;
-  var AScheme, AHost, ADocument: QStringW; var APort: Word; AParams: TStrings;
+function UrlDecode(const AUrl: QStringW; var AScheme, AHost, ADocument: QStringW; var APort: Word; AParams: TStrings;
   AUtf8Encode: Boolean): Boolean;
 var
   p, ps: PQCharW;
@@ -8041,8 +7875,7 @@ begin
         while p^ <> #0 do
         begin
           V := DecodeTokenW(p, ParamDelimiter, QCharW(0), false, True);
-          if DecodeUrlStr(NameOfW(V, '='), N) and
-            DecodeUrlStr(ValueOfW(V, '='), V) then
+          if DecodeUrlStr(NameOfW(V, '='), N) and DecodeUrlStr(ValueOfW(V, '=',true), V) then
             AParams.Add(N + '=' + V)
           else
           begin
@@ -8063,11 +7896,9 @@ begin
   end;
 end;
 
-function DateTimeFromString(AStr: String; var AResult: TDateTime;
-  AFormat: String): Boolean; overload;
+function DateTimeFromString(AStr: String; var AResult: TDateTime; AFormat: String): Boolean; overload;
 // 日期时间格式
-  function DecodeTagValue(var pf, ps: PWideChar; cl, cu: WideChar;
-    var AValue, ACount: Integer; AMaxOnOne: Integer): Boolean;
+  function DecodeTagValue(var pf, ps: PWideChar; cl, cu: WideChar; var AValue, ACount: Integer; AMaxOnOne: Integer): Boolean;
   begin
     AValue := 0;
     ACount := 0;
@@ -8189,10 +8020,9 @@ function DateTimeFromString(AStr: String; var AResult: TDateTime;
     ps, p, tz: PWideChar;
     I, AOffset: Integer;
   const
-    KnownFormats: array [0 .. 15] of String = ('y-m-d h:n:s.z', 'y-m-d h:n:s',
-      'y-m-d', 'h:n:s.z', 'h:n:s', 'y-m-d"T"h:n:s.z', 'y-m-d"T"h:n:s',
-      'd/m/y h:n:s.z', 'd/m/y h:n:s', 'd/m/y', 'm/d/y h:n:s.z', 'm/d/y h:n:s',
-      'm/d/y', 'y/m/d h:n:s.z', 'y/m/d h:n:s', 'y/m/d');
+    KnownFormats: array [0 .. 15] of String = ('y-m-d h:n:s.z', 'y-m-d h:n:s', 'y-m-d', 'h:n:s.z', 'h:n:s', 'y-m-d"T"h:n:s.z',
+      'y-m-d"T"h:n:s', 'd/m/y h:n:s.z', 'd/m/y h:n:s', 'd/m/y', 'm/d/y h:n:s.z', 'm/d/y h:n:s', 'm/d/y', 'y/m/d h:n:s.z',
+      'y/m/d h:n:s', 'y/m/d');
   begin
     ps := PWideChar(AStr);
     tz := StrStrW(ps, '+'); // +xxyy
@@ -8234,8 +8064,7 @@ function DateTimeFromString(AStr: String; var AResult: TDateTime;
       end;
     end
     // 检测连续的数字格式
-    else if (l = 8) and (DecodeAsFormat('hh:nn:ss') or
-      DecodeAsFormat('yy-mm-dd') or DecodeAsFormat('yyyymmdd')) then
+    else if (l = 8) and (DecodeAsFormat('hh:nn:ss') or DecodeAsFormat('yy-mm-dd') or DecodeAsFormat('yyyymmdd')) then
       Exit
     else if (l = 9) and DecodeAsFormat('hhnnsszzz') then
       Exit
@@ -8248,25 +8077,21 @@ function DateTimeFromString(AStr: String; var AResult: TDateTime;
       // mm?dd?yyyy or dd?mm?yyyy
       begin
         // dd mm yyyy 的国家居多，优先识别为这种
-        if DecodeAsFormat('dd' + p^ + 'mm' + p^ + 'yyyy') or
-          DecodeAsFormat('mm' + p^ + 'dd' + p^ + 'yyyy') then
+        if DecodeAsFormat('dd' + p^ + 'mm' + p^ + 'yyyy') or DecodeAsFormat('mm' + p^ + 'dd' + p^ + 'yyyy') then
           Exit;
       end
       else if DecodeAsFormat('yyyy-mm-dd') then // 其它格式都是100移动卡
         Exit;
     end
-    else if (l = 12) and (DecodeAsFormat('yymmddhhnnss') or
-      DecodeAsFormat('hh:nn:ss.zzz')) then
+    else if (l = 12) and (DecodeAsFormat('yymmddhhnnss') or DecodeAsFormat('hh:nn:ss.zzz')) then
       Exit
     else if (l = 14) and DecodeAsFormat('yyyymmddhhnnss') then
       Exit
     else if (l = 17) and DecodeAsFormat('yyyymmddhhnnsszzz') then
       Exit
-    else if (l = 20) and (DecodeAsFormat('yyyy-mm-dd hh:nn:ss') or
-      DecodeAsFormat('yyyy-mm-dd"T"hh:nn:ss')) then
+    else if (l = 20) and (DecodeAsFormat('yyyy-mm-dd hh:nn:ss') or DecodeAsFormat('yyyy-mm-dd"T"hh:nn:ss')) then
       Exit
-    else if (l = 23) and (DecodeAsFormat('yyyy-mm-dd hh:nn:ss.zzz') or
-      DecodeAsFormat('yyyy-mm-dd"T"hh:nn:ss.zzz')) then
+    else if (l = 23) and (DecodeAsFormat('yyyy-mm-dd hh:nn:ss.zzz') or DecodeAsFormat('yyyy-mm-dd"T"hh:nn:ss.zzz')) then
       Exit;
     for I := Low(KnownFormats) to High(KnownFormats) do
     begin
@@ -8285,8 +8110,7 @@ begin
     SmartDetect;
 end;
 
-function DateTimeFromString(Str: String; AFormat: String; ADef: TDateTime)
-  : TDateTime; overload;
+function DateTimeFromString(Str: String; AFormat: String; ADef: TDateTime): TDateTime; overload;
 begin
   if not DateTimeFromString(Str, Result, AFormat) then
     Result := ADef;
@@ -8516,10 +8340,9 @@ var
   I: Integer;
   Y, M, d, H, N, S, tz: Integer;
 const
-  MonthNames: array [0 .. 11] of QStringW = ('Jan', 'Feb', 'Mar', 'Apr', 'May',
-    'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
-  WeekNames: array [0 .. 6] of QStringW = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri',
-    'Sat', 'Sun');
+  MonthNames: array [0 .. 11] of QStringW = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct',
+    'Nov', 'Dec');
+  WeekNames: array [0 .. 6] of QStringW = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun');
   Comma: WideChar = ',';
   Digits: PWideChar = '0123456789';
   // Web 日期格式：星期, 日 月 年 时:分:秒 GMT
@@ -8675,7 +8498,7 @@ begin
 {$ELSE}
   t1 := 0;
   localtime_r(t1, tmLocal);
-  Result := tmLocal.tm_gmtoff div 60 ;
+  Result := tmLocal.tm_gmtoff div 60;
 {$ENDIF}
 end;
 
@@ -8698,19 +8521,17 @@ var
   Y, M, d, H, N, S, MS: Word;
   ATimeZone: String;
 const
-  DefShortMonthNames: array [1 .. 12] of String = ('Jan', 'Feb', 'Mar', 'Apr',
-    'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
-  DefShortDayNames: array [1 .. 7] of String = ('Sun', 'Mon', 'Tue', 'Wed',
-    'Thu', 'Fri', 'Sat');
+  DefShortMonthNames: array [1 .. 12] of String = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct',
+    'Nov', 'Dec');
+  DefShortDayNames: array [1 .. 7] of String = ('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
 begin
   if (ATime < MinDateTime) or (ATime > MaxDateTime) then
     Result := ''
   else
   begin
     DecodeDateTime(ATime, Y, M, d, H, N, S, MS);
-    Result := DefShortDayNames[DayOfWeek(ATime)] + ',' + IntToStr(d) + ' ' +
-      DefShortMonthNames[M] + ' ' + IntToStr(Y) + ' ' + IntToStr(H) + ':' +
-      IntToStr(N) + ':' + IntToStr(S);
+    Result := DefShortDayNames[DayOfWeek(ATime)] + ',' + IntToStr(d) + ' ' + DefShortMonthNames[M] + ' ' + IntToStr(Y) + ' ' +
+      IntToStr(H) + ':' + IntToStr(N) + ':' + IntToStr(S);
     ATimeZone := GetTimezoneText;
     if Length(ATimeZone) > 0 then
       Result := Result + ' GMT ' + ATimeZone;
@@ -8952,10 +8773,8 @@ end;
 
 function BinToHex(p: Pointer; l: Integer; ALowerCase: Boolean): QStringW;
 const
-  B2HConvert: array [0 .. 15] of QCharW = ('0', '1', '2', '3', '4', '5', '6',
-    '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F');
-  B2HConvertL: array [0 .. 15] of QCharW = ('0', '1', '2', '3', '4', '5', '6',
-    '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f');
+  B2HConvert: array [0 .. 15] of QCharW = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F');
+  B2HConvertL: array [0 .. 15] of QCharW = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f');
 var
   pd: PQCharW;
   pb: PByte;
@@ -9185,6 +9004,17 @@ begin
   Result := Cat(PQCharA(S), S.Length);
 end;
 
+class function QStringA.Create(const p: PQCharA; AIsUtf8: Boolean): QStringA;
+var
+  pe: PQCharA;
+begin
+  pe := p;
+  while pe^ <> 0 do
+    Inc(pe);
+  Result.Cat(p, IntPtr(pe) - IntPtr(p));
+  Result.SetIsUtf8(AIsUtf8);
+end;
+
 { TQStringCatHelperW }
 
 function TQStringCatHelperW.Back(ALen: Integer): TQStringCatHelperW;
@@ -9217,14 +9047,12 @@ begin
   end;
 end;
 
-function TQStringCatHelperW.Cat(const S: QStringW; AQuoter: QCharW)
-  : TQStringCatHelperW;
+function TQStringCatHelperW.Cat(const S: QStringW; AQuoter: QCharW): TQStringCatHelperW;
 begin
   Result := Cat(PQCharW(S), Length(S), AQuoter);
 end;
 
-function TQStringCatHelperW.Cat(p: PQCharW; len: Integer; AQuoter: QCharW)
-  : TQStringCatHelperW;
+function TQStringCatHelperW.Cat(p: PQCharW; len: Integer; AQuoter: QCharW): TQStringCatHelperW;
 var
   ps: PQCharW;
   ACount: Integer;
@@ -9334,8 +9162,7 @@ begin
   NeedSize(FBlockSize);
 end;
 
-function TQStringCatHelperW.EndWith(const S: QStringW;
-  AIgnoreCase: Boolean): Boolean;
+function TQStringCatHelperW.EndWith(const S: QStringW; AIgnoreCase: Boolean): Boolean;
 var
   p: PQCharW;
 begin
@@ -9415,8 +9242,7 @@ begin
   end;
 end;
 
-function TQStringCatHelperW.Replicate(const S: QStringW; count: Integer)
-  : TQStringCatHelperW;
+function TQStringCatHelperW.Replicate(const S: QStringW; count: Integer): TQStringCatHelperW;
 var
   ps: PQCharW;
   l: Integer;
@@ -9574,8 +9400,7 @@ end;
 // 兼容2007版的原子操作接口
 {$IF RTLVersion<24}
 
-function AtomicCmpExchange(var Target: Integer; Value: Integer;
-  Comparand: Integer): Integer; inline;
+function AtomicCmpExchange(var Target: Integer; Value: Integer; Comparand: Integer): Integer; inline;
 begin
 {$IFDEF MSWINDOWS}
   Result := InterlockedCompareExchange(Target, Value, Comparand);
@@ -9584,19 +9409,16 @@ begin
 {$ENDIF}
 end;
 
-function AtomicCmpExchange(var Target: Pointer; Value: Pointer;
-  Comparand: Pointer): Pointer; inline;
+function AtomicCmpExchange(var Target: Pointer; Value: Pointer; Comparand: Pointer): Pointer; inline;
 begin
 {$IFDEF MSWINDOWS}
-  Result := Pointer(InterlockedCompareExchange(PInteger(@Target)^,
-    Integer(Value), Integer(Comparand)));
+  Result := Pointer(InterlockedCompareExchange(PInteger(@Target)^, Integer(Value), Integer(Comparand)));
 {$ELSE}
   Result := TInterlocked.CompareExchange(Target, Value, Comparand);
 {$ENDIF}
 end;
 
-function AtomicIncrement(var Target: Integer; const Value: Integer)
-  : Integer; inline;
+function AtomicIncrement(var Target: Integer; const Value: Integer): Integer; inline;
 begin
 {$IFDEF MSWINDOWS}
   if Value = 1 then
@@ -9717,8 +9539,7 @@ begin
   Result := Cat(@V, SizeOf(Variant));
 end;
 
-function TQBytesCatHelper.Cat(const V: QStringA; ACStyle: Boolean)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Cat(const V: QStringA; ACStyle: Boolean): TQBytesCatHelper;
 begin
   if ACStyle then
     Result := Cat(PQCharA(V), V.Length + 1)
@@ -9777,8 +9598,7 @@ begin
     Result := Self;
 end;
 
-function TQBytesCatHelper.Cat(const AData: Pointer; const ALen: Integer)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Cat(const AData: Pointer; const ALen: Integer): TQBytesCatHelper;
 begin
   Result := Self;
   NeedSize(-ALen);
@@ -9799,18 +9619,36 @@ begin
 end;
 
 function TQBytesCatHelper.Delete(AStart, ACount: Cardinal): TQBytesCatHelper;
+var
+  ATotal: Integer;
+  pDeleteStart, pDeleteEnd: PByte;
 begin
   Result := Self;
-  if AStart < Cardinal(Position) then
+  if AStart < 0 then // 从右删除指定的个数
   begin
-    if Cardinal(Position) - AStart < ACount then
-      FDest := PByte(UIntPtr(FStart) + AStart)
-    else
+    pDeleteStart := FDest;
+    Inc(pDeleteStart, AStart);
+    if pDeleteStart < FStart then
     begin
-      Move(PByte(UIntPtr(FStart) + AStart + ACount)^,
-        PByte(UIntPtr(FStart) + AStart)^, ACount);
-      Dec(FDest, ACount);
+      Dec(ACount, IntPtr(FStart) - IntPtr(pDeleteStart));
+      pDeleteStart := FStart;
     end;
+  end
+  else
+  begin
+    pDeleteStart := FStart;
+    Inc(pDeleteStart, AStart);
+    if pDeleteStart >= FDest then // 没有可以删除的内容
+      Exit;
+  end;
+  pDeleteEnd := pDeleteStart + ACount;
+  if (pDeleteEnd >= FDest) or (pDeleteEnd <= FStart) then
+    FDest := pDeleteStart
+  else
+  begin
+    ATotal := IntPtr(FDest) - IntPtr(pDeleteEnd);
+    Move(pDeleteEnd^, pDeleteStart^, ATotal);
+    FDest := pDeleteStart + ATotal;
   end;
 end;
 
@@ -9841,64 +9679,54 @@ begin
     Move(FValue[0], Result[0], ALen);
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Int64)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Int64): TQBytesCatHelper;
 begin
   Result := Insert(AIndex, @V, SizeOf(Int64));
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Integer)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Integer): TQBytesCatHelper;
 begin
   Result := Insert(AIndex, @V, SizeOf(Integer));
 end;
 {$IFNDEF NEXTGEN}
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: AnsiString)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: AnsiString): TQBytesCatHelper;
 begin
   Result := Insert(AIndex, PAnsiChar(V), Length(V));
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: AnsiChar)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: AnsiChar): TQBytesCatHelper;
 begin
   Result := Insert(AIndex, @V, 1);
 end;
 {$ENDIF}
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Cardinal)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Cardinal): TQBytesCatHelper;
 begin
   Result := Insert(AIndex, @V, SizeOf(Cardinal));
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Shortint)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Shortint): TQBytesCatHelper;
 begin
   Result := Insert(AIndex, @V, SizeOf(Shortint));
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Byte)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Byte): TQBytesCatHelper;
 begin
   Result := Insert(AIndex, @V, 1);
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Smallint)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Smallint): TQBytesCatHelper;
 begin
   Result := Insert(AIndex, @V, SizeOf(Smallint));
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Word)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Word): TQBytesCatHelper;
 begin
   Result := Insert(AIndex, @V, SizeOf(Word));
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: QStringA;
-  ACStyle: Boolean): TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: QStringA; ACStyle: Boolean): TQBytesCatHelper;
 begin
   if ACStyle then
     Result := Insert(AIndex, PQCharA(V), V.Length + 1)
@@ -9906,57 +9734,48 @@ begin
     Result := Insert(AIndex, PQCharA(V), V.Length);
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Currency)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Currency): TQBytesCatHelper;
 begin
   Result := Insert(AIndex, @V, SizeOf(Currency));
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Boolean)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Boolean): TQBytesCatHelper;
 begin
   Result := Insert(AIndex, @V, SizeOf(Boolean));
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Variant)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Variant): TQBytesCatHelper;
 begin
   // ??这是一个有问题的实现，临时先这样，回头抽空改
   Result := Insert(AIndex, @V, SizeOf(Variant));
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: TGuid)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: TGuid): TQBytesCatHelper;
 begin
   Result := Insert(AIndex, @V, SizeOf(V));
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Double)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Double): TQBytesCatHelper;
 begin
   Result := Insert(AIndex, @V, SizeOf(V));
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const S: QStringW)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const S: QStringW): TQBytesCatHelper;
 begin
   Result := Insert(AIndex, PQCharW(S), Length(S) shl 1);
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const c: QCharW)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const c: QCharW): TQBytesCatHelper;
 begin
   Result := Insert(AIndex, @c, SizeOf(c));
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Single)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const V: Single): TQBytesCatHelper;
 begin
   Result := Insert(AIndex, @V, SizeOf(V));
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const ABytes: TBytes)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const ABytes: TBytes): TQBytesCatHelper;
 begin
   if Length(ABytes) > 0 then
     Result := Insert(AIndex, @ABytes[0], Length(ABytes))
@@ -9964,16 +9783,14 @@ begin
     Result := Self;
 end;
 
-function TQBytesCatHelper.Insert(AIndex: Cardinal; const AData: Pointer;
-  const ALen: Integer): TQBytesCatHelper;
+function TQBytesCatHelper.Insert(AIndex: Cardinal; const AData: Pointer; const ALen: Integer): TQBytesCatHelper;
 begin
   if AIndex >= Cardinal(Position) then
     Result := Cat(AData, ALen)
   else
   begin
     NeedSize(-ALen);
-    Move(PByte(UIntPtr(FStart) + AIndex)^,
-      PByte(IntPtr(FStart) + ALen + Integer(AIndex))^, ALen);
+    Move(PByte(UIntPtr(FStart) + AIndex)^, PByte(IntPtr(FStart) + ALen + Integer(AIndex))^, ALen);
     Move(AData^, PByte(UIntPtr(FStart) + AIndex)^, ALen);
     Inc(FDest, ALen);
     Result := Self;
@@ -9996,8 +9813,7 @@ begin
   end;
 end;
 
-function TQBytesCatHelper.Replicate(const ABytes: TBytes; ACount: Integer)
-  : TQBytesCatHelper;
+function TQBytesCatHelper.Replicate(const ABytes: TBytes; ACount: Integer): TQBytesCatHelper;
 var
   l: Integer;
 begin
@@ -10123,16 +9939,13 @@ var
           end;
         'u': // Unicode字符
           begin
-            if IsHexChar(T[1]) and IsHexChar(T[2]) and IsHexChar(T[3]) and
-              IsHexChar(T[4]) then
+            if IsHexChar(T[1]) and IsHexChar(T[2]) and IsHexChar(T[3]) and IsHexChar(T[4]) then
             begin
-              Result := (HexValue(T[1]) shl 12) or (HexValue(T[2]) shl 8) or
-                (HexValue(T[3]) shl 4) or HexValue(T[4]);
+              Result := (HexValue(T[1]) shl 12) or (HexValue(T[2]) shl 8) or (HexValue(T[3]) shl 4) or HexValue(T[4]);
               Inc(T, 5);
             end
             else
-              raise Exception.CreateFmt(SCharNeeded,
-                ['0-9A-Fa-f', StrDupW(T, 0, 4)]);
+              raise Exception.CreateFmt(SCharNeeded, ['0-9A-Fa-f', StrDupW(T, 0, 4)]);
           end
       else
         begin
@@ -10149,8 +9962,7 @@ var
 
   function IsDigit: Boolean;
   begin
-    Result := ((S^ >= '0') and (S^ <= '9')) or
-      ((S^ >= #65296) and (S^ <= #65305));
+    Result := ((S^ >= '0') and (S^ <= '9')) or ((S^ >= #65296) and (S^ <= #65305));
   end;
   function IsMatch(AStart, AEnd: Integer): Boolean;
   var
@@ -10354,8 +10166,7 @@ begin
 end;
 {$IF RTLVersion<26}
 
-procedure TQPagedList.Assign(ListA: TList; AOperator: TListAssignOp;
-  ListB: TList);
+procedure TQPagedList.Assign(ListA: TList; AOperator: TListAssignOp; ListB: TList);
 var
   I: Integer;
   LTemp: TQPagedList;
@@ -10448,8 +10259,7 @@ begin
     BatchInsert(FCount, @AList[0], Length(AList));
 end;
 
-procedure TQPagedList.Assign(ListA: TQPagedList; AOperator: TListAssignOp;
-  ListB: TQPagedList);
+procedure TQPagedList.Assign(ListA: TQPagedList; AOperator: TListAssignOp; ListB: TQPagedList);
 var
   I: Integer;
   LTemp, LSource: TQPagedList;
@@ -10591,8 +10401,7 @@ var
           if ASource <> ADest then
           begin
             APriorPage := FPages[ADest - 1];
-            ADestPage.FStartIndex := APriorPage.FStartIndex +
-              APriorPage.FUsedCount;
+            ADestPage.FStartIndex := APriorPage.FStartIndex + APriorPage.FUsedCount;
           end;
         end;
         Break;
@@ -10624,8 +10433,7 @@ var
     I := FFirstDirtyPage;
     while I < APageCount do
     begin
-      FPages[I].FStartIndex := FPages[I - 1].FStartIndex + FPages[I - 1]
-        .FUsedCount;
+      FPages[I].FStartIndex := FPages[I - 1].FStartIndex + FPages[I - 1].FUsedCount;
       Inc(I);
     end;
   end;
@@ -10648,21 +10456,19 @@ begin
           AToMove := ASourcePage.FUsedCount - AStartMove;
           if AToMove > FPageSize - ADestPage.FUsedCount then
             AToMove := FPageSize - ADestPage.FUsedCount;
-          System.Move(ASourcePage.FItems[AStartMove],
-            ADestPage.FItems[ADestPage.FUsedCount], AToMove * SizeOf(Pointer));
+          System.Move(ASourcePage.FItems[AStartMove], ADestPage.FItems[ADestPage.FUsedCount], AToMove * SizeOf(Pointer));
           Inc(AStartMove, AToMove);
           Inc(ADestPage.FUsedCount, AToMove);
           if ASourcePage.FUsedCount = AStartMove then
           begin
-            ASourcePage.FStartIndex := ADestPage.FStartIndex +
-              ADestPage.FUsedCount;
+            ASourcePage.FStartIndex := ADestPage.FStartIndex + ADestPage.FUsedCount;
             ASourcePage.FUsedCount := 0;
             Break;
           end;
           if ADestPage.FUsedCount = FPageSize then
           begin
-            System.Move(ASourcePage.FItems[AStartMove], ASourcePage.FItems[0],
-              (ASourcePage.FUsedCount - AStartMove) * SizeOf(Pointer));
+            System.Move(ASourcePage.FItems[AStartMove], ASourcePage.FItems[0], (ASourcePage.FUsedCount - AStartMove) *
+              SizeOf(Pointer));
             Dec(ASourcePage.FUsedCount, AStartMove);
             Inc(ASourcePage.FStartIndex, AStartMove);
             AStartMove := 0;
@@ -10706,8 +10512,7 @@ begin
     ATemp := FPages[APage];
     Dec(AIndex, ATemp.FStartIndex);
     DoDelete(ATemp.FItems[AIndex]);
-    System.Move(ATemp.FItems[AIndex + 1], ATemp.FItems[AIndex],
-      SizeOf(Pointer) * (ATemp.FUsedCount - AIndex - 1));
+    System.Move(ATemp.FItems[AIndex + 1], ATemp.FItems[AIndex], SizeOf(Pointer) * (ATemp.FUsedCount - AIndex - 1));
     Dec(ATemp.FUsedCount);
     CheckLastPage;
     Dec(FCount);
@@ -10723,8 +10528,7 @@ begin
   for I := 0 to High(FPages) do
     FreeObject(FPages[I]);
 {$IFDEF UNICODE}
-  if (TMethod(FOnCompare).Code <> nil) and
-    (TMethod(FOnCompare).Data = Pointer(-1)) then
+  if (TMethod(FOnCompare).Code <> nil) and (TMethod(FOnCompare).Data = Pointer(-1)) then
     TQPagedListSortCompareA(TMethod(FOnCompare).Code) := nil;
 {$ENDIF}
   inherited;
@@ -10829,8 +10633,7 @@ var
 begin
   c := Length(FPages);
   ATemp := FPages[FFirstDirtyPage - 1];
-  if (FFirstDirtyPage < c) and (AIndex >= ATemp.FStartIndex + ATemp.FUsedCount)
-  then
+  if (FFirstDirtyPage < c) and (AIndex >= ATemp.FStartIndex + ATemp.FUsedCount) then
   begin
     I := FFirstDirtyPage;
     while I < c do
@@ -10917,8 +10720,7 @@ begin
     APage := FPages[I];
     if APage.FUsedCount > 0 then
     begin
-      System.Move(APage.FItems[0], Result[K],
-        APage.FUsedCount * SizeOf(Pointer));
+      System.Move(APage.FItems[0], Result[K], APage.FUsedCount * SizeOf(Pointer));
       Inc(K, APage.FUsedCount);
     end;
   end;
@@ -10932,8 +10734,7 @@ begin
   Result := nil;
   c := Length(FPages);
   ATemp := FPages[FFirstDirtyPage - 1];
-  if (FFirstDirtyPage < c) and (AIndex >= ATemp.FStartIndex + ATemp.FUsedCount)
-  then
+  if (FFirstDirtyPage < c) and (AIndex >= ATemp.FStartIndex + ATemp.FUsedCount) then
   begin
     I := FFirstDirtyPage;
     while I < c do
@@ -11034,8 +10835,7 @@ begin
   end;
 end;
 
-procedure TQPagedList.BatchInsert(AIndex: Integer; pp: PPointer;
-  ACount: Integer);
+procedure TQPagedList.BatchInsert(AIndex: Integer; pp: PPointer; ACount: Integer);
 var
   APage, ANeedPages, APageCount, AOffset, ARemain, AToMove: Integer;
   ASourcePage, ADestPage: TQListPage;
@@ -11045,11 +10845,9 @@ var
     ADestPage := FPages[APage];
     ADestPage.FStartIndex := ASourcePage.FStartIndex;
     ADestPage.FUsedCount := AIndex - ASourcePage.FStartIndex;
-    System.Move(ASourcePage.FItems[0], ADestPage.FItems[0],
-      ADestPage.FUsedCount * SizeOf(Pointer));
+    System.Move(ASourcePage.FItems[0], ADestPage.FItems[0], ADestPage.FUsedCount * SizeOf(Pointer));
     Dec(ASourcePage.FUsedCount, ADestPage.FUsedCount);
-    System.Move(ASourcePage.FItems[ADestPage.FUsedCount], ASourcePage.FItems[0],
-      ASourcePage.FUsedCount * SizeOf(Pointer));
+    System.Move(ASourcePage.FItems[ADestPage.FUsedCount], ASourcePage.FItems[0], ASourcePage.FUsedCount * SizeOf(Pointer));
     Inc(APage);
     Dec(ANeedPages);
   end;
@@ -11094,8 +10892,7 @@ var
       begin
         SetLength(ATempList, ANeedPages);
         System.Move(ATempList[0], FPages[APage], ANeedPages * SizeOf(Pointer));
-        System.Move(FPages[APage], FPages[APage + ANeedPages],
-          (FLastUsedPage - APage + 1) * SizeOf(Pointer));
+        System.Move(FPages[APage], FPages[APage + ANeedPages], (FLastUsedPage - APage + 1) * SizeOf(Pointer));
         System.Move(ATempList[0], FPages[APage], ANeedPages * SizeOf(Pointer));
         if ASplitNeeded then
           SplitPage;
@@ -11110,13 +10907,10 @@ var
       begin
         SetLength(ATempList, AEmptyPages);
         if AEmptyPages > 0 then
-          System.Move(FPages[FLastUsedPage + 1], ATempList[0],
-            AEmptyPages * SizeOf(Pointer));
-        System.Move(FPages[APage], FPages[APage + ANeedPages],
-          (FLastUsedPage - APage + 1) * SizeOf(Pointer));
+          System.Move(FPages[FLastUsedPage + 1], ATempList[0], AEmptyPages * SizeOf(Pointer));
+        System.Move(FPages[APage], FPages[APage + ANeedPages], (FLastUsedPage - APage + 1) * SizeOf(Pointer));
         if AEmptyPages > 0 then
-          System.Move(ATempList[0], FPages[APage],
-            AEmptyPages * SizeOf(Pointer));
+          System.Move(ATempList[0], FPages[APage], AEmptyPages * SizeOf(Pointer));
       end;
       AOffset := APage + AEmptyPages;
       AToMove := ANeedPages - AEmptyPages;
@@ -11201,8 +10995,7 @@ begin
     ADestPage := FPages[0];
     if ADestPage.FUsedCount < FPageSize then
     begin
-      System.Move(ADestPage.FItems[0], ADestPage.FItems[1],
-        ADestPage.FUsedCount * SizeOf(Pointer));
+      System.Move(ADestPage.FItems[0], ADestPage.FItems[1], ADestPage.FUsedCount * SizeOf(Pointer));
       ADestPage.FItems[0] := p;
       Inc(ADestPage.FUsedCount);
     end
@@ -11238,16 +11031,14 @@ begin
     if (ADestPage.FUsedCount = FPageSize) then // 目标页已满
     begin
       ANewPage := APage + 1;
-      if (FLastUsedPage = APage) or (FPages[ANewPage].FUsedCount = FPageSize)
-      then
+      if (FLastUsedPage = APage) or (FPages[ANewPage].FUsedCount = FPageSize) then
       // 下一页也满了
       begin
         Inc(FLastUsedPage);
         if FLastUsedPage = Length(FPages) then
         begin
           SetLength(FPages, FLastUsedPage + 1);
-          System.Move(FPages[ANewPage], FPages[ANewPage + 1],
-            SizeOf(TQListPage) * (FLastUsedPage - ANewPage));
+          System.Move(FPages[ANewPage], FPages[ANewPage + 1], SizeOf(TQListPage) * (FLastUsedPage - ANewPage));
           ATemp := TQListPage.Create(FPageSize);;
           FPages[ANewPage] := ATemp;
         end
@@ -11256,15 +11047,13 @@ begin
         else
         begin
           ATemp := FPages[FLastUsedPage];
-          System.Move(FPages[ANewPage], FPages[ANewPage + 1],
-            SizeOf(TQListPage) * (FLastUsedPage - ANewPage));
+          System.Move(FPages[ANewPage], FPages[ANewPage + 1], SizeOf(TQListPage) * (FLastUsedPage - ANewPage));
           FPages[ANewPage] := ATemp;
         end;
         ATemp.FStartIndex := AIndex + 1;
         Dec(AIndex, ADestPage.FStartIndex);
         AMoved := ADestPage.FUsedCount - AIndex;
-        System.Move(ADestPage.FItems[AIndex], ATemp.FItems[0],
-          AMoved * SizeOf(Pointer));
+        System.Move(ADestPage.FItems[AIndex], ATemp.FItems[0], AMoved * SizeOf(Pointer));
         Dec(ADestPage.FUsedCount, AMoved - 1);
         ATemp.FUsedCount := AMoved;
         ADestPage.FItems[AIndex] := p;
@@ -11273,15 +11062,13 @@ begin
       else // 将当前页的内容移入下一页
       begin
         ATemp := FPages[ANewPage];
-        System.Move(ATemp.FItems[0], ATemp.FItems[1],
-          ATemp.FUsedCount * SizeOf(Pointer));
+        System.Move(ATemp.FItems[0], ATemp.FItems[1], ATemp.FUsedCount * SizeOf(Pointer));
         ATemp.FItems[0] := ADestPage.FItems[FPageSize - 1];
         Inc(ATemp.FUsedCount);
         Dirty(ANewPage);
         Dec(AIndex, ADestPage.FStartIndex);
         AMoved := ADestPage.FUsedCount - AIndex - 1;
-        System.Move(ADestPage.FItems[AIndex], ADestPage.FItems[AIndex + 1],
-          AMoved * SizeOf(Pointer));
+        System.Move(ADestPage.FItems[AIndex], ADestPage.FItems[AIndex + 1], AMoved * SizeOf(Pointer));
         ADestPage.FItems[AIndex] := p;
       end;
     end
@@ -11291,8 +11078,7 @@ begin
       if AIndex < ADestPage.FUsedCount then
       begin
         AMoved := (ADestPage.FUsedCount - AIndex);
-        System.Move(ADestPage.FItems[AIndex], ADestPage.FItems[AIndex + 1],
-          AMoved * SizeOf(TQListPage));
+        System.Move(ADestPage.FItems[AIndex], ADestPage.FItems[AIndex + 1], AMoved * SizeOf(TQListPage));
       end;
       ADestPage.FItems[AIndex] := p;
       Inc(ADestPage.FUsedCount);
@@ -11384,8 +11170,7 @@ end;
 
 procedure TQPagedList.SetOnCompare(const Value: TQPagedListSortCompare);
 begin
-  if (TMethod(FOnCompare).Code <> TMethod(Value).Code) or
-    (TMethod(FOnCompare).Data <> TMethod(Value).Data) then
+  if (TMethod(FOnCompare).Code <> TMethod(Value).Code) or (TMethod(FOnCompare).Data <> TMethod(Value).Data) then
   begin
     FOnCompare := Value;
     if Assigned(Value) then
@@ -11539,8 +11324,7 @@ begin
   if AIndex + 1 > FSize then
     Result := 0
   else
-    Result := PByte(IntPtr(FPages[AIndex div FPageSize]) +
-      (AIndex mod FPageSize))^;
+    Result := PByte(IntPtr(FPages[AIndex div FPageSize]) + (AIndex mod FPageSize))^;
 end;
 
 function TQPagedStream.GetSize: Int64;
@@ -11666,8 +11450,7 @@ procedure TQPagedStream.SetBytes(AIndex: Int64; const Value: Byte);
 begin
   if FSize < AIndex + 1 then
     Size := AIndex + 1;
-  PByte(IntPtr(FPages[AIndex div FPageSize]) + (AIndex mod FPageSize))^
-    := Value;
+  PByte(IntPtr(FPages[AIndex div FPageSize]) + (AIndex mod FPageSize))^ := Value;
 end;
 
 procedure TQPagedStream.SetCapacity(Value: Int64);
@@ -11711,8 +11494,7 @@ begin
   Capacity := NewSize;
 end;
 
-function TQPagedStream.Write(const Buffer: TBytes;
-  Offset, count: Longint): Longint;
+function TQPagedStream.Write(const Buffer: TBytes; Offset, count: Longint): Longint;
 begin
   if count > 0 then
     Result := Write(Buffer[Offset], count)
@@ -11908,13 +11690,11 @@ begin
       Result := Result + [rctAlpha, rctUpperCase]
     else if (p^ >= #$4E00) and (p^ <= #$9FA5) then
       Result := Result + [rctChinese]
-    else if (p^ = ' ') or (p^ = #9) or (p^ = #10) or (p^ = #13) or (p^ = #$A0)
-      or (p^ = #$3000) then
+    else if (p^ = ' ') or (p^ = #9) or (p^ = #10) or (p^ = #13) or (p^ = #$A0) or (p^ = #$3000) then
       Result := Result + [rctSpace]
     else
       Result := Result + [rctSymbol];
-    if Result = [rctChinese, rctAlpha, rctLowerCase, rctUpperCase, rctNum,
-      rctSymbol, rctSpace] then
+    if Result = [rctChinese, rctAlpha, rctLowerCase, rctUpperCase, rctNum, rctSymbol, rctSpace] then
       Break;
     Inc(p);
   end;
@@ -11930,8 +11710,7 @@ function SimpleChineseToTraditional(S: QStringW): QStringW;
 begin
 {$IFDEF MSWINDOWS}
   SetLength(Result, Length(S) shl 1);
-  SetLength(Result, LCMapStringW(2052, LCMAP_TRADITIONAL_CHINESE, PWideChar(S),
-    Length(S), PWideChar(Result), Length(Result)));
+  SetLength(Result, LCMapStringW(2052, LCMAP_TRADITIONAL_CHINESE, PWideChar(S), Length(S), PWideChar(Result), Length(Result)));
 {$ELSE}
   raise Exception.CreateFmt(SUnsupportNow, ['SimpleChineseToTraditional']);
 {$ENDIF}
@@ -11941,15 +11720,13 @@ function TraditionalChineseToSimple(S: QStringW): QStringW;
 begin
 {$IFDEF MSWINDOWS}
   SetLength(Result, Length(S) shl 1);
-  SetLength(Result, LCMapStringW(2052, LCMAP_SIMPLIFIED_CHINESE, PWideChar(S),
-    Length(S), PWideChar(Result), Length(Result)));
+  SetLength(Result, LCMapStringW(2052, LCMAP_SIMPLIFIED_CHINESE, PWideChar(S), Length(S), PWideChar(Result), Length(Result)));
 {$ELSE}
   raise Exception.CreateFmt(SUnsupportNow, ['TraditionalChineseToSimple']);
 {$ENDIF}
 end;
 
-function MoneyRound(const AVal: Currency; ARoundMethod: TMoneyRoundMethod)
-  : Currency;
+function MoneyRound(const AVal: Currency; ARoundMethod: TMoneyRoundMethod): Currency;
 var
   V, R: Int64;
 begin
@@ -12010,18 +11787,14 @@ end;
   CapMoney(101005,MC_READ,L"负",L"",L"",0)=壹拾万壹仟零伍元
 }
 
-function CapMoney(AVal: Currency; AFlags: Integer;
-  ANegText, AStartText, AEndText: QStringW; AGroupNum: Integer;
+function CapMoney(AVal: Currency; AFlags: Integer; ANegText, AStartText, AEndText: QStringW; AGroupNum: Integer;
   ARoundMethod: TMoneyRoundMethod; AEndDigits: Integer = 2): QStringW;
 const
-  Nums: array [0 .. 9] of WideChar = (#$96F6 { 零 } , #$58F9 { 壹 } ,
-    #$8D30 { 贰 } , #$53C1 { 叁 } , #$8086 { 肆 } , #$4F0D { 伍 } , #$9646 { 陆 } ,
-    #$67D2 { 柒 } , #$634C { 捌 } , #$7396 { 玖 } );
-  Units: array [0 .. 19] of WideChar = (#$94B1 { 钱 } , #$5398 { 厘 } ,
-    #$5206 { 分 } , #$89D2 { 角 } , #$5706 { 圆 } , #$62FE { 拾 } , #$4F70 { 佰 } ,
-    #$4EDF { 仟 } , #$4E07 { 万 } , #$62FE { 拾 } , #$4F70 { 佰 } , #$4EDF { 仟 } ,
-    #$4EBF { 亿 } , #$62FE { 拾 } , #$4F70 { 佰 } , #$4EDF { 仟 } , #$4E07 { 万 } ,
-    #$5146 { 兆 } , #$62FE { 拾 } , #$4F70 { 佰 } );
+  Nums: array [0 .. 9] of WideChar = (#$96F6 { 零 } , #$58F9 { 壹 } , #$8D30 { 贰 } , #$53C1 { 叁 } , #$8086 { 肆 } , #$4F0D { 伍 } ,
+    #$9646 { 陆 } , #$67D2 { 柒 } , #$634C { 捌 } , #$7396 { 玖 } );
+  Units: array [0 .. 19] of WideChar = (#$94B1 { 钱 } , #$5398 { 厘 } , #$5206 { 分 } , #$89D2 { 角 } , #$5706 { 圆 } ,
+    #$62FE { 拾 } , #$4F70 { 佰 } , #$4EDF { 仟 } , #$4E07 { 万 } , #$62FE { 拾 } , #$4F70 { 佰 } , #$4EDF { 仟 } , #$4EBF { 亿 } ,
+    #$62FE { 拾 } , #$4F70 { 佰 } , #$4EDF { 仟 } , #$4E07 { 万 } , #$5146 { 兆 } , #$62FE { 拾 } , #$4F70 { 佰 } );
 var
   R, V: Int64;
   I: Integer;
@@ -12149,8 +11922,8 @@ begin
   end;
 end;
 
-function IsHumanName(S: QStringW; AllowChars: TNameCharSet; AMinLen: Integer;
-  AMaxLen: Integer; AOnTest: TQCustomNameCharTest): Boolean;
+function IsHumanName(S: QStringW; AllowChars: TNameCharSet; AMinLen: Integer; AMaxLen: Integer;
+  AOnTest: TQCustomNameCharTest): Boolean;
 var
   p: PWideChar;
   c: Integer;
@@ -12236,14 +12009,12 @@ end;
 
 function IsChineseAddr(S: QStringW; AMinLength: Integer): Boolean;
 begin
-  Result := IsHumanName(S, [nctChinese, nctAlpha, nctSymbol, nctDot, nctSpace,
-    nctNum], AMinLength, 128, AddrCharTest);
+  Result := IsHumanName(S, [nctChinese, nctAlpha, nctSymbol, nctDot, nctSpace, nctNum], AMinLength, 128, AddrCharTest);
 end;
 
 function IsNoChineseAddr(S: QStringW; AMinLength: Integer): Boolean;
 begin
-  Result := IsHumanName(S, [nctAlpha, nctDot, nctSymbol, nctSpace, nctNum],
-    AMinLength, 128, AddrCharTest);
+  Result := IsHumanName(S, [nctAlpha, nctDot, nctSymbol, nctSpace, nctNum], AMinLength, 128, AddrCharTest);
 end;
 
 { TQBits }
@@ -12286,17 +12057,14 @@ function CheckChineseId18(CardNo: QStringW): QCharW;
 var
   Sum, Idx: Integer;
 const
-  Weight: array [1 .. 17] of Integer = (7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10,
-    5, 8, 4, 2);
-  Checksums: array [0 .. 10] of WideChar = ('1', '0', 'X', '9', '8', '7', '6',
-    '5', '4', '3', '2');
+  Weight: array [1 .. 17] of Integer = (7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2);
+  Checksums: array [0 .. 10] of WideChar = ('1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2');
 begin
   if (Length(CardNo) >= 17) then
   begin
     Sum := 0;
     for Idx := 1 to 17 do
-      Sum := Sum + (Ord(CardNo[Idx{$IFDEF NEXTGEN} - 1{$ENDIF}]) - Ord('0')) *
-        Weight[Idx];
+      Sum := Sum + (Ord(CardNo[Idx{$IFDEF NEXTGEN} - 1{$ENDIF}]) - Ord('0')) * Weight[Idx];
     Result := Checksums[Sum mod 11];
   end
   else
@@ -12311,8 +12079,7 @@ begin
   Result := CardNo + CheckChineseId18(CardNo);
 end;
 
-function DecodeChineseId(CardNo: QStringW; var AreaCode: QStringW;
-  var Birthday: TDateTime; var IsFemale: Boolean): Boolean;
+function DecodeChineseId(CardNo: QStringW; var AreaCode: QStringW; var Birthday: TDateTime; var IsFemale: Boolean): Boolean;
 var
   len: Integer;
   Y, M, d: Integer;
@@ -12325,8 +12092,7 @@ begin
   begin
     if (Length(CardNo) = 15) then
       CardNo := ChineseId15To18(CardNo);
-    if CheckChineseId18(CardNo) <>
-      CharUpperW(CardNo[{$IFDEF NEXTGEN}17{$ELSE}18{$ENDIF}]) then // 身份证号校验码检查
+    if CheckChineseId18(CardNo) <> CharUpperW(CardNo[{$IFDEF NEXTGEN}17{$ELSE}18{$ENDIF}]) then // 身份证号校验码检查
       Exit;
     p := PQCharW(CardNo);
     AreaCode := StrDupX(p, 6);
@@ -12577,8 +12343,7 @@ begin
   OutputDebugStringW(PQCharW(AMsg));
 {$ENDIF}
 {$IFDEF ANDROID}
-  __android_log_write(ANDROID_LOG_DEBUG, 'debug',
-    Pointer(PQCharA(qstring.Utf8Encode(AMsg))));
+  __android_log_write(ANDROID_LOG_DEBUG, 'debug', Pointer(PQCharA(qstring.Utf8Encode(AMsg))));
 {$ENDIF}
 {$IFDEF IOS}
   NSLog(((StrToNSStr(AMsg)) as ILocalObject).GetObjectID);
@@ -12593,8 +12358,7 @@ begin
   Debugout(Format(AFmt, AParams));
 end;
 
-function RandomString(ALen: Cardinal; ACharTypes: TRandCharTypes;
-  AllTypesNeeded: Boolean): QStringW;
+function RandomString(ALen: Cardinal; ACharTypes: TRandCharTypes; AllTypesNeeded: Boolean): QStringW;
 var
   p: PQCharW;
   K, M: Integer;
@@ -12660,8 +12424,8 @@ begin
   end;
 end;
 
-function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW;
-  AIgnoreCase: Boolean; var ASwitchChar: QCharW): QStringW;
+function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW; AIgnoreCase: Boolean; var ASwitchChar: QCharW)
+  : QStringW;
 var
   I: Integer;
   S, SW: QStringW;
@@ -12689,8 +12453,7 @@ begin
   Result := '';
 end;
 
-function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW)
-  : QStringW;
+function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW): QStringW;
 var
   c: QCharW;
 begin
@@ -12699,8 +12462,7 @@ end;
 
 { TQSingleton<T> }
 
-function TQSingleton{$IFDEF UNICODE}<T>{$ENDIF}.Instance
-  (ACallback: TGetInstanceCallback):
+function TQSingleton{$IFDEF UNICODE}<T>{$ENDIF}.Instance(ACallback: TGetInstanceCallback):
 {$IFDEF UNICODE}T{$ELSE}Pointer{$ENDIF};
 begin
   if not Assigned(InitToNull) then
@@ -12743,14 +12505,13 @@ begin
   Result := EncodeDate(Y, M, 1);
 end;
 
-function MergeAddr(const AProv, ACity, ACounty, ATownship, AVillage,
-  ADetail: String; AIgnoreCityIfSameEnding: Boolean): String;
+function MergeAddr(const AProv, ACity, ACounty, ATownship, AVillage, ADetail: QStringW; AIgnoreCityIfSameEnding: Boolean)
+  : QStringW;
 var
   p: PWideChar;
   procedure Cat(S: String);
   begin
-    if (Length(S) > 0) and (not EndWithW(PWideChar(Result), PWideChar(S), false))
-    then
+    if (Length(S) > 0) and (not EndWithW(PWideChar(Result), PWideChar(S), false)) then
     begin
       Result := Result + S;
       if StartWithW(p, PChar(S), false) then

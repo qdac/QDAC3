@@ -7,7 +7,7 @@
 /// 5、要发布主题，调用 Publish 方法发布 <br />6、停止连接可以调用 Stop 方法。
 /// </para>
 /// <para>
-/// 还是老规矩，开源免费，但需要申明版权，并不承担由于使用本代码引起的任何后果。
+/// 还是老规矩，开源免费，但需要申明版权，并不承担由于使用本代码引起的任何后果。由于使用匿名函数，所以不兼容2007
 /// </para>
 /// </summary>
 unit QMqttClient;
@@ -20,10 +20,7 @@ interface
 {$I qdac.inc}
 {$WARN UNIT_PLATFORM OFF}
 {$WARN SYMBOL_PLATFORM OFF}
-{$IFDEF MSWINDOWS}
-{$DEFINE EnableSSLMqtt }
-//其它平台的OpenSSL暂时先不支持
-{$ENDIF}
+
 uses classes, sysutils, qstring, qworker,
   netencoding, generics.collections, syncobjs, variants,
   RegularExpressionsCore{$IFDEF POSIX}
@@ -33,7 +30,7 @@ uses classes, sysutils, qstring, qworker,
 {$ELSE}
     , windows, messages, winsock, TlHelp32
 {$ENDIF}{$IFDEF LogMqttContent},
-  qlog{$ENDIF}{$IFDEF EnableSSLMqtt}, qdac_ssl{$ENDIF};
+  qlog{$ENDIF}, qdac_ssl;
 
 const
   /// <summary>
@@ -64,6 +61,10 @@ const
   /// 订阅失败
   /// </summary>
   MQERR_SUBSCRIBE_FAILED = 20;
+  /// <summary>
+  /// 发布失败
+  /// </summary>
+  MQERR_PUBLISH_FAILED = 21;
 
   // 属性ID定义
   MP_PAYLOAD_FORMAT = 1;
@@ -196,8 +197,7 @@ type
   /// <summary>
   /// 内部消息流转状态
   /// </summary>
-  TQMQTMessageState = (msSending, msSent, msRecving, msRecved, msDispatching,
-    msDispatched, msNeedWait, msWaiting);
+  TQMQTMessageState = (msSending, msSent, msRecving, msRecved, msDispatching, msDispatched, msNeedAck, msNeedWait, msWaiting);
   TQMQTMessageStates = set of TQMQTMessageState;
   TQMQTTMessageClient = class;
 
@@ -228,29 +228,23 @@ type
   /// <summary>
   /// 订阅结果通知事件
   /// </summary>
-  TQMQTTTopicSubscribeResultNotify = procedure(ASender: TQMQTTMessageClient;
-    const AResults: TQMQTTSubscribeResults) of object;
+  TQMQTTTopicSubscribeResultNotify = procedure(ASender: TQMQTTMessageClient; const AResults: TQMQTTSubscribeResults) of object;
   /// <summary>
   /// 取消订阅结果通知事件
   /// </summary>
-  TQMQTTTopicUnsubscribeEvent = procedure(ASender: TQMQTTMessageClient;
-    const ATopic: String) of object;
+  TQMQTTTopicUnsubscribeEvent = procedure(ASender: TQMQTTMessageClient; const ATopic: String) of object;
   /// <summary>
   /// 消息派发事件，ATopic 指明了被派发的消息主题，当然您也可以从 AReq 参数中取其 TopicName 属性的值。这里 ATopic
   /// 是从 AReq.TopicName 缓存的值。
   /// </summary>
-  TQMQTTTopicDispatchEvent = procedure(ASender: TQMQTTMessageClient;
-    const ATopic: String; const AReq: PQMQTTMessage) of object;
-  TQMQTTTopicDispatchEventG = procedure(ASender: TQMQTTMessageClient;
-    const ATopic: String; const AReq: PQMQTTMessage);
-  TQMQTTTopicDispatchEventA = reference to procedure
-    (ASender: TQMQTTMessageClient; const ATopic: String;
+  TQMQTTTopicDispatchEvent = procedure(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage) of object;
+  TQMQTTTopicDispatchEventG = procedure(ASender: TQMQTTMessageClient; const ATopic: String; const AReq: PQMQTTMessage);
+  TQMQTTTopicDispatchEventA = reference to procedure(ASender: TQMQTTMessageClient; const ATopic: String;
     const AReq: PQMQTTMessage);
   /// <summary>
   /// 系统出错时的触发事件
   /// </summary>
-  TQMQTTErrorEvent = procedure(ASender: TQMQTTMessageClient;
-    const AErrorCode: Integer; const AErrorMsg: String) of object;
+  TQMQTTErrorEvent = procedure(ASender: TQMQTTMessageClient; const AErrorCode: Integer; const AErrorMsg: String) of object;
   /// <summary>
   /// 常规通知事件
   /// </summary>
@@ -283,10 +277,8 @@ type
     procedure SetPayloadSize(Value: Cardinal);
     procedure EncodeInt(var ABuf: PByte; V: Cardinal);
     procedure EncodeInt64(var ABuf: PByte; V: UInt64);
-    function DecodeInt(var ABuf: PByte; AMaxCount: Integer;
-      var AResult: Cardinal): Boolean;
-    function DecodeInt64(var ABuf: PByte; AMaxCount: Integer;
-      var AResult: Int64): Boolean;
+    function DecodeInt(var ABuf: PByte; AMaxCount: Integer; var AResult: Cardinal): Boolean;
+    function DecodeInt64(var ABuf: PByte; AMaxCount: Integer; var AResult: Int64): Boolean;
     function GetBof: PByte;
     function GetEof: PByte;
     function GetPosition: Integer;
@@ -306,6 +298,7 @@ type
     function ReloadSize(AKnownBytes: Integer): Boolean;
     function GetTopicContentSize: Integer;
     function GetTopicOriginContent: PByte;
+    function GetPackageId: Word;
     property Next: PQMQTTMessage read FNext write FNext;
   public
     class function IntEncodedSize(const V: Cardinal): Byte; static;
@@ -320,18 +313,15 @@ type
     /// <summary>
     /// 向当前位置写入一个字符串
     /// </summary>
-    function Cat(const S: QStringW; AWriteZeroLen: Boolean = false)
-      : PQMQTTMessage; overload;
+    function Cat(const S: QStringW; AWriteZeroLen: Boolean = false): PQMQTTMessage; overload;
     /// <summary>
     /// 向当前位置写入一个字符串
     /// </summary>
-    function Cat(const S: QStringA; AWriteZeroLen: Boolean = false)
-      : PQMQTTMessage; overload;
+    function Cat(const S: QStringA; AWriteZeroLen: Boolean = false): PQMQTTMessage; overload;
     /// <summary>
     /// 向当前位置写入指定的数据
     /// </summary>
-    function Cat(const ABuf: Pointer; const ALen: Cardinal)
-      : PQMQTTMessage; overload;
+    function Cat(const ABuf: Pointer; const ALen: Cardinal): PQMQTTMessage; overload;
     /// <summary>
     /// 向当前位置写入指定的数据
     /// </summary>
@@ -349,8 +339,7 @@ type
     /// <param name="AEncode">
     /// 是否对其进行编码（具体编码规则参考 EncodeInt 和 EncodeInt64 的实现）
     /// </param>
-    function Cat(const V: Word; AEncode: Boolean = false)
-      : PQMQTTMessage; overload;
+    function Cat(const V: Word; AEncode: Boolean = false): PQMQTTMessage; overload;
     /// <summary>
     /// 向当前位置写入一个32位无符号整数
     /// </summary>
@@ -360,8 +349,7 @@ type
     /// <param name="AEncode">
     /// 是否对其进行编码（具体编码规则参考 EncodeInt 和 EncodeInt64 的实现）
     /// </param>
-    function Cat(const V: Cardinal; AEncode: Boolean = false)
-      : PQMQTTMessage; overload;
+    function Cat(const V: Cardinal; AEncode: Boolean = false): PQMQTTMessage; overload;
 
     /// <summary>
     /// 向当前位置写入一个64位无符号整数
@@ -372,8 +360,7 @@ type
     /// <param name="AEncode">
     /// 是否对其进行编码（具体编码规则参考 EncodeInt 和 EncodeInt64 的实现）
     /// </param>
-    function Cat(const V: UInt64; AEncode: Boolean = false)
-      : PQMQTTMessage; overload;
+    function Cat(const V: UInt64; AEncode: Boolean = false): PQMQTTMessage; overload;
     /// <summary>
     /// 向当前位置写入一个8位整数
     /// </summary>
@@ -387,8 +374,7 @@ type
     /// <param name="AEncode">
     /// 是否对其进行编码（具体编码规则参考 EncodeInt 和 EncodeInt64 的实现）
     /// </param>
-    function Cat(const V: Smallint; AEncode: Boolean = false)
-      : PQMQTTMessage; overload;
+    function Cat(const V: Smallint; AEncode: Boolean = false): PQMQTTMessage; overload;
     /// <summary>
     /// 向当前位置写入一个32位整数
     /// </summary>
@@ -398,8 +384,7 @@ type
     /// <param name="AEncode">
     /// 是否对其进行编码（具体编码规则参考 EncodeInt 和 EncodeInt64 的实现）
     /// </param>
-    function Cat(const V: Integer; AEncode: Boolean = false)
-      : PQMQTTMessage; overload;
+    function Cat(const V: Integer; AEncode: Boolean = false): PQMQTTMessage; overload;
     /// <summary>
     /// 向当前位置写入一个64位整数
     /// </summary>
@@ -409,8 +394,7 @@ type
     /// <param name="AEncode">
     /// 是否对其进行编码（具体编码规则参考 EncodeInt 和 EncodeInt64 的实现）
     /// </param>
-    function Cat(const V: Int64; AEncode: Boolean = false)
-      : PQMQTTMessage; overload;
+    function Cat(const V: Int64; AEncode: Boolean = false): PQMQTTMessage; overload;
     /// <summary>
     /// 向当前位置写入一个32位浮点数
     /// </summary>
@@ -420,8 +404,7 @@ type
     /// <param name="AEncode">
     /// 是否对其进行编码（具体编码规则参考 EncodeInt 和 EncodeInt64 的实现）
     /// </param>
-    function Cat(const V: Single; AEncode: Boolean = false)
-      : PQMQTTMessage; overload;
+    function Cat(const V: Single; AEncode: Boolean = false): PQMQTTMessage; overload;
     /// <summary>
     /// 向当前位置写入一个64位浮点数
     /// </summary>
@@ -431,8 +414,7 @@ type
     /// <param name="AEncode">
     /// 是否对其进行编码（具体编码规则参考 EncodeInt 和 EncodeInt64 的实现）
     /// </param>
-    function Cat(const V: Double; AEncode: Boolean = false)
-      : PQMQTTMessage; overload;
+    function Cat(const V: Double; AEncode: Boolean = false): PQMQTTMessage; overload;
 
     /// <summary>
     /// 从当前位置读取下一个字节的值（8位无符号整数）
@@ -521,8 +503,7 @@ type
     /// <summary>
     /// 控制命令类型
     /// </summary>
-    property ControlType: TQMQTTControlType read GetControlType
-      write SetControlType;
+    property ControlType: TQMQTTControlType read GetControlType write SetControlType;
     /// <summary>
     /// 以十六进制视图方式来显示整个消息内容（用于记录日志分析）
     /// </summary>
@@ -578,8 +559,7 @@ type
     /// <summary>
     /// 内容中特定字节的值
     /// </summary>
-    property Bytes[const AIndex: Integer]: Byte read GetByte
-      write SetByte; default;
+    property Bytes[const AIndex: Integer]: Byte read GetByte write SetByte; default;
     /// <summary>
     /// 当前状态
     /// </summary>
@@ -615,7 +595,12 @@ type
     /// <summary>
     /// 容量大小
     /// </summary>
+    ///
     property Capacity: Cardinal read GetCapacity write SetCapacity;
+    property RecvTime: Cardinal read FRecvTime;
+    property SentTime: Cardinal read FSentTime;
+    property SentTimes: Cardinal read FSentTimes;
+    property PackageId: Word read GetPackageId;
   end;
 
   /// <summary>
@@ -645,8 +630,13 @@ type
 
   TQMQTTProtocolVersion = (pv3_1_1 = 4, pv5_0 = 5);
   TQMQTT5AuthMode = (amNone);
-  TQMQTT5PropDataType = (ptUnknown, ptByte, ptWord, ptInt, ptVarInt, ptString,
-    ptBinary);
+
+  TQMQTTPropId = (piFormat = 1, piMsgTimeout = 2, piContentType = 3, piRespTopic = 8, piRelData = 9, piIdentDef = 11,
+    piSessionTimeout = 17, piClientId = 18, piKeepAlive = 19, piAuthMode = 21, piAuthData = 22, piErrorData = 23,
+    piWillDelay = 24, piRequestResp = 25, piRequst = 26, piServerRef = 28, piReason = 31, piMaxRecv = 33, piMaxTopicLen = 34,
+    piTopicAlias = 35, piMaxQoS = 36, piUserProp = 38, piMaxPackageSize = 39, piAcceptPatten = 40, piAcceptTopicId = 41,
+    piAcceptShareTopic = 42);
+  TQMQTT5PropDataType = (ptUnknown, ptByte, ptWord, ptInt, ptVarInt, ptString, ptBinary);
 
   TQMQTT5PropType = record
   private
@@ -677,6 +667,14 @@ type
         (AsBytes: ^TBytes);
   end;
 
+  EMQTTError = class(Exception)
+
+  end;
+
+  EMQTTAbortError = class(EAbort)
+
+  end;
+
   PQMQTT5Prop = ^TQMQTT5Prop;
 
   TQMQTT5Props = class
@@ -702,11 +700,9 @@ type
     procedure WriteProps(AMessage: PQMQTTMessage);
     procedure Replace(AProps: TQMQTT5Props);
     property PropTypes[const APropId: Byte]: PQMQTT5PropType read GetPropTypes;
-    property Values[const APropId: Byte]: Variant read GetAsVariant
-      write SetAsVariant;
+    property Values[const APropId: Byte]: Variant read GetAsVariant write SetAsVariant;
     property AsInt[const APropId: Byte]: Cardinal read GetAsInt write SetAsInt;
-    property AsString[const APropId: Byte]: String read GetAsString
-      write SetAsString;
+    property AsString[const APropId: Byte]: String read GetAsString write SetAsString;
     property IsSet[const APropId: Byte]: Boolean read GetIsSet;
     property DataSize[const APropId: Byte]: Integer read GetDataSize;
     property PayloadSize: Integer read GetPayloadSize;
@@ -714,8 +710,26 @@ type
     property MaxId: Byte index 1 read GetMinMaxId;
   end;
 
-  TQMQTTClientState = (qcsConnecting, qcsReconnecting, qcsRunning, qcsStop);
+  TQMQTTClientState = (qcsConnecting, qcsReconnecting, qcsRunning, qcsStopping);
   TQMQTTClientStates = set of TQMQTTClientState;
+
+  PQMQTTPublishPendingItem = ^TQMQTTPublishPendingItem;
+
+  TQMQTTPublishPendingItem = record
+    Topic: String;
+    Content: TBytes;
+    Qos: TQMQTTQoSLevel;
+    Props: TQMQTT5Props;
+    PushTime: Cardinal;
+    Prior, Next: PQMQTTPublishPendingItem; // forms.pas
+  end;
+
+  TQMQTTPublishPendings = record
+    First, Last: PQMQTTPublishPendingItem;
+  end;
+
+  TQMQTTPublishOption = (poCacheUnpublish, poCleanOnDisconnect);
+  TQMQTTPublishOptions = set of TQMQTTPublishOption;
 
   /// <summary>
   /// QMQTT 消息客户端实现，注意目前版本并没有实现消息的重发（主要是作者懒）
@@ -740,8 +754,9 @@ type
     FOnRecvTopic: TQMQTTTopicDispatchEvent;
     FAfterDisconnected: TQMQTTNotifyEvent;
     //
-
-    FConnectionTimeout, FReconnectInterval: Cardinal;
+    FSSL: IQSSLItem;
+    FConnectionTimeout, FReconnectInterval, FMaxTopicAckTimeout: Cardinal;
+    FWaitAckTopics: Integer;
     FServerHost, FUserName, FPassword, FClientId, FWillTopic: String;
     FWillMessage: TBytes;
     FRecvThread, FSendThread: TThread;
@@ -750,34 +765,37 @@ type
     FOnError: TQMQTTErrorEvent;
     FPackageId: Integer;
     FWaitAcks: TArray<PQMQTTMessage>;
+    FPublishPendings: TQMQTTPublishPendings;
     FSubscribes: TStringList;
     FTopicHandlers: TStringList;
     FNotifyEvent: TEvent;
-    FLastIoTick: Cardinal;
-    FPingStarted: Cardinal;
+    FConnectJob: IntPtr;
+    FLastIoTick, FPublishTTL: Cardinal;
+    FPingStarted, FPingTime: Cardinal;
     FReconnectTimes, FReconnectTime: Cardinal;
     FLastConnectTime: Cardinal;
     FSentTopics: Cardinal;
     FRecvTopics: Cardinal;
     FConnectProps: TQMQTT5Props;
     FStates: TQMQTTClientStates;
+    FPublishOptions: TQMQTTPublishOptions;
+    FLocker: TCriticalSection;
     FPeekInterval: Word;
     FServerPort: Word;
 
     FProtocolVersion: TQMQTTProtocolVersion;
     FQoSLevel: TQMQTTQoSLevel;
     FIsRetain: Boolean;
+    FUseSSL: Boolean;
     FCleanLastSession: Boolean;
     FConnected: Boolean;
+    FEventInThread: Boolean;
 {$IFDEF LogMqttContent}
     FLogPackageContent: Boolean;
 {$ENDIF}
-{$IFDEF EnableSSLMqtt}
-    FUseSSL: Boolean;
-    FSSL: TQSSLItem;
-{$ENDIF}
     procedure RecreateSocket;
     procedure DoConnect;
+    procedure DoMQTTConnect(AJob: PQJob);
     procedure DoDispatch(var AReq: TQMQTTMessage);
     procedure DispatchTopic(AMsg: PQMQTTMessage);
     procedure DispatchProps(AMsg: PQMQTTMessage);
@@ -809,16 +827,21 @@ type
     procedure DoPing;
     procedure FreeMessage(AMsg: PQMQTTMessage);
     function AcquirePackageId(AReq: PQMQTTMessage; AIsWaitAck: Boolean): Word;
-    procedure Queue(ACallback: TThreadProcedure);
+    procedure Queue(ACallback: TThreadProcedure; AIsForce: Boolean = false);
+    procedure DoQueueCallback(AJob: PQJob);
     procedure DoCloseSocket;
     function GetIsRunning: Boolean;
     function GetConnectProps: TQMQTT5Props;
-{$IFDEF EnableSSLMqtt}
     function GetSSLManager: TQSSLManager;
-{$ENDIF}
     procedure DoTimer(AJob: PQJob);
     procedure ReconnectNeeded;
     procedure DoCleanup;
+    procedure CheckPublished;
+    procedure CleanPublishPendings;
+    procedure SubscribePendings;
+    procedure RemoveSubscribePendings(const ATopics: array of String);
+    function CompareTopic(const ATopic1, ATopic2: String): Integer;
+    procedure PublishFirstPending;
   public
     /// <summary>
     /// 构造函数
@@ -857,8 +880,7 @@ type
     /// 1、 服务质量要求并不合最终的服务质量要求一致，服务器不支持该级别时，可能降级。 <br />
     /// 2、如果尚未连接到服务器，则对应的请求会在服务连接完成后尝试自动订阅（先买票后上车和先上车后买票的区别）。
     /// </remarks>
-    procedure Subscribe(const ATopics: array of String;
-      const AQoS: TQMQTTQoSLevel; AProps: TQMQTT5Props = nil);
+    procedure Subscribe(const ATopics: array of String; const AQoS: TQMQTTQoSLevel; AProps: TQMQTT5Props = nil);
     /// <summary>
     /// 取消指定的主题订阅
     /// </summary>
@@ -870,19 +892,10 @@ type
     /// </remarks>
     procedure Unsubscribe(const ATopics: array of String);
     /// <summary>
-    /// 发布一个消息
+    /// 清除所有的主题订阅
     /// </summary>
-    /// <param name="ATopic">
-    /// 消息主题，注意不能使用任何通配符
-    /// </param>
-    /// <param name="AContent">
-    /// 消息内容
-    /// </param>
-    /// <param name="AQoSLevel">
-    /// 服务质量要求
-    /// </param>
-    procedure Publish(const ATopic, AContent: String;
-      AQoSLevel: TQMQTTQoSLevel); overload;
+
+    procedure ClearSubscribes;
     /// <summary>
     /// 发布一个消息
     /// </summary>
@@ -895,8 +908,7 @@ type
     /// <param name="AQoSLevel">
     /// 服务质量要求
     /// </param>
-    procedure Publish(const ATopic: String; AContent: TBytes;
-      AQoSLevel: TQMQTTQoSLevel); overload;
+    procedure Publish(const ATopic, AContent: String; AQoSLevel: TQMQTTQoSLevel); overload;
     /// <summary>
     /// 发布一个消息
     /// </summary>
@@ -909,8 +921,20 @@ type
     /// <param name="AQoSLevel">
     /// 服务质量要求
     /// </param>
-    procedure Publish(const ATopic: String; const AContent; ALen: Cardinal;
-      AQoSLevel: TQMQTTQoSLevel); overload;
+    procedure Publish(const ATopic: String; AContent: TBytes; AQoSLevel: TQMQTTQoSLevel); overload;
+    /// <summary>
+    /// 发布一个消息
+    /// </summary>
+    /// <param name="ATopic">
+    /// 消息主题，注意不能使用任何通配符
+    /// </param>
+    /// <param name="AContent">
+    /// 消息内容
+    /// </param>
+    /// <param name="AQoSLevel">
+    /// 服务质量要求
+    /// </param>
+    procedure Publish(const ATopic: String; const AContent; ALen: Cardinal; AQoSLevel: TQMQTTQoSLevel); overload;
 
     /// <summary>
     /// 注册一个消息派发处理过程
@@ -924,20 +948,18 @@ type
     /// <param name="AType">
     /// 消息主题类型
     /// </param>
-    procedure RegisterDispatch(const ATopic: String;
-      AHandler: TQMQTTTopicDispatchEvent;
+    procedure RegisterDispatch(const ATopic: String; AHandler: TQMQTTTopicDispatchEvent;
       AType: TTopicMatchType = mtFull); overload;
-    procedure RegisterDispatch(const ATopic: String;
-      AHandler: TQMQTTTopicDispatchEventG;
+    procedure RegisterDispatch(const ATopic: String; AHandler: TQMQTTTopicDispatchEventG;
       AType: TTopicMatchType = mtFull); overload;
-    procedure RegisterDispatch(const ATopic: String;
-      AHandler: TQMQTTTopicDispatchEventA;
+    procedure RegisterDispatch(const ATopic: String; AHandler: TQMQTTTopicDispatchEventA;
       AType: TTopicMatchType = mtFull); overload;
+
     /// <summary>
     /// 移除一个消息派发函数注册
     /// </summary>
     procedure UnregisterDispatch(AHandler: TQMQTTTopicDispatchEvent); overload;
-
+    property EventInThread: Boolean read FEventInThread write FEventInThread;
     /// <summary>
     /// 服务器IP或域名
     /// </summary>
@@ -959,10 +981,9 @@ type
     /// </summary>
     property ClientId: String read GetClientId write FClientId;
     /// <summary>
-    /// 连接超时
+    /// 连接超时,单位为秒
     /// </summary>
-    property ConnectionTimeout: Cardinal read FConnectionTimeout
-      write FConnectionTimeout;
+    property ConnectionTimeout: Cardinal read FConnectionTimeout write FConnectionTimeout;
     /// <summary>
     /// 默认服务质量要求
     /// </summary>
@@ -982,14 +1003,16 @@ type
     /// <summary>
     /// 是否连接时清除上次会话信息
     /// </summary>
-    property CleanLastSession: Boolean read FCleanLastSession
-      write FCleanLastSession;
+    property CleanLastSession: Boolean read FCleanLastSession write FCleanLastSession;
     /// <summary>
     /// 保活间隔，单位为秒
     /// </summary>
     property PeekInterval: Word read FPeekInterval write FPeekInterval;
-    property ReconnectInterval: Cardinal read FReconnectInterval
-      write FReconnectInterval;
+    /// <summary>
+    /// 重连间隔，单位为秒
+    /// </summary>
+    property ReconnectInterval: Cardinal read FReconnectInterval write FReconnectInterval;
+    property MaxTopicAckTimeout: Cardinal read FMaxTopicAckTimeout write FMaxTopicAckTimeout;
     /// <summary>
     /// 客户端是否已经成功连接到服务器
     /// </summary>
@@ -1004,18 +1027,16 @@ type
     /// </summary>
     property SentTopics: Cardinal read FSentTopics;
 {$IFDEF LogMqttContent}
-    property LogPackageContent: Boolean read FLogPackageContent
-      write FLogPackageContent;
+    property LogPackageContent: Boolean read FLogPackageContent write FLogPackageContent;
 {$ENDIF}
-{$IFDEF EnableSSLMqtt}
     property UseSSL: Boolean read FUseSSL write FUseSSL;
     property SSLManager: TQSSLManager read GetSSLManager;
-{$ENDIF}
-    // MQTT 5.0 Added
-    property ProtocolVersion: TQMQTTProtocolVersion read FProtocolVersion
-      write FProtocolVersion;
-    property ConnectProps: TQMQTT5Props read GetConnectProps;
 
+    // MQTT 5.0 Added
+    property ProtocolVersion: TQMQTTProtocolVersion read FProtocolVersion write FProtocolVersion;
+    property ConnectProps: TQMQTT5Props read GetConnectProps;
+    property PublishOptions: TQMQTTPublishOptions read FPublishOptions write FPublishOptions;
+    property PublishTTL: Cardinal read FPublishTTL write FPublishTTL;
     /// <summary>
     /// 出错通知
     /// </summary>
@@ -1023,73 +1044,59 @@ type
     /// <summary>
     /// 连接前通知
     /// </summary>
-    property BeforeConnect: TQMQTTNotifyEvent read FBeforeConnect
-      write FBeforeConnect;
+    property BeforeConnect: TQMQTTNotifyEvent read FBeforeConnect write FBeforeConnect;
     /// <summary>
     /// 连接后通知
     /// </summary>
-    property AfterConnected: TQMQTTNotifyEvent read FAfterConnected
-      write FAfterConnected;
+    property AfterConnected: TQMQTTNotifyEvent read FAfterConnected write FAfterConnected;
     /// <summary>
     /// 断开后通知
     /// </summary>
-    property AfterDisconnected: TQMQTTNotifyEvent read FAfterDisconnected
-      write FAfterDisconnected;
+    property AfterDisconnected: TQMQTTNotifyEvent read FAfterDisconnected write FAfterDisconnected;
     /// <summary>
     /// 派发前通知
     /// </summary>
-    property BeforeDispatch: TQMQTTTopicDispatchEvent read FBeforeDispatch
-      write FBeforeDispatch;
+    property BeforeDispatch: TQMQTTTopicDispatchEvent read FBeforeDispatch write FBeforeDispatch;
     /// <summary>
     /// 派发后通知
     /// </summary>
-    property AfterDispatch: TQMQTTTopicDispatchEvent read FAfterDispatch
-      write FAfterDispatch;
+    property AfterDispatch: TQMQTTTopicDispatchEvent read FAfterDispatch write FAfterDispatch;
     /// <summary>
     /// 发布前通知
     /// </summary>
-    property BeforePublish: TQMQTTTopicDispatchEvent read FBeforePublish
-      write FBeforePublish;
+    property BeforePublish: TQMQTTTopicDispatchEvent read FBeforePublish write FBeforePublish;
     /// <summary>
     /// 发布后通知
     /// </summary>
-    property AfterPublished: TQMQTTTopicDispatchEvent read FAfterPublished
-      write FAfterPublished;
+    property AfterPublished: TQMQTTTopicDispatchEvent read FAfterPublished write FAfterPublished;
     /// <summary>
     /// 订阅前通知
     /// </summary>
-    property BeforeSubscribe: TQMQTTTopicDispatchEvent read FBeforeSubscribe
-      write FBeforeSubscribe;
+    property BeforeSubscribe: TQMQTTTopicDispatchEvent read FBeforeSubscribe write FBeforeSubscribe;
     /// <summary>
     /// 订阅后通知
     /// </summary>
-    property AfterSubscribed: TQMQTTTopicSubscribeResultNotify
-      read FAfterSubscribed write FAfterSubscribed;
+    property AfterSubscribed: TQMQTTTopicSubscribeResultNotify read FAfterSubscribed write FAfterSubscribed;
     /// <summary>
     /// 取消订阅前通知
     /// </summary>
-    property BeforeUnsubscribe: TQMQTTTopicDispatchEvent read FBeforeUnsubscribe
-      write FBeforeUnsubscribe;
+    property BeforeUnsubscribe: TQMQTTTopicDispatchEvent read FBeforeUnsubscribe write FBeforeUnsubscribe;
     /// <summary>
     /// 取消订阅后通知
     /// </summary>
-    property AfterUnsubscribed: TQMQTTTopicUnsubscribeEvent
-      read FAfterUnsubscribed write FAfterUnsubscribed;
+    property AfterUnsubscribed: TQMQTTTopicUnsubscribeEvent read FAfterUnsubscribed write FAfterUnsubscribed;
     /// <summary>
     /// 发送数据前通知
     /// </summary>
-    property BeforeSend: TQMQTTMessageNotifyEvent read FBeforeSend
-      write FBeforeSend;
+    property BeforeSend: TQMQTTMessageNotifyEvent read FBeforeSend write FBeforeSend;
     /// <summary>
     /// 发送数据后通知
     /// </summary>
-    property AfterSent: TQMQTTMessageNotifyEvent read FAfterSent
-      write FAfterSent;
+    property AfterSent: TQMQTTMessageNotifyEvent read FAfterSent write FAfterSent;
     /// <summary>
     /// 收到消息时通知
     /// </summary>
-    property OnRecvTopic: TQMQTTTopicDispatchEvent read FOnRecvTopic
-      write FOnRecvTopic;
+    property OnRecvTopic: TQMQTTTopicDispatchEvent read FOnRecvTopic write FOnRecvTopic;
   end;
 
   /// <summary>
@@ -1100,10 +1107,11 @@ function DefaultMqttClient: TQMQTTMessageClient;
 implementation
 
 resourcestring
+  SServerHostUnknown = 'MQTT 服务器地址未设置';
+  SServerPortInvalid = '无效的服务器端口号';
   STooLargePayload = '载荷大小 %d 超出包限制';
   SClientNotRunning = '客户端未连接到服务器，不能订阅';
-  SInitSSLFailed =
-    '初始化 SSL 失败，请检查目录下是否存在 ssleay32.dll 和 libeay32.dll/libssl32.dll';
+  SInitSSLFailed = '初始化 SSL 失败，请检查目录下是否存在 libssl-1_1.dll 和 libcrypto-1_1.dll';
 
 const
   MQTT5PropTypes: array [0 .. 41] of TQMQTT5PropType = ( //
@@ -1185,7 +1193,8 @@ type
     constructor Create(AOwner: TQMQTTMessageClient); overload;
     destructor Destroy; override;
     procedure Post(AMessage: PQMQTTMessage);
-    procedure Send(AMessage: PQMQTTMessage);
+    function Send(AMessage: PQMQTTMessage; ATimeout: Cardinal = INFINITE): Boolean;
+    procedure Clear;
   end;
 
   TTopicHandler = class
@@ -1196,10 +1205,10 @@ type
     FNext: TTopicHandler;
     FMatchType: TTopicMatchType;
   public
-    constructor Create(const ATopic: String; AHandler: TQMQTTTopicDispatchEvent;
-      AMatchType: TTopicMatchType);
+    constructor Create(const ATopic: String; AHandler: TQMQTTTopicDispatchEvent; AMatchType: TTopicMatchType);
     destructor Destroy; override;
     function IsMatch(const ATopic: String): Boolean;
+    property Topic: String read FTopic;
   end;
 
 const
@@ -1216,16 +1225,17 @@ begin
   if not Assigned(_DefaultClient) then
   begin
     AClient := TQMQTTMessageClient.Create(nil);
-    if AtomicCmpExchange(Pointer(_DefaultClient), Pointer(AClient), nil) <> nil
-    then
+    if AtomicCmpExchange(Pointer(_DefaultClient), Pointer(AClient), nil) <> nil then
       FreeAndNil(AClient);
+{$IFDEF AUTOREFCOUNT}
+    AClient.__ObjAddRef;
+{$ENDIF}
   end;
   Result := _DefaultClient;
 end;
 { TMessageQueue }
 
-function TQMQTTMessageClient.AcquirePackageId(AReq: PQMQTTMessage;
-  AIsWaitAck: Boolean): Word;
+function TQMQTTMessageClient.AcquirePackageId(AReq: PQMQTTMessage; AIsWaitAck: Boolean): Word;
 var
   ALast: Word;
   ATryTimes: Integer;
@@ -1240,7 +1250,10 @@ begin
         if not Assigned(FWaitAcks[Result]) then
         begin
           if AIsWaitAck then
+          begin
             FWaitAcks[Result] := AReq;
+            Inc(FWaitAckTopics);
+          end;
           Break;
         end;
       until Result = ALast;
@@ -1264,17 +1277,96 @@ end;
 procedure TQMQTTMessageClient.BeforeDestruction;
 begin
   inherited;
-  Workers.Clear(DoTimer, INVALID_JOB_DATA);
   Stop;
+  CheckSynchronize;
+end;
+
+procedure TQMQTTMessageClient.CheckPublished;
+var
+  I: Integer;
+  ATick, ATimeout: Cardinal;
+begin
+  if (FWaitAckTopics > 0) and Assigned(FSendThread) then
+  begin
+    ATick := {$IF RTLVersion>=23}TThread.{$IFEND}GetTickCount;
+    ATimeout := MaxTopicAckTimeout * 1000;
+    Lock;
+    try
+      for I := 0 to High(FWaitAcks) do
+      begin
+        if Assigned(FWaitAcks[I]) and (FWaitAcks[I].SentTime > 0) and (ATick - FWaitAcks[I].SentTime > ATimeout) then
+          TSocketSendThread(FSendThread).Post(FWaitAcks[I]);
+      end;
+    finally
+      Unlock;
+    end;
+  end;
+end;
+
+procedure TQMQTTMessageClient.CleanPublishPendings;
+var
+  AItem, ANext: PQMQTTPublishPendingItem;
+begin
+  if Assigned(FPublishPendings.First) then
+  begin
+    AItem := FPublishPendings.First;
+    FPublishPendings.First := nil;
+    FPublishPendings.Last := nil;
+    while Assigned(AItem) do
+    begin
+      ANext := AItem.Next;
+      if Assigned(AItem.Props) then
+        FreeAndNil(AItem.Props);
+      Dispose(AItem);
+      AItem := ANext;
+    end;
+  end;
 end;
 
 procedure TQMQTTMessageClient.ClearHandlers;
 var
   I: Integer;
+  AHandler, ANext: TTopicHandler;
 begin
   for I := 0 to FTopicHandlers.Count - 1 do
-    FreeObject(FTopicHandlers.Objects[I]);
+  begin
+    AHandler := TTopicHandler(FTopicHandlers.Objects[I]);
+    while Assigned(AHandler) do
+    begin
+      ANext := AHandler.FNext;
+      FreeAndNil(AHandler);
+      AHandler := ANext;
+    end;
+  end;
   FTopicHandlers.Clear;
+end;
+
+procedure TQMQTTMessageClient.ClearSubscribes;
+var
+  I: Integer;
+  ATopics: array of String;
+  AList: TStringList;
+  AProps: TQMQTT5Props;
+begin
+  AList := TStringList.Create;
+  try
+    AList.Duplicates := dupIgnore;
+    AList.Sorted := True;
+    for I := 0 to FSubscribes.Count - 1 do
+    begin
+      AList.Add(ValueOfW(FSubscribes[I], '|'));
+      AProps := TQMQTT5Props(AList.Objects[I]);
+      if Assigned(AProps) then
+        FreeAndNil(AProps);
+    end;
+    SetLength(ATopics, AList.Count);
+    for I := 0 to AList.Count - 1 do
+      ATopics[I] := AList[I];
+    Unsubscribe(ATopics);
+    FSubscribes.Clear;
+  finally
+    FreeAndNil(AList);
+  end;
 end;
 
 procedure TQMQTTMessageClient.ClearWaitAcks;
@@ -1305,17 +1397,20 @@ end;
 constructor TQMQTTMessageClient.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FPeekInterval := 60;
-  FConnectionTimeout := 15000;
-  FReconnectInterval := 15;
-  FStates := [qcsStop];
+  FPeekInterval := 60; // 默认 Ping 时间间隔
+  FConnectionTimeout := 15; // 默认连接超时
+  FReconnectInterval := 30; // 默认重连间隔
+  FMaxTopicAckTimeout := 15; // 对于QoS1/2消息，从发出到确认的最大间隔时间
+  FPublishTTL := INFINITE;
+  FStates := [];
   FNotifyEvent := TEvent.Create(nil, false, false, '');
   FTopicHandlers := TStringList.Create;
-  FTopicHandlers.Sorted := true;
+  FTopicHandlers.Sorted := True;
   FSubscribes := TStringList.Create;
-  FSubscribes.Sorted := true;
+  FSubscribes.Sorted := True;
   FSubscribes.Duplicates := dupIgnore;
   FProtocolVersion := pv3_1_1;
+  FLocker := TCriticalSection.Create;
 end;
 
 destructor TQMQTTMessageClient.Destroy;
@@ -1323,6 +1418,8 @@ var
   I: Integer;
   AProps: TQMQTT5Props;
 begin
+  AtomicCmpExchange(Pointer(_DefaultClient), nil, Pointer(Self));
+  DebugOut('Free MQTT client %x', [IntPtr(Self)]);
   FreeAndNil(FNotifyEvent);
   ClearHandlers;
   FreeAndNil(FTopicHandlers);
@@ -1332,8 +1429,10 @@ begin
     if Assigned(AProps) then
       FreeAndNil(AProps);
   end;
+  CleanPublishPendings;
   FreeAndNil(FSubscribes);
   FreeAndNil(FConnectProps);
+  FreeAndNil(FLocker);
   inherited;
 end;
 
@@ -1348,13 +1447,11 @@ begin
     AReq.ControlType := TQMQTTControlType.ctDisconnect;
     AReq.FAfterSent := DoFreeAfterSent;
     AReq.States := [msNeedWait];
-    TSocketSendThread(FSendThread).Send(AReq);
+    TSocketSendThread(FSendThread).Send(AReq, 1000);
   end;
 end;
 
-procedure TQMQTTMessageClient.InvokeTopicHandlers(
-
-  const ATopic: String; AMsg: PQMQTTMessage);
+procedure TQMQTTMessageClient.InvokeTopicHandlers(const ATopic: String; AMsg: PQMQTTMessage);
 var
   AIdx: Integer;
   procedure InvokeItem(AItem: TTopicHandler);
@@ -1365,11 +1462,9 @@ var
       begin
         case IntPtr(TMethod(AItem.FOnDispatch).Data) of
           0:
-            TQMQTTTopicDispatchEventG(TMethod(AItem.FOnDispatch).Code)
-              (Self, ATopic, AMsg);
+            TQMQTTTopicDispatchEventG(TMethod(AItem.FOnDispatch).Code)(Self, ATopic, AMsg);
           1:
-            TQMQTTTopicDispatchEventA(TMethod(AItem.FOnDispatch).Code)
-              (Self, ATopic, AMsg);
+            TQMQTTTopicDispatchEventA(TMethod(AItem.FOnDispatch).Code)(Self, ATopic, AMsg);
         else
           AItem.FOnDispatch(Self, ATopic, AMsg);
         end;
@@ -1379,12 +1474,19 @@ var
   end;
 
 begin
-  if FTopicHandlers.Find(ATopic, AIdx) then
-    InvokeItem(TTopicHandler(FTopicHandlers.Objects[AIdx]));
-  if FTopicHandlers.Find(PatternTopic, AIdx) then
-    InvokeItem(TTopicHandler(FTopicHandlers.Objects[AIdx]));
-  if FTopicHandlers.Find(RegexTopic, AIdx) then
-    InvokeItem(TTopicHandler(FTopicHandlers.Objects[AIdx]));
+  try
+    if Assigned(FBeforeDispatch) then
+      FBeforeDispatch(Self, ATopic, AMsg);
+    if FTopicHandlers.Find(ATopic, AIdx) then
+      InvokeItem(TTopicHandler(FTopicHandlers.Objects[AIdx]));
+    if FTopicHandlers.Find(PatternTopic, AIdx) then
+      InvokeItem(TTopicHandler(FTopicHandlers.Objects[AIdx]));
+    if FTopicHandlers.Find(RegexTopic, AIdx) then
+      InvokeItem(TTopicHandler(FTopicHandlers.Objects[AIdx]));
+  finally
+    if Assigned(FAfterDispatch) then
+      FAfterDispatch(Self, ATopic, AMsg);
+  end;
 end;
 
 procedure TQMQTTMessageClient.DispatchProps(AMsg: PQMQTTMessage);
@@ -1425,9 +1527,7 @@ begin
     end);
 end;
 
-function TQMQTTMessageClient.DNSLookupV4(
-
-  const AHost: QStringW): Cardinal;
+function TQMQTTMessageClient.DNSLookupV4(const AHost: QStringW): Cardinal;
 var
   Utf8Host: QStringA;
   AEntry: PHostEnt;
@@ -1474,8 +1574,7 @@ begin
   begin
     Result := 0;
     Utf8Host := qstring.Utf8Encode(AHost);
-    AEntry := gethostbyname
-      ({$IFDEF UNICODE}MarshaledAString{$ELSE}PAnsiChar{$ENDIF}(PQCharA(Utf8Host)));
+    AEntry := gethostbyname({$IFDEF UNICODE}MarshaledAString{$ELSE}PAnsiChar{$ENDIF}(PQCharA(Utf8Host)));
     if Assigned(AEntry) then
     begin
       if AEntry.h_addrtype = AF_INET then
@@ -1491,46 +1590,20 @@ procedure TQMQTTMessageClient.DoAfterConnected;
 begin
   Queue(
     procedure
-    var
-      ALevel, ALastLevel: TQMQTTQoSLevel;
-      ATopics: array of String;
-      ATopic: String;
-      I, C: Integer;
     begin
-      FConnected := true;
+      FConnected := True;
       FReconnectTimes := 0; // 清空重连计数
       FReconnectTime := 0;
-      FStates := FStates - [qcsConnecting];
+      FPingTime := {$IF RTLVersion>=23}TThread.{$IFEND}GetTickCount;
+      FStates := FStates - [qcsConnecting, qcsReconnecting];
       if Assigned(FAfterConnected) then
         FAfterConnected(Self);
-      if FSubscribes.Count > 0 then
-      begin
-        SetLength(ATopics, FSubscribes.Count);
-        ALevel := qlMax1;
-        ALastLevel := ALevel;
-        C := 0;
-        for I := 0 to FSubscribes.Count - 1 do
-        begin
-          ATopic := FSubscribes[I];
-          ALevel := TQMQTTQoSLevel(StrToIntDef(NameOfW(ATopic, '|'), 0));
-          if ALevel <> ALastLevel then
-          begin
-            Subscribe(Copy(ATopics, 0, C), ALastLevel);
-            C := 0;
-            ALastLevel := ALevel;
-          end;
-          ATopics[C] := ValueOfW(ATopic, '|');
-          Inc(C);
-        end;
-        if C > 0 then
-          Subscribe(Copy(ATopics, 0, C), ALastLevel);
-      end
+      SubscribePendings;
+      PublishFirstPending;
     end);
 end;
 
-procedure TQMQTTMessageClient.DoAfterSent(
-
-  const AReq: PQMQTTMessage);
+procedure TQMQTTMessageClient.DoAfterSent(const AReq: PQMQTTMessage);
 begin
   if Assigned(AReq.FAfterSent) or Assigned(FAfterSent) then
   begin
@@ -1547,12 +1620,10 @@ end;
 
 procedure TQMQTTMessageClient.DoAfterDisconnected;
 begin
-  TThread.Synchronize(nil,
-    procedure
-    begin
-      if Assigned(FAfterDisconnected) then
-        FAfterDisconnected(Self);
-    end);
+  if poCleanOnDisconnect in FPublishOptions then
+    CleanPublishPendings;
+  if Assigned(FAfterDisconnected) then
+    FAfterDisconnected(Self);
 end;
 
 procedure TQMQTTMessageClient.DoAfterSubcribed(AResult: PQMQTTSubscribeResults);
@@ -1580,13 +1651,18 @@ begin
   begin
     Queue(
       procedure
+      var
+        ATopic: String;
       begin
         try
           if Assigned(FAfterUnsubscribed) then
           begin
             ASource.Position := ASource.VarHeaderOffset + 2;
             while ASource.Current < ASource.Eof do
-              FAfterUnsubscribed(Self, ASource.NextString);
+            begin
+              ATopic := ASource.NextString;
+              FAfterUnsubscribed(Self, ATopic);
+            end;
           end;
         finally
           FreeMessage(ASource);
@@ -1611,23 +1687,27 @@ begin
   end;
 end;
 
-procedure TQMQTTMessageClient.DoBeforePublish(ATopic: String;
-AMsg: PQMQTTMessage);
+procedure TQMQTTMessageClient.DoBeforePublish(ATopic: String; AMsg: PQMQTTMessage);
+var
+  ATemp: PQMQTTMessage;
 begin
   if Assigned(FBeforePublish) then
   begin
+    ATemp := AMsg.Copy; //已知：如果正在处理时程序溢出，内存可能泄露
     Queue(
       procedure
       begin
-        if Assigned(FBeforePublish) then
-          FBeforePublish(Self, ATopic, AMsg);
+        try
+          if Assigned(FBeforePublish) then
+            FBeforePublish(Self, ATemp.TopicName, ATemp);
+        finally
+          Dispose(ATemp);
+        end;
       end);
   end;
 end;
 
-procedure TQMQTTMessageClient.DoBeforeSend(
-
-  const AReq: PQMQTTMessage);
+procedure TQMQTTMessageClient.DoBeforeSend(const AReq: PQMQTTMessage);
 begin
   if Assigned(FBeforeSend) then
   begin
@@ -1636,19 +1716,20 @@ end;
 
 procedure TQMQTTMessageClient.DoCleanup;
 begin
-{$IFDEF EnableSSLMqtt}
-  if Assigned(FSSL) then
-    FreeAndNil(FSSL);
-{$ENDIF}
+  FSSL := nil;
 end;
 
 procedure TQMQTTMessageClient.DoCloseSocket;
 const
   SD_BOTH = 2;
 begin
-  if FSocket <> 0 then
+  if (FSocket <> 0) then
   begin
-    shutdown(FSocket, SD_BOTH);
+    if Assigned(FSSL) then
+    begin
+      FSSL := nil;
+    end;
+    Shutdown(FSocket, SD_BOTH);
 {$IFDEF MSWINDOWS}
     closesocket(FSocket);
 {$ELSE}
@@ -1657,10 +1738,6 @@ begin
     FSocket := 0;
     FPingStarted := 0;
     DoAfterDisconnected;
-{$IFDEF  EnableSSLMqtt}
-    if Assigned(FSSL) then
-      FreeAndNil(FSSL);
-{$ENDIF}
   end;
 end;
 
@@ -1672,8 +1749,7 @@ var
   AHeader: PMQTTConnectHeader;
 
 const
-  Protocol: array [0 .. 5] of Byte = (0, 4, Ord('M'), Ord('Q'), Ord('T'),
-    Ord('T'));
+  Protocol: array [0 .. 5] of Byte = (0, 4, Ord('M'), Ord('Q'), Ord('T'), Ord('T'));
 begin
   FConnected := false;
   AReq := TQMQTTMessage.Create(Self);
@@ -1749,11 +1825,7 @@ end;
 
 procedure TQMQTTMessageClient.DoConnectFailed;
 begin
-  TThread.Queue(nil,
-    procedure
-    begin
-      FStates := FStates - [qcsConnecting];
-    end);
+  FStates := FStates - [qcsConnecting];
 end;
 
 procedure TQMQTTMessageClient.DoDispatch(var AReq: TQMQTTMessage);
@@ -1788,9 +1860,9 @@ procedure TQMQTTMessageClient.DoDispatch(var AReq: TQMQTTMessage);
           DoAfterConnected
       else
         begin
-          DoConnectFailed;
           DoError(MQERR_CONNECT + AReq[3]);
-          Stop;
+          DoConnectFailed;
+          Queue(Stop, True);
         end;
       end;
     end;
@@ -1808,7 +1880,7 @@ procedure TQMQTTMessageClient.DoDispatch(var AReq: TQMQTTMessage);
     // 跳过固定报头
     AReq.Position := 1;
     // 载荷大小
-    AAckPayload := AReq.NextDWord(true);
+    AAckPayload := AReq.NextDWord(True);
     // 消息ID
     APackageId := AReq.NextWord(false);
     // 属性(5.0+)
@@ -1909,6 +1981,7 @@ procedure TQMQTTMessageClient.DoDispatch(var AReq: TQMQTTMessage);
       end);
     Ack := TQMQTTMessage.Create(Self);
     Ack.PayloadSize := 2;
+    Ack.QosLevel := TQMQTTQoSLevel.qlAtLeast1;
     Ack.ControlType := TQMQTTControlType.ctPublishDone;
     Ack.Cat(APackageId);
     Ack.FAfterSent := DoFreeAfterSent;
@@ -1924,7 +1997,7 @@ procedure TQMQTTMessageClient.DoDispatch(var AReq: TQMQTTMessage);
     AReq.Position := AReq.VarHeaderOffset;
     APackageId := AReq.NextWord(false);
     Ack.PayloadSize := 2;
-    Ack.IsRetain := true;
+    Ack.IsRetain := True;
     Ack.ControlType := TQMQTTControlType.ctPublishRelease;
     Ack.Position := AReq.VarHeaderOffset;
     Ack.Cat(APackageId);
@@ -1951,8 +2024,7 @@ procedure TQMQTTMessageClient.DoDispatch(var AReq: TQMQTTMessage);
       procedure
       begin
 {$IFDEF LogMqttContent}
-        PostLog(llDebug, 'Ping 服务器往返用时 %d ms',
-          [GetTickCount - FPingStarted], 'QMQTT');
+        PostLog(llDebug, 'Ping 服务器往返用时 %d ms', [GetTickCount - FPingStarted], 'QMQTT');
 {$ENDIF}
         FPingStarted := 0;
       end);
@@ -1961,13 +2033,11 @@ procedure TQMQTTMessageClient.DoDispatch(var AReq: TQMQTTMessage);
 begin
 {$IFDEF LogMqttContent}
   if LogPackageContent then
-    PostLog(llDebug, '[接收]收到命令 %d，TopicId=%d,载荷大小:%d,总大小:%d 内容:'#13#10'%s',
-      [Ord(AReq.ControlType), Integer(AReq.TopicId), Integer(AReq.PayloadSize),
-      Integer(AReq.Size), AReq.ContentAsHexText], 'QMQTT')
+    PostLog(llDebug, '[接收]收到命令 %d，TopicId=%d,载荷大小:%d,总大小:%d 内容:'#13#10'%s', [Ord(AReq.ControlType), Integer(AReq.TopicId),
+      Integer(AReq.PayloadSize), Integer(AReq.Size), AReq.ContentAsHexText], 'QMQTT')
   else
-    PostLog(llDebug, '[接收]收到命令 %d，TopicId=%d,载荷大小:%d,总大小:%d',
-      [Ord(AReq.ControlType), Integer(AReq.TopicId), Integer(AReq.PayloadSize),
-      Integer(AReq.Size)], 'QMQTT');
+    PostLog(llDebug, '[接收]收到命令 %d，TopicId=%d,载荷大小:%d,总大小:%d', [Ord(AReq.ControlType), Integer(AReq.TopicId),
+      Integer(AReq.PayloadSize), Integer(AReq.Size)], 'QMQTT');
 {$ENDIF}
   AReq.States := AReq.States + [msDispatching];
   case AReq.ControlType of
@@ -1995,8 +2065,8 @@ end;
 
 procedure TQMQTTMessageClient.DoError(AErrorCode: Integer);
 const
-  KnownErrorMessages: array [0 .. 6] of String = ('操作成功完成', '协议版本号不受支持',
-    '客户端ID被拦截', '服务不可用', '用户名或密码错误', '客户端未被授权连接', '订阅指定的主题失败');
+  KnownErrorMessages: array [0 .. 6] of String = ('操作成功完成', '协议版本号不受支持', '客户端ID被拦截', '服务不可用', '用户名或密码错误', '客户端未被授权连接',
+    '订阅指定的主题失败');
 var
   AMsg: String;
 begin
@@ -2005,7 +2075,9 @@ begin
     if AErrorCode < Length(KnownErrorMessages) then
       AMsg := KnownErrorMessages[AErrorCode]
     else
+    begin
       AMsg := '未知的错误代码：' + IntToStr(AErrorCode);
+    end;
     Queue(
       procedure
       begin
@@ -2014,11 +2086,141 @@ begin
   end;
 end;
 
-procedure TQMQTTMessageClient.DoFreeAfterSent(
-
-  const AMessage: PQMQTTMessage);
+procedure TQMQTTMessageClient.DoFreeAfterSent(const AMessage: PQMQTTMessage);
 begin
   FreeMessage(AMessage);
+end;
+
+procedure TQMQTTMessageClient.DoMQTTConnect(AJob: PQJob);
+var
+  Addr: sockaddr_in;
+  tm: TIMEVAL;
+  mode: Integer;
+  ASocket: THandle;
+  fdWrite, fdError:
+{$IFDEF MSWINDOWS}TFdSet{$ELSE}FD_SET{$ENDIF};
+begin
+  if (csDestroying in ComponentState) then // 未处于析构状态
+    Exit;
+  FLastConnectTime :=
+{$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
+  DoBeforeConnect;
+  ASocket := Socket(PF_INET, SOCK_STREAM, 0);
+  if ASocket = THandle(-1) then
+    RaiseLastOSError;
+  try
+    // 连接到远程地址
+    Addr.sin_family := AF_INET;
+    Addr.sin_port := htons(FServerPort);
+    Addr.sin_addr.S_addr := DNSLookupV4(FServerHost);
+    if Addr.sin_addr.S_addr = 0 then
+      RaiseLastOSError;
+    tm.tv_sec := FConnectionTimeout;
+    tm.tv_usec := 0;
+{$IFDEF MSWINDOWS}
+    mode := 1;
+{$ENDIF}
+    if {$IFDEF MSWINDOWS}ioctlsocket(ASocket, FIONBIO, mode) <> NO_ERROR{$ELSE}Fcntl(ASocket, F_SETFL,
+      Fcntl(ASocket, F_GETFL, 0) or O_NONBLOCK) = -1{$ENDIF} then
+      RaiseLastOSError;
+    CONNECT(ASocket,
+{$IFDEF MSWINDOWS}sockaddr_in{$ELSE}sockaddr{$ENDIF}(Addr), SizeOf(Addr));
+    FD_ZERO(fdWrite);
+    FD_ZERO(fdError);
+{$IFDEF MSWINDOWS}
+    FD_SET(ASocket, fdWrite);
+    FD_SET(ASocket, fdError);
+{$ELSE}
+    _FD_SET(ASocket, fdWrite);
+    _FD_SET(ASocket, fdError);
+{$ENDIF}
+    mode := select(ASocket + 1, nil, @fdWrite, @fdError, @tm);
+    if mode >= 0 then
+    begin
+      if FD_ISSET(ASocket, fdError) then
+        RaiseLastOSError;
+      if FD_ISSET(ASocket, fdWrite) then
+        DebugOut('Socket writable')
+      else
+      begin
+        raise EMQTTAbortError.Create('连接服务器失败');
+      end;
+    end
+    else
+      RaiseLastOSError;
+{$IFDEF MSWINDOWS}
+    mode := 0;
+{$ENDIF}
+    if {$IFDEF MSWINDOWS}ioctlsocket(ASocket, FIONBIO, mode) <> NO_ERROR{$ELSE}Fcntl(ASocket, F_SETFL,
+      Fcntl(ASocket, F_GETFL, 0) or O_NONBLOCK) = -1{$ENDIF} then
+      RaiseLastOSError;
+    if UseSSL and (not Assigned(FSSL)) then
+    begin
+      if TQSSLManager.ActiveFactory <> nil then
+      begin
+        // SSL 使用阻塞模式,异步模式控制有点小复杂:)
+{$IFDEF MSWINDOWS}
+        mode := 0;
+{$ENDIF}
+        if {$IFDEF MSWINDOWS}ioctlsocket(ASocket, FIONBIO, mode) <> NO_ERROR{$ELSE}Fcntl(ASocket, F_SETFL,
+          Fcntl(ASocket, F_GETFL, 0) or O_NONBLOCK) = -1{$ENDIF} then
+          RaiseLastOSError;
+        FSSL := TQSSLManager.ActiveFactory.NewItem;
+        FSSL.Handle := ASocket;
+        if not FSSL.CONNECT then
+        begin
+          raise EMQTTAbortError.Create(FSSL.GetFactory.LastErrorMsg);
+        end;
+        // raise Exception.Create(FSSL.LastErrorMsg);
+        // 连接完再调整回去:)
+        mode := 1;
+        if {$IFDEF MSWINDOWS}ioctlsocket(ASocket, FIONBIO, mode) <> NO_ERROR
+{$ELSE}Fcntl(ASocket, F_SETFL, Fcntl(ASocket, F_GETFL, 0) and (not O_NONBLOCK)) = -1{$ENDIF} then
+          RaiseLastOSError;
+      end
+      else
+      begin
+        Stop;
+        raise Exception.Create(SInitSSLFailed);
+      end;
+    end;
+    FSocket := ASocket;
+    DoConnect;
+    FConnectJob := 0;
+  except
+    on E: Exception do
+    begin
+      mode := GetLastError;
+      FConnectJob := 0;
+      if not(csDestroying in ComponentState) then
+      // 未处于析构状态
+      begin
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            if Assigned(FOnError) then
+              FOnError(Self, mode, E.Message);
+          end);
+      end;
+      FStates := FStates - [qcsConnecting];
+      FReconnectTime :=
+{$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
+      if not(qcsReconnecting in FStates) then
+      begin
+        if qcsRunning in FStates then
+          FStates := FStates + [qcsReconnecting];
+      end;
+{$IFDEF MSWINDOWS}
+      closesocket(ASocket);
+{$ELSE}
+      __close(ASocket);
+{$ENDIF}
+      if ASocket = FSocket then
+        FSocket := 0;
+      TThread.ForceQueue(nil, DoCloseSocket);
+    end;
+  end;
+
 end;
 
 procedure TQMQTTMessageClient.DoPing;
@@ -2027,7 +2229,9 @@ var
 begin
   if (FPingStarted = 0) and Assigned(FSendThread) then
   begin
-    FPingStarted := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
+    FPingStarted :=
+{$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
+    FPingTime := FPingStarted;
     AReq := TQMQTTMessage.Create(Self);
     AReq.PayloadSize := 0;
     AReq.ControlType := TQMQTTControlType.ctPing;
@@ -2036,25 +2240,31 @@ begin
   end;
 end;
 
+procedure TQMQTTMessageClient.DoQueueCallback(AJob: PQJob);
+begin
+  TThreadProcedure(AJob.Data)();
+end;
+
 procedure TQMQTTMessageClient.FreeMessage(AMsg: PQMQTTMessage);
-// var
-// APkgId: Word;
+var
+  APkgId: Word;
 begin
   if Assigned(AMsg) then
   begin
-    // {$IFDEF MSWINDOWS}
-    // Lock;
-    // try
-    // APkgId := AMsg.TopicId;
-    // if APkgId <> 0 then
-    // begin
-    // if Assigned(FWaitAcks[APkgId]) and (FWaitAcks[APkgId] = AMsg) then
-    // DebugBreak;
-    // end;
-    // finally
-    // Unlock;
-    // end;
-    // {$ENDIF}
+    if msNeedAck in AMsg.States then
+    begin
+      APkgId := AMsg.PackageId;
+      Lock;
+      try
+        if FWaitAcks[APkgId] = AMsg then
+        begin
+          FWaitAcks[APkgId] := nil;
+          Dec(FWaitAckTopics);
+        end;
+      finally
+        Unlock;
+      end;
+    end;
     Dispose(AMsg);
   end;
 end;
@@ -2076,34 +2286,26 @@ function TQMQTTMessageClient.GetIsRunning: Boolean;
 begin
   Result := Assigned(FRecvThread) and Assigned(FSendThread) and (FSocket <> 0);
 end;
-{$IFDEF EnableSSLMqtt}
 
 function TQMQTTMessageClient.GetSSLManager: TQSSLManager;
 begin
   Result := TQSSLManager.Current;
 end;
-{$ENDIF}
 
 procedure TQMQTTMessageClient.Lock;
 begin
-  TMonitor.Enter(Self);
+  FLocker.Enter;
 end;
 
-procedure TQMQTTMessageClient.Publish(
-
-  const ATopic, AContent: String; AQoSLevel: TQMQTTQoSLevel);
+procedure TQMQTTMessageClient.Publish(const ATopic, AContent: String; AQoSLevel: TQMQTTQoSLevel);
 var
   AUtf8Content: QStringA;
 begin
-  if not IsRunning then
-    Exit;
   AUtf8Content := qstring.Utf8Encode(AContent);
   Publish(ATopic, AUtf8Content.Data^, AUtf8Content.Length, AQoSLevel);
 end;
 
-procedure TQMQTTMessageClient.Publish(
-
-  const ATopic: String; AContent: TBytes; AQoSLevel: TQMQTTQoSLevel);
+procedure TQMQTTMessageClient.Publish(const ATopic: String; AContent: TBytes; AQoSLevel: TQMQTTQoSLevel);
 begin
   Publish(ATopic, AContent[0], Length(AContent), AQoSLevel)
 end;
@@ -2116,37 +2318,85 @@ begin
     begin
       Result := FWaitAcks[APackageId];
       FWaitAcks[APackageId] := nil;
+      if Assigned(Result) then
+        Dec(FWaitAckTopics);
     end
     else
       Result := nil;
   finally
     Unlock;
   end;
+  if Assigned(Result) then
+    Result.States := Result.States - [msNeedAck];
 end;
 
-procedure TQMQTTMessageClient.Publish(
-
-  const ATopic: String;
-
-const AContent; ALen: Cardinal; AQoSLevel: TQMQTTQoSLevel);
+procedure TQMQTTMessageClient.Publish(const ATopic: String; const AContent; ALen: Cardinal; AQoSLevel: TQMQTTQoSLevel);
 var
   AReq: PQMQTTMessage;
   AUtf8Topic: QStringA;
   APackageId: Word;
   ANeedAck: Boolean;
   APayloadSize: Cardinal;
+  procedure PushPendings;
+  var
+    AItem: PQMQTTPublishPendingItem;
+  begin
+    New(AItem);
+    AItem.Topic := ATopic;
+    SetLength(AItem.Content, ALen);
+    Move(AContent, AItem.Content[0], ALen);
+    AItem.Qos := AQoSLevel;
+    AItem.Next := nil;
+    AItem.PushTime := {$IF RTLVersion>=23}TThread.{$IFEND}GetTickCount;
+    AItem.Prior := nil;
+    AItem.Props := nil;
+    // Support for MQTT 5.0
+    Queue(
+      procedure
+      begin
+        AItem.Prior := FPublishPendings.Last;
+        if Assigned(FPublishPendings.Last) then
+          FPublishPendings.Last.Next := AItem
+        else
+          FPublishPendings.First := AItem;
+        FPublishPendings.Last := AItem;
+      end);
+  end;
+
 begin
-  if not IsRunning then
+  if not(IsRunning and Connected) then
+  begin
+    if poCacheUnpublish in FPublishOptions then // 发布的主题是否放到待发送队列中
+      PushPendings;
     Exit;
+  end;
   Assert(Length(ATopic) > 0);
   AUtf8Topic := qstring.Utf8Encode(ATopic);
   // 判断总长度不能超过限制
   APayloadSize := SizeOf(Word) + Cardinal(AUtf8Topic.Length) + ALen;
+  AReq := TQMQTTMessage.Create(Self);
   ANeedAck := AQoSLevel <> TQMQTTQoSLevel.qlMax1;
   if ANeedAck then
+  begin
+    AReq.States := AReq.States + [msNeedAck];
     Inc(APayloadSize, 2);
-  AReq := TQMQTTMessage.Create(Self);
-  AReq.PayloadSize := APayloadSize;
+    AReq.PayloadSize := APayloadSize;
+    APackageId := AcquirePackageId(AReq, ANeedAck);
+    if APackageId = 0 then
+    begin
+      FreeAndNil(AReq);
+      if poCacheUnpublish in FPublishOptions then
+        PushPendings
+      else
+        DoError(MQERR_PUBLISH_FAILED);
+      Exit;
+    end;
+  end
+  else
+  begin
+    AReq.PayloadSize := APayloadSize;
+    APackageId := 0;
+  end;
   AReq.ControlType := TQMQTTControlType.ctPublish;
   AReq.QosLevel := AQoSLevel;
   AReq.IsRetain := IsRetain;
@@ -2154,10 +2404,7 @@ begin
   AReq.Cat(AUtf8Topic);
   // 标志符
   if ANeedAck then
-  begin
-    APackageId := AcquirePackageId(AReq, ANeedAck);
     AReq.Cat(APackageId);
-  end;
   AReq.Cat(@AContent, ALen);
   DoBeforePublish(ATopic, AReq);
   if AQoSLevel = TQMQTTQoSLevel.qlMax1 then
@@ -2165,118 +2412,68 @@ begin
   TSocketSendThread(FSendThread).Post(AReq);
 end;
 
-procedure TQMQTTMessageClient.Queue(ACallback: TThreadProcedure);
+procedure TQMQTTMessageClient.PublishFirstPending;
+var
+  AItem: PQMQTTPublishPendingItem;
 begin
-  TThread.Queue(nil, ACallback);
+  if Assigned(FPublishPendings.First) then
+  begin
+    AItem := FPublishPendings.First;
+    FPublishPendings.First := AItem.Next;
+    if not Assigned(AItem.Next) then
+      FPublishPendings.Last := nil;
+    Publish(AItem.Topic, AItem.Content, AItem.Qos);
+    if Assigned(AItem.Props) then
+      FreeAndNil(AItem.Props);
+    Dispose(AItem);
+  end;
+end;
+
+procedure TQMQTTMessageClient.Queue(ACallback: TThreadProcedure; AIsForce: Boolean);
+type
+  PInterface = ^IInterface;
+begin
+  if AIsForce then
+    Workers.Post(DoQueueCallback, Pointer(PInterface(@ACallback)^), not EventInThread, jdfFreeAsInterface)
+  else
+  begin
+    if EventInThread or (GetCurrentThreadId  = MainThreadId) then
+      ACallback
+    else
+      Workers.Post(DoQueueCallback, Pointer(PInterface(@ACallback)^), True, jdfFreeAsInterface);
+  end;
 end;
 
 procedure TQMQTTMessageClient.ReconnectNeeded;
 begin
+  if [qcsConnecting, qcsReconnecting] * FStates <> [] then
+    Exit;
+  if Assigned(FSendThread) then
+    TSocketSendThread(FSendThread).Clear;
   DoCloseSocket;
   FStates := FStates + [qcsReconnecting];
   if FReconnectTimes = 0 then
-    FReconnectTime := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
+    FReconnectTime :=
+{$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
   if FReconnectTimes < 5 then // 5次尽快连接,超过5次，就要去靠定时器延时重连
   begin
     Inc(FReconnectTimes);
-    if not(qcsStop in FStates) then
+    if not(qcsStopping in FStates) then
       RecreateSocket;
   end;
 end;
 
 procedure TQMQTTMessageClient.RecreateSocket;
-var
-  Addr: sockaddr_in;
-  tm: TIMEVAL;
-  mode: Integer;
-  fdWrite, fdError: {$IFDEF MSWINDOWS}TFdSet{$ELSE}FD_SET{$ENDIF};
 begin
-  DoCloseSocket;
-  DoBeforeConnect;
-  FSocket := Socket(PF_INET, SOCK_STREAM, 0);
-  if FSocket = THandle(-1) then
-    RaiseLastOSError;
-  try
-    // 连接到远程地址
-    Addr.sin_family := AF_INET;
-    Addr.sin_port := htons(FServerPort);
-    Addr.sin_addr.S_addr := DNSLookupV4(FServerHost);
-    if Addr.sin_addr.S_addr = 0 then
-      RaiseLastOSError;
-    tm.tv_sec := FConnectionTimeout div 1000;
-    tm.tv_usec := (FConnectionTimeout mod 1000) * 1000;
-{$IFDEF MSWINDOWS}
-    mode := 1;
-{$ENDIF}
-    if {$IFDEF MSWINDOWS}ioctlsocket(FSocket, FIONBIO, mode) <>
-      NO_ERROR{$ELSE}Fcntl(FSocket, F_SETFL, Fcntl(FSocket, F_GETFL, 0) or
-      O_NONBLOCK) = -1{$ENDIF} then
-      RaiseLastOSError;
-    CONNECT(FSocket, {$IFDEF MSWINDOWS}sockaddr_in{$ELSE}sockaddr{$ENDIF}(Addr), SizeOf(Addr));
-    FD_ZERO(fdWrite);
-    FD_ZERO(fdError);
-{$IFDEF MSWINDOWS}
-    FD_SET(FSocket, fdWrite);
-    FD_SET(FSocket, fdError);
-{$ELSE}
-    _FD_SET(FSocket, fdWrite);
-    _FD_SET(FSocket, fdError);
-{$ENDIF}
-    select(0, nil, @fdWrite, @fdError, @tm);
-    if not FD_ISSET(FSocket, fdWrite) then
-      RaiseLastOSError;
-{$IFDEF EnableSSLMqtt}
-    if UseSSL and (not Assigned(FSSL)) then
-    begin
-      if TQSSLManager.Current.Initialized then
-      begin
-        // SSL 使用阻塞模式,异步模式控制有点小复杂:)
-        mode := 0;
-        if ioctlsocket(FSocket, FIONBIO, mode) <> NO_ERROR then
-          RaiseLastOSError;
-        FSSL := TQSSLManager.Current.NewItem;
-        FSSL.Bind(FSocket);
-        FSSL.Modes := [TQSSLMode.AutoReply];
-        if not FSSL.CONNECT then
-        begin
-          Abort;
-        end;
-        // raise Exception.Create(FSSL.LastErrorMsg);
-        // 连接完再调整回去:)
-        mode := 1;
-        if ioctlsocket(FSocket, FIONBIO, mode) <> NO_ERROR then
-          RaiseLastOSError;
-      end
-      else
-      begin
-        Stop;
-        raise Exception.Create(SInitSSLFailed);
-      end;
-    end;
-{$ENDIF}
-    DoConnect;
-    FLastConnectTime := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
-  except
-    on E: Exception do
-    begin
-      mode := GetLastError;
-      if Assigned(FOnError) then
-        FOnError(Self, mode, E.Message);
-      FStates := FStates - [qcsConnecting];
-      DoCloseSocket;
-      FReconnectTime := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
-      if not(qcsReconnecting in FStates) then
-      begin
-        if qcsRunning in FStates then
-          FStates := FStates + [qcsReconnecting];
-        raise;
-      end;
-    end;
+  if FConnectJob = 0 then
+  begin
+    DoCloseSocket;
+    FConnectJob := Workers.Post(DoMQTTConnect, nil);
   end;
 end;
 
-procedure TQMQTTMessageClient.RegisterDispatch(const ATopic: String;
-AHandler: TQMQTTTopicDispatchEventG; AType: TTopicMatchType);
+procedure TQMQTTMessageClient.RegisterDispatch(const ATopic: String; AHandler: TQMQTTTopicDispatchEventG;
+AType: TTopicMatchType);
 var
   AMethod: TMethod;
   ATemp: TQMQTTTopicDispatchEvent absolute AMethod;
@@ -2286,8 +2483,8 @@ begin
   RegisterDispatch(ATopic, ATemp, AType);
 end;
 
-procedure TQMQTTMessageClient.RegisterDispatch(const ATopic: String;
-AHandler: TQMQTTTopicDispatchEventA; AType: TTopicMatchType);
+procedure TQMQTTMessageClient.RegisterDispatch(const ATopic: String; AHandler: TQMQTTTopicDispatchEventA;
+AType: TTopicMatchType);
 var
   AMethod: TMethod;
   ATemp: TQMQTTTopicDispatchEvent absolute AMethod;
@@ -2297,8 +2494,34 @@ begin
   RegisterDispatch(ATopic, ATemp, AType);
 end;
 
-procedure TQMQTTMessageClient.RegisterDispatch(const ATopic: String;
-AHandler: TQMQTTTopicDispatchEvent; AType: TTopicMatchType);
+procedure TQMQTTMessageClient.RemoveSubscribePendings(const ATopics: array of String);
+var
+  I: Integer;
+  procedure RemoveItem(const ATopic: String);
+  var
+    J: Integer;
+  begin
+    J := 0;
+    while J < FSubscribes.Count - 1 do
+    begin
+      if CompareTopic(ATopic, ValueOfW(FSubscribes[J], '|')) >= 0 then
+        FSubscribes.Delete(J)
+      else
+        Inc(J);
+    end;
+  end;
+
+begin
+  I := 0;
+  while (FSubscribes.Count > 0) and (I < Length(ATopics)) do
+  begin
+    RemoveItem(ATopics[I]);
+    Inc(I);
+  end;
+end;
+
+procedure TQMQTTMessageClient.RegisterDispatch(const ATopic: String; AHandler: TQMQTTTopicDispatchEvent;
+AType: TTopicMatchType);
 var
   AItem, AFirst: TTopicHandler;
   AIdx: Integer;
@@ -2318,7 +2541,7 @@ begin
   // 检查主题响应是否注册过，以避免重复注册
   while Assigned(AItem) do
   begin
-    if MethodEqual(TMethod(AItem.FOnDispatch), TMethod(AHandler)) then
+    if MethodEqual(TMethod(AItem.FOnDispatch), TMethod(AHandler)) and (AItem.Topic = ATopic) then
       Exit;
     AItem := AItem.FNext;
   end;
@@ -2337,7 +2560,8 @@ var
   AReaded, ATotal, ATick, ALastLargeIoTick: Cardinal;
   ARecv: Integer;
   tm: TIMEVAL;
-  fdRead, fdError: {$IFDEF MSWINDOWS}TFdSet{$ELSE}FD_SET{$ENDIF};
+  fdRead, fdError:
+{$IFDEF MSWINDOWS}TFdSet{$ELSE}FD_SET{$ENDIF};
   rc: Integer;
   AErrorCode: Integer;
 const
@@ -2358,7 +2582,7 @@ begin
     FReconnectTimes := 0;
     ALastLargeIoTick := 0;
     if FSocket = 0 then
-      TThread.Queue(nil, RecreateSocket);
+      Queue(RecreateSocket);
     repeat
       while (FSocket = 0) do
       begin
@@ -2384,31 +2608,26 @@ begin
         __FD_SET(FSocket, fdError);
 {$ENDIF}
         try
-          rc := select(0, @fdRead, nil, @fdError, @tm);
+          rc := select(FSocket + 1, @fdRead, nil, @fdError, @tm);
           if (rc > 0) then
           begin
-            if FD_ISSET(FSocket, fdRead) and (not FD_ISSET(FSocket, fdError))
-            then
+            if FD_ISSET(FSocket, fdRead) and (not FD_ISSET(FSocket, fdError)) then
             begin
-{$IFDEF EnableSSLMqtt}
               if UseSSL then
               begin
                 if Assigned(FSSL) then
-                  ARecv := FSSL.Read(AReq.FData[AReaded],
-                    Cardinal(Length(AReq.FData)) - AReaded)
+                  ARecv := FSSL.Read(AReq.FData[AReaded], Cardinal(Length(AReq.FData)) - AReaded)
                 else
                   Exit;
               end
               else
-{$ENDIF}
-                ARecv := Recv(FSocket, AReq.FData[AReaded],
-                  Cardinal(Length(AReq.FData)) - AReaded, 0);
+                ARecv := Recv(FSocket, AReq.FData[AReaded], Cardinal(Length(AReq.FData)) - AReaded, 0);
               if TSocketRecvThread(TThread.Current).Terminated then
                 Break;
               if ARecv = -1 then
               begin
                 if GetLastError =
-                {$IFDEF MSWINDOWS}WSAEWOULDBLOCK{$ELSE}EWOULDBLOCK{$ENDIF} then
+{$IFDEF MSWINDOWS}WSAEWOULDBLOCK{$ELSE}EWOULDBLOCK{$ENDIF} then
                 begin
                   Sleep(10);
                   continue;
@@ -2421,12 +2640,13 @@ begin
               end
               else if ARecv = 0 then // 没有进一步的数据时，让出CPU
               begin
-                TThread.Queue(nil, DoPing);
+                Queue(DoPing);
                 Sleep(10);
                 continue;
               end;
               Inc(AReaded, ARecv);
-              FLastIoTick := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
+              FLastIoTick :=
+{$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
               if AReaded > 4096 then
                 ALastLargeIoTick := FLastIoTick;
               if ATotal = InvalidSize then
@@ -2464,8 +2684,7 @@ begin
           begin
             ATick := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
             // 连续5秒读取不到填充够缓冲的数据，则缩小内存占用
-            if (AReq.Capacity > MinBufferSize) and (AReaded < MinBufferSize) and
-              (ATick - ALastLargeIoTick > 5000) then
+            if (AReq.Capacity > MinBufferSize) and (AReaded < MinBufferSize) and (ATick - ALastLargeIoTick > 5000) then
             begin
               AReq.PayloadSize := 0;
               AReq.Capacity := MinBufferSize;
@@ -2475,15 +2694,15 @@ begin
 
         end;
       until TSocketRecvThread(TThread.Current).Terminated;
-      if (AErrorCode <> 0) and (not TSocketThread(TThread.Current).Terminated)
-      then
+      if (AErrorCode <> 0) and (not TSocketThread(TThread.Current).Terminated) and (FSocket <> 0) then
       begin
         DebugOut(SysErrorMessage(AErrorCode));
-        TThread.Synchronize(nil, ReconnectNeeded);
+        if not(csDestroying in ComponentState) then // 未处于析构状态
+          TThread.Synchronize(nil, ReconnectNeeded);
       end;
     until TSocketThread(TThread.Current).Terminated;
   finally
-    DoCloseSocket;
+    TThread.ForceQueue(nil, DoCloseSocket);
     FreeMessage(AReq);
     FRecvThread := nil;
   end;
@@ -2497,97 +2716,126 @@ var
 begin
 {$IFDEF LogMqttContent}
   if LogPackageContent then
-    PostLog(llDebug, '发送请求 %d(%x),ID=%d,载荷大小:%d,总大小:%d,内容:'#13#10'%s',
-      [Ord(AReq.ControlType), IntPtr(AReq), Integer(AReq.TopicId),
-      Integer(AReq.PayloadSize), Integer(AReq.Size),
-      AReq.ContentAsHexText], 'QMQTT')
+    PostLog(llDebug, '发送请求 %d(%x),ID=%d,载荷大小:%d,总大小:%d,内容:'#13#10'%s', [Ord(AReq.ControlType), IntPtr(AReq),
+      Integer(AReq.TopicId), Integer(AReq.PayloadSize), Integer(AReq.Size), AReq.ContentAsHexText], 'QMQTT')
   else
-    PostLog(llDebug, '发送请求 %d(%x),ID=%d,载荷大小:%d,总大小:%d',
-      [Ord(AReq.ControlType), IntPtr(AReq), Integer(AReq.TopicId),
+    PostLog(llDebug, '发送请求 %d(%x),ID=%d,载荷大小:%d,总大小:%d', [Ord(AReq.ControlType), IntPtr(AReq), Integer(AReq.TopicId),
       Integer(AReq.PayloadSize), Integer(AReq.Size)], 'QMQTT');
 {$ENDIF}
-  Result := false;
-  DoBeforeSend(AReq);
   try
-    p := AReq.Bof;
-    ASize := AReq.Size;
-    while (ASize > 0) and (not TSocketThread(TThread.Current).Terminated) do
+    if FSocket <> 0 then
     begin
-{$IFDEF EnableSSLMqtt}
-      if UseSSL then
-      begin
-        if not Assigned(FSSL) then
-          Exit;
-        ASent := FSSL.Write(p^, ASize);
-        if ASent > 0 then
+      Result := false;
+      DoBeforeSend(AReq);
+      try
+        p := AReq.Bof;
+        ASize := AReq.Size;
+        while (ASize > 0) and (not TSocketThread(TThread.Current).Terminated) do
         begin
-          Inc(p, ASent);
-          Dec(ASize, ASent);
-        end
-        else
-        begin
-          // 暂时不了解SSL这块，待定
+          if UseSSL then
+          begin
+            if not Assigned(FSSL) then
+              Exit;
+            ASent := FSSL.Write(p^, ASize);
+            if ASent > 0 then
+            begin
+              Inc(p, ASent);
+              Dec(ASize, ASent);
+            end
+            else
+            begin
+              // 暂时不了解SSL这块，待定
+            end;
+          end
+          else
+          begin
+            ASent := Send(FSocket, p^, ASize, 0);
+            if ASent <> -1 then
+            begin
+              Inc(p, ASent);
+              Dec(ASize, ASent);
+            end
+            else if GetLastError =
+{$IFDEF MSWINDOWS} WSAEWOULDBLOCK{$ELSE}EWOULDBLOCK{$ENDIF} then
+            begin
+              Sleep(10);
+              continue
+            end
+            else
+              Break;
+          end;
         end;
-      end
-      else
-{$ENDIF}
-      begin
-        ASent := Send(AReq.Client.FSocket, p^, ASize, 0);
-        if ASent <> -1 then
+        if ASize = 0 then
         begin
-          Inc(p, ASent);
-          Dec(ASize, ASent);
-        end
-        else if ASent =
-        {$IFDEF MSWINDOWS} WSAEWOULDBLOCK{$ELSE}EWOULDBLOCK{$ENDIF} then
+          AReq.States := AReq.States + [msSent];
+          AReq.FSentTime :=
+{$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
+          Inc(AReq.FSentTimes);
+          Result := True;
+          FLastIoTick := AReq.FSentTime;
+        end;
+      except
+        on E: Exception do
         begin
-          Sleep(10);
-          continue
+          DebugOut('发送数据时发生异常:' + E.Message);
         end
-        else
-          Break;
       end;
     end;
-    if ASize = 0 then
-    begin
-      AReq.States := AReq.States + [msSent] - [msSending];
-      AReq.FSentTime := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
-      Inc(AReq.FSentTimes);
-      AReq.Client.FLastIoTick := AReq.FSentTime;
-      Result := true;
-      DoAfterSent(AReq);
-    end;
-  except
-    on E: Exception do
-    begin
-      DebugOut('发送数据时发生异常:' + E.Message);
-    end
+  finally
+    AReq.States := AReq.States - [msSending];
+    if Assigned(AReq.FWaitEvent) then
+      AReq.FWaitEvent.SetEvent;
+    DoAfterSent(AReq);
   end;
 end;
 
 procedure TQMQTTMessageClient.DoTimer(AJob: PQJob);
 var
   ATick: Cardinal;
-begin
-  ATick := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
-  if qcsConnecting in FStates then
-    Exit;
-  if FSocket = 0 then
+  procedure CheckPublishPendings;
+  var
+    AItem: PQMQTTPublishPendingItem;
   begin
-    if ((ATick - FReconnectTime) > (FReconnectInterval * 1000)) and
-      (qcsRunning in FStates) then
+    while Assigned(FPublishPendings.First) do
+    begin
+      AItem := FPublishPendings.First;
+      if ATick - AItem.PushTime >= FPublishTTL then
+      begin
+        FPublishPendings.First := AItem.Next;
+        if not Assigned(AItem.Next) then
+          FPublishPendings.Last := nil;
+        if Assigned(AItem.Props) then
+          FreeAndNil(AItem.Props);
+        Dispose(AItem);
+      end
+      else
+        Break;
+    end;
+  end;
+
+begin
+  ATick :=
+{$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
+  CheckPublishPendings;
+  if ([qcsConnecting, qcsReconnecting] * FStates) <> [] then // 连接中
+  begin
+    if (ATick - FLastConnectTime) > (FConnectionTimeout * 1000) then
       RecreateSocket;
+    Exit;
   end
-  else if ((ATick - FLastIoTick) >= (FPeekInterval * 1000)) then
-    DoPing
-  else if (FPingStarted > 0) and ((ATick - FPingStarted) > 1000) then
-    // Ping 必需在1秒内返回，如果不返回直接重连
-    ReconnectNeeded;
+  else if (qcsRunning in FStates) then // QoS 1等
+  begin
+    if ((ATick - FPingTime) >= (FPeekInterval * 1000)) then
+      DoPing
+    else if (FPingStarted > 0) and ((ATick - FPingStarted) > 1000) then
+      // Ping 必需在1秒内返回，如果不返回直接重连
+      ReconnectNeeded
+    else
+      CheckPublished;
+  end;
 end;
 
-procedure TQMQTTMessageClient.DoTopicPublished(
-
-  const AMessage: PQMQTTMessage);
+procedure TQMQTTMessageClient.DoTopicPublished(const AMessage: PQMQTTMessage);
 var
   ATopic: String;
 begin
@@ -2620,6 +2868,10 @@ end;
 
 procedure TQMQTTMessageClient.Start;
 begin
+  if Length(FServerHost) = 0 then
+    raise EMQTTError.Create(SServerHostUnknown);
+  if FServerPort = 0 then
+    raise EMQTTError.Create(SServerPortInvalid);
   FStates := [qcsConnecting, qcsRunning];
   ClearWaitAcks;
   SetLength(FWaitAcks, 65536);
@@ -2627,16 +2879,19 @@ begin
     FRecvThread := TSocketRecvThread.Create(Self);
   if not Assigned(FSendThread) then
     FSendThread := TSocketSendThread.Create(Self);
-  Workers.Delay(DoTimer, 1000, nil, true, jdfFreeByUser, true);
+  Workers.Delay(DoTimer, 1000, nil, True, jdfFreeByUser, True);
 end;
 
 procedure TQMQTTMessageClient.Stop;
+var
+  T: Cardinal;
 begin
-  FStates := FStates + [qcsStop] - [qcsRunning];
+  FStates := FStates + [qcsStopping] - [qcsRunning];
   FReconnectTimes := 0;
   FReconnectTime := 0;
-  Workers.Clear(DoTimer, INVALID_JOB_DATA);
-  Disconnect;
+  Workers.Clear(Self, -1, false);
+  if [qcsConnecting, qcsReconnecting] * FStates = [] then
+    Disconnect;
   DoCloseSocket;
   if Assigned(FRecvThread) then
   begin
@@ -2649,12 +2904,14 @@ begin
     TSocketSendThread(FSendThread).FNotifyEvent.SetEvent;
     FSendThread := nil;
   end;
-  Sleep(10);
+  T := TThread.GetTickCount;
+  while (FThreadCount > 0) and (TThread.GetTickCount - T < 5000) do
+    Sleep(10);
   ClearWaitAcks;
+  FStates := FStates - [qcsStopping];
 end;
 
-procedure TQMQTTMessageClient.Subscribe(const ATopics: array of String;
-const AQoS: TQMQTTQoSLevel; AProps: TQMQTT5Props);
+procedure TQMQTTMessageClient.Subscribe(const ATopics: array of String; const AQoS: TQMQTTQoSLevel; AProps: TQMQTT5Props);
 var
   AReq: PQMQTTMessage;
   APayloadSize: Integer;
@@ -2696,8 +2953,9 @@ begin
     AReq.PayloadSize := APayloadSize;
     AReq.ControlType := TQMQTTControlType.ctSubscribe;
     AReq.QosLevel := TQMQTTQoSLevel.qlAtLeast1;
+    AReq.States := AReq.States + [msNeedAck];
     // 报文标志符
-    APackageId := AcquirePackageId(AReq, true);
+    APackageId := AcquirePackageId(AReq, True);
     AReq.Cat(APackageId);
     if (ProtocolVersion = pv5_0) then
     begin
@@ -2713,13 +2971,59 @@ begin
   end;
 end;
 
-procedure TQMQTTMessageClient.Unlock;
+procedure TQMQTTMessageClient.SubscribePendings;
+var
+  ALevel, ALastLevel: TQMQTTQoSLevel;
+  ATopics: array of String;
+  ATopic: String;
+  I, C: Integer;
 begin
-  TMonitor.Exit(Self);
+  if FSubscribes.Count > 0 then
+  begin
+    SetLength(ATopics, FSubscribes.Count);
+    ALevel := qlMax1;
+    ALastLevel := ALevel;
+    C := 0;
+    for I := 0 to FSubscribes.Count - 1 do
+    begin
+      ATopic := FSubscribes[I];
+      ALevel := TQMQTTQoSLevel(StrToIntDef(NameOfW(ATopic, '|'), 0));
+      if ALevel <> ALastLevel then
+      begin
+        Subscribe(Copy(ATopics, 0, C), ALastLevel);
+        C := 0;
+        ALastLevel := ALevel;
+      end;
+      ATopics[C] := ValueOfW(ATopic, '|');
+      Inc(C);
+    end;
+    if C > 0 then
+      Subscribe(Copy(ATopics, 0, C), ALastLevel);
+  end;
 end;
 
-procedure TQMQTTMessageClient.UnregisterDispatch
-  (AHandler: TQMQTTTopicDispatchEvent);
+function TQMQTTMessageClient.CompareTopic(const ATopic1, ATopic2: String): Integer;
+// 需要实现一个主题的比较算法，1和2都包含模式匹配符时，要确定
+  function IsContains(p1, p2: PChar): Boolean;
+  begin
+    Result := false;
+  end;
+
+begin
+  if ATopic1 = ATopic2 then
+    Result := 0
+  else if IsContains(PChar(ATopic1), PChar(ATopic2)) then
+    Result := 1
+  else
+    Result := -1;
+end;
+
+procedure TQMQTTMessageClient.Unlock;
+begin
+  FLocker.Leave;
+end;
+
+procedure TQMQTTMessageClient.UnregisterDispatch(AHandler: TQMQTTTopicDispatchEvent);
 var
   AItem, APrior, ANext: TTopicHandler;
   I: Integer;
@@ -2751,9 +3055,7 @@ begin
   end;
 end;
 
-procedure TQMQTTMessageClient.Unsubscribe(
-
-  const ATopics: array of String);
+procedure TQMQTTMessageClient.Unsubscribe(const ATopics: array of String);
 var
   AReq: PQMQTTMessage;
   APayloadSize: Integer;
@@ -2761,6 +3063,7 @@ var
   I, C: Integer;
   APackageId: Word;
 begin
+  RemoveSubscribePendings(ATopics);
   if not IsRunning then
     Exit;
   if Length(ATopics) > 0 then
@@ -2783,8 +3086,9 @@ begin
     AReq := TQMQTTMessage.Create(Self);
     AReq.PayloadSize := APayloadSize;
     AReq.ControlType := TQMQTTControlType.ctUnsubscribe;
-    AReq.QosLevel:=TQMQTTQoSLevel.qlAtLeast1;
-    APackageId := AcquirePackageId(AReq, true);
+    AReq.QosLevel := TQMQTTQoSLevel.qlAtLeast1;
+    AReq.States := AReq.States + [msNeedAck];
+    APackageId := AcquirePackageId(AReq, True);
     AReq.Cat(APackageId);
     for I := 0 to C - 1 do
       AReq.Cat(AUtf8Topics[I]);
@@ -2807,8 +3111,7 @@ begin
   if Length(FClientId) = 0 then
   begin
     CreateGUID(AId);
-    FClientId := DeleteRightW(TNetEncoding.Base64.EncodeBytesToString(@AId,
-      SizeOf(AId)), '=', false, 1);
+    FClientId := DeleteRightW(TNetEncoding.Base64.EncodeBytesToString(@AId, SizeOf(AId)), '=', false, 1);
   end;
 end;
 
@@ -2910,8 +3213,7 @@ begin
   Result.FSentTimes := FSentTimes;
 end;
 
-class function TQMQTTMessage.Create(AClient: TQMQTTMessageClient)
-  : PQMQTTMessage;
+class function TQMQTTMessage.Create(AClient: TQMQTTMessageClient): PQMQTTMessage;
 begin
   New(Result);
   Result.FClient := AClient;
@@ -2927,9 +3229,7 @@ begin
   Result.FWaitEvent := nil;
 end;
 
-function TQMQTTMessage.Cat(
-
-  const S: QStringA; AWriteZeroLen: Boolean): PQMQTTMessage;
+function TQMQTTMessage.Cat(const S: QStringA; AWriteZeroLen: Boolean): PQMQTTMessage;
 var
   T: QStringA;
 begin
@@ -3028,7 +3328,7 @@ begin
     begin
       Inc(AResult, ABuf^ shl (C * 7));
       Inc(ABuf);
-      Exit(true);
+      Exit(True);
     end;
     Inc(C);
   end;
@@ -3067,7 +3367,7 @@ begin
     begin
       Inc(AResult, ABuf^ shl (C * 7));
       Inc(ABuf);
-      Exit(true);
+      Exit(True);
     end;
     Inc(C);
   end;
@@ -3158,6 +3458,21 @@ const
   AMasks: array [0 .. 1] of Byte = (1, 8);
 begin
   Result := (FData[0] and AMasks[Index]) <> 0;
+end;
+
+function TQMQTTMessage.GetPackageId: Word;
+begin
+  Result := 0;
+  case ControlType of
+    ctPublish: // 发布
+      begin
+        if QosLevel > qlMax1 then
+          // 可变头+主题长度+主题内容+PackageId
+          Result := ExchangeByteOrder(PWord(IntPtr(FVarHeader) + SizeOf(Word) + ExchangeByteOrder(PWord(FVarHeader)^))^);
+      end;
+    ctPublishAck, ctPublishRecv, ctPublishRelease, ctPublishDone, ctSubscribe, ctSubscribeAck, ctUnsubscribe, ctUnsubscribeAck:
+      Result := ExchangeByteOrder(PWord(FVarHeader)^);
+  end;
 end;
 
 function TQMQTTMessage.GetPayloadSize: Cardinal;
@@ -3267,6 +3582,7 @@ end;
 function TQMQTTMessage.GetTopicText: String;
 var
   p: PByte;
+  L: Integer;
 begin
   if ControlType = ctPublish then
   begin
@@ -3275,8 +3591,11 @@ begin
     if QosLevel > qlMax1 then
       // 跳过可能存在的PackageId
       Inc(p, 2);
-    Result := qstring.Utf8Decode(PQCharA(p),
-      Length(FData) - (IntPtr(p) - IntPtr(@FData[0])));
+    L := Length(FData) - (IntPtr(p) - IntPtr(@FData[0]));
+    if L > 0 then
+      Result := qstring.Utf8Decode(PQCharA(p), L)
+    else
+      Result := '';
   end
   else
     Result := '';
@@ -3413,7 +3732,7 @@ end;
 function TQMQTTMessage.NextSmallInt(AIsEncoded: Boolean): Smallint;
 begin
   if AIsEncoded then
-    Result := NextInt(true)
+    Result := NextInt(True)
   else
   begin
     Result := ExchangeByteOrder(PSmallint(FCurrent)^);
@@ -3457,7 +3776,7 @@ end;
 function TQMQTTMessage.NextWord(AIsEncoded: Boolean): Word;
 begin
   if AIsEncoded then
-    Result := Word(NextInt(true))
+    Result := Word(NextInt(True))
   else
   begin
     Result := ExchangeByteOrder(PWord(FCurrent)^);
@@ -3657,8 +3976,7 @@ end;
 
 constructor TTopicHandler.Create(
 
-  const ATopic: String; AHandler: TQMQTTTopicDispatchEvent;
-AMatchType: TTopicMatchType);
+  const ATopic: String; AHandler: TQMQTTTopicDispatchEvent; AMatchType: TTopicMatchType);
 begin
   inherited Create;
   FMatchType := AMatchType;
@@ -3747,20 +4065,40 @@ begin
   else if FMatchType = mtPattern then
     Result := PatternMatch
   else
-    Result := true;
+    Result := True;
 end;
 
 { TSocketThread }
 
 constructor TSocketThread.Create(AOwner: TQMQTTMessageClient);
 begin
-  inherited Create(true);
+  inherited Create(True);
   FOwner := AOwner;
-  FreeOnTerminate := true;
+  FreeOnTerminate := True;
   AtomicIncrement(AOwner.FThreadCount);
 end;
 
 { TSocketSendThread }
+
+procedure TSocketSendThread.Clear;
+var
+  AFirst, ANext: PQMQTTMessage;
+begin
+  FOwner.Lock;
+  try
+    AFirst := FFirst;
+    FFirst := nil;
+    FLast := nil;
+  finally
+    FOwner.Unlock;
+  end;
+  while Assigned(AFirst) do
+  begin
+    ANext := AFirst.Next;
+    FOwner.FreeMessage(AFirst);
+    AFirst := ANext;
+  end;
+end;
 
 constructor TSocketSendThread.Create(AOwner: TQMQTTMessageClient);
 begin
@@ -3778,25 +4116,9 @@ end;
 procedure TSocketSendThread.Execute;
 var
   AFirst, ANext: PQMQTTMessage;
-  procedure Cleanup;
-  begin
-    while Assigned(AFirst) do
-    begin
-      ANext := AFirst.Next;
-      Dispose(AFirst);
-      AFirst := ANext;
-    end;
-    if Assigned(FFirst) then
-    begin
-      AFirst := FFirst;
-      FFirst := nil;
-      FLast := nil;
-      Cleanup;
-    end;
-  end;
-
 begin
   try
+    AFirst := nil;
     while not Terminated do
     begin
       if FNotifyEvent.WaitFor = wrSignaled then
@@ -3818,15 +4140,14 @@ begin
         while Assigned(AFirst) do
         begin
           ANext := AFirst.Next;
-          if FOwner.DoSend(AFirst) then
-            AFirst := ANext
-          else
-            Break;
+          FOwner.DoSend(AFirst);
+          AFirst := ANext
         end;
+        Queue(FOwner.PublishFirstPending);
       end;
     end;
   finally
-    Cleanup;
+    Clear;
     if AtomicDecrement(FOwner.FThreadCount) = 0 then
       FOwner.DoCleanup;
   end;
@@ -3847,7 +4168,7 @@ begin
   end;
 end;
 
-procedure TSocketSendThread.Send(AMessage: PQMQTTMessage);
+function TSocketSendThread.Send(AMessage: PQMQTTMessage; ATimeout: Cardinal): Boolean;
 var
   AEvent: TEvent;
 begin
@@ -3855,6 +4176,7 @@ begin
   try
     AMessage.FWaitEvent := AEvent;
     Post(AMessage);
+    Result := AEvent.WaitFor(ATimeout) = wrSignaled;
   finally
     FreeAndNil(AEvent);
   end;
@@ -3879,8 +4201,7 @@ var
 begin
   for I := 0 to High(FItems) do
   begin
-    if (MQTT5PropTypes[I].DataType in [ptString, ptBinary]) and
-      Assigned(FItems[I].AsString) then
+    if (MQTT5PropTypes[I].DataType in [ptString, ptBinary]) and Assigned(FItems[I].AsString) then
     begin
       if MQTT5PropTypes[I].DataType = ptString then
         Dispose(FItems[I].AsString)
@@ -3962,11 +4283,9 @@ begin
       begin
         if Assigned(FItems[APropId - 1].AsBytes) then
         begin
-          Result := VarArrayCreate([0, Length(FItems[APropId - 1].AsBytes^) -
-            1], varByte);
+          Result := VarArrayCreate([0, Length(FItems[APropId - 1].AsBytes^) - 1], varByte);
           p := VarArrayLock(Result);
-          Move(FItems[APropId - 1].AsBytes^[0], p^,
-            Length(FItems[APropId - 1].AsBytes^));
+          Move(FItems[APropId - 1].AsBytes^[0], p^, Length(FItems[APropId - 1].AsBytes^));
           VarArrayUnlock(Result);
         end
         else
@@ -4032,7 +4351,7 @@ var
   I: Integer;
   APropId: Byte;
 begin
-  APropLen := AMessage.NextDWord(true);
+  APropLen := AMessage.NextDWord(True);
   pe := AMessage.Current + APropLen;
   for I := 0 to High(FItems) do
     FItems[I].IsSet := false;
@@ -4051,13 +4370,13 @@ begin
           ptInt:
             AsInteger := AMessage.NextDWord(false);
           ptVarInt:
-            AsInteger := AMessage.NextDWord(true);
+            AsInteger := AMessage.NextDWord(True);
           ptString:
             begin
               if not Assigned(AsString) then
                 New(AsString);
               AsString^.Length := AMessage.NextWord(false);
-              AsString^.IsUtf8 := true;
+              AsString^.IsUtf8 := True;
               AMessage.NextBytes(PQCharA(AsString^), AsString^.Length);
             end;
           ptBinary:
@@ -4068,7 +4387,7 @@ begin
               AMessage.NextBytes(@AsBytes^[0], Length(AsBytes^));
             end;
         end;
-        IsSet := true;
+        IsSet := True;
       end;
     end;
   end;
@@ -4104,7 +4423,7 @@ end;
 
 procedure TQMQTT5Props.SetAsInt(const APropId: Byte; const Value: Cardinal);
 begin
-  FItems[APropId - 1].IsSet := true;
+  FItems[APropId - 1].IsSet := True;
   case MQTT5PropTypes[APropId - 1].DataType of
     ptByte:
       FItems[APropId - 1].AsByte := Value;
@@ -4128,7 +4447,7 @@ end;
 
 procedure TQMQTT5Props.SetAsString(const APropId: Byte; const Value: String);
 begin
-  FItems[APropId - 1].IsSet := true;
+  FItems[APropId - 1].IsSet := True;
   case MQTT5PropTypes[APropId - 1].DataType of
     ptByte:
       FItems[APropId - 1].AsByte := Byte(StrToInt(Value));
@@ -4153,7 +4472,7 @@ end;
 
 procedure TQMQTT5Props.SetAsVariant(const APropId: Byte; const Value: Variant);
 begin
-  FItems[APropId - 1].IsSet := true;
+  FItems[APropId - 1].IsSet := True;
   case MQTT5PropTypes[APropId - 1].DataType of
     ptByte:
       FItems[APropId - 1].AsByte := Value;
@@ -4171,10 +4490,8 @@ begin
       begin
         if not Assigned(FItems[APropId - 1].AsBytes) then
           New(FItems[APropId - 1].AsBytes);
-        SetLength(FItems[APropId - 1].AsBytes^,
-          VarArrayHighBound(Value, 1) + 1);
-        Move(VarArrayLock(Value)^, FItems[APropId - 1].AsBytes^[0],
-          Length(FItems[APropId - 1].AsBytes^));
+        SetLength(FItems[APropId - 1].AsBytes^, VarArrayHighBound(Value, 1) + 1);
+        Move(VarArrayLock(Value)^, FItems[APropId - 1].AsBytes^[0], Length(FItems[APropId - 1].AsBytes^));
         VarArrayUnlock(Value);
       end;
   end;
@@ -4192,7 +4509,7 @@ begin
     if FItems[I].IsSet then
       Inc(ASize, DataSize[I + 1] + 1);
   end;
-  AMessage.Cat(ASize, true);
+  AMessage.Cat(ASize, True);
   for I := 0 to High(FItems) do
   begin
     if FItems[I].IsSet then
@@ -4207,7 +4524,7 @@ begin
         ptInt:
           AMessage.Cat(FItems[I].AsInteger);
         ptVarInt:
-          AMessage.Cat(FItems[I].AsInteger, true);
+          AMessage.Cat(FItems[I].AsInteger, True);
         ptString:
           AMessage.Cat(FItems[I].AsString^);
         ptBinary:

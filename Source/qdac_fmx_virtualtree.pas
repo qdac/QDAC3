@@ -7745,6 +7745,7 @@ end;
 
 procedure TQVTTextEditor.CancelEdit;
 begin
+  inherited;
   (Control as TEdit).Text := '';
 end;
 
