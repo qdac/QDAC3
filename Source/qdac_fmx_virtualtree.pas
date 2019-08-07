@@ -4936,7 +4936,7 @@ begin
   // 如果有子结点
   if (TQVTNodeState.nsHasChildren in FStates) then
   begin
-    // 检查第后一个子结点是否赋值了
+    // 检查最后一个子结点是否赋值了
     if not Assigned(FLastChild) then
     begin
       if not Assigned(FLastInitChild) then
@@ -5277,7 +5277,7 @@ begin
     if FCount < value then
     // 如果新的子结点数量增大，则末个结点变空，以便后续初始化
     begin
-      // Pointer(FLastChild) := nil;
+      Pointer(FLastChild) := nil;
       FCount := value;
     end
     else

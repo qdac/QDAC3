@@ -241,8 +241,8 @@ type
   public
     constructor Create; overload;
     destructor Destroy; override;
-    procedure Post(ALevel: TQLogLevel; const AMsg, ATag: QStringW); overload;
-    procedure Post(ALevel: TQLogLevel; const AFormat: QStringW; Args: array of const; const ATag: QStringW); overload;
+    procedure Post(ALevel: TQLogLevel; const AMsg:QStringW;const ATag: QStringW=''); overload;
+    procedure Post(ALevel: TQLogLevel; const AFormat: QStringW; Args: array of const; const ATag: QStringW=''); overload;
     property Mode: TQLogMode read FMode write SetMode;
     property Castor: TQLogCastor read GetCastor;
     property Count: Integer read FCount;
@@ -263,7 +263,6 @@ type
     FTag: IntPtr;
     FLazyMode: Boolean;
     FEnabled: Boolean;
-    FAcceptTags: QStringW;
     procedure BeginWrite; virtual;
     procedure EndWrite; virtual;
     procedure LazyWrite; virtual;
@@ -280,7 +279,6 @@ type
     property Enabled: Boolean read FEnabled write FEnabled;
     property OnAccept: TQLogItemAcceptEvent read FOnAccept write FOnAccept;
     property Tag: IntPtr read FTag write FTag;
-    property AcceptTags: QStringW read FAcceptTags write FAcceptTags;
   end;
 
   // 日志读取对象
@@ -751,40 +749,8 @@ end;
 
 // TQLogWriter
 function TQLogWriter.Accept(AItem: PQLogItem): Boolean;
-var
-  pTags, pTag: PWideChar;
-  ATag: QStringW;
 begin
   Result := Enabled and (AItem.Level in AcceptLevels);
-  if Result and (Length(FAcceptTags) > 0) then
-  begin
-    Result := (AItem.TagLen > 0);
-    if Result then
-    begin
-      pTags := PWideChar(FAcceptTags);
-      ATag := AItem.Tag;
-      pTag := StrIStrW(pTags, PWideChar(ATag));
-      if Assigned(pTag) then
-      begin
-        if pTag <> pTags then
-        begin
-          Dec(pTag);
-          if pTag^ = ',' then
-          begin
-            Inc(pTag, Length(ATag) + 1);
-            Result := (pTag^ = ',') or (pTag^ = #0);
-          end
-          else
-            Result := False;
-        end
-        else
-        begin
-          Inc(pTag, Length(ATag));
-          Result := (pTag^ = ',') or (pTag^ = #0);
-        end;
-      end;
-    end;
-  end;
   if Assigned(OnAccept) then
     OnAccept(Self, AItem, Result);
 end;
@@ -2067,12 +2033,9 @@ begin
           else // 目标就是 TStringsList 类型，则直接移动数据
           begin
             for I := ADelta to FItems.Count - 1 do
-              ATemp.Exchange(I, I-ADelta);
+              ATemp.Exchange(I, ADelta - I);
             while ADelta > 0 do
-              begin
               FItems.Delete(FItems.Count - 1);
-              Dec(ADelta);
-              end;
           end;
         end;
       end;
@@ -2086,15 +2049,10 @@ begin
     finally
       if ATemp <> FItems then
       begin
-        if FMaxItems > 0 then
-          // 一次性赋值
-          FItems.Text := ATemp.Text
-        else
-          FItems.AddStrings(ATemp);
+        // 一次性赋值
+        FItems.Text := ATemp.Text;
         FreeAndNil(ATemp);
-      end
-      else
-        ATemp.EndUpdate;
+      end;
     end;
     AtomicDecrement(FFlushRefCount);
     // {$IFDEF DEBUG}
@@ -2116,27 +2074,23 @@ end;
 procedure TQLogStringsWriter.LazyWrite;
 var
   T: Cardinal;
-  procedure DoFlush;
-  begin
-    FLastFlush := T;
-    if AtomicIncrement(FFlushRefCount) = 1 then
-      TThread.Queue(nil, FlushLogs)
-    else
-      AtomicDecrement(FFlushRefCount);
-  end;
-
 begin
-  T := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
+  T := GetTickCount;
   if FBuffered > 0 then
   begin
     if LazyMode then
     begin
       if T - FLastFlush >= Logs.Castor.LazyInterval then // 大于日志刷新间隔
-        DoFlush;
-    end
-    else
-      DoFlush;
+      begin
+        FLastFlush := T;
+        if AtomicIncrement(FFlushRefCount) = 1 then
+          TThread.Queue(nil, FlushLogs)
+        else
+          AtomicDecrement(FFlushRefCount);
+      end;
+    end;
   end;
+
 end;
 
 function TQLogStringsWriter.WriteItem(AItem: PQLogItem): Boolean;

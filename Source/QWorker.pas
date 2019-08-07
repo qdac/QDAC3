@@ -1023,7 +1023,7 @@ type
   /// jesCleanup : 清理作业完成时出错
   /// </summary>
 
-  TJobErrorSource = (jesExecute, jesFreeData, jesWaitDone,jesCleanup);
+  TJobErrorSource = (jesExecute, jesFreeData, jesWaitDone, jesCleanup);
   // For并发的索引值类型
   TForLoopIndexType = {$IF RTLVersion>=26}NativeInt{$ELSE}Integer{$IFEND};
   /// <summary>工作者错误通知事件</summary>
@@ -1467,6 +1467,10 @@ type
     /// 2.信号一旦注册，则只有程序退出时才会自动释放
     /// </remarks>
     function RegisterSignal(const AName: QStringW): Integer; // 注册一个信号名称
+    /// <summary>获取指定的ID对应的信号名称</summary>
+    /// <param name="AId">信号 ID</param>
+    /// <return>返回ID对应的信号名称，如果不存在，返回空字符串</return>
+    function NameOfSignal(const AId: Integer): QStringW;
     /// <summary>启用工作者</summary>
     /// <remarks>和DisableWorkers必需配对使用</remarks>
     procedure EnableWorkers;
@@ -4793,6 +4797,21 @@ begin
     end;
   until (APasscount < 0) or (AWorker <> nil);
   Result := AWorker <> nil;
+end;
+
+function TQWorkers.NameOfSignal(const AId: Integer): QStringW;
+var
+  ASignal: PQSignal;
+  AIdx: Integer;
+begin
+  Result := '';
+  FLocker.Enter;
+  try
+    if (AId > 0) and (AId <= Length(FSignalJobs)) then
+      Result := FSignalJobs[AId-1].Name;
+  finally
+    FLocker.Leave;
+  end;
 end;
 
 procedure TQWorkers.NewWorkerNeeded;

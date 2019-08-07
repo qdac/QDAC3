@@ -1158,6 +1158,14 @@ begin
 end;
 
 procedure TDialogBuilder.DoDialogWndProc(var AMsg: TMessage);
+  procedure DrawFrames;
+  var
+    R:TRect;
+  begin
+    //弹出下拉窗口时，绘制一个边界，以便和背景分离呈现立体效果
+    R:=Dialog.ClientRect;
+    Frame3D(Dialog.Canvas,R,clBtnHighlight,clBtnShadow,1);
+  end;
 begin
   if dbsPopup in FStates then
   begin
@@ -1170,6 +1178,11 @@ begin
       DoClosePopup(Self);
   end;
   FLastDialogWndProc(AMsg);
+  if dbsPopup in FStates then
+  begin
+    if AMsg.Msg = WM_PAINT then
+      DrawFrames;
+  end;
 end;
 
 procedure TDialogBuilder.DoPopupMessage(var Msg: tagMSG; var Handled: Boolean);
@@ -1189,7 +1202,7 @@ procedure TDialogBuilder.DoPopupMessage(var Msg: tagMSG; var Handled: Boolean);
   function IsDropDown: Boolean;
   begin
     if (Screen.ActiveControl is TComboBox) then
-      Result := SendMessage(TComboBox(Screen.ActiveControl).Handle, CB_GETDROPPEDSTATE, 0, 0)<>0
+      Result := SendMessage(TComboBox(Screen.ActiveControl).Handle, CB_GETDROPPEDSTATE, 0, 0) <> 0
     else
       Result := false;
   end;

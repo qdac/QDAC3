@@ -401,6 +401,7 @@ type
 
   TQDnsEntryItem = record
     Next: PQDnsEntryItem;
+    ExpireTick: Cardinal; //
     case Integer of
       0:
         (LongAddr: Cardinal;);
@@ -416,27 +417,28 @@ type
   protected
     FFirst, FLast, FActive: PQDnsEntryItem;
   public
-    constructor Create(const AValue: QStringW); overload;
+    constructor Create(const AValue: QStringW;DnsTTL:Cardinal); overload;
     destructor Destroy; override;
+    procedure Clean;
     function First: PQDnsEntryItem; inline;
     function Last: PQDnsEntryItem; inline;
     function Next: PQDnsEntryItem;
     property Active: PQDnsEntryItem read FActive;
   end;
 
-//  IQStreamOwner=interface
-//    ['{F07DE00B-72AF-4827-A482-5AD76C442B9C}']
-//    function LockRead(AOffset:Int64;ABuffer:Pointer;ACount:Integer):Integer;
-//    function LockWrite(AOffset:Int64;ABuffer:Pointer;ACount:Integer):Integer;
-//  end;
-//  TQStreamOwner=class(TInterfacedObject,IQStreamOwner)
-//
-//  end;
-//  TQRangeStream=class(TStream)
-//  protected
-//    FStart,FCount:Int64;
-//    F
-//  end;
+  // IQStreamOwner=interface
+  // ['{F07DE00B-72AF-4827-A482-5AD76C442B9C}']
+  // function LockRead(AOffset:Int64;ABuffer:Pointer;ACount:Integer):Integer;
+  // function LockWrite(AOffset:Int64;ABuffer:Pointer;ACount:Integer):Integer;
+  // end;
+  // TQStreamOwner=class(TInterfacedObject,IQStreamOwner)
+  //
+  // end;
+  // TQRangeStream=class(TStream)
+  // protected
+  // FStart,FCount:Int64;
+  // F
+  // end;
   TQHttpRequests = class
   private
     class var CurlInitialized: Boolean;
@@ -452,6 +454,7 @@ type
     FDNSCaches: TStringList;
     FEngine: TQHttpClientEngine;
     FDnsLookupOrder: TQDnsLookupOrder;
+    FDnsTTL: Cardinal;
     procedure Start(ARequest: TQHttpRequestItem);
     procedure RequestDone(ARequest: TQHttpRequestItem);
     procedure DoEventReqDone(ASender: TObject);
@@ -497,6 +500,7 @@ type
     function NewHeaders: IQHttpHeaders;
     property MaxClients: Integer read FMaxClients write FMaxClients;
     property DefaultHeaders: IQHttpHeaders read FDefaultHeaders;
+    property DnsTTL: Cardinal read FDnsTTL write FDnsTTL;
     property AfterRequestDone: TQHttpRequestNotifyEvent read FAfterRequestDone write FAfterRequestDone;
     property OnDnsLookup: TQHttpDNSLookupEvent read FOnDnsLookup write FOnDnsLookup;
     property Engine: TQHttpClientEngine read FEngine write SetEngine;
@@ -2146,17 +2150,20 @@ var
   Addrs: QStringW;
   function ActiveAddr: Cardinal;
   begin
-    AItem := AEntry.Active;
     Result := 0;
-    repeat
-      if AEntry.Active.Family = AF_INET then
-      begin
-        Result := AEntry.Active.LongAddr;
-        Exit;
-      end
-      else
-        AEntry.Next;
-    until AItem = AEntry.Active;
+    AItem := AEntry.Active;
+    if Assigned(AItem) then
+    begin
+      repeat
+        if AEntry.Active.Family = AF_INET then
+        begin
+          Result := AEntry.Active.LongAddr;
+          Exit;
+        end
+        else
+          AEntry.Next;
+      until AItem = AEntry.Active;
+    end;
   end;
   procedure DefaultLookup;
   var
@@ -2191,8 +2198,10 @@ begin
     if FDNSCaches.Find(AHost, I) then
     begin
       AEntry := TQDnsEntry(FDNSCaches.Objects[I]);
+      AEntry.Clean;
       Result := ActiveAddr;
-      Exit;
+      if Result <> 0 then
+        Exit;
     end;
     Addrs := '';
     if FDnsLookupOrder = dloSystemFirst then
@@ -2213,7 +2222,7 @@ begin
     end;
     if Length(Addrs) > 0 then
     begin
-      AEntry := TQDnsEntry.Create(Addrs);
+      AEntry := TQDnsEntry.Create(Addrs,DnsTTL);
       FDNSCaches.AddObject(AHost, AEntry);
       Result := ActiveAddr;
     end;
@@ -3582,7 +3591,7 @@ begin
   try
     repeat
       if Assigned(FRequestStream) then
-        FRequestStream.Position:=0;
+        FRequestStream.Position := 0;
       ReplaceHostIfNeeded;
       InternalExecute;
     until not DoRedirect;
@@ -3855,7 +3864,9 @@ begin
     finally
       FreeAndNil(AUrl);
     end;
-  end;
+  end
+  else
+    FReplacedUrl:=FFinalUrl;
 end;
 
 procedure TQBaseHttpClient.Reset;
@@ -4220,7 +4231,7 @@ begin
       else
         I := 0;
       CheckCurlCode(curl_easy_setopt(FHandle, CURLOPT_SSL_VERIFYPEER, I));
-      CheckCurlCode(curl_easy_setopt(FHandle, CURLOPT_SSL_VERIFYHOST,I));
+      CheckCurlCode(curl_easy_setopt(FHandle, CURLOPT_SSL_VERIFYHOST, I));
     end;
     if Assigned(FCookieManager) then
     begin
@@ -4698,14 +4709,59 @@ end;
 
 { TQDnsEntry }
 
-constructor TQDnsEntry.Create(const AValue: QStringW);
+procedure TQDnsEntry.Clean;
+var
+  T: Cardinal;
+  AItem, APrior: PQDnsEntryItem;
+begin
+  T := {$IFDEF UNICODE}TThread.{$ENDIF}GetTickCount;
+  AItem := FFirst;
+  APrior := nil;
+  while Assigned(AItem) do
+  begin
+    if AItem.ExpireTick < T then // 过期了
+    begin
+      if Assigned(APrior) then
+      begin
+        APrior.Next := AItem.Next;
+        if AItem = FLast then
+          FLast := APrior;
+      end
+      else
+      begin
+        FFirst := AItem.Next;
+        if FLast = AItem then
+          FLast := FFirst;
+      end;
+      Dispose(AItem);
+      if Assigned(APrior) then
+      begin
+        if AItem = FActive then
+          FActive := APrior.Next;
+        AItem := APrior.Next;
+      end
+      else
+      begin
+        if AItem = FActive then
+          FActive := FFirst;
+        AItem := FFirst;
+      end;
+    end
+    else
+      AItem := AItem.Next;
+  end;
+end;
+
+constructor TQDnsEntry.Create(const AValue: QStringW;DnsTTL:Cardinal);
 var
   p: PQCharW;
   AIdx: Integer;
   AItem: QStringA;
+  ATick:Cardinal;
   AEntry: PQDnsEntryItem;
 begin
   p := PQCharW(AValue);
+  ATick:={$IFDEF UNICODE}TThread.{$ENDIF}GetTickCount;
   // IPv6暂时不支持
   while p^ <> #0 do
   begin
@@ -4714,6 +4770,10 @@ begin
     AEntry.Family := AF_INET;
     AEntry.LongAddr := inet_addr({$IFDEF UNICODE}MarshaledAString{$ELSE}PAnsiChar{$ENDIF}(PQCharA(AItem)));
     AEntry.Next := nil;
+    if DnsTTL>0 then
+      AEntry.ExpireTick:=ATick+DnsTTL
+    else
+      AEntry.ExpireTick:=INFINITE;
     if not Assigned(FFirst) then
       FFirst := AEntry;
     if Assigned(FLast) then

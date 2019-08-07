@@ -23,7 +23,9 @@ unit QWinStackTracer;
   开户行：建设银行长春团风储蓄所
 }
 interface
+
 {$HPPEMIT '#pragma link "qwinstacktracer"'}
+
 uses classes, windows, sysutils, qstring;
 
 type
@@ -103,43 +105,33 @@ type
 
 {$A-}
 
-  PREAD_PROCESS_MEMORY_ROUTINE = function(hProcess: THandle;
-    lpBaseAddress: DWORD; lpBuffer: Pointer; nSize: DWORD;
+  PREAD_PROCESS_MEMORY_ROUTINE = function(hProcess: THandle; lpBaseAddress: DWORD; lpBuffer: Pointer; nSize: DWORD;
     var lpNumberOfBytesRead: DWORD): Boolean; stdcall;
 
-  PFUNCTION_TABLE_ACCESS_ROUTINE = function(hProcess: THandle; AddrBase: DWORD)
-    : Pointer; stdcall;
+  PFUNCTION_TABLE_ACCESS_ROUTINE = function(hProcess: THandle; AddrBase: DWORD): Pointer; stdcall;
 
-  PGET_MODULE_BASE_ROUTINE = function(hProcess: THandle; Address: DWORD)
+  PGET_MODULE_BASE_ROUTINE = function(hProcess: THandle; Address: DWORD): DWORD; stdcall;
+
+  PTRANSLATE_ADDRESS_ROUTINE = function(hProcess, hThread: THandle; lpaddr: LPADDRESS): DWORD; stdcall;
+
+  TSymLoadModule = function(hProcess, hFile: THandle; ImageName, ModuleName: PChar; BaseOfDll, SizeOfDll: DWORD)
     : DWORD; stdcall;
-
-  PTRANSLATE_ADDRESS_ROUTINE = function(hProcess, hThread: THandle;
-    lpaddr: LPADDRESS): DWORD; stdcall;
-
-  TSymLoadModule = function(hProcess, hFile: THandle;
-    ImageName, ModuleName: PChar; BaseOfDll, SizeOfDll: DWORD): DWORD; stdcall;
-  TSymGetSymFromAddr = function(hProcess: THandle; dwAddr: DWORD;
-    var dwDisplacement: DWORD; pSymbol: PIMAGEHLP_SYMBOL): Boolean; stdcall;
+  TSymGetSymFromAddr = function(hProcess: THandle; dwAddr: DWORD; var dwDisplacement: DWORD; pSymbol: PIMAGEHLP_SYMBOL)
+    : Boolean; stdcall;
   TSymSetOptions = function(SymOptions: DWORD): DWORD; stdcall;
-  TSymInitialize = function(hProcess: THandle; UserSearchPath: PChar;
-    fInvadeProcess: Boolean): Boolean; stdcall;
+  TSymInitialize = function(hProcess: THandle; UserSearchPath: PChar; fInvadeProcess: Boolean): Boolean; stdcall;
   TSymCleanup = function(hProcess: THandle): Boolean; stdcall;
-  TStackWalk = function(MachineType: DWORD; hProcess, hThread: THandle;
-    STACKFRAME: LPSTACKFRAME; ContextRecord: Pointer;
-    ReadMemoryRoutine: PREAD_PROCESS_MEMORY_ROUTINE;
-    FunctionTableAccessRoutine: PFUNCTION_TABLE_ACCESS_ROUTINE;
-    GetModuleBaseRoutine: PGET_MODULE_BASE_ROUTINE;
-    TranslateAddress: PTRANSLATE_ADDRESS_ROUTINE): Integer; stdcall;
-  TSymFunctionTableAccess = function(hProcess: THandle; AddrBase: DWORD)
-    : Pointer; stdcall;
-  TSymGetModuleBase = function(hProcess: THandle; Address: DWORD)
-    : DWORD; stdcall;
-  TSymGetLineFromAddr = function(hProcess: THandle; dwAddr: DWORD;
-    var dwDisplacement: DWORD; Line: PIMAGEHLP_LINE): Boolean; stdcall;
+  TStackWalk = function(MachineType: DWORD; hProcess, hThread: THandle; STACKFRAME: LPSTACKFRAME; ContextRecord: Pointer;
+    ReadMemoryRoutine: PREAD_PROCESS_MEMORY_ROUTINE; FunctionTableAccessRoutine: PFUNCTION_TABLE_ACCESS_ROUTINE;
+    GetModuleBaseRoutine: PGET_MODULE_BASE_ROUTINE; TranslateAddress: PTRANSLATE_ADDRESS_ROUTINE): Integer; stdcall;
+  TSymFunctionTableAccess = function(hProcess: THandle; AddrBase: DWORD): Pointer; stdcall;
+  TSymGetModuleBase = function(hProcess: THandle; Address: DWORD): DWORD; stdcall;
+  TSymGetLineFromAddr = function(hProcess: THandle; dwAddr: DWORD; var dwDisplacement: DWORD; Line: PIMAGEHLP_LINE)
+    : Boolean; stdcall;
   TStackFrames = array of STACKFRAME;
 function DebugHelperExists: Boolean;
 function GetThreadStacks(AThreadHandle: THandle): TStackFrames;
-function GetFunctionInfo(Addr: Pointer): String;
+function GetFunctionInfo(Addr: Pointer; var AFileName: String; var ALineNo: Cardinal): String;
 
 const
   //
@@ -173,7 +165,7 @@ var
 
 function DebugHelperExists: Boolean;
 begin
-Result := hDLL <> 0;
+  Result := hDLL <> 0;
 end;
 
 function LoadProc(AName: String): FARPROC;
@@ -181,30 +173,31 @@ var
   ARealName: String;
 begin
 {$IFDEF UNICODE}
-ARealName := AName + 'W';
+  ARealName := AName + 'W';
 {$ELSE}
-ARealName := AName + 'A';
-{$ENDIF}
-Result := GetProcAddress(hDLL, PChar(ARealName));
-if not Assigned(Result) then
-  Result := GetProcAddress(hDLL, PChar(AName));
-if not Assigned(Result) then
-  begin
-{$IFDEF UNICODE}
-  ARealName := AName + 'W64';
-{$ELSE}
-  ARealName := AName + '64';
+  ARealName := AName + 'A';
 {$ENDIF}
   Result := GetProcAddress(hDLL, PChar(ARealName));
+  if not Assigned(Result) then
+    Result := GetProcAddress(hDLL, PChar(AName));
+  if not Assigned(Result) then
+  begin
+{$IFDEF UNICODE}
+    ARealName := AName + 'W64';
+{$ELSE}
+    ARealName := AName + '64';
+{$ENDIF}
+    Result := GetProcAddress(hDLL, PChar(ARealName));
   end;
 end;
 
 function GetThreadStacks(AThreadHandle: THandle): TStackFrames;
 {$IFDEF WIN64}
 begin
-SetLength(Result,0);
+  SetLength(Result, 0);
 end;
 {$ELSE}
+
 var
   AFrame: STACKFRAME;
   AContext: PContext;
@@ -213,103 +206,107 @@ var
   I: Integer;
   function GetNextStackFrame(var ANextFrame: STACKFRAME): Boolean;
   begin
-  Result := WinStackWalk(IMAGE_FILE_MACHINE_I386, GetCurrentProcess(),
-    AThreadHandle, @AFrame, AContext, nil, WinSymFunctionTableAccess,
-    WinSymGetModuleBase, nil) <> 0;
-  if Result then
-    ANextFrame := AFrame;
+    Result := WinStackWalk(IMAGE_FILE_MACHINE_I386, GetCurrentProcess(), AThreadHandle, @AFrame, AContext, nil,
+      WinSymFunctionTableAccess, WinSymGetModuleBase, nil) <> 0;
+    if Result then
+      ANextFrame := AFrame;
   end;
 
 begin
-if not DebugHelperExists then
+  if not DebugHelperExists then
   begin
-  SetLength(Result, 0);
-  Exit;
+    SetLength(Result, 0);
+    Exit;
   end;
-GetMem(pMem, SizeOf(TContext) + 15);
-if (IntPtr(pMem) and $F) <> 0 then
-  AContext := Pointer(((IntPtr(pMem) shr 4) + 1) shl 4)
-else
-  AContext := pMem;
-SetLength(Result, 0);
-SuspendThread(AThreadHandle);
-try
-  AContext.ContextFlags := CONTEXT_CONTROL;
-  if GetThreadContext(AThreadHandle, AContext^) then
+  GetMem(pMem, SizeOf(TContext) + 15);
+  if (IntPtr(pMem) and $F) <> 0 then
+    AContext := Pointer(((IntPtr(pMem) shr 4) + 1) shl 4)
+  else
+    AContext := pMem;
+  SetLength(Result, 0);
+  SuspendThread(AThreadHandle);
+  try
+    AContext.ContextFlags := CONTEXT_CONTROL;
+    if GetThreadContext(AThreadHandle, AContext^) then
     begin
-    FillChar(AFrame, SizeOf(AFrame), 0);
-    AFrame.AddrPC.Offset := AContext.Eip;
-    AFrame.AddrPC.Mode := DWORD(AddrModeFlat);
-    AFrame.AddrStack.Offset := AContext.Esp;
-    AFrame.AddrStack.Mode := DWORD(AddrModeFlat);
-    AFrame.AddrFrame.Offset := AContext.Ebp;
-    AFrame.AddrFrame.Mode := DWORD(AddrModeFlat);
-    SetLength(Result, MAX_SYMNAME_SIZE);
-    I := 0;
-    while (I<MAX_SYMNAME_SIZE) and GetNextStackFrame(Result[I]) do
-      Inc(I);
-    SetLength(Result, I);
+      FillChar(AFrame, SizeOf(AFrame), 0);
+      AFrame.AddrPC.Offset := AContext.Eip;
+      AFrame.AddrPC.Mode := DWORD(AddrModeFlat);
+      AFrame.AddrStack.Offset := AContext.Esp;
+      AFrame.AddrStack.Mode := DWORD(AddrModeFlat);
+      AFrame.AddrFrame.Offset := AContext.Ebp;
+      AFrame.AddrFrame.Mode := DWORD(AddrModeFlat);
+      SetLength(Result, MAX_SYMNAME_SIZE);
+      I := 0;
+      while (I < MAX_SYMNAME_SIZE) and GetNextStackFrame(Result[I]) do
+        Inc(I);
+      SetLength(Result, I);
     end;
-finally
-  ResumeThread(AThreadHandle);
-  FreeMem(pMem);
-end;
+  finally
+    ResumeThread(AThreadHandle);
+    FreeMem(pMem);
+  end;
 end;
 {$ENDIF}
 
-function GetFunctionInfo(Addr: Pointer): String;
+function GetFunctionInfo(Addr: Pointer; var AFileName: String; var ALineNo: Cardinal): String;
 var
-  sName: array [0 .. $FF] of Char;
+  sName: array [0 .. MAX_PATH] of Char;
   mbi: MEMORY_BASIC_INFORMATION;
+  AProcess: THandle;
   procedure LoadSym(Addr: Pointer);
   var
-    sPath: array [0 .. 4095] of Char;
     mbi: MEMORY_BASIC_INFORMATION;
   begin
-  FillChar(mbi, SizeOf(MEMORY_BASIC_INFORMATION), 0);
-  VirtualQuery(Addr, mbi, SizeOf(mbi));
-  GetModuleFileName(Cardinal(mbi.AllocationBase), sPath, MAX_PATH);
-  WinSymLoadModule(GetCurrentProcess(), 0, sPath, nil,
-    DWORD(mbi.AllocationBase), 0);
+    FillChar(mbi, SizeOf(MEMORY_BASIC_INFORMATION), 0);
+    VirtualQuery(Addr, mbi, SizeOf(mbi));
+    WinSymLoadModule(AProcess, 0, @sName[0], nil, DWORD(mbi.AllocationBase), 0);
   end;
+
   function GetFunctionName: String;
   var
     dwDisplacement: DWORD;
     buffer: array [0 .. 4095] of BYTE;
     pSymbol: PIMAGEHLP_SYMBOL;
+    ALine:IMAGEHLP_LINE;
   begin
-  Result := '';
-  FillChar(buffer, 4096, 0);
-  pSymbol := PIMAGEHLP_SYMBOL(@buffer);
-  pSymbol.SizeOfStruct := SizeOf(IMAGEHLP_SYMBOL);
-  pSymbol.MaxNameLen := SizeOf(buffer) - SizeOf(IMAGEHLP_SYMBOL) + 1;
-  LoadSym(Addr);
-  if (WinSymGetSymFromAddr(GetCurrentProcess(), DWORD(Addr), dwDisplacement,
-    pSymbol)) then
+    Result := '';
+    FillChar(buffer, 4096, 0);
+    pSymbol := PIMAGEHLP_SYMBOL(@buffer);
+    pSymbol.SizeOfStruct := SizeOf(IMAGEHLP_SYMBOL);
+    pSymbol.MaxNameLen := SizeOf(buffer) - SizeOf(IMAGEHLP_SYMBOL) + 1;
+    LoadSym(Addr);
+    if (WinSymGetSymFromAddr(AProcess, DWORD(Addr), dwDisplacement, pSymbol)) then
     begin
-    if (pSymbol.Flags and $00000800) <> 0 then
-      Result := PChar(@pSymbol.Name);
+      if (pSymbol.Flags and $00000800) <> 0 then
+        Result := PChar(@pSymbol.Name);
     end;
+    FillChar(ALine,SizeOf(ALine),0);
+    ALine.SizeOfStruct:=Sizeof(ALine);
+    if WinSymGetLineFromAddr(AProcess,DWORD(Addr),dwDisplacement,@ALine) then
+      ALineNo:=ALine.LineNumber;
   end;
 
 begin
-if (VirtualQuery(Addr, mbi, SizeOf(mbi)) = 0) or (mbi.State <> MEM_COMMIT) then
-  Exit;
-if (GetModuleFileName(HModule(mbi.AllocationBase), @sName, 256) = 0) then
-  Exit;
-Result := GetFunctionName;
-if Length(Result) > 0 then
-  Result := ExtractFileName(sName) + '.' + Result
-else
-  Result := ExtractFileName(sName) + '.' + IntToHex(IntPtr(Addr),
-    SizeOf(Pointer) shl 1);
+  Result := '';
+  if (VirtualQuery(Addr, mbi, SizeOf(mbi)) = 0) or (mbi.State <> MEM_COMMIT) then
+    Exit;
+  if (GetModuleFileName(HModule(mbi.AllocationBase), @sName, MAX_PATH) = 0) then
+    Exit;
+  AFileName := sName;
+  AProcess := GetCurrentProcess;
+  Result := GetFunctionName;
+  if Length(Result) > 0 then
+    Result := ExtractFileName(sName) + '.' + Result
+  else
+    Result := ExtractFileName(sName) + '.' + IntToHex(IntPtr(Addr), SizeOf(Pointer) shl 1);
 end;
 
 initialization
 
 hDLL := LoadLibrary('dbghelp.dll');
 if hDLL <> 0 then
-  begin
+begin
   WinSymLoadModule := LoadProc('SymLoadModule');
   WinSymGetSymFromAddr := LoadProc('SymGetSymFromAddr');
   WinSymSetOptions := LoadProc('SymSetOptions');
@@ -319,13 +316,12 @@ if hDLL <> 0 then
   WinSymFunctionTableAccess := LoadProc('SymFunctionTableAccess');
   WinSymGetModuleBase := LoadProc('SymGetModuleBase');
   WinSymGetLineFromAddr := LoadProc('SymGetLineFromAddr');
-  WinSymSetOptions(SYMOPT_UNDNAME or SYMOPT_DEFERRED_LOADS or
-    SYMOPT_LOAD_LINES);
+  WinSymSetOptions(SYMOPT_UNDNAME or SYMOPT_DEFERRED_LOADS or SYMOPT_LOAD_LINES);
   WinSymInitialize(GetCurrentProcess(), nil, True);
   WinSymSetOptions(SYMOPT_UNDNAME or SYMOPT_LOAD_LINES);
-  end
+end
 else
-  begin
+begin
   WinSymLoadModule := nil;
   WinSymGetSymFromAddr := nil;
   WinSymSetOptions := nil;
@@ -335,7 +331,7 @@ else
   WinSymFunctionTableAccess := nil;
   WinSymGetModuleBase := nil;
   WinSymGetLineFromAddr := nil;
-  end;
+end;
 
 finalization
 
