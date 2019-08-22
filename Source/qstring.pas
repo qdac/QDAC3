@@ -1456,7 +1456,6 @@ function FindSwitchValue(ASwitch: QStringW; ANameValueSperator: QCharW = ':'): Q
 function MonthFirstDay(ADate: TDateTime): TDateTime;
 function MergeAddr(const AProv, ACity, ACounty, ATownship, AVillage, ADetail: QStringW; AIgnoreCityIfSameEnding: Boolean)
   : QStringW;
-
 var
   JavaFormatUtf8: Boolean;
   IsFMXApp: Boolean;
@@ -1535,7 +1534,7 @@ var
 const
   // HTML转义表
 
-  HtmlEscapeChars: array [32 .. 255] of String = ('&nbsp;', #33, '&quot;', #35, #36, #37, '&amp;', '&apos;', #40, #41, //
+  HtmlEscapeChars: array [32 .. 255] of QStringW = ('&nbsp;', #33, '&quot;', #35, #36, #37, '&amp;', '&apos;', #40, #41, //
     #42, #43, #44, #45, #46, #47, #48, #49, #50, #51, //
     #52, #53, #54, #55, #56, #57, #58, #59, '&lt;', #61, //
     '&gt;', #63, #64, #65, #66, #67, #68, #69, #70, #71, //
@@ -1544,17 +1543,20 @@ const
     #92, #93, #94, #95, #96, #97, #98, #99, #100, #101, //
     #102, #103, #104, #105, #106, #107, #108, #109, #110, #111, //
     #112, #113, #114, #115, #116, #117, #118, #119, #120, #121, //
-    #122, #123, #124, #125, #126, #127, #128, #129, #130, #131, //
-    #132, #133, #134, #135, #136, #137, #138, #139, #140, #141, //
-    #142, #143, #144, #145, #146, #147, #148, #149, #150, #151, //
-    #152, #153, #154, #155, #156, #157, #158, #159, #160, '&iexcl;', //
+    #122, #123, #124, #125, #126, #127, WideChar(128), WideChar(129), WideChar(130), WideChar(131), //
+    WideChar(132), WideChar(133), WideChar(134), WideChar(135), WideChar(136), WideChar(137), WideChar(138), WideChar(139),
+    WideChar(140), WideChar(141), //
+    WideChar(142), WideChar(143), WideChar(144), WideChar(145), WideChar(146), WideChar(147), WideChar(148), WideChar(149),
+    WideChar(150), WideChar(151), //
+    WideChar(152), WideChar(153), WideChar(154), WideChar(155), WideChar(156), WideChar(157), WideChar(158), WideChar(159),
+    WideChar(160), '&iexcl;', //
     '&cent;', '&pound;', '&curren;', '&yen;', '&brvbar;', '&sect;', '&uml;', '&copy;', '&ordf;', '&laquo;', //
-    '&not;', '&shy;', '&reg;', '&macr;', '&deg;', '&plusmn;', #178, #179, '&acute;', '&micro;', //
-    '&para;', '&middot;', '&cedil;', #185, '&ordm;', '&raquo;', #188, #189, #190, '&iquest;', //
-    '&Agrave;', '&Aacute;', '&circ;', '&Atilde;', #196, '&ring;', '&AElig;', '&Ccedil;', '&Egrave;', '&Eacute;', //
+    '&not;', '&shy;', '&reg;', '&macr;', '&deg;', '&plusmn;', WideChar(178), WideChar(179), '&acute;', '&micro;', //
+    '&para;', '&middot;', '&cedil;', WideChar(185), '&ordm;', '&raquo;', WideChar(188), WideChar(189), WideChar(190), '&iquest;', //
+    '&Agrave;', '&Aacute;', '&circ;', '&Atilde;',WideChar(196), '&ring;', '&AElig;', '&Ccedil;', '&Egrave;', '&Eacute;', //
     '&Ecirc;', '&Euml;', '&Igrave;', '&Iacute;', '&Icirc;', '&Iuml;', '&ETH;', '&Ntilde;', '&Ograve;', '&Oacute;', //
     '&Ocirc;', '&Otilde;', '&Ouml;', '&times;', '&Oslash;', '&Ugrave;', '&Uacute;', '&Ucirc;', '&Uuml;', '&Yacute;', //
-    '&THORN;', '&szlig;', '&agrave;', '&aacute;', #226, '&atilde;', '&auml;', '&aring;', '&aelig;', '&ccedil;', //
+    '&THORN;', '&szlig;', '&agrave;', '&aacute;',WideChar(226), '&atilde;', '&auml;', '&aring;', '&aelig;', '&ccedil;', //
     '&egrave;', '&eacute;', '&ecirc;', '&euml;', '&igrave;', '&iacute;', '&icirc;', '&iuml;', '&ieth;', '&ntilde;', '&ograve;',
     '&oacute;', '&ocirc;', '&otilde;', '&ouml;', '&divide;', '&oslash;', '&ugrave;', '&uacute;', '&ucirc;', //
     '&uuml;', '&yacute;', '&thorn;', '&yuml;');
@@ -2574,7 +2576,7 @@ end;
 
 function IsSpaceW(const c: PQCharW; ASpaceSize: PInteger): Boolean;
 begin
-  Result := (c^ = #9) or (c^ = #10) or (c^ = #13) or (c^ = #32) or (c^ = #$A0) or (c^ = #$3000);
+  Result := (c^ = #9) or (c^ = #10) or (c^ = #13) or (c^ = #32) or (c^ = WideChar($A0)) or (c^ = #$3000);
   if Result and Assigned(ASpaceSize) then
     ASpaceSize^ := 1;
 end;
@@ -7612,7 +7614,7 @@ var
 begin
   // 计算实际的长度
   c := 0;
-  ABookmarkCount:=0;
+  ABookmarkCount := 0;
   ps := PByte(ABytes);
   pe := PByte(IntPtr(ps) + l);
   while IntPtr(ps) < IntPtr(pe) do
@@ -7632,10 +7634,10 @@ begin
       if (ps^ = 32) and ASpacesAsPlus then
         Inc(ps)
       else if ps^ = Ord('#') then
-        begin
+      begin
         Inc(ps);
         Inc(ABookmarkCount);
-        end
+      end
       else
       begin
         if (ps^ < 32) or (ps^ > 127) or (SafeChars[ps^] = 0) then
@@ -7706,7 +7708,7 @@ function UrlEncode(const ABytes: TBytes; ASpacesAsPlus, AEncodePercent: Boolean;
   : QStringW; overload;
 begin
   if Length(ABytes) > 0 then
-    Result := UrlEncode(@ABytes[0], Length(ABytes), ASpacesAsPlus, AEncodePercent,ABookmarkEncode)
+    Result := UrlEncode(@ABytes[0], Length(ABytes), ASpacesAsPlus, AEncodePercent, ABookmarkEncode)
   else
     SetLength(Result, 0);
 end;
@@ -7875,7 +7877,7 @@ begin
         while p^ <> #0 do
         begin
           V := DecodeTokenW(p, ParamDelimiter, QCharW(0), false, True);
-          if DecodeUrlStr(NameOfW(V, '='), N) and DecodeUrlStr(ValueOfW(V, '=',true), V) then
+          if DecodeUrlStr(NameOfW(V, '='), N) and DecodeUrlStr(ValueOfW(V, '=', True), V) then
             AParams.Add(N + '=' + V)
           else
           begin
@@ -9628,7 +9630,7 @@ begin
   begin
     pDeleteStart := FDest;
     Inc(pDeleteStart, AStart);
-    if pDeleteStart < FStart then
+    if IntPtr(pDeleteStart) < IntPtr(FStart) then
     begin
       Dec(ACount, IntPtr(FStart) - IntPtr(pDeleteStart));
       pDeleteStart := FStart;
@@ -9638,17 +9640,18 @@ begin
   begin
     pDeleteStart := FStart;
     Inc(pDeleteStart, AStart);
-    if pDeleteStart >= FDest then // 没有可以删除的内容
+    if IntPtr(pDeleteStart) >= IntPtr(FDest) then // 没有可以删除的内容
       Exit;
   end;
   pDeleteEnd := pDeleteStart + ACount;
-  if (pDeleteEnd >= FDest) or (pDeleteEnd <= FStart) then
+  if (IntPtr(pDeleteEnd) >= IntPtr(FDest)) or (IntPtr(pDeleteEnd) <= IntPtr(FStart)) then
     FDest := pDeleteStart
   else
   begin
     ATotal := IntPtr(FDest) - IntPtr(pDeleteEnd);
     Move(pDeleteEnd^, pDeleteStart^, ATotal);
-    FDest := pDeleteStart + ATotal;
+    FDest := pDeleteStart;
+    Inc(FDest, ATotal);
   end;
 end;
 
@@ -12514,7 +12517,7 @@ var
     if (Length(S) > 0) and (not EndWithW(PWideChar(Result), PWideChar(S), false)) then
     begin
       Result := Result + S;
-      if StartWithW(p, PChar(S), false) then
+      if StartWithW(p, PWideChar(S), false) then
         Inc(p, Length(S));
     end;
   end;
@@ -12531,7 +12534,7 @@ begin
       begin
         if not AIgnoreCityIfSameEnding then
           Cat(LeftStrW(ACity, Length(ACity) - 1, false))
-        else if StartWithW(p, PChar(ACity), false) then
+        else if StartWithW(p, PWideChar(ACity), false) then
           Inc(p, Length(ACity));
       end
       else

@@ -94,7 +94,7 @@ type
     function ToChar(V: Cardinal): Char; virtual; abstract;
     function FromChar(C: Char): Cardinal; virtual; abstract;
   public
-    function ToString(AValue: UInt64): String;
+    function ToString(AValue: UInt64): String;overload;
     function FromString(AValue: String): UInt64; overload;
     function FromString(AValue: String; ADefVal: UInt64): UInt64; overload;
     /// <summary>
@@ -163,6 +163,7 @@ class function TQBinaryConverter.NewSimple(const AMaps: array of Char): IQBinary
 begin
   Result := TQSimpleBinaryConverter.Create(AMaps);
 end;
+
 
 class function TQBinaryConverter.NewSimple(const AMaps: String): IQBinaryConverter;
 begin

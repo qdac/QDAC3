@@ -911,13 +911,107 @@ type
   public
     constructor Create(AOwner: TQWorkers); overload;
     destructor Destroy; override;
+    
+    /// <summary>
+    ///   投送一个信号到队列中
+    /// </summary>
+    /// <param name="AId">
+    ///   信号 ID
+    /// </param>
+    /// <param name="AData">
+    ///   附加数据
+    /// </param>
+    /// <param name="AFreeType">
+    ///   附加数据释放方式
+    /// </param>
+    /// <returns>
+    ///   如果作业成功被投递到队列中，则返回 true，否则返回 false。
+    /// </returns>
+    /// <remarks>
+    ///   Post 到队列中的信号会等待前一个信号处理完成，才会触发下一个，所以不适合需要立即予以响应的操作。
+    /// </remarks>
     function Post(AId: Integer; AData: Pointer; AFreeType: TQJobDataFreeType = jdfFreeByUser): Boolean; overload;
+    /// <summary>
+    ///   投送一个信号到队列中
+    /// </summary>
+    /// <param name="AName">
+    ///   信号名称
+    /// </param>
+    /// <param name="AData">
+    ///   附加数据
+    /// </param>
+    /// <param name="AFreeType">
+    ///   附加数据释放方式
+    /// </param>
+    /// <returns>
+    ///   如果作业成功被投递到队列中，则返回 true，否则返回 false。
+    /// </returns>
+    /// <remarks>
+    ///   Post 到队列中的信号会等待前一个信号处理完成，才会触发下一个，所以不适合需要立即予以响应的操作。
+    /// </remarks>
     function Post(AName: QStringW; AData: Pointer; AFreeType: TQJobDataFreeType = jdfFreeByUser): Boolean; overload;
+    /// <summary>
+    ///   立即触发一个信号执行
+    /// </summary>
+    /// <param name="AId">
+    ///   信号 ID
+    /// </param>
+    /// <param name="AData">
+    ///   附加数据
+    /// </param>
+    /// <param name="AFreeType">
+    ///   附加数据释放方式
+    /// </param>
+    /// <param name="ATimeout">
+    ///   等待信号处理完成的超时，如果为0，则不等待，在信号触发完成后立即返回
+    /// </param>
+    /// <returns>
+    ///   如果 
+    ///   ATimeout&gt;0，则如果在指定的超时内完成，那就会返回wrSignaled，如果未执行完，会返回wrTimeout，否则立即返回 
+    ///   wrSignaled <br />
+    /// </returns>
+    /// <remarks>
+    ///   Send 会立即触发信号并将子任务的执行派发到工作者队列中安排执行，实际的执行时机受当前的可用工作者数据限制，有可能不会立即执行
+    /// </remarks>
+
     function Send(AId: Integer; AData: Pointer; AFreeType: TQJobDataFreeType = jdfFreeByUser; ATimeout: Cardinal = INFINITE)
       : TWaitResult; overload;
+    /// <summary>
+    ///   立即触发一个信号执行
+    /// </summary>
+    /// <param name="AName">
+    ///   信号名称
+    /// </param>
+    /// <param name="AData">
+    ///   附加数据
+    /// </param>
+    /// <param name="AFreeType">
+    ///   附加数据释放方式
+    /// </param>
+    /// <param name="ATimeout">
+    ///   等待信号处理完成的超时，如果为0，则不等待，在信号触发完成后立即返回
+    /// </param>
+    /// <returns>
+    ///   如果 
+    ///   ATimeout&gt;0，则如果在指定的超时内完成，那就会返回wrSignaled，如果未执行完，会返回wrTimeout，否则立即返回 
+    ///   wrSignaled <br />
+    /// </returns>
+    /// <remarks>
+    ///   Send 会立即触发信号并将子任务的执行派发到工作者队列中安排执行，实际的执行时机受当前的可用工作者数据限制，有可能不会立即执行
+    /// </remarks>
     function Send(AName: QStringW; AData: Pointer; AFreeType: TQJobDataFreeType = jdfFreeByUser; ATimeout: Cardinal = INFINITE)
       : TWaitResult; overload;
+      
+    /// <summary>
+    ///   队列允许缓存的信号最大数量，默认为4096
+    /// </summary>
+    /// <remarks>
+    ///   注意，由于队列中的项目是依次触发，所以等待信号的函数是否执行不取决于信号投递时的等待函数个数，而是取决于信号触发时的等待函数个数
+    /// </remarks>
     property MaxItems: Integer read FMaxItems write FMaxItems;
+    /// <summary>
+    ///   当前队列中实际的元素个数
+    /// </summary>
     property Count: Integer read FCount;
   end;
 
@@ -7462,7 +7556,8 @@ begin
       FFirst := FFirst.Next;
     if not Assigned(FFirst) then
       FLast := nil;
-    Dec(FCount);
+    if Assigned(FLastPop) then
+      Dec(FCount);
   finally
     FLocker.Leave;
   end;
@@ -7495,7 +7590,9 @@ begin
     FLocker.Leave;
     if ADoFire then
       FireNext;
-  end;
+  end
+  else
+    FreeItem(AItem);
 end;
 
 function TQSignalQueue.NewItem(AId: Integer; AData: Pointer; AFreeType: TQJobDataFreeType; AWaiter: TEvent): PQSignalQueueItem;

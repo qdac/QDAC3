@@ -562,6 +562,8 @@ end;
 {$IFDEF MSWINDOWS}
 
 function StackByThreadHandle(AThread: THandle): QStringW;
+const
+  MAX_FRAMES = 30;
 var
 {$IFDEF USE_JCLDEBUG}
   AStacks: TJclStackInfoList;
@@ -621,8 +623,8 @@ begin
   begin
     try
       C := AStacks.Count;
-      if C > 20 then
-        C := 20;
+      if C > MAX_FRAMES then
+        C := MAX_FRAMES;
       for I := 0 to C - 1 do
       begin
         if Symbols.Locate(AStacks.Items[I].CallerAddr, AInfo) then
@@ -644,8 +646,8 @@ begin
     else
       Break;
   end;
-  if C > 20 then
-    C := 20;
+  if C > MAX_FRAMES then
+    C := MAX_FRAMES;
   for I := Low(AFrames) to C do
   begin
     if Symbols.Locate(Pointer(AFrames[I].AddrPC.Offset - 6), AInfo) then
@@ -653,7 +655,7 @@ begin
     else
     begin
       AInfo.Reset;
-      AInfo.Addr:=Pointer(AFrames[I].AddrPC.Offset);
+      AInfo.Addr := Pointer(AFrames[I].AddrPC.Offset);
       AInfo.FunctionName := GetFunctionInfo(AInfo.Addr, AInfo.FileName, AInfo.LineNo);
       Result := Result + AInfo.ToString + #13#10;
     end;
@@ -894,7 +896,7 @@ begin
     Result := AFile.Locate(Addr, AInfo)
   else if DebugHelperExists then
   begin
-    AInfo.Addr:=Addr;
+    AInfo.Addr := Addr;
     AInfo.FunctionName := GetFunctionInfo(Addr, AInfo.FileName, AInfo.LineNo);
     AInfo.UnitName := '';
     Result := Length(AInfo.FunctionName) > 0;
@@ -1173,7 +1175,6 @@ function TQDebugSymbols.Locate(const Addr: Pointer): TQSymbolLocation;
 begin
   Locate(Addr, Result);
 end;
-
 
 { TQSymbolBase }
 
@@ -1808,33 +1809,65 @@ begin
   end;
 end;
 
+function RtlCaptureStackBackTrace(FramesToSkip, FramesToCapture: DWORD; var BackTrace: Pointer; BackTraceHash: PCardinal): Word;
+  stdcall; external kernel32;
+
 function DoGetExceptionStacks(p: System.PExceptionRecord): Pointer;
 var
-  ATemp: QStringW;
-  S: PQCharW;
-  ALocation: TQSymbolLocation;
+  AStack: PPointer;
+  ACount: Integer;
 begin
-  New(PString(Result));
-  ATemp := StackByThreadHandle(GetCurrentThread);
-  S := PQCharW(ATemp);
-  // 跳过此函数
-  SkipLineW(S);
-  // 跳过System.SysUtils.Exception.RaisingException
-  SkipLineW(S);
-  if LocateSymbol(p.ExceptionAddress, ALocation) then
-    PQStringW(Result)^ := ALocation.ToString + SLineBreak + S
-  else
-    PQStringW(Result)^ := ALocation.ToString + S;
+  GetMem(AStack, SizeOf(Pointer) * 34);
+  FillChar(AStack^, SizeOf(Pointer) * 34, 0);
+  Result := AStack;
+  AStack^ := p.ExceptionAddress;
+  Inc(AStack);
+  // ACount:=
+  RtlCaptureStackBackTrace(2, 32, AStack^, nil);
+  // DebugOut('Count=%d',[ACount]);
+  // New(PString(Result));
+  // ATemp := StackByThreadHandle(GetCurrentThread);
+  // DebugOut('Stacks:%s',[ATemp]);
+  // S := PQCharW(ATemp);
+  // // 跳过此函数
+  // SkipLineW(S);
+  // // 跳过System.SysUtils.Exception.RaisingException
+  // SkipLineW(S);
+  // if LocateSymbol(p.ExceptionAddress, ALocation) then
+  // PQStringW(Result)^ := ALocation.ToString + SLineBreak + S
+  // else
+  // PQStringW(Result)^ := ALocation.ToString + S;
 end;
 
 procedure DoCleanupStacks(Info: Pointer);
 begin
-  Dispose(PQStringW(Info));
+  if Assigned(Info) then
+    FreeMem(Info);
 end;
 
 function DoGetStackInfoString(Info: Pointer): string;
+var
+  C: Integer;
+  pStack: PPointer;
+  ALocation: TQSymbolLocation;
 begin
-  Result := PQStringW(Info)^;
+  Result := '';
+  if Assigned(Info) then
+  begin
+    pStack := Info;
+    while pStack^ <> nil do
+    begin
+      if LocateSymbol(pStack^, ALocation) then
+        Result := Result + ALocation.ToString + SLineBreak
+      else
+      begin
+        ALocation.Reset;
+        ALocation.Addr := pStack^;
+        Result := Result + ALocation.ToString + SLineBreak;
+      end;
+      Inc(pStack);
+    end;
+  end;
 end;
 
 { TQSymbolLocation }
@@ -1851,11 +1884,10 @@ end;
 function TQSymbolLocation.ToString: String;
 begin
   Result := IntToHex(NativeInt(Addr), SizeOf(NativeInt) shl 1) + ' ' + FileName;
-  if (Length(Result) > 0) and (LineNo <> 0) then
-    Result := Result + '[' + IntToStr(LineNo) + ']:'
-  else
-    Result := Result + ':';
-  Result := Result + FunctionName;
+  if LineNo <> 0 then
+    Result := Result + '[' + IntToStr(LineNo) + ']';
+  if Length(FunctionName) > 0 then
+    Result := Result + ':' + FunctionName;
 end;
 
 initialization

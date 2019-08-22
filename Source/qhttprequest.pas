@@ -417,7 +417,7 @@ type
   protected
     FFirst, FLast, FActive: PQDnsEntryItem;
   public
-    constructor Create(const AValue: QStringW;DnsTTL:Cardinal); overload;
+    constructor Create(const AValue: QStringW; DnsTTL: Cardinal); overload;
     destructor Destroy; override;
     procedure Clean;
     function First: PQDnsEntryItem; inline;
@@ -566,7 +566,7 @@ function NewHttpClient(AType: TQHttpClientEngine): IQHttpClient;
 
 implementation
 
-uses zlib, libcurl, qdac_ssl, qdac_ssl_ics
+uses zlib, libcurl{$IFDEF NATIVE_SSL_ENABLED}, qdac_ssl, qdac_ssl_ics{$ENDIF}
 {$IFDEF MSWINDOWS} , windows, messages, winsock{$ENDIF}
 {$IFDEF POSIX}, System.Net.Socket, Posix.Base, Posix.Stdio, Posix.Pthread,
   Posix.UniStd, IOUtils, Posix.NetDB, Posix.SysSocket, Posix.Fcntl,
@@ -777,7 +777,9 @@ type
   protected
     FHandle: THandle;
     FSentBytes, FRecvBytes: Int64;
+    {$IFDEF NATIVE_SSL_ENABLED}
     FSSL: IQSSLItem;
+    {$ENDIF}
     procedure InternalExecute; override;
   public
     constructor Create;
@@ -1373,29 +1375,22 @@ begin
 end;
 
 function TQUrl.GetUrlWithoutParams: QStringW;
-  procedure DoEncode;
-  begin
-    if Length(FScheme) = 0 then
-      FUrl := 'http'
-    else
-      FUrl := LowerCase(FScheme);
-    FUrl := FUrl + '://';
-    if Length(FUserName) > 0 then
-    begin
-      FUrl := FUrl + UrlEncode(FUserName, SpaceAsPlus, true, true, ubeAll);
-      if Length(FPassword) > 0 then
-        FUrl := FUrl + ':' + UrlEncode(FPassword, SpaceAsPlus, true, true, ubeAll);
-      FUrl := FUrl + '@';
-    end;
-    FUrl := FUrl + RequestHost;
-    FUrl := FUrl + Document;
-    FChanged := false;
-  end;
-
 begin
-  if FChanged then
-    DoEncode;
-  Result := FUrl;
+  Result := '';
+  if Length(FScheme) = 0 then
+    Result := 'http'
+  else
+    Result := LowerCase(FScheme);
+  Result := Result + '://';
+  if Length(FUserName) > 0 then
+  begin
+    Result := Result + UrlEncode(FUserName, SpaceAsPlus, true, true, ubeAll);
+    if Length(FPassword) > 0 then
+      Result := Result + ':' + UrlEncode(FPassword, SpaceAsPlus, true, true, ubeAll);
+    Result := Result + '@';
+  end;
+  Result := Result + RequestHost;
+  Result := Result + Document;
 end;
 
 procedure TQUrl.RandSortParams;
@@ -2222,7 +2217,7 @@ begin
     end;
     if Length(Addrs) > 0 then
     begin
-      AEntry := TQDnsEntry.Create(Addrs,DnsTTL);
+      AEntry := TQDnsEntry.Create(Addrs, DnsTTL);
       FDNSCaches.AddObject(AHost, AEntry);
       Result := ActiveAddr;
     end;
@@ -2555,7 +2550,8 @@ var
 begin
   if Assigned(ARequest) then
   begin
-    ARequest.HttpClient.Reset;
+    if Assigned(ARequest.HttpClient) then
+      ARequest.HttpClient.Reset;
     ARequest.FIsDone := true;
     ARequest._AddRef;
     Lock;
@@ -3866,7 +3862,7 @@ begin
     end;
   end
   else
-    FReplacedUrl:=FFinalUrl;
+    FReplacedUrl := FFinalUrl;
 end;
 
 procedure TQBaseHttpClient.Reset;
@@ -4353,9 +4349,11 @@ var
   begin
     while ASize > 0 do
     begin
+    {$IFDEF NATIVE_SSL_ENABLED}
       if Assigned(FSSL) then
         ASent := FSSL.Write(p^, ASize)
       else
+    {$ENDIF}
         ASent := send(FHandle, p^, ASize, 0);
       if ASent <> SOCKET_ERROR then
       begin
@@ -4369,9 +4367,11 @@ var
   end;
   function RecvData(p: Pointer; ACount: Integer): Integer;
   begin
+    {$IFDEF NATIVE_SSL_ENABLED}
     if Assigned(FSSL) then
       Result := FSSL.read(p^, ACount)
     else
+    {$ENDIF}
       Result := recv(FHandle, p^, ACount, 0);
   end;
   procedure SendRequest;
@@ -4675,6 +4675,7 @@ begin
   try
     AUrl.Url := FReplacedUrl;
     DoConnect;
+    {$IFDEF NATIVE_SSL_ENABLED}
     if SameText(AUrl.Scheme, 'https') then
     begin
       FSSL := TQSSLManager.ActiveFactory.NewItem;
@@ -4684,6 +4685,7 @@ begin
     end
     else
       FSSL := nil;
+    {$ENDIF}
     SendRequest;
     RecvResponse;
     if FResponseHeaders.Count > 0 then
@@ -4700,7 +4702,9 @@ begin
     FreeAndNil(AUrl);
     if FHandle <> 0 then
     begin
+      {$IFDEF NATIVE_SSL_ENABLED}
       FSSL := nil;
+      {$ENDIF}
       closesocket(FHandle);
       FHandle := 0;
     end;
@@ -4752,16 +4756,16 @@ begin
   end;
 end;
 
-constructor TQDnsEntry.Create(const AValue: QStringW;DnsTTL:Cardinal);
+constructor TQDnsEntry.Create(const AValue: QStringW; DnsTTL: Cardinal);
 var
   p: PQCharW;
   AIdx: Integer;
   AItem: QStringA;
-  ATick:Cardinal;
+  ATick: Cardinal;
   AEntry: PQDnsEntryItem;
 begin
   p := PQCharW(AValue);
-  ATick:={$IFDEF UNICODE}TThread.{$ENDIF}GetTickCount;
+  ATick := {$IFDEF UNICODE}TThread.{$ENDIF}GetTickCount;
   // IPv6暂时不支持
   while p^ <> #0 do
   begin
@@ -4770,10 +4774,10 @@ begin
     AEntry.Family := AF_INET;
     AEntry.LongAddr := inet_addr({$IFDEF UNICODE}MarshaledAString{$ELSE}PAnsiChar{$ENDIF}(PQCharA(AItem)));
     AEntry.Next := nil;
-    if DnsTTL>0 then
-      AEntry.ExpireTick:=ATick+DnsTTL
+    if DnsTTL > 0 then
+      AEntry.ExpireTick := ATick + DnsTTL
     else
-      AEntry.ExpireTick:=INFINITE;
+      AEntry.ExpireTick := INFINITE;
     if not Assigned(FFirst) then
       FFirst := AEntry;
     if Assigned(FLast) then
