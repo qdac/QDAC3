@@ -214,7 +214,7 @@ interface
   * 首个正式版本发布，目前与RTTI相关的几个函数暂时不可用
 }
 uses classes, sysutils, math, qstring, qrbtree, typinfo,
-  variants, varutils, System.DateUtils
+  variants, varutils,System.DateUtils
 {$IFDEF UNICODE}, Generics.Collections{$ENDIF}{$IF RTLVersion>=21},
   Rtti{$IFEND >=2010}
 {$IF RTLVersion<22}// 2007-2010
@@ -718,7 +718,7 @@ type
     /// <summary>从指定的文件中加载当前对象</summary>
     /// <param name="AFileName">要加载的文件名</param>
     procedure LoadFromFile(AFileName: String);
-    /// / <summary>重置值为Null，等价于直接设置DataType为mptNull</summary>
+    /// / <summary>重置值为Null，等价于直接设置DataType为jdtNull</summary>
     procedure ResetNull;
     /// <summary>重载TObject.ToString函数</summary>
     function ToString: string; {$IFDEF UNICODE}override; {$ELSE}virtual;
@@ -993,7 +993,6 @@ type
   protected
     FHashTable: TQHashTable;
     function CreateItem: TQMsgPack; override;
-    procedure FreeItem(AItem: TQMsgPack); override;
     procedure Replace(AIndex: Integer; ANewItem: TQMsgPack); override;
     procedure DoNodeNameChanged(ANode: TQMsgPack); override;
     procedure DoParsed; override;
@@ -1034,16 +1033,8 @@ var
   /// 在需要释放一个TQMsgPack对象时触发
   OnQMsgPackFree: TQMsgPackFreeEvent;
   QMsgPackPathDelimiter: QCharW = '\';
-  // <summary>从缓冲池中获取一个新的 TQMsgPack 实例</summary>
-function AcquireMsgPack: TQMsgPack;
-// <summary>将使用完成的 TQMsgPack 实例归还到缓冲池中</summary>
-procedure ReleaseMsgPack(AMsgPack: TQMsgPack);
-// <summary>调整 TQMsgPack 实例缓存池的大小</summary>
-procedure ResizeMsgPackPool(const ASize: Cardinal);
 
 implementation
-
-uses qsimplepool;
 
 resourcestring
 
@@ -1101,57 +1092,10 @@ type
         (BArray: array [0 .. 16] of Byte);
   end;
 
-  TQMsgPackPool = class(TQSimplePool)
-  private
-    class var FCurrent: TQMsgPackPool;
-    class function GetCurrent: TQMsgPackPool; static;
-  protected
-    procedure DoFree(ASender: TQSimplePool; AData: Pointer);
-    procedure DoNew(ASender: TQSimplePool; var AData: Pointer);
-  public
-    constructor Create;
-    class destructor Destroy;
-    class property Current: TQMsgPackPool read GetCurrent;
-  end;
-
 const
   MsgPackTypeName: array [0 .. 10] of QStringW = ('Unknown', 'Integer', 'Null',
     'Boolean', 'Float', 'String', 'Binary', 'Array', 'Map', 'Extended',
     'DateTime');
-
-function AcquireMsgPack: TQMsgPack;
-begin
-  Result := TQMsgPackPool.Current.Pop;
-end;
-
-procedure ReleaseMsgPack(AMsgPack: TQMsgPack);
-var
-  I: Integer;
-  AChild: TQMsgPack;
-begin
-  AMsgPack.Detach;
-  if AMsgPack.DataType in [mptMap, mptArray] then
-  begin
-    for I := 0 to AMsgPack.Count - 1 do
-    begin
-      AChild := AMsgPack[I];
-      AChild.FParent := nil;
-      ReleaseMsgPack(AChild);
-    end;
-    AMsgPack.FItems.Clear;
-  end;
-  AMsgPack.ResetNull;
-  AMsgPack.ResetKey;
-  if Assigned(TQMsgPackPool.FCurrent) then
-    TQMsgPackPool.FCurrent.Push(AMsgPack)
-  else
-    FreeAndNil(AMsgPack);
-end;
-
-procedure ResizeMsgPackPool(const ASize: Cardinal);
-begin
-  TQMsgPackPool.Current.Size := ASize;
-end;
 
 function DoCompareName(Item1, Item2: Pointer): Integer;
 var
@@ -1334,7 +1278,7 @@ end;
 
 function TQMsgPack.CreateNew: TQMsgPack;
 begin
-  Result := AcquireMsgPack;
+  Result := TQMsgPack.Create;
 end;
 
 function TQMsgPack.DateTimeByName(AName: QStringW; ADefVal: TDateTime)
@@ -2237,11 +2181,13 @@ end;
 
 procedure TQMsgPack.FreeItem(AItem: TQMsgPack);
 begin
-  AItem.FParent := nil;
   if Assigned(OnQMsgPackFree) then
-    OnQMsgPackFree(AItem)
+  begin
+    AItem.FParent := nil;
+    OnQMsgPackFree(AItem);
+  end
   else
-    ReleaseMsgPack(AItem);
+    FreeObject(AItem);
 end;
 
 {$IF RTLVersion>=21}
@@ -3361,7 +3307,7 @@ procedure TQMsgPack.InternalParse(var p: PByte; l: Integer; AToKey: Boolean);
 var
   ps: PByte;
   I: Integer;
-  sec, nsec: Int64;
+  sec,nsec: Int64;
   ACount: Cardinal;
   AChild: TQMsgPack;
 begin
@@ -3527,17 +3473,15 @@ begin
             FExtType := p^;
             Inc(p);
             Move(p^, FValue[0], ACount);
-            if (ACount = 12) and (FExtType = -1) then // 96位时间格式
+            if (ACount = 12) and (FExtType = -1) then //96位时间格式
             begin
               DataType := mptDateTime;
               nsec := ExchangeByteOrder(PCardinal(@FValue[0])^);
               sec := ExchangeByteOrder(PCardinal(@FValue[4])^);
-              // 转换成本地时间
-              PDouble(FValue)^ := TTimeZone.Local.ToLocalTime
-                ((sec + nsec / (1000 * 1000 * 1000)) / 86400 + UnixDateDelta);
+              //转换成本地时间
+              PDouble(FValue)^ := TTimeZone.Local.ToLocalTime((sec+nsec/(1000*1000*1000))/ 86400+UnixDateDelta);
             end
-            else
-              DataType := mptExtended;
+            else DataType := mptExtended;
 
             Inc(p, ACount);
           end;
@@ -3693,12 +3637,10 @@ begin
             begin
               sec := ExchangeByteOrder(PCardinal(@FValue[0])^);
               DataType := mptDateTime;
-              // 转换成本地时间
-              PDouble(FValue)^ := TTimeZone.Local.ToLocalTime
-                (sec / 86400 + UnixDateDelta);
+              //转换成本地时间
+              PDouble(FValue)^ := TTimeZone.Local.ToLocalTime(sec / 86400+UnixDateDelta);
             end
-            else
-              DataType := mptExtended;
+            else  DataType := mptExtended;
             Inc(p, 4);
           end;
         $D7: // Fixed Ext64,8B
@@ -3711,14 +3653,12 @@ begin
             if FExtType = -1 then
             begin
               sec := ExchangeByteOrder(PInt64(@FValue[0])^);
-              nsec := Int64(sec shr 34);
-              sec := sec and $00000003FFFFFFFF;
+              nsec := int64(sec shr 34);
+              sec := sec and $00000003ffffffff;
               DataType := mptDateTime;
-              PDouble(FValue)^ := TTimeZone.Local.ToLocalTime
-                ((sec + nsec / (1000 * 1000 * 1000)) / 86400 + UnixDateDelta);
+              PDouble(FValue)^ := TTimeZone.Local.ToLocalTime((sec+nsec/(1000*1000*1000))/ 86400+UnixDateDelta);
             end
-            else
-              DataType := mptExtended;
+            else DataType := mptExtended;
             Inc(p, 8);
           end;
         $D8: // Fixed Ext 128bit,16B
@@ -5648,17 +5588,17 @@ class procedure TQMsgPack.WriteDateTime(AStream: TStream; AValue: TDateTime;
   ADateTimeAsTimeStamp: Boolean);
 var
   ts: TQMsgPackTimeStamp;
-  v: Double;
+  V: Double;
   ABuf: array [0 .. 15] of Byte;
   ABuf32: array [0 .. 3] of Cardinal absolute ABuf;
   ABuf64: array [0 .. 1] of Int64 absolute ABuf;
 begin
   if ADateTimeAsTimeStamp then
   begin
-    v := AValue * 86400;
-    ts.Seconds := Trunc(v - UnixDateDelta * Int64(86400));
-    v := v * 10;
-    ts.NanoSeconds := Trunc((v - Trunc(v)) * 1000000000);
+    V := AValue * 86400;
+    ts.Seconds := Trunc(V - UnixDateDelta * Int64(86400));
+    V := V * 10;
+    ts.NanoSeconds := Trunc((V - Trunc(V)) * 1000000000);
     if ts.NanoSeconds = 0 then
     begin
       if ts.Seconds <= $FFFFFFFF then
@@ -5671,7 +5611,7 @@ begin
     if ts.Seconds <= Int64($3FFFFFFFF) then // 64位:30位纳秒,34位秒数
     begin
       ABuf64[0] := Int64(ts.NanoSeconds) shl 34;
-      ABuf64[0] := ABuf64[0] + ts.Seconds;
+      ABuf64[0]:=ABuf64[0]+ts.Seconds;
       ABuf64[0] := ExchangeByteOrder(ABuf64[0]);
       WriteExt(AStream, $FF, @ABuf[0], SizeOf(Int64));
     end
@@ -6114,15 +6054,6 @@ begin
   end;
 end;
 
-procedure TQHashedMsgPack.FreeItem(AItem: TQMsgPack);
-begin
-  AItem.FParent := nil;
-  if Assigned(OnQMsgPackFree) then
-    OnQMsgPackFree(AItem)
-  else
-    FreeAndNil(AItem);
-end;
-
 function TQHashedMsgPack.GetHashTable: TQHashTable;
 begin
   if not Assigned(FHashTable) then
@@ -6214,53 +6145,6 @@ begin
     if DataType = mptMap then
       HashTable.Add(ANewItem, ANewItem.FKeyHash);
   end;
-end;
-
-{ TQMsgPackPool }
-
-constructor TQMsgPackPool.Create;
-begin
-  inherited Create(2048, SizeOf(Pointer));
-  OnNewItem := DoNew;
-  OnFree := DoFree;
-end;
-
-class destructor TQMsgPackPool.Destroy;
-var
-  ATemp: TQMsgPackPool;
-begin
-  if Assigned(FCurrent) then
-  begin
-    // 使用临时变量，避免释放时重新入队
-    ATemp := FCurrent;
-    FCurrent := nil;
-    FreeAndNil(ATemp);
-  end;
-end;
-
-procedure TQMsgPackPool.DoFree(ASender: TQSimplePool; AData: Pointer);
-begin
-  FreeAndNil(TQMsgPack(AData));
-end;
-
-procedure TQMsgPackPool.DoNew(ASender: TQSimplePool; var AData: Pointer);
-begin
-  TQMsgPack(AData) := TQMsgPack.Create;
-end;
-
-class function TQMsgPackPool.GetCurrent: TQMsgPackPool;
-begin
-  if not Assigned(FCurrent) then
-  begin
-    Result := TQMsgPackPool.Create;
-    if AtomicCmpExchange(Pointer(FCurrent), Pointer(Result), nil) <> nil then
-      FreeAndNil(Result);
-{$IFDEF AUTOREFCOUNT}
-    Result.__ObjAddRef;
-{$ENDIF}
-  end
-  else
-    Result := FCurrent;
 end;
 
 initialization

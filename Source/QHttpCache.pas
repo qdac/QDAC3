@@ -40,11 +40,9 @@ type
   /// <param name="AItem">找到的缓存项目</param>             。
   /// <param name="AUserTag">用户自行定义的回调标记</param>
 
-  TCacheLookupResult = procedure(const AItem: TCacheItem; AUserTag: Pointer)
-    of object;
+  TCacheLookupResult = procedure(const AItem: TCacheItem; AUserTag: Pointer) of object;
   /// TCacheLookupResult的内联函数版
-  TCacheLookupResultA = reference to procedure(const AItem: TCacheItem;
-    AUserTag: Pointer);
+  TCacheLookupResultA = reference to procedure(const AItem: TCacheItem; AUserTag: Pointer);
   // HttpClient对象支持函数，以便可以利用额外的缓冲池
   THttpClientGetEvent = procedure(var AClient: THttpClient) of object;
   THttpClientReleaseEvent = procedure(AClient: THttpClient) of object;
@@ -68,7 +66,6 @@ type
     procedure ReleaseHttpClient(AClient: THttpClient);
     procedure SetCacheDir(const Value: String);
     procedure SaveIndexes(AJob: PQJob);
-    procedure IndexChanged;
     procedure LoadIndexes;
     procedure DoAysnGetContent(AJob: PQJob);
     procedure DoCacheReady(ACache: PCacheItem);
@@ -90,33 +87,27 @@ type
     /// <param name="ACallback">缓存就绪后的回调函数</param>
     /// <param name="ATag">用户自定义的额外标签</param>
     /// <returns>返回完整的缓存文件路径</returns>
-    procedure Lookup(AUrl, ACacheId: String; ACallback: TCacheLookupResult;
-      ATag: Pointer); overload;
+    procedure Lookup(AUrl, ACacheId: String; ACallback: TCacheLookupResult; ATag: Pointer); overload;
     /// <summary>查找指定URL和缓存ID对应的文件，如果ACacheId为空，则以AUrl的MD5值为ACacheId的值</summary>
     /// <param name="AUrl">要缓存的URL地址</param>
     /// <param name="ACacheId">缓存后的文件名</param>
     /// <param name="ACallback">缓存就绪后的回调函数</param>
     /// <param name="ATag">用户自定义的额外标签</param>
     /// <returns>返回完整的缓存文件路径</returns>
-    procedure Lookup(AUrl, ACacheId: String; ACallback: TCacheLookupResultA;
-      ATag: Pointer); overload;
+    procedure Lookup(AUrl, ACacheId: String; ACallback: TCacheLookupResultA; ATag: Pointer); overload;
     /// <summary>返回指定的缓存项目对应的文件的完整路径</summary>
     function CacheFile(const AItem: TCacheItem): String;
     /// <summary>判断指定的项目是否已经缓存</summary>
     /// <param name="AUrl">要判断的URL地址，区分大小写</param>
     /// <returns>如果已经缓存，返回true，否则返回false</returns>
     function Cached(const AUrl: String): Boolean;
-    procedure Invalid(const AUrl: String);
     /// 缓存目录
     property CacheDir: String read FCacheDir write SetCacheDir;
     /// 获取HttpClient对象事件
-    property OnGetHttpClient: THttpClientGetEvent read FOnGetHttpClient
-      write FOnGetHttpClient;
+    property OnGetHttpClient: THttpClientGetEvent read FOnGetHttpClient write FOnGetHttpClient;
     // 释放HttpClient对象事件
-    property OnReleaseHttpClient: THttpClientReleaseEvent
-      read FOnReleaseHttpClient write FOnReleaseHttpClient;
-    property CacheIndexFileName: String read FCacheIndexFileName
-      write SetCacheIndexFileName;
+    property OnReleaseHttpClient: THttpClientReleaseEvent read FOnReleaseHttpClient write FOnReleaseHttpClient;
+    property CacheIndexFileName: String read FCacheIndexFileName write SetCacheIndexFileName;
   end;
 
 function HttpCaches: TLocalCaches;
@@ -147,39 +138,34 @@ begin
   try
     if FileExists(CacheDir + CacheIndexFileName) then
     begin
-      AUrl := LoadTextW(CacheDir + CacheIndexFileName);
-      if AJson.TryParse(AUrl) then
+      AJson.LoadFromFile(CacheDir + CacheIndexFileName);
+      for I := 0 to AJson.Count - 1 do
       begin
-        for I := 0 to AJson.Count - 1 do
+        AItem := AJson[I];
+        AUrl := AItem.ValueByName('url', '');
+        if not FItems.TryGetValue(AUrl, ACache) then
         begin
-          AItem := AJson[I];
-          AUrl := AItem.ValueByName('url', '');
-          if not FItems.TryGetValue(AUrl, ACache) then
-          begin
-            New(ACache);
-            ACache.Url := AUrl;
-            FItems.Add(ACache.Url, ACache);
-          end;
-          ACache.ContentType := AItem.ValueByName('type', '');
-          ACache.CacheId := AItem.ValueByName('id', '');
-          ACache.LastModified := AItem.DateTimeByName('modified', 0);
-          ACache.ExpireTime := AItem.DateTimeByName('expires', 0);
-          ACache.ETag := AItem.ValueByName('etag', '');
-          ACache.FirstNotify := nil;
-          if FileExists(CacheDir + ACache.CacheId) then
-          begin
-            if ACache.ExpireTime < Now then // 过期了，删除原来的文件
-              ACache.Status := TCacheStatus.Timeout
-            else
-              ACache.Status := TCacheStatus.Ready;
-          end
-          else
-            ACache.Status := TCacheStatus.Missed;
+          New(ACache);
+          ACache.Url := AUrl;
+          FItems.Add(ACache.Url, ACache);
         end;
+        ACache.ContentType := AItem.ValueByName('type', '');
+        ACache.CacheId := AItem.ValueByName('id', '');
+        ACache.LastModified := AItem.DateTimeByName('modified', 0);
+        ACache.ExpireTime := AItem.DateTimeByName('expires', 0);
+        ACache.ETag := AItem.ValueByName('etag', '');
+        ACache.FirstNotify := nil;
+        if FileExists(CacheDir + ACache.CacheId) then
+        begin
+          if ACache.ExpireTime < Now then // 过期了，删除原来的文件
+            ACache.Status := TCacheStatus.Timeout
+          else
+            ACache.Status := TCacheStatus.Ready;
+        end
+        else
+          ACache.Status := TCacheStatus.Missed;
       end;
-    end
-    else
-      DebugOut('HTTP 缓存索引文件格式无效，已忽略。');
+    end;
     FIndexDirty := false;
   finally
     FLocker.Leave;
@@ -187,8 +173,7 @@ begin
   end;
 end;
 
-procedure TLocalCaches.Lookup(AUrl, ACacheId: String;
-  ACallback: TCacheLookupResult; ATag: Pointer);
+procedure TLocalCaches.Lookup(AUrl, ACacheId: String; ACallback: TCacheLookupResult; ATag: Pointer);
 var
   ACache: PCacheItem;
   AFetchNeeded, AResultReady: Boolean;
@@ -200,9 +185,7 @@ begin
   AResultReady := false;
   FLocker.Enter;
   try
-    if (not FItems.TryGetValue(AUrl, ACache)) or
-      (not FileExists(CacheDir + ACache.CacheId)) or (ACache.ExpireTime < Now)
-    then
+    if (not FItems.TryGetValue(AUrl, ACache)) or (not FileExists(CacheDir + ACache.CacheId)) or (ACache.ExpireTime < Now) then
     begin
       AFetchNeeded := true;
       if not Assigned(ACache) then
@@ -245,8 +228,7 @@ begin
     Workers.Post(DoAysnGetContent, ACache, false, jdfFreeByUser);
 end;
 
-procedure TLocalCaches.Lookup(AUrl, ACacheId: String;
-  ACallback: TCacheLookupResultA; ATag: Pointer);
+procedure TLocalCaches.Lookup(AUrl, ACacheId: String; ACallback: TCacheLookupResultA; ATag: Pointer);
 var
   AEvent: TCacheLookupResult;
   Alias: TMethod absolute AEvent;
@@ -268,8 +250,7 @@ begin
   FLocker.Enter;
   try
     ACache := FItems.ExtractPair(AUrl).Value;
-    if (not Assigned(ACache)) or (not FileExists(CacheDir + ACache.CacheId)) or
-      (ACache.ExpireTime < Now) then
+    if (not Assigned(ACache)) or (not FileExists(CacheDir + ACache.CacheId)) or (ACache.ExpireTime < Now) then
     begin
       AFetchNeeded := true;
       if not Assigned(ACache) then
@@ -316,22 +297,13 @@ end;
 procedure TLocalCaches.Clear(ADeleteFile: Boolean);
 var
   AItem: PCacheItem;
-  ACallback, ANext: PCacheItemResultCallback;
 begin
   FSaveJob := 0;
+
   for AItem in FItems.Values do
   begin
     if ADeleteFile then
       DeleteFile(CacheDir + AItem.CacheId);
-    ACallback := AItem^.FirstNotify;
-    while Assigned(ACallback) do
-    begin
-      ANext := ACallback.Next;
-      if ACallback.Callback.Data = Pointer(-1) then
-        TCacheLookupResultA(ACallback.Callback.Code) := nil;
-      Dispose(ACallback);
-      ACallback := ANext;
-    end;
     Dispose(AItem);
   end;
   FItems.Clear;
@@ -365,7 +337,7 @@ end;
 
 procedure TLocalCaches.DoCacheReady(ACache: PCacheItem);
 var
-  ANext,ACallback: PCacheItemResultCallback;
+  ACallback: PCacheItemResultCallback;
 begin
   FLocker.Enter;
   try
@@ -376,7 +348,6 @@ begin
   end;
   while Assigned(ACallback) do
   begin
-    ANext:=ACallback.Next;
     if ACallback.Callback.Data = Pointer(-1) then
     begin
       TCacheLookupResultA(ACallback.Callback.Code)(ACache^, ACallback.UserTag);
@@ -384,8 +355,7 @@ begin
     end
     else
       TCacheLookupResult(ACallback.Callback)(ACache^, ACallback.UserTag);
-    Dispose(ACallback);
-    ACallback := ANext;
+    ACallback := ACallback.Next;
   end;
 end;
 
@@ -404,11 +374,9 @@ var
     FLocker.Enter;
     try
       ACache.ETag := DequotedStrW(AReply.HeaderValue['ETag'], '"');
-      if not ParseWebTime(PQCharW(AReply.HeaderValue['Last-Modified']),
-        ACache.LastModified) then
+      if not ParseWebTime(PQCharW(AReply.HeaderValue['Last-Modified']), ACache.LastModified) then
         ACache.LastModified := Now;
-      if not ParseWebTime(PQCharW(AReply.HeaderValue['Expires']),
-        ACache.ExpireTime) then
+      if not ParseWebTime(PQCharW(AReply.HeaderValue['Expires']), ACache.ExpireTime) then
       begin
         S := AReply.HeaderValue['Cache-Control'];
         while Length(S) > 0 do
@@ -439,92 +407,64 @@ var
   end;
 
 begin
-  if Length(ACache.Url) > 0 then
+  if Length(ACache.CacheId) = 0 then
+    ACache.CacheId := DigestToString(MD5Hash(ACache.Url));
+  ARequest := GetHttpClient;
+  if ACache.Status in [TCacheStatus.Exists, TCacheStatus.Ready, TCacheStatus.Timeout] then
   begin
-    if Length(ACache.CacheId) = 0 then
-      ACache.CacheId := DigestToString(MD5Hash(ACache.Url));
-    ARequest := GetHttpClient;
-    if ACache.Status in [TCacheStatus.Exists, TCacheStatus.Ready,
-      TCacheStatus.Timeout] then
+    if Length(ACache.ETag) > 0 then
     begin
-      if Length(ACache.ETag) > 0 then
-      begin
-        SetLength(AHeaders, 2);
-        AHeaders[0].Name := 'If-None-Match';
-        AHeaders[0].Value := ACache.ETag;
-      end
-      else
-        SetLength(AHeaders, 1);
-      AHeaders[High(AHeaders)].Name := 'If-Modified-Since';
-      AHeaders[High(AHeaders)].Value := EncodeWebTime(ACache.LastModified);
+      SetLength(AHeaders, 2);
+      AHeaders[0].Name := 'If-None-Match';
+      AHeaders[0].Value := ACache.ETag;
     end
     else
-      AHeaders := nil;
-    ACacheStream := nil;
-    try
-      AReply := ARequest.Get(ACache.Url, nil, AHeaders);
-      if AReply.StatusCode = 200 then
-      begin
-        UpdateCache;
-        ACacheStream := TFileStream.Create(CacheDir + ACache.CacheId, fmCreate);
-        ACacheStream.CopyFrom(AReply.ContentStream, 0);
-        IndexChanged;
-      end
-      else
-      begin
-        if AReply.StatusCode = 304 then // Not modified
-        begin
-          ACache.Status := TCacheStatus.Ready;
-        end
-        else if AReply.StatusCode = 404 then // 找不到了
-        begin
-          if ACache.Status = TCacheStatus.Exists then
-            DeleteFile(ACache.CacheId);
-          ACache.Status := TCacheStatus.Missed;
-        end
-        else // Todo:出错处理
-        begin
-          ACache.Status := TCacheStatus.Missed;
-        end;
-      end;
-    finally
-      if Assigned(ACacheStream) then
-        FreeObject(ACacheStream);
-      ReleaseHttpClient(ARequest);
-    end;
+      SetLength(AHeaders, 1);
+    AHeaders[High(AHeaders)].Name := 'If-Modified-Since';
+    AHeaders[High(AHeaders)].Value := EncodeWebTime(ACache.LastModified);
   end
   else
-    ACache.Status := TCacheStatus.Missed;
+    AHeaders := nil;
+  ACacheStream := nil;
+  try
+    AReply := ARequest.Get(ACache.Url, nil, AHeaders);
+    if AReply.StatusCode = 200 then
+    begin
+      UpdateCache;
+      ACacheStream := TFileStream.Create(CacheDir + ACache.CacheId, fmCreate);
+      ACacheStream.CopyFrom(AReply.ContentStream, 0);
+      if FSaveJob = 0 then
+        // 延时15秒而不是立即保存索引，这有助于减少不必要的IO操作
+        FSaveJob := Workers.Delay(SaveIndexes, 15 * Q1Second, nil, true);
+    end
+    else
+    begin
+      if AReply.StatusCode = 304 then // Not modified
+      begin
+        ACache.Status := TCacheStatus.Ready;
+      end
+      else if AReply.StatusCode = 404 then // 找不到了
+      begin
+        if ACache.Status = TCacheStatus.Exists then
+          DeleteFile(ACache.CacheId);
+        ACache.Status := TCacheStatus.Missed;
+      end
+      else // Todo:出错处理
+      begin
+        ACache.Status := TCacheStatus.Missed;
+      end;
+    end;
+  finally
+    if Assigned(ACacheStream) then
+      FreeObject(ACacheStream);
+    ReleaseHttpClient(ARequest);
+  end;
 end;
 
 function TLocalCaches.GetHttpClient: THttpClient;
 begin
+
   Result := THttpClient.Create;
-end;
-
-procedure TLocalCaches.IndexChanged;
-begin
-  if FSaveJob = 0 then
-    // 延时15秒而不是立即保存索引，这有助于减少不必要的IO操作
-    FSaveJob := Workers.Delay(SaveIndexes, 15 * Q1Second, nil, true);
-end;
-
-procedure TLocalCaches.Invalid(const AUrl: String);
-var
-  ACache: PCacheItem;
-begin
-  if FIndexDirty then
-    LoadIndexes;
-  FLocker.Enter;
-  try
-    if FItems.TryGetValue(AUrl, ACache) then
-    begin
-      FItems.Remove(AUrl);
-      DeleteFile(CacheDir + ACache.CacheId);
-    end;
-  finally
-    FLocker.Leave;
-  end;
 end;
 
 procedure TLocalCaches.ReleaseHttpClient(AClient: THttpClient);

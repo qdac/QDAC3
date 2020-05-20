@@ -166,8 +166,7 @@ type
     constructor Create; overload;
     destructor Destroy; override;
     procedure Add(AFile: TQSymbolMapFile; AOffset: Cardinal = 0);
-    function Locate(const Addr: Pointer; var AInfo: TQSymbolLocation)
-      : Boolean; overload;
+    function Locate(const Addr: Pointer; var AInfo: TQSymbolLocation): Boolean; overload;
     function Locate(const Addr: Pointer): TQSymbolLocation; overload;
     procedure LoadSymbols;
     procedure LoadDefault;
@@ -175,11 +174,9 @@ type
 
 var
   Symbols: TQDebugSymbols;
-function LocateSymbol(const Addr: Pointer;
-  var ALocation: TQSymbolLocation): Boolean;
+function LocateSymbol(const Addr: Pointer; var ALocation: TQSymbolLocation): Boolean;
 function StackOfThread(AThread: TThread): QStringW; overload;
 function StackByThreadId(AThreadId: TThreadId): QStringW; overload;
-function CurrentCallStack: QStringW; inline;
 {$IFDEF MSWINDOWS}
 function StackByThreadHandle(AThread: THandle): QStringW; overload;
 function EnumWaitChains: QStringW;
@@ -224,23 +221,19 @@ const
   WCT_OUT_OF_PROC_COM_FLAG = $02;
   WCT_OUT_OF_PROC_CS_FLAG = $04;
   WCT_NETWORK_IO_FLAG = $08;
-  WCTP_GETINFO_ALL_FLAGS = WCT_OUT_OF_PROC_FLAG or WCT_OUT_OF_PROC_COM_FLAG or
-    WCT_OUT_OF_PROC_CS_FLAG;
+  WCTP_GETINFO_ALL_FLAGS = WCT_OUT_OF_PROC_FLAG or WCT_OUT_OF_PROC_COM_FLAG or WCT_OUT_OF_PROC_CS_FLAG;
 
   THREAD_GET_CONTEXT = $0008;
   THREAD_QUERY_INFORMATION = $0040;
   THREAD_ALL_ACCESS = $1FFFFF;
 
 const
-  ObjectTypes: array [0 .. 10] of String = ('CriticalSection', 'SendMessage',
-    'Mutex', 'Alpc', 'Com', 'ThreadWait', 'ProcWait', 'Thread', 'ComActivation',
-    'Unknown', 'Max');
+  ObjectTypes: array [0 .. 10] of String = ('CriticalSection', 'SendMessage', 'Mutex', 'Alpc', 'Com', 'ThreadWait', 'ProcWait',
+    'Thread', 'ComActivation', 'Unknown', 'Max');
 
 type
-  WCT_OBJECT_TYPE = (WctCriticalSectionType = 1, WctSendMessageType,
-    WctMutexType, WctAlpcType, WctComType, WctThreadWaitType,
-    WctProcessWaitType, WctThreadType, WctComActivationType, WctUnknownType,
-    WctSocketIoType, WctSmbIoType, WctMaxType);
+  WCT_OBJECT_TYPE = (WctCriticalSectionType = 1, WctSendMessageType, WctMutexType, WctAlpcType, WctComType, WctThreadWaitType,
+    WctProcessWaitType, WctThreadType, WctComActivationType, WctUnknownType, WctSocketIoType, WctSmbIoType, WctMaxType);
 
   WCT_OBJECT_STATUS = (WctStatusNoAccess = 1, // ACCESS_DENIED for this object
     WctStatusRunning, // Thread status
@@ -277,19 +270,15 @@ type
   TWaitChainNodeInfo = WAITCHAIN_NODE_INFO;
   PWaitChainNodeInfo = ^TWaitChainNodeInfo;
 
-  TWaitChainCallback = procedure(WctHandle: THandle; Context: DWORD_PTR;
-    CallbackStatus: DWORD; NodeCount: PDWord;
+  TWaitChainCallback = procedure(WctHandle: THandle; Context: DWORD_PTR; CallbackStatus: DWORD; NodeCount: PDWord;
     NodeInfoArrary: PWaitChainNodeInfo; IsCycle: PBool); stdcall;
 
-  TOpenThreadWaitChainSession = function(Flags: DWORD;
-    callback: TWaitChainCallback): THandle; stdcall;
+  TOpenThreadWaitChainSession = function(Flags: DWORD; callback: TWaitChainCallback): THandle; stdcall;
   TCloseThreadWaitChainSession = procedure(WctHandle: THandle); stdcall;
-  TGetThreadWaitChain = function(WctHandle: THandle; Context: DWORD_PTR;
-    Flags, ThreadId: DWORD; NodeCount: LPDWORD;
+  TGetThreadWaitChain = function(WctHandle: THandle; Context: DWORD_PTR; Flags, ThreadId: DWORD; NodeCount: LPDWORD;
     NodeInfoArray: PWaitChainNodeInfo; IsCycle: PBool): BOOL; stdcall;
   PCoGetCallState = function(P1: Integer; P2: PCardinal): HRESULT; stdcall;
-  PCoGetActivationState = function(AId: TGuid; P1: DWORD; P2: PCardinal)
-    : HRESULT; stdcall;
+  PCoGetActivationState = function(AId: TGuid; P1: DWORD; P2: PCardinal): HRESULT; stdcall;
   TRegisterWaitChainCOMCallback = procedure(CallStateCallback: PCoGetCallState;
     ActivationStateCallback: PCoGetActivationState); stdcall;
 
@@ -304,8 +293,7 @@ type
     property Stacks: String read FStacks;
   end;
 
-  TThreadCheckEvent = procedure(WctHandle: THandle; AThreadId: TThreadId;
-    ATag: Pointer; var ADeadFound: Boolean);
+  TThreadCheckEvent = procedure(WctHandle: THandle; AThreadId: TThreadId; ATag: Pointer; var ADeadFound: Boolean);
 
   TDeadlockChecker = class(TThread)
   protected
@@ -317,8 +305,7 @@ type
     constructor Create; overload;
     destructor Destroy; override;
     class function EnumWaitChains: QStringW;
-    class function CheckThreads(ACallback: TThreadCheckEvent;
-      AExcludeThread: TThreadId; ATag: Pointer;
+    class function CheckThreads(ACallback: TThreadCheckEvent; AExcludeThread: TThreadId; ATag: Pointer;
       var ADeadFound: Boolean): Boolean;
     class function DeadlockExists(var ALog: QStringW): Boolean;
   end;
@@ -419,8 +406,7 @@ type
     SizeOfHeapCommit: ULONGLONG;
     LoaderFlags: DWORD;
     NumberOfRvaAndSizes: DWORD;
-    DataDirectory: packed array [0 .. IMAGE_NUMBEROF_DIRECTORY_ENTRIES - 1]
-      of TImageDataDirectory;
+    DataDirectory: packed array [0 .. IMAGE_NUMBEROF_DIRECTORY_ENTRIES - 1] of TImageDataDirectory;
   end;
 
   TImageOptionalHeader64 = _IMAGE_OPTIONAL_HEADER64;
@@ -467,13 +453,12 @@ var
   RegisterWaitChainCOMCallback: TRegisterWaitChainCOMCallback;
   DeadLocker: TDeadlockChecker;
   DeadCheckThreadId: TThreadId;
-function OpenThread(dwDesiredAccess: DWORD; bInheritHandle: Boolean;
-  dwThreadId: Cardinal): THandle; stdcall; external kernel32 name 'OpenThread';
+function OpenThread(dwDesiredAccess: DWORD; bInheritHandle: Boolean; dwThreadId: Cardinal): THandle; stdcall;
+  external kernel32 name 'OpenThread';
 
 {$ENDIF}
 
-function LocateSymbol(const Addr: Pointer;
-  var ALocation: TQSymbolLocation): Boolean;
+function LocateSymbol(const Addr: Pointer; var ALocation: TQSymbolLocation): Boolean;
 begin
   Result := Symbols.Locate(Addr, ALocation);
 end;
@@ -500,11 +485,6 @@ begin
   end;
 end;
 
-function CurrentCallStack: QStringW;
-begin
-  Result := StackOfThread(TThread.Current);
-end;
-
 function StackByThreadId(AThreadId: TThreadId): QStringW;
 {$IFDEF MSWINDOWS}
 var
@@ -513,8 +493,7 @@ var
 {$ENDIF}
 begin
 {$IFDEF MSWINDOWS}
-  AHandle := OpenThread(THREAD_QUERY_INFORMATION or THREAD_GET_CONTEXT, False,
-    AThreadId);
+  AHandle := OpenThread(THREAD_QUERY_INFORMATION or THREAD_GET_CONTEXT, False, AThreadId);
   if AHandle <> 0 then
   begin
     Result := StackByThreadHandle(AHandle);
@@ -559,8 +538,7 @@ type
     BasePriority: LongInt;
   end;
 
-  TNtQueryInformationThread = function(ThreadHandle: THandle;
-    ThreadInformationClass: Cardinal; ThreadInformation: Pointer;
+  TNtQueryInformationThread = function(ThreadHandle: THandle; ThreadInformationClass: Cardinal; ThreadInformation: Pointer;
     ThreadInformationLength: ULONG; ReturnLength: PULONG): Cardinal; stdcall;
 
 var
@@ -576,8 +554,7 @@ begin
   else
   begin
     FillChar(AInfo, SizeOf(THREAD_BASIC_INFORMATION), 0);
-    NtQueryInformationThread(AHandle, 0, @AInfo,
-      SizeOf(THREAD_BASIC_INFORMATION), @L);
+    NtQueryInformationThread(AHandle, 0, @AInfo, SizeOf(THREAD_BASIC_INFORMATION), @L);
     Result := AInfo.ThreadId;
   end;
 end;
@@ -653,8 +630,7 @@ begin
         if Symbols.Locate(AStacks.Items[I].CallerAddr, AInfo) then
           Result := Result + AInfo.ToString + #13#10
         else
-          Result := Result + IntToHex(IntPtr(AStacks.Items[I].CallerAddr),
-            SizeOf(IntPtr) shl 1) + #13#10;
+          Result := Result + IntToHex(IntPtr(AStacks.Items[I].CallerAddr), SizeOf(IntPtr) shl 1) + #13#10;
       end;
     finally
       FreeObject(AStacks);
@@ -680,8 +656,7 @@ begin
     begin
       AInfo.Reset;
       AInfo.Addr := Pointer(AFrames[I].AddrPC.Offset);
-      AInfo.FunctionName := GetFunctionInfo(AInfo.Addr, AInfo.FileName,
-        AInfo.LineNo);
+      AInfo.FunctionName := GetFunctionInfo(AInfo.Addr, AInfo.FileName, AInfo.LineNo);
       Result := Result + AInfo.ToString + #13#10;
     end;
   end;
@@ -728,8 +703,7 @@ begin
       FItems.Add(AItem);
   end
   else
-    raise Exception.CreateFmt(SUnsupportSymbolClass, [AItem.ClassType.ClassName,
-      FItemClass.ClassName]);
+    raise Exception.CreateFmt(SUnsupportSymbolClass, [AItem.ClassType.ClassName, FItemClass.ClassName]);
 end;
 
 procedure TQSymbols.BeginUpdate;
@@ -822,8 +796,7 @@ begin
   end;
 end;
 
-function TQSymbols.InternalFind(const Addr: NativeInt;
-  var AIndex: Integer): Boolean;
+function TQSymbols.InternalFind(const Addr: NativeInt; var AIndex: Integer): Boolean;
 var
   L, H, I: Integer;
   V: NativeInt;
@@ -911,8 +884,7 @@ begin
   inherited;
 end;
 
-function TQDebugSymbols.Locate(const Addr: Pointer;
-  var AInfo: TQSymbolLocation): Boolean;
+function TQDebugSymbols.Locate(const Addr: Pointer; var AInfo: TQSymbolLocation): Boolean;
 var
   AFile: TQSymbolMapFile;
 begin
@@ -959,8 +931,7 @@ var
       Result := False;
   end;
 
-  function ReadImports(AFile: TFileStream; AImportVAddr: DWORD; ASections: Word)
-    : TStrings;
+  function ReadImports(AFile: TFileStream; AImportVAddr: DWORD; ASections: Word): TStrings;
   var
     ADLL: String;
     I: Word;
@@ -999,8 +970,7 @@ var
               ACat.Reset;
               AFile.Position := Int64(AImport.FirstThunk) + AOffset;
               repeat
-                if AFile.Read(AThunk, SizeOf(IMAGE_THUNK_DATA))
-                  = SizeOf(IMAGE_THUNK_DATA) then
+                if AFile.Read(AThunk, SizeOf(IMAGE_THUNK_DATA)) = SizeOf(IMAGE_THUNK_DATA) then
                 begin
                   ALastPos := AFile.Position;
                   if AThunk.Ordinal <> 0 then
@@ -1009,8 +979,7 @@ var
                     AFile.Read(ABuffer[0], 520);
                     if PImageImportByName(@ABuffer[0]).Hint = 0 then
                     begin
-                      ACat.Cat(AnsiDecode(@PImageImportByName(@ABuffer[0])
-                        .Name[0], -1)).Cat(',');
+                      ACat.Cat(AnsiDecode(@PImageImportByName(@ABuffer[0]).Name[0], -1)).Cat(',');
                       AFile.Position := ALastPos;
                     end;
                   end;
@@ -1020,8 +989,7 @@ var
               until AThunk.Ordinal = 0;
               ACat.Back(1);
               Result.Add(ADLL + '=' + ACat.Value);
-              AImport :=
-                Pointer(IntPtr(AImport) + SizeOf(TImageImportDescriptor));
+              AImport := Pointer(IntPtr(AImport) + SizeOf(TImageImportDescriptor));
             end;
           finally
             FreeMem(AMem);
@@ -1034,8 +1002,7 @@ var
       FreeObject(ACat);
     end;
   end;
-  function LoadPEImports(AFile: TFileStream; AMapFile: TQSymbolMapFile;
-    AdjustOffset: Boolean): Boolean;
+  function LoadPEImports(AFile: TFileStream; AMapFile: TQSymbolMapFile; AdjustOffset: Boolean): Boolean;
   var
     AHdr: TPEImageHeader;
   begin
@@ -1048,32 +1015,26 @@ var
       if AdjustOffset then
       begin
         if AMapFile.FOffset = 0 then
-          AMapFile.FOffset := AHdr.PE64.OptionalHeader.ImageBase +
-            AHdr.PE64.OptionalHeader.BaseOfCode
+          AMapFile.FOffset := AHdr.PE64.OptionalHeader.ImageBase + AHdr.PE64.OptionalHeader.BaseOfCode
         else
           Inc(AMapFile.FOffset, AHdr.PE64.OptionalHeader.BaseOfCode);
       end;
       AMapFile.Size := AHdr.PE64.OptionalHeader.SizeOfCode;
-      AMapFile.Tag :=
-        NativeInt(ReadImports(AFile, AHdr.PE64.OptionalHeader.DataDirectory
-        [IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress,
-        AHdr.PE64.FileHeader.NumberOfSections));
+      AMapFile.Tag := NativeInt(ReadImports(AFile, AHdr.PE64.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]
+        .VirtualAddress, AHdr.PE64.FileHeader.NumberOfSections));
     end
     else
     begin
       if AdjustOffset then
       begin
         if AMapFile.FOffset = 0 then
-          AMapFile.FOffset := AHdr.PE32.OptionalHeader.ImageBase +
-            AHdr.PE32.OptionalHeader.BaseOfCode
+          AMapFile.FOffset := AHdr.PE32.OptionalHeader.ImageBase + AHdr.PE32.OptionalHeader.BaseOfCode
         else
           Inc(AMapFile.FOffset, AHdr.PE32.OptionalHeader.BaseOfCode);
       end;
       AMapFile.Size := AHdr.PE32.OptionalHeader.SizeOfCode;
-      AMapFile.Tag :=
-        NativeInt(ReadImports(AFile, AHdr.PE32.OptionalHeader.DataDirectory
-        [IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress,
-        AHdr.PE32.FileHeader.NumberOfSections));
+      AMapFile.Tag := NativeInt(ReadImports(AFile, AHdr.PE32.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]
+        .VirtualAddress, AHdr.PE32.FileHeader.NumberOfSections));
     end;
   end;
 
@@ -1081,8 +1042,7 @@ var
   var
     AFile: TFileStream;
   begin
-    AFile := TFileStream.Create(AMapFile.FileName, fmOpenRead or
-      fmShareDenyWrite);
+    AFile := TFileStream.Create(AMapFile.FileName, fmOpenRead or fmShareDenyWrite);
     try
       Result := LoadPEImports(AFile, AMapFile, True);
     finally
@@ -1126,9 +1086,8 @@ var
               AFunc := DecodeTokenW(p, AFuncSpliter, ANonQuoter, True);
               if Length(AFunc) > 0 then
               begin
-                AProc := AMap.FFunctions.Add
-                  (IntPtr(GetProcAddress(AModule,
-                  LPCSTR(PQCharA(AnsiEncode(AFunc)))))) as TQNamedSymbol;
+                AProc := AMap.FFunctions.Add(IntPtr(GetProcAddress(AModule, LPCSTR(PQCharA(AnsiEncode(AFunc))))))
+                  as TQNamedSymbol;
                 AProc.Name := AFunc;
               end;
             until p^ = #0;
@@ -1182,9 +1141,7 @@ var
         end;
       except
         on E: Exception do
-          OutputDebugString
-            (PChar(String('Error read symbols ' + AFileName + ' :' +
-            E.Message)));
+          OutputDebugString(PChar(String('Error read symbols ' + AFileName + ' :' + E.Message)));
       end;
     end;
   end;
@@ -1335,8 +1292,7 @@ var
             ps := p;
             SkipUntilW(p, [#10, #13]);
             AItem.Name := StrDupX(ps, p - ps);
-            if CompareMem(p, PQCharW(SSectionEnd), Length(SSectionEnd) shl 1)
-            then
+            if CompareMem(p, PQCharW(SSectionEnd), Length(SSectionEnd) shl 1) then
             begin
               SkipSpaceW(p);
               Break;
@@ -1371,7 +1327,6 @@ var
     AMod: TQFileSymbol;
     ALineNo, AOffset: Int64;
     AItem: TQLineOffset;
-    AKeyHash:Cardinal;
   begin
     Result := False;
     repeat
@@ -1390,13 +1345,11 @@ var
         SkipUntilW(p, [')']);
         AFileName := StrDupX(ps, p - ps);
         AKey := AModuleName + AFileName;
-        AKeyHash:=HashOf(PQCharW(AKey), Length(AKey) shl 1);
-        AList := AModules.FindFirst(AKeyHash);
+        AList := AModules.FindFirst(HashOf(PQCharW(AKey), Length(AKey) shl 1));
         AMod := nil;
         while AList <> nil do
         begin
-          if (TQFileSymbol(AList.Data).Name = AModuleName) and
-            (TQFileSymbol(AList.Data).FileName = AFileName) then
+          if (TQFileSymbol(AList.Data).Name = AModuleName) and (TQFileSymbol(AList.Data).FileName = AFileName) then
           begin
             AMod := AList.Data;
             Break;
@@ -1410,7 +1363,6 @@ var
           AMod.Name := AModuleName;
           AMod.FileName := AFileName;
           FModules.Add(AMod);
-          AModules.Add(AMod,AKeyHash);
         end;
         SkipLineW(p);
         // 开始解析行信息
@@ -1472,8 +1424,7 @@ begin
   end;
 end;
 
-function TQSymbolMapFile.Locate(const Addr: Pointer;
-  var AInfo: TQSymbolLocation): Boolean;
+function TQSymbolMapFile.Locate(const Addr: Pointer; var AInfo: TQSymbolLocation): Boolean;
 var
   ASymbol: TQSymbolBase;
 begin
@@ -1513,8 +1464,7 @@ var
   hToken: THandle;
 begin
   Result := False;
-  if OpenProcessToken(GetCurrentProcess, TOKEN_ADJUST_PRIVILEGES or TOKEN_QUERY,
-    hToken) then
+  if OpenProcessToken(GetCurrentProcess, TOKEN_ADJUST_PRIVILEGES or TOKEN_QUERY, hToken) then
   begin
     GetMem(TP, SizeOf(DWORD) + SizeOf(TLUIDAndAttributes));
     try
@@ -1525,8 +1475,7 @@ begin
           TP.Privileges[0].Attributes := SE_PRIVILEGE_ENABLED
         else
           TP.Privileges[0].Attributes := 0;
-        Result := AdjustTokenPrivileges(hToken, False, TP^, SizeOf(TP),
-          nil, Dummy);
+        Result := AdjustTokenPrivileges(hToken, False, TP^, SizeOf(TP), nil, Dummy);
       end
       else
         Result := False;
@@ -1565,8 +1514,8 @@ end;
 
 { TDeadlockChecker }
 
-class function TDeadlockChecker.CheckThreads(ACallback: TThreadCheckEvent;
-  AExcludeThread: TThreadId; ATag: Pointer; var ADeadFound: Boolean): Boolean;
+class function TDeadlockChecker.CheckThreads(ACallback: TThreadCheckEvent; AExcludeThread: TThreadId; ATag: Pointer;
+  var ADeadFound: Boolean): Boolean;
 var
   hSnapshot, hThread, hWct: THandle;
   AEntry: THREADENTRY32;
@@ -1589,11 +1538,9 @@ begin
         if Thread32First(hSnapshot, AEntry) then
         begin
           repeat
-            if (AEntry.th32OwnerProcessID = AProcId) and
-              (AEntry.th32ThreadID <> AExcludeThread) then
+            if (AEntry.th32OwnerProcessID = AProcId) and (AEntry.th32ThreadID <> AExcludeThread) then
             begin
-              hThread := OpenThread(THREAD_ALL_ACCESS, False,
-                AEntry.th32ThreadID);
+              hThread := OpenThread(THREAD_ALL_ACCESS, False, AEntry.th32ThreadID);
               if hThread <> 0 then
               begin
                 GetExitCodeThread(hThread, AExitCode);
@@ -1620,8 +1567,7 @@ begin
   FreeOnTerminate := True;
 end;
 
-procedure CheckThreadDeadlock(WctHandle: THandle; AThreadId: TThreadId;
-  ATag: Pointer; var ADeadFound: Boolean);
+procedure CheckThreadDeadlock(WctHandle: THandle; AThreadId: TThreadId; ATag: Pointer; var ADeadFound: Boolean);
 var
   NodeInfoArray: array [0 .. WCT_MAX_NODE_COUNT - 1] of WAITCHAIN_NODE_INFO;
   Count, I: DWORD;
@@ -1632,12 +1578,10 @@ const
 begin
   ABuilder := ATag;
   Count := WCT_MAX_NODE_COUNT;
-  if not GetThreadWaitChain(WctHandle, 0, WCTP_GETINFO_ALL_FLAGS, AThreadId,
-    @Count, @NodeInfoArray[0], @IsCycle) then
+  if not GetThreadWaitChain(WctHandle, 0, WCTP_GETINFO_ALL_FLAGS, AThreadId, @Count, @NodeInfoArray[0], @IsCycle) then
   begin
     I := GetLastError;
-    ABuilder.Cat(SpaceChar, 1)
-      .Cat(Format(SGetWaitStateError, [I, SysErrorMessage(I)])).Cat(SLineBreak);
+    ABuilder.Cat(SpaceChar, 1).Cat(Format(SGetWaitStateError, [I, SysErrorMessage(I)])).Cat(SLineBreak);
     Exit;
   end;
   if IsCycle then // 在发生死锁时才记录相关日志
@@ -1649,9 +1593,7 @@ begin
     ABuilder.Cat(SLineBreak).Cat(SDeadLockFound).Cat(SLineBreak);
     if Count > WCT_MAX_NODE_COUNT then
     begin
-      ABuilder.Cat(SpaceChar, 1)
-        .Cat(Format(SMoreChainNodes, [Count, WCT_MAX_NODE_COUNT]))
-        .Cat(SLineBreak);
+      ABuilder.Cat(SpaceChar, 1).Cat(Format(SMoreChainNodes, [Count, WCT_MAX_NODE_COUNT])).Cat(SLineBreak);
       Count := WCT_MAX_NODE_COUNT;
     end;
     for I := 0 to Count - 1 do
@@ -1660,8 +1602,7 @@ begin
       case NodeInfoArray[I].ObjectType of
         WctThreadType:
           begin
-            ABuilder.Cat(SWaitThreadDesc)
-              .Cat(NodeInfoArray[I].ThreadObject.ThreadId);
+            ABuilder.Cat(SWaitThreadDesc).Cat(NodeInfoArray[I].ThreadObject.ThreadId);
             if NodeInfoArray[I].ObjectStatus = WctStatusBlocked then
               ABuilder.Cat(SThreadBlocked)
             else
@@ -1696,8 +1637,7 @@ begin
   begin
     ABuilder := TQStringCatHelperW.Create;
     try
-      if CheckThreads(CheckThreadDeadlock, DeadCheckThreadId, ABuilder, Result)
-      then
+      if CheckThreads(CheckThreadDeadlock, DeadCheckThreadId, ABuilder, Result) then
       begin
         if Result then
           ALog := ABuilder.Value
@@ -1707,8 +1647,7 @@ begin
       else
       begin
         Result := False;
-        ALog := Format(SGetWaitStateError,
-          [GetLastError, SysErrorMessage(GetLastError)]);
+        ALog := Format(SGetWaitStateError, [GetLastError, SysErrorMessage(GetLastError)]);
       end;
     finally
       FreeObject(ABuilder);
@@ -1722,8 +1661,7 @@ begin
   inherited;
 end;
 
-procedure PrintThreadWaitChain(hWct: THandle; AThreadId: TThreadId;
-  ATag: Pointer; var ADeadFound: Boolean);
+procedure PrintThreadWaitChain(hWct: THandle; AThreadId: TThreadId; ATag: Pointer; var ADeadFound: Boolean);
 var
   NodeInfoArray: array [0 .. WCT_MAX_NODE_COUNT - 1] of WAITCHAIN_NODE_INFO;
   Count, I: DWORD;
@@ -1734,12 +1672,10 @@ const
 begin
   ABuilder := ATag;
   Count := WCT_MAX_NODE_COUNT;
-  if not GetThreadWaitChain(hWct, 0, WCTP_GETINFO_ALL_FLAGS, AThreadId, @Count,
-    @NodeInfoArray[0], @IsCycle) then
+  if not GetThreadWaitChain(hWct, 0, WCTP_GETINFO_ALL_FLAGS, AThreadId, @Count, @NodeInfoArray[0], @IsCycle) then
   begin
     I := GetLastError;
-    ABuilder.Cat(SpaceChar, 1)
-      .Cat(Format(SGetWaitStateError, [I, SysErrorMessage(I)])).Cat(SLineBreak);
+    ABuilder.Cat(SpaceChar, 1).Cat(Format(SGetWaitStateError, [I, SysErrorMessage(I)])).Cat(SLineBreak);
     Exit;
   end;
   ABuilder.Cat(SWaitThreadDesc).Cat(AThreadId);
@@ -1753,9 +1689,7 @@ begin
   end;
   if Count > WCT_MAX_NODE_COUNT then
   begin
-    ABuilder.Cat(SpaceChar, 1)
-      .Cat(Format(SMoreChainNodes, [Count, WCT_MAX_NODE_COUNT]))
-      .Cat(SLineBreak);
+    ABuilder.Cat(SpaceChar, 1).Cat(Format(SMoreChainNodes, [Count, WCT_MAX_NODE_COUNT])).Cat(SLineBreak);
     Count := WCT_MAX_NODE_COUNT;
   end;
   I := 0;
@@ -1765,8 +1699,7 @@ begin
     case NodeInfoArray[I].ObjectType of
       WctThreadType:
         begin
-          ABuilder.Cat(SWaitThreadDesc)
-            .Cat(NodeInfoArray[I].ThreadObject.ThreadId);
+          ABuilder.Cat(SWaitThreadDesc).Cat(NodeInfoArray[I].ThreadObject.ThreadId);
           if NodeInfoArray[I].ObjectStatus = WctStatusBlocked then
             ABuilder.Cat(SThreadBlocked)
           else
@@ -1802,12 +1735,10 @@ begin
   begin
     ABuilder := TQStringCatHelperW.Create;
     try
-      if CheckThreads(PrintThreadWaitChain, DeadCheckThreadId, ABuilder,
-        ADeadFound) then
+      if CheckThreads(PrintThreadWaitChain, DeadCheckThreadId, ABuilder, ADeadFound) then
         Result := ABuilder.Value
       else
-        Result := Format(SGetWaitStateError,
-          [GetLastError, SysErrorMessage(GetLastError)]);
+        Result := Format(SGetWaitStateError, [GetLastError, SysErrorMessage(GetLastError)]);
     finally
       FreeObject(ABuilder);
     end;
@@ -1823,8 +1754,7 @@ begin
   begin
     if DeadlockExists(S) then
     begin
-      SaveTextW(ExtractFilePath(GetModuleName(MainInstance)) +
-        'deadlock.log', S);
+      SaveTextW(ExtractFilePath(GetModuleName(MainInstance)) + 'deadlock.log', S);
       AtomicCmpExchange(PPointer(@DeadLocker)^, nil, Pointer(Self));
       Terminate; // 检测到死锁后记录日志就退出
     end
@@ -1842,10 +1772,8 @@ var
   ActivationStateCallback: PCoGetActivationState;
 begin
   CoInitialize(nil);
-  CallStateCallback := GetProcAddress(GetModuleHandle('ole32.dll'),
-    'CoGetCallState');
-  ActivationStateCallback := GetProcAddress(GetModuleHandle('ole32.dll'),
-    'CoGetActivationState');
+  CallStateCallback := GetProcAddress(GetModuleHandle('ole32.dll'), 'CoGetCallState');
+  ActivationStateCallback := GetProcAddress(GetModuleHandle('ole32.dll'), 'CoGetActivationState');
   Result := Assigned(CallStateCallback) and Assigned(ActivationStateCallback);
   if Result then
     RegisterWaitChainCOMCallback(CallStateCallback, ActivationStateCallback);
@@ -1881,9 +1809,8 @@ begin
   end;
 end;
 
-function RtlCaptureStackBackTrace(FramesToSkip, FramesToCapture: DWORD;
-  var BackTrace: Pointer; BackTraceHash: PCardinal): Word; stdcall;
-  external kernel32;
+function RtlCaptureStackBackTrace(FramesToSkip, FramesToCapture: DWORD; var BackTrace: Pointer; BackTraceHash: PCardinal): Word;
+  stdcall; external kernel32;
 
 function DoGetExceptionStacks(p: System.PExceptionRecord): Pointer;
 var
@@ -1967,16 +1894,11 @@ initialization
 
 {$IFDEF MSWINDOWS}
   EnablePrivilege('SeDebugPrivilege', True);
-NtQueryInformationThread := GetProcAddress(GetModuleHandle('ntdll.dll'),
-  'NtQueryInformationThread');
-OpenThreadWaitChainSession := GetProcAddress(GetModuleHandle(Advapi32),
-  'OpenThreadWaitChainSession');
-CloseThreadWaitChainSession := GetProcAddress(GetModuleHandle(Advapi32),
-  'CloseThreadWaitChainSession');
-GetThreadWaitChain := GetProcAddress(GetModuleHandle(Advapi32),
-  'GetThreadWaitChain');
-RegisterWaitChainCOMCallback := GetProcAddress(GetModuleHandle(Advapi32),
-  'RegisterWaitChainCOMCallback');
+NtQueryInformationThread := GetProcAddress(GetModuleHandle('ntdll.dll'), 'NtQueryInformationThread');
+OpenThreadWaitChainSession := GetProcAddress(GetModuleHandle(Advapi32), 'OpenThreadWaitChainSession');
+CloseThreadWaitChainSession := GetProcAddress(GetModuleHandle(Advapi32), 'CloseThreadWaitChainSession');
+GetThreadWaitChain := GetProcAddress(GetModuleHandle(Advapi32), 'GetThreadWaitChain');
+RegisterWaitChainCOMCallback := GetProcAddress(GetModuleHandle(Advapi32), 'RegisterWaitChainCOMCallback');
 {$ENDIF}
 Symbols := TQDebugSymbols.Create;
 Symbols.LoadDefault;

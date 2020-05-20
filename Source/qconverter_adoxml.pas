@@ -178,7 +178,7 @@ begin
             ADef.DBType := SQL_BOOLEAN
           else if S = 'r4' then
             ADef.DBType := SQL_SINGLE
-          else if (S = 'r8') or (S='float') then
+          else if S = 'r8' then
             ADef.DBType := SQL_FLOAT
           else if (S = 'numeric') or (S = 'number') then
           begin

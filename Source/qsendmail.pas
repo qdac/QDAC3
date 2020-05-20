@@ -10,7 +10,7 @@ interface
   本单元实现参考了 BCCSafe 的实现，详情参考：
   http://www.bccsafe.com/delphi%E7%AC%94%E8%AE%B0/2015/05/12/IndySendMail/?utm_source=tuicool&utm_medium=referral
 }
-uses classes, sysutils, qstring;
+uses classes, sysutils,qstring;
 
 type
   PQMailAttachment = ^TQMailAttachment;
@@ -20,14 +20,13 @@ type
     ContentId: QStringW;
     ContentFile: QStringW;
     ContentStream: TStream;
-    IsHtmlFile: Boolean;
   end;
 
   IMailAttachments = interface
     procedure AddFile(const AFileName: QStringW;
-      const AContentId: QStringW = ''; IsHtmlFile: Boolean = False);
+      const AContentId: QStringW = '');
     procedure AddStream(AData: TStream; const AContentType: QStringW;
-      const AContentId: QStringW = ''; IsHtmlFile: Boolean = False);
+      const AContentId: QStringW = '');
     function GetCount: Integer;
     function GetItems(AIndex: Integer): PQMailAttachment;
     property Count: Integer read GetCount;
@@ -64,14 +63,15 @@ type
 
 function DetectImageFormat(AStream: TStream): TGraphicFormat; overload;
 function DetectImageFormat(AFileName: String): TGraphicFormat; overload;
-function EncodeAttachmentImage(const AId: QStringW; AWidth: QStringW = '';
-  AHeight: QStringW = ''): QStringW;
 function EncodeMailImage(AStream: TStream; AId: QStringW = '';
-  AWidth: QStringW = ''; AHeight: QStringW = ''): QStringW; overload;
+  AWidth: QStringW = ''; AHeight: QStringW = '')
+  : QStringW; overload;
 function EncodeMailImage(AFileName: QStringW; AId: QStringW = '';
-  AWidth: QStringW = ''; AHeight: QStringW = ''): QStringW; overload;
+  AWidth: QStringW = ''; AHeight: QStringW = '')
+  : QStringW; overload;
 function EncodeMailImage(AImage: IStreamPersist; AId: QStringW = '';
-  AWidth: QStringW = ''; AHeight: QStringW = ''): QStringW; overload;
+  AWidth: QStringW = ''; AHeight: QStringW = '')
+  : QStringW; overload;
 
 var
   DefaultSMTPServer: String;
@@ -92,7 +92,6 @@ uses
 
 resourcestring
   SUnsupportImageFormat = '不支持的图片格式，HTML中图片只支持JPG/PNG/GIF/BMP';
-  SAttachmentIdNotExists = '未指定附件ID。';
 
 type
 {$IF RTLVersion>=21}
@@ -105,9 +104,9 @@ type
   protected
     FItems: TAttachmentList;
     procedure AddFile(const AFileName: QStringW;
-      const AContentId: QStringW = ''; IsHtmlFile: Boolean = False);
+      const AContentId: QStringW = '');
     procedure AddStream(AData: TStream; const AContentType: QStringW;
-      const AContentId: QStringW = ''; IsHtmlFile: Boolean = False);
+      const AContentId: QStringW = '');
     function GetCount: Integer;
     function GetItems(AIndex: Integer): PQMailAttachment;
     procedure DoInitializeISO(var VHeaderEncoding: Char; var VCharSet: string);
@@ -148,20 +147,10 @@ begin
     begin
       with AData.Attachements.Items[I]^ do
       begin
-        if IsHtmlFile then
-        begin
-          if Length(ContentFile) > 0 then
-            ABuilder.HtmlFiles.Add(ContentFile, ContentId)
-          else if Assigned(ContentStream) then
-            ABuilder.HtmlFiles.Add(ContentStream, ContentType, ContentId);
-        end
-        else
-        begin
-          if Length(ContentFile) > 0 then
-            ABuilder.Attachments.Add(ContentFile, ContentId)
-          else if Assigned(ContentStream) then
-            ABuilder.Attachments.Add(ContentStream, ContentType, ContentId);
-        end;
+        if Length(ContentFile) > 0 then
+          ABuilder.Attachments.Add(ContentFile, ContentId)
+        else if Assigned(ContentStream)  then
+          ABuilder.Attachments.Add(ContentStream, ContentType, ContentId)
       end;
     end;
     ABuilder.FillMessage(AMsg);
@@ -324,20 +313,18 @@ end;
 
 { TQMailAttachments }
 
-procedure TQMailAttachments.AddFile(const AFileName, AContentId: QStringW;
-  IsHtmlFile: Boolean);
+procedure TQMailAttachments.AddFile(const AFileName, AContentId: QStringW);
 var
   AItem: PQMailAttachment;
 begin
   New(AItem);
   AItem.ContentFile := AFileName;
   AItem.ContentId := AContentId;
-  AItem.IsHtmlFile := IsHtmlFile;
   FItems.Add(AItem);
 end;
 
 procedure TQMailAttachments.AddStream(AData: TStream;
-  const AContentType, AContentId: QStringW; IsHtmlFile: Boolean);
+  const AContentType, AContentId: QStringW);
 var
   AItem: PQMailAttachment;
 begin
@@ -345,7 +332,6 @@ begin
   AItem.ContentStream := AData;
   AItem.ContentType := AContentType;
   AItem.ContentId := AContentId;
-  AItem.IsHtmlFile := IsHtmlFile;
   FItems.Add(AItem);
 end;
 
@@ -391,12 +377,12 @@ function DetectImageFormat(AStream: TStream): TGraphicFormat; overload;
 var
   ABuf: array [0 .. 7] of Byte;
   AReaded: Integer;
-  APos: Int64;
+  APos:Int64;
 begin
   FillChar(ABuf, 8, 0);
-  APos := AStream.Position;
+  APos:=AStream.Position;
   AReaded := AStream.Read(ABuf[0], 8);
-  AStream.Position := APos; // 回到原始位置
+  AStream.Position:=APos;// 回到原始位置
   if (ABuf[0] = $FF) and (ABuf[1] = $D8) then
     // JPEG文件头标识 (2 bytes): $ff, $d8 (SOI) (JPEG 文件标识)
     Result := gfJpeg
@@ -487,19 +473,6 @@ begin
   end;
 end;
 
-function EncodeAttachmentImage(const AId: QStringW; AWidth: QStringW = '';
-  AHeight: QStringW = ''): QStringW;
-begin
-  if Length(AId) = 0 then
-    raise Exception.Create(SAttachmentIdNotExists);
-  Result := '<img id=' + QuotedStrW(AId, '"');
-  if Length(AWidth) > 0 then
-    Result := Result + ' width=' + QuotedStrW(AWidth, '"');
-  if Length(AHeight) > 0 then
-    Result := Result + ' height=' + QuotedStrW(AHeight, '"');
-  Result := Result + ' src=' + QuotedStrW('cid:' + AId, '"') + '/>';
-end;
-
 function EncodeMailImage(AStream: TStream; AId, AWidth, AHeight: QStringW)
   : QStringW;
 var
@@ -525,8 +498,8 @@ begin
   end;
 end;
 
-function EncodeMailImage(AFileName: QStringW; AId, AWidth, AHeight: QStringW)
-  : QStringW;
+function EncodeMailImage(AFileName: QStringW;
+  AId, AWidth, AHeight: QStringW): QStringW;
 var
   AStream: TMemoryStream;
 begin

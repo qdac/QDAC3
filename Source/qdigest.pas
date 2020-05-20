@@ -64,7 +64,7 @@ type
       3:
         (SHA512: array [0 .. 63] of Byte);
       4:
-        (I32: array [0 .. 15] of Cardinal);
+        (I32: array [0 .. 7] of Cardinal);
       5:
         (I64: array [0 .. 7] of UInt64);
   end;
@@ -76,53 +76,75 @@ type
 {$ENDIF}
 function MD5Hash(const p: Pointer; len: Integer): TQMD5Digest; overload;
 function MD5Hash(const S: QStringW): TQMD5Digest; overload;
-function MD5Hash(AStream: TStream; AOnProgress: TQHashProgressNotify = nil): TQMD5Digest; overload;
+function MD5Hash(AStream: TStream; AOnProgress: TQHashProgressNotify = nil)
+  : TQMD5Digest; overload;
 {$IFDEF UNICODE}
-function MD5Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA): TQMD5Digest; overload;
+function MD5Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA)
+  : TQMD5Digest; overload;
 {$ENDIF}
-function MD5File(AFile: QStringW; AOnProgress: TQHashProgressNotify = nil): TQMD5Digest; overload;
+function MD5File(AFile: QStringW; AOnProgress: TQHashProgressNotify = nil)
+  : TQMD5Digest; overload;
 {$IFDEF UNICODE}
-function MD5File(AFile: QStringW; AOnProgress: TQHashProgressNotifyA): TQMD5Digest; overload;
+function MD5File(AFile: QStringW; AOnProgress: TQHashProgressNotifyA)
+  : TQMD5Digest; overload;
 {$ENDIF}
-function MD5QuickHash(AStream: TStream; ASampleSize: Integer = 4096): TQMD5Digest; overload;
-function MD5QuickHash(AFile: QStringW; ASampleSize: Integer = 4096): TQMD5Digest; overload;
+function MD5QuickHash(AStream: TStream; ASampleSize: Integer = 4096)
+  : TQMD5Digest; overload;
+function MD5QuickHash(AFile: QStringW; ASampleSize: Integer = 4096)
+  : TQMD5Digest; overload;
 function MD5Equal(const AFirst, ASecond: TQMD5Digest): Boolean;
 function SHA160Hash(const p: Pointer; len: Integer): TQSHADigest; overload;
 function SHA160Hash(const S: QStringW): TQSHADigest; overload;
-function SHA160Hash(AStream: TStream; AOnProgress: TQHashProgressNotify = nil): TQSHADigest; overload;
-function SHA160File(AFileName: QStringW; AOnProgress: TQHashProgressNotify = nil): TQSHADigest; overload;
+function SHA160Hash(AStream: TStream; AOnProgress: TQHashProgressNotify = nil)
+  : TQSHADigest; overload;
+function SHA160File(AFileName: QStringW;
+  AOnProgress: TQHashProgressNotify = nil): TQSHADigest; overload;
 {$IFDEF UNICODE}
-function SHA160Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA): TQSHADigest; overload;
-function SHA160File(AFileName: QStringW; AOnProgress: TQHashProgressNotifyA): TQSHADigest; overload;
+function SHA160Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA)
+  : TQSHADigest; overload;
+function SHA160File(AFileName: QStringW; AOnProgress: TQHashProgressNotifyA)
+  : TQSHADigest; overload;
 {$ENDIF}
 function SHA256Hash(const p: Pointer; len: Integer): TQSHADigest; overload;
 function SHA256Hash(const S: QStringW): TQSHADigest; overload;
-function SHA256Hash(AStream: TStream; AOnProgress: TQHashProgressNotify = nil): TQSHADigest; overload;
-function SHA256File(AFileName: QStringW; AOnProgress: TQHashProgressNotify = nil): TQSHADigest; overload;
+function SHA256Hash(AStream: TStream; AOnProgress: TQHashProgressNotify = nil)
+  : TQSHADigest; overload;
+function SHA256File(AFileName: QStringW;
+  AOnProgress: TQHashProgressNotify = nil): TQSHADigest; overload;
 {$IFDEF UNICODE}
-function SHA256Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA): TQSHADigest; overload;
-function SHA256File(AFileName: QStringW; AOnProgress: TQHashProgressNotifyA): TQSHADigest; overload;
+function SHA256Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA)
+  : TQSHADigest; overload;
+function SHA256File(AFileName: QStringW; AOnProgress: TQHashProgressNotifyA)
+  : TQSHADigest; overload;
 {$ENDIF}
 function SHA384Hash(const p: Pointer; len: Integer): TQSHADigest; overload;
 function SHA384Hash(const S: QStringW): TQSHADigest; overload;
-function SHA384Hash(AStream: TStream; AOnProgress: TQHashProgressNotify = nil): TQSHADigest; overload;
-function SHA384File(AFileName: QStringW; AOnProgress: TQHashProgressNotify = nil): TQSHADigest; overload;
+function SHA384Hash(AStream: TStream; AOnProgress: TQHashProgressNotify = nil)
+  : TQSHADigest; overload;
+function SHA384File(AFileName: QStringW;
+  AOnProgress: TQHashProgressNotify = nil): TQSHADigest; overload;
 {$IFDEF UNICODE}
-function SHA384Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA): TQSHADigest; overload;
-function SHA384File(AFileName: QStringW; AOnProgress: TQHashProgressNotifyA): TQSHADigest; overload;
+function SHA384Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA)
+  : TQSHADigest; overload;
+function SHA384File(AFileName: QStringW; AOnProgress: TQHashProgressNotifyA)
+  : TQSHADigest; overload;
 {$ENDIF}
 function SHA512Hash(const p: Pointer; len: Integer): TQSHADigest; overload;
 function SHA512Hash(const S: QStringW): TQSHADigest; overload;
-function SHA512Hash(AStream: TStream; AOnProgress: TQHashProgressNotify = nil): TQSHADigest; overload;
-function SHA512File(AFileName: QStringW; AOnProgress: TQHashProgressNotify = nil): TQSHADigest; overload;
+function SHA512Hash(AStream: TStream; AOnProgress: TQHashProgressNotify = nil)
+  : TQSHADigest; overload;
+function SHA512File(AFileName: QStringW;
+  AOnProgress: TQHashProgressNotify = nil): TQSHADigest; overload;
 {$IFDEF UNICODE}
-function SHA512Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA): TQSHADigest; overload;
-function SHA512File(AFileName: QStringW; AOnProgress: TQHashProgressNotifyA): TQSHADigest; overload;
+function SHA512Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA)
+  : TQSHADigest; overload;
+function SHA512File(AFileName: QStringW; AOnProgress: TQHashProgressNotifyA)
+  : TQSHADigest; overload;
 {$ENDIF}
-function DigestToString(const ADigest: TQMD5Digest; ALowerCase: Boolean = False): QStringW; overload;
-function DigestToString(const ADigest: TQSHADigest; ALowerCase: Boolean = False): QStringW; overload;
-function DigestEqual(AHash1, AHash2: TQMD5Digest): Boolean; overload;
-function DigestEqual(AHash1, AHash2: TQSHADigest): Boolean; overload;
+function DigestToString(const ADigest: TQMD5Digest; ALowerCase: Boolean = False)
+  : QStringW; overload;
+function DigestToString(const ADigest: TQSHADigest; ALowerCase: Boolean = False)
+  : QStringW; overload;
 
 implementation
 
@@ -171,9 +193,11 @@ type
     class function GetHashString(const AString: QStringW): QStringW; static;
 
     /// <summary>Gets the string associated to the HMAC authentication</summary>
-    class function GetHMAC(const AData, AKey: QStringW): QStringW; static; inline;
+    class function GetHMAC(const AData, AKey: QStringW): QStringW;
+      static; inline;
     /// <summary>Gets the Digest associated to the HMAC authentication</summary>
-    class function GetHMACAsBytes(const AData, AKey: QStringW): TQMD5Digest; static;
+    class function GetHMACAsBytes(const AData, AKey: QStringW)
+      : TQMD5Digest; static;
   end;
 
   TQSHAContext = record
@@ -186,36 +210,6 @@ type
       1:
         (LenHi64, LenLo64: Int64);
   end;
-
-function DigestEqual(AHash1, AHash2: TQMD5Digest): Boolean;
-begin
-  Result := (AHash1.Low = AHash2.Low) and (AHash1.High = AHash2.High);
-end;
-
-function DigestEqual(AHash1, AHash2: TQSHADigest): Boolean;
-var
-  I, C: Integer;
-begin
-  Result := (AHash1.HashType = AHash2.HashType);
-  if Result then
-  begin
-    case AHash1.HashType of
-      sdt160:
-        C := 5;
-      sdt256:
-        C := 8;
-      sdt384:
-        C := 12;
-      sdt512:
-        C := 16;
-    end;
-    for I := 0 to C - 1 do
-    begin
-      if AHash1.I32[I] <> AHash2.I32[I] then
-        Exit(False);
-    end;
-  end;
-end;
 
 function MD5Hash(const p: Pointer; len: Integer): TQMD5Digest;
 var
@@ -234,7 +228,8 @@ begin
   Result := MD5Hash(PQCharA(T), T.Length);
 end;
 
-function MD5Hash(AStream: TStream; AOnProgress: TQHashProgressNotify): TQMD5Digest;
+function MD5Hash(AStream: TStream; AOnProgress: TQHashProgressNotify)
+  : TQMD5Digest;
 var
   ABuf: array [0 .. 65535] of Byte;
   AReaded: Integer;
@@ -248,7 +243,8 @@ var
       begin
 {$IFDEF UNICODE}
         if TMethod(AOnProgress).Data = Pointer(-1) then
-          TQHashProgressNotifyA(TMethod(AOnProgress).Code)(AStream.Position, AStream.Size)
+          TQHashProgressNotifyA(TMethod(AOnProgress).Code)
+            (AStream.Position, AStream.Size)
         else
 {$ENDIF}
           AOnProgress(AStream.Position, AStream.Size);
@@ -272,7 +268,8 @@ begin
 end;
 {$IFDEF UNICODE}
 
-function MD5Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA): TQMD5Digest; overload;
+function MD5Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA)
+  : TQMD5Digest; overload;
 var
   AEvent: TQHashProgressNotify;
 begin
@@ -292,7 +289,8 @@ begin
 end;
 {$ENDIF}
 
-function MD5File(AFile: QStringW; AOnProgress: TQHashProgressNotify): TQMD5Digest;
+function MD5File(AFile: QStringW; AOnProgress: TQHashProgressNotify)
+  : TQMD5Digest;
 var
   AStream: TFileStream;
 begin
@@ -305,7 +303,8 @@ begin
 end;
 {$IFDEF UNICODE}
 
-function MD5File(AFile: QStringW; AOnProgress: TQHashProgressNotifyA): TQMD5Digest; overload;
+function MD5File(AFile: QStringW; AOnProgress: TQHashProgressNotifyA)
+  : TQMD5Digest; overload;
 var
   AStream: TFileStream;
 begin
@@ -369,7 +368,8 @@ begin
   Result := (AFirst.Low = ASecond.Low) and (AFirst.High = ASecond.High);
 end;
 
-function DigestToString(const ADigest: TQMD5Digest; ALowerCase: Boolean): QStringW;
+function DigestToString(const ADigest: TQMD5Digest; ALowerCase: Boolean)
+  : QStringW;
 begin
   Result := qstring.BinToHex(@ADigest, SizeOf(TQMD5Digest), ALowerCase);
 end;
@@ -427,20 +427,22 @@ end;
 
 function SwapDWord(a: LongWord): LongWord; inline;
 begin
-  Result := ((a and $FF) shl 24) or ((a and $FF00) shl 8) or ((a and $FF0000) shr 8) or ((a and $FF000000) shr 24);
+  Result := ((a and $FF) shl 24) or ((a and $FF00) shl 8) or
+    ((a and $FF0000) shr 8) or ((a and $FF000000) shr 24);
 end;
 
 function SwapQWord(a: Int64): Int64; inline;
 begin
-  Result := ((a and $FF) shl 56) or ((a and $FF00) shl 40) or ((a and $FF0000) shl 24) or ((a and $FF000000) shl 8) or
-    ((a and $FF00000000) shr 8) or ((a and $FF0000000000) shr 24) or ((a and $FF000000000000) shr 40) or
-    ((a and $FF00000000000000) shr 56);
+  Result := ((a and $FF) shl 56) or ((a and $FF00) shl 40) or
+    ((a and $FF0000) shl 24) or ((a and $FF000000) shl 8) or
+    ((a and $FF00000000) shr 8) or ((a and $FF0000000000) shr 24) or
+    ((a and $FF000000000000) shr 40) or ((a and $FF00000000000000) shr 56);
 end;
 
 procedure SHACompress(var AContext: TQSHAContext);
   procedure SHA160Compress;
   var
-    a, b, C, d, E: LongWord;
+    a, b, c, d, E: LongWord;
     W: array [0 .. 79] of LongWord;
     I: LongWord;
   begin
@@ -454,182 +456,222 @@ procedure SHACompress(var AContext: TQSHAContext);
         ((W[I - 3] xor W[I - 8] xor W[I - 14] xor W[I - 16]) shr 31);
     a := AContext.CurrentHash.I32[0];
     b := AContext.CurrentHash.I32[1];
-    C := AContext.CurrentHash.I32[2];
+    c := AContext.CurrentHash.I32[2];
     d := AContext.CurrentHash.I32[3];
     E := AContext.CurrentHash.I32[4];
-    Inc(E, ((a shl 5) or (a shr 27)) + (d xor (b and (C xor d))) + $5A827999 + W[0]);
+    Inc(E, ((a shl 5) or (a shr 27)) + (d xor (b and (c xor d))) +
+      $5A827999 + W[0]);
     b := (b shl 30) or (b shr 2);
-    Inc(d, ((E shl 5) or (E shr 27)) + (C xor (a and (b xor C))) + $5A827999 + W[1]);
+    Inc(d, ((E shl 5) or (E shr 27)) + (c xor (a and (b xor c))) +
+      $5A827999 + W[1]);
     a := (a shl 30) or (a shr 2);
-    Inc(C, ((d shl 5) or (d shr 27)) + (b xor (E and (a xor b))) + $5A827999 + W[2]);
+    Inc(c, ((d shl 5) or (d shr 27)) + (b xor (E and (a xor b))) +
+      $5A827999 + W[2]);
     E := (E shl 30) or (E shr 2);
-    Inc(b, ((C shl 5) or (C shr 27)) + (a xor (d and (E xor a))) + $5A827999 + W[3]);
+    Inc(b, ((c shl 5) or (c shr 27)) + (a xor (d and (E xor a))) +
+      $5A827999 + W[3]);
     d := (d shl 30) or (d shr 2);
-    Inc(a, ((b shl 5) or (b shr 27)) + (E xor (C and (d xor E))) + $5A827999 + W[4]);
-    C := (C shl 30) or (C shr 2);
-    Inc(E, ((a shl 5) or (a shr 27)) + (d xor (b and (C xor d))) + $5A827999 + W[5]);
+    Inc(a, ((b shl 5) or (b shr 27)) + (E xor (c and (d xor E))) +
+      $5A827999 + W[4]);
+    c := (c shl 30) or (c shr 2);
+    Inc(E, ((a shl 5) or (a shr 27)) + (d xor (b and (c xor d))) +
+      $5A827999 + W[5]);
     b := (b shl 30) or (b shr 2);
-    Inc(d, ((E shl 5) or (E shr 27)) + (C xor (a and (b xor C))) + $5A827999 + W[6]);
+    Inc(d, ((E shl 5) or (E shr 27)) + (c xor (a and (b xor c))) +
+      $5A827999 + W[6]);
     a := (a shl 30) or (a shr 2);
-    Inc(C, ((d shl 5) or (d shr 27)) + (b xor (E and (a xor b))) + $5A827999 + W[7]);
+    Inc(c, ((d shl 5) or (d shr 27)) + (b xor (E and (a xor b))) +
+      $5A827999 + W[7]);
     E := (E shl 30) or (E shr 2);
-    Inc(b, ((C shl 5) or (C shr 27)) + (a xor (d and (E xor a))) + $5A827999 + W[8]);
+    Inc(b, ((c shl 5) or (c shr 27)) + (a xor (d and (E xor a))) +
+      $5A827999 + W[8]);
     d := (d shl 30) or (d shr 2);
-    Inc(a, ((b shl 5) or (b shr 27)) + (E xor (C and (d xor E))) + $5A827999 + W[9]);
-    C := (C shl 30) or (C shr 2);
-    Inc(E, ((a shl 5) or (a shr 27)) + (d xor (b and (C xor d))) + $5A827999 + W[10]);
+    Inc(a, ((b shl 5) or (b shr 27)) + (E xor (c and (d xor E))) +
+      $5A827999 + W[9]);
+    c := (c shl 30) or (c shr 2);
+    Inc(E, ((a shl 5) or (a shr 27)) + (d xor (b and (c xor d))) +
+      $5A827999 + W[10]);
     b := (b shl 30) or (b shr 2);
-    Inc(d, ((E shl 5) or (E shr 27)) + (C xor (a and (b xor C))) + $5A827999 + W[11]);
+    Inc(d, ((E shl 5) or (E shr 27)) + (c xor (a and (b xor c))) +
+      $5A827999 + W[11]);
     a := (a shl 30) or (a shr 2);
-    Inc(C, ((d shl 5) or (d shr 27)) + (b xor (E and (a xor b))) + $5A827999 + W[12]);
+    Inc(c, ((d shl 5) or (d shr 27)) + (b xor (E and (a xor b))) +
+      $5A827999 + W[12]);
     E := (E shl 30) or (E shr 2);
-    Inc(b, ((C shl 5) or (C shr 27)) + (a xor (d and (E xor a))) + $5A827999 + W[13]);
+    Inc(b, ((c shl 5) or (c shr 27)) + (a xor (d and (E xor a))) +
+      $5A827999 + W[13]);
     d := (d shl 30) or (d shr 2);
-    Inc(a, ((b shl 5) or (b shr 27)) + (E xor (C and (d xor E))) + $5A827999 + W[14]);
-    C := (C shl 30) or (C shr 2);
-    Inc(E, ((a shl 5) or (a shr 27)) + (d xor (b and (C xor d))) + $5A827999 + W[15]);
+    Inc(a, ((b shl 5) or (b shr 27)) + (E xor (c and (d xor E))) +
+      $5A827999 + W[14]);
+    c := (c shl 30) or (c shr 2);
+    Inc(E, ((a shl 5) or (a shr 27)) + (d xor (b and (c xor d))) +
+      $5A827999 + W[15]);
     b := (b shl 30) or (b shr 2);
-    Inc(d, ((E shl 5) or (E shr 27)) + (C xor (a and (b xor C))) + $5A827999 + W[16]);
+    Inc(d, ((E shl 5) or (E shr 27)) + (c xor (a and (b xor c))) +
+      $5A827999 + W[16]);
     a := (a shl 30) or (a shr 2);
-    Inc(C, ((d shl 5) or (d shr 27)) + (b xor (E and (a xor b))) + $5A827999 + W[17]);
+    Inc(c, ((d shl 5) or (d shr 27)) + (b xor (E and (a xor b))) +
+      $5A827999 + W[17]);
     E := (E shl 30) or (E shr 2);
-    Inc(b, ((C shl 5) or (C shr 27)) + (a xor (d and (E xor a))) + $5A827999 + W[18]);
+    Inc(b, ((c shl 5) or (c shr 27)) + (a xor (d and (E xor a))) +
+      $5A827999 + W[18]);
     d := (d shl 30) or (d shr 2);
-    Inc(a, ((b shl 5) or (b shr 27)) + (E xor (C and (d xor E))) + $5A827999 + W[19]);
-    C := (C shl 30) or (C shr 2);
+    Inc(a, ((b shl 5) or (b shr 27)) + (E xor (c and (d xor E))) +
+      $5A827999 + W[19]);
+    c := (c shl 30) or (c shr 2);
 
-    Inc(E, ((a shl 5) or (a shr 27)) + (b xor C xor d) + $6ED9EBA1 + W[20]);
+    Inc(E, ((a shl 5) or (a shr 27)) + (b xor c xor d) + $6ED9EBA1 + W[20]);
     b := (b shl 30) or (b shr 2);
-    Inc(d, ((E shl 5) or (E shr 27)) + (a xor b xor C) + $6ED9EBA1 + W[21]);
+    Inc(d, ((E shl 5) or (E shr 27)) + (a xor b xor c) + $6ED9EBA1 + W[21]);
     a := (a shl 30) or (a shr 2);
-    Inc(C, ((d shl 5) or (d shr 27)) + (E xor a xor b) + $6ED9EBA1 + W[22]);
+    Inc(c, ((d shl 5) or (d shr 27)) + (E xor a xor b) + $6ED9EBA1 + W[22]);
     E := (E shl 30) or (E shr 2);
-    Inc(b, ((C shl 5) or (C shr 27)) + (d xor E xor a) + $6ED9EBA1 + W[23]);
+    Inc(b, ((c shl 5) or (c shr 27)) + (d xor E xor a) + $6ED9EBA1 + W[23]);
     d := (d shl 30) or (d shr 2);
-    Inc(a, ((b shl 5) or (b shr 27)) + (C xor d xor E) + $6ED9EBA1 + W[24]);
-    C := (C shl 30) or (C shr 2);
-    Inc(E, ((a shl 5) or (a shr 27)) + (b xor C xor d) + $6ED9EBA1 + W[25]);
+    Inc(a, ((b shl 5) or (b shr 27)) + (c xor d xor E) + $6ED9EBA1 + W[24]);
+    c := (c shl 30) or (c shr 2);
+    Inc(E, ((a shl 5) or (a shr 27)) + (b xor c xor d) + $6ED9EBA1 + W[25]);
     b := (b shl 30) or (b shr 2);
-    Inc(d, ((E shl 5) or (E shr 27)) + (a xor b xor C) + $6ED9EBA1 + W[26]);
+    Inc(d, ((E shl 5) or (E shr 27)) + (a xor b xor c) + $6ED9EBA1 + W[26]);
     a := (a shl 30) or (a shr 2);
-    Inc(C, ((d shl 5) or (d shr 27)) + (E xor a xor b) + $6ED9EBA1 + W[27]);
+    Inc(c, ((d shl 5) or (d shr 27)) + (E xor a xor b) + $6ED9EBA1 + W[27]);
     E := (E shl 30) or (E shr 2);
-    Inc(b, ((C shl 5) or (C shr 27)) + (d xor E xor a) + $6ED9EBA1 + W[28]);
+    Inc(b, ((c shl 5) or (c shr 27)) + (d xor E xor a) + $6ED9EBA1 + W[28]);
     d := (d shl 30) or (d shr 2);
-    Inc(a, ((b shl 5) or (b shr 27)) + (C xor d xor E) + $6ED9EBA1 + W[29]);
-    C := (C shl 30) or (C shr 2);
-    Inc(E, ((a shl 5) or (a shr 27)) + (b xor C xor d) + $6ED9EBA1 + W[30]);
+    Inc(a, ((b shl 5) or (b shr 27)) + (c xor d xor E) + $6ED9EBA1 + W[29]);
+    c := (c shl 30) or (c shr 2);
+    Inc(E, ((a shl 5) or (a shr 27)) + (b xor c xor d) + $6ED9EBA1 + W[30]);
     b := (b shl 30) or (b shr 2);
-    Inc(d, ((E shl 5) or (E shr 27)) + (a xor b xor C) + $6ED9EBA1 + W[31]);
+    Inc(d, ((E shl 5) or (E shr 27)) + (a xor b xor c) + $6ED9EBA1 + W[31]);
     a := (a shl 30) or (a shr 2);
-    Inc(C, ((d shl 5) or (d shr 27)) + (E xor a xor b) + $6ED9EBA1 + W[32]);
+    Inc(c, ((d shl 5) or (d shr 27)) + (E xor a xor b) + $6ED9EBA1 + W[32]);
     E := (E shl 30) or (E shr 2);
-    Inc(b, ((C shl 5) or (C shr 27)) + (d xor E xor a) + $6ED9EBA1 + W[33]);
+    Inc(b, ((c shl 5) or (c shr 27)) + (d xor E xor a) + $6ED9EBA1 + W[33]);
     d := (d shl 30) or (d shr 2);
-    Inc(a, ((b shl 5) or (b shr 27)) + (C xor d xor E) + $6ED9EBA1 + W[34]);
-    C := (C shl 30) or (C shr 2);
-    Inc(E, ((a shl 5) or (a shr 27)) + (b xor C xor d) + $6ED9EBA1 + W[35]);
+    Inc(a, ((b shl 5) or (b shr 27)) + (c xor d xor E) + $6ED9EBA1 + W[34]);
+    c := (c shl 30) or (c shr 2);
+    Inc(E, ((a shl 5) or (a shr 27)) + (b xor c xor d) + $6ED9EBA1 + W[35]);
     b := (b shl 30) or (b shr 2);
-    Inc(d, ((E shl 5) or (E shr 27)) + (a xor b xor C) + $6ED9EBA1 + W[36]);
+    Inc(d, ((E shl 5) or (E shr 27)) + (a xor b xor c) + $6ED9EBA1 + W[36]);
     a := (a shl 30) or (a shr 2);
-    Inc(C, ((d shl 5) or (d shr 27)) + (E xor a xor b) + $6ED9EBA1 + W[37]);
+    Inc(c, ((d shl 5) or (d shr 27)) + (E xor a xor b) + $6ED9EBA1 + W[37]);
     E := (E shl 30) or (E shr 2);
-    Inc(b, ((C shl 5) or (C shr 27)) + (d xor E xor a) + $6ED9EBA1 + W[38]);
+    Inc(b, ((c shl 5) or (c shr 27)) + (d xor E xor a) + $6ED9EBA1 + W[38]);
     d := (d shl 30) or (d shr 2);
-    Inc(a, ((b shl 5) or (b shr 27)) + (C xor d xor E) + $6ED9EBA1 + W[39]);
-    C := (C shl 30) or (C shr 2);
+    Inc(a, ((b shl 5) or (b shr 27)) + (c xor d xor E) + $6ED9EBA1 + W[39]);
+    c := (c shl 30) or (c shr 2);
 
-    Inc(E, ((a shl 5) or (a shr 27)) + ((b and C) or (d and (b or C))) + $8F1BBCDC + W[40]);
+    Inc(E, ((a shl 5) or (a shr 27)) + ((b and c) or (d and (b or c))) +
+      $8F1BBCDC + W[40]);
     b := (b shl 30) or (b shr 2);
-    Inc(d, ((E shl 5) or (E shr 27)) + ((a and b) or (C and (a or b))) + $8F1BBCDC + W[41]);
+    Inc(d, ((E shl 5) or (E shr 27)) + ((a and b) or (c and (a or b))) +
+      $8F1BBCDC + W[41]);
     a := (a shl 30) or (a shr 2);
-    Inc(C, ((d shl 5) or (d shr 27)) + ((E and a) or (b and (E or a))) + $8F1BBCDC + W[42]);
+    Inc(c, ((d shl 5) or (d shr 27)) + ((E and a) or (b and (E or a))) +
+      $8F1BBCDC + W[42]);
     E := (E shl 30) or (E shr 2);
-    Inc(b, ((C shl 5) or (C shr 27)) + ((d and E) or (a and (d or E))) + $8F1BBCDC + W[43]);
+    Inc(b, ((c shl 5) or (c shr 27)) + ((d and E) or (a and (d or E))) +
+      $8F1BBCDC + W[43]);
     d := (d shl 30) or (d shr 2);
-    Inc(a, ((b shl 5) or (b shr 27)) + ((C and d) or (E and (C or d))) + $8F1BBCDC + W[44]);
-    C := (C shl 30) or (C shr 2);
-    Inc(E, ((a shl 5) or (a shr 27)) + ((b and C) or (d and (b or C))) + $8F1BBCDC + W[45]);
+    Inc(a, ((b shl 5) or (b shr 27)) + ((c and d) or (E and (c or d))) +
+      $8F1BBCDC + W[44]);
+    c := (c shl 30) or (c shr 2);
+    Inc(E, ((a shl 5) or (a shr 27)) + ((b and c) or (d and (b or c))) +
+      $8F1BBCDC + W[45]);
     b := (b shl 30) or (b shr 2);
-    Inc(d, ((E shl 5) or (E shr 27)) + ((a and b) or (C and (a or b))) + $8F1BBCDC + W[46]);
+    Inc(d, ((E shl 5) or (E shr 27)) + ((a and b) or (c and (a or b))) +
+      $8F1BBCDC + W[46]);
     a := (a shl 30) or (a shr 2);
-    Inc(C, ((d shl 5) or (d shr 27)) + ((E and a) or (b and (E or a))) + $8F1BBCDC + W[47]);
+    Inc(c, ((d shl 5) or (d shr 27)) + ((E and a) or (b and (E or a))) +
+      $8F1BBCDC + W[47]);
     E := (E shl 30) or (E shr 2);
-    Inc(b, ((C shl 5) or (C shr 27)) + ((d and E) or (a and (d or E))) + $8F1BBCDC + W[48]);
+    Inc(b, ((c shl 5) or (c shr 27)) + ((d and E) or (a and (d or E))) +
+      $8F1BBCDC + W[48]);
     d := (d shl 30) or (d shr 2);
-    Inc(a, ((b shl 5) or (b shr 27)) + ((C and d) or (E and (C or d))) + $8F1BBCDC + W[49]);
-    C := (C shl 30) or (C shr 2);
-    Inc(E, ((a shl 5) or (a shr 27)) + ((b and C) or (d and (b or C))) + $8F1BBCDC + W[50]);
+    Inc(a, ((b shl 5) or (b shr 27)) + ((c and d) or (E and (c or d))) +
+      $8F1BBCDC + W[49]);
+    c := (c shl 30) or (c shr 2);
+    Inc(E, ((a shl 5) or (a shr 27)) + ((b and c) or (d and (b or c))) +
+      $8F1BBCDC + W[50]);
     b := (b shl 30) or (b shr 2);
-    Inc(d, ((E shl 5) or (E shr 27)) + ((a and b) or (C and (a or b))) + $8F1BBCDC + W[51]);
+    Inc(d, ((E shl 5) or (E shr 27)) + ((a and b) or (c and (a or b))) +
+      $8F1BBCDC + W[51]);
     a := (a shl 30) or (a shr 2);
-    Inc(C, ((d shl 5) or (d shr 27)) + ((E and a) or (b and (E or a))) + $8F1BBCDC + W[52]);
+    Inc(c, ((d shl 5) or (d shr 27)) + ((E and a) or (b and (E or a))) +
+      $8F1BBCDC + W[52]);
     E := (E shl 30) or (E shr 2);
-    Inc(b, ((C shl 5) or (C shr 27)) + ((d and E) or (a and (d or E))) + $8F1BBCDC + W[53]);
+    Inc(b, ((c shl 5) or (c shr 27)) + ((d and E) or (a and (d or E))) +
+      $8F1BBCDC + W[53]);
     d := (d shl 30) or (d shr 2);
-    Inc(a, ((b shl 5) or (b shr 27)) + ((C and d) or (E and (C or d))) + $8F1BBCDC + W[54]);
-    C := (C shl 30) or (C shr 2);
-    Inc(E, ((a shl 5) or (a shr 27)) + ((b and C) or (d and (b or C))) + $8F1BBCDC + W[55]);
+    Inc(a, ((b shl 5) or (b shr 27)) + ((c and d) or (E and (c or d))) +
+      $8F1BBCDC + W[54]);
+    c := (c shl 30) or (c shr 2);
+    Inc(E, ((a shl 5) or (a shr 27)) + ((b and c) or (d and (b or c))) +
+      $8F1BBCDC + W[55]);
     b := (b shl 30) or (b shr 2);
-    Inc(d, ((E shl 5) or (E shr 27)) + ((a and b) or (C and (a or b))) + $8F1BBCDC + W[56]);
+    Inc(d, ((E shl 5) or (E shr 27)) + ((a and b) or (c and (a or b))) +
+      $8F1BBCDC + W[56]);
     a := (a shl 30) or (a shr 2);
-    Inc(C, ((d shl 5) or (d shr 27)) + ((E and a) or (b and (E or a))) + $8F1BBCDC + W[57]);
+    Inc(c, ((d shl 5) or (d shr 27)) + ((E and a) or (b and (E or a))) +
+      $8F1BBCDC + W[57]);
     E := (E shl 30) or (E shr 2);
-    Inc(b, ((C shl 5) or (C shr 27)) + ((d and E) or (a and (d or E))) + $8F1BBCDC + W[58]);
+    Inc(b, ((c shl 5) or (c shr 27)) + ((d and E) or (a and (d or E))) +
+      $8F1BBCDC + W[58]);
     d := (d shl 30) or (d shr 2);
-    Inc(a, ((b shl 5) or (b shr 27)) + ((C and d) or (E and (C or d))) + $8F1BBCDC + W[59]);
-    C := (C shl 30) or (C shr 2);
+    Inc(a, ((b shl 5) or (b shr 27)) + ((c and d) or (E and (c or d))) +
+      $8F1BBCDC + W[59]);
+    c := (c shl 30) or (c shr 2);
 
-    Inc(E, ((a shl 5) or (a shr 27)) + (b xor C xor d) + $CA62C1D6 + W[60]);
+    Inc(E, ((a shl 5) or (a shr 27)) + (b xor c xor d) + $CA62C1D6 + W[60]);
     b := (b shl 30) or (b shr 2);
-    Inc(d, ((E shl 5) or (E shr 27)) + (a xor b xor C) + $CA62C1D6 + W[61]);
+    Inc(d, ((E shl 5) or (E shr 27)) + (a xor b xor c) + $CA62C1D6 + W[61]);
     a := (a shl 30) or (a shr 2);
-    Inc(C, ((d shl 5) or (d shr 27)) + (E xor a xor b) + $CA62C1D6 + W[62]);
+    Inc(c, ((d shl 5) or (d shr 27)) + (E xor a xor b) + $CA62C1D6 + W[62]);
     E := (E shl 30) or (E shr 2);
-    Inc(b, ((C shl 5) or (C shr 27)) + (d xor E xor a) + $CA62C1D6 + W[63]);
+    Inc(b, ((c shl 5) or (c shr 27)) + (d xor E xor a) + $CA62C1D6 + W[63]);
     d := (d shl 30) or (d shr 2);
-    Inc(a, ((b shl 5) or (b shr 27)) + (C xor d xor E) + $CA62C1D6 + W[64]);
-    C := (C shl 30) or (C shr 2);
-    Inc(E, ((a shl 5) or (a shr 27)) + (b xor C xor d) + $CA62C1D6 + W[65]);
+    Inc(a, ((b shl 5) or (b shr 27)) + (c xor d xor E) + $CA62C1D6 + W[64]);
+    c := (c shl 30) or (c shr 2);
+    Inc(E, ((a shl 5) or (a shr 27)) + (b xor c xor d) + $CA62C1D6 + W[65]);
     b := (b shl 30) or (b shr 2);
-    Inc(d, ((E shl 5) or (E shr 27)) + (a xor b xor C) + $CA62C1D6 + W[66]);
+    Inc(d, ((E shl 5) or (E shr 27)) + (a xor b xor c) + $CA62C1D6 + W[66]);
     a := (a shl 30) or (a shr 2);
-    Inc(C, ((d shl 5) or (d shr 27)) + (E xor a xor b) + $CA62C1D6 + W[67]);
+    Inc(c, ((d shl 5) or (d shr 27)) + (E xor a xor b) + $CA62C1D6 + W[67]);
     E := (E shl 30) or (E shr 2);
-    Inc(b, ((C shl 5) or (C shr 27)) + (d xor E xor a) + $CA62C1D6 + W[68]);
+    Inc(b, ((c shl 5) or (c shr 27)) + (d xor E xor a) + $CA62C1D6 + W[68]);
     d := (d shl 30) or (d shr 2);
-    Inc(a, ((b shl 5) or (b shr 27)) + (C xor d xor E) + $CA62C1D6 + W[69]);
-    C := (C shl 30) or (C shr 2);
-    Inc(E, ((a shl 5) or (a shr 27)) + (b xor C xor d) + $CA62C1D6 + W[70]);
+    Inc(a, ((b shl 5) or (b shr 27)) + (c xor d xor E) + $CA62C1D6 + W[69]);
+    c := (c shl 30) or (c shr 2);
+    Inc(E, ((a shl 5) or (a shr 27)) + (b xor c xor d) + $CA62C1D6 + W[70]);
     b := (b shl 30) or (b shr 2);
-    Inc(d, ((E shl 5) or (E shr 27)) + (a xor b xor C) + $CA62C1D6 + W[71]);
+    Inc(d, ((E shl 5) or (E shr 27)) + (a xor b xor c) + $CA62C1D6 + W[71]);
     a := (a shl 30) or (a shr 2);
-    Inc(C, ((d shl 5) or (d shr 27)) + (E xor a xor b) + $CA62C1D6 + W[72]);
+    Inc(c, ((d shl 5) or (d shr 27)) + (E xor a xor b) + $CA62C1D6 + W[72]);
     E := (E shl 30) or (E shr 2);
-    Inc(b, ((C shl 5) or (C shr 27)) + (d xor E xor a) + $CA62C1D6 + W[73]);
+    Inc(b, ((c shl 5) or (c shr 27)) + (d xor E xor a) + $CA62C1D6 + W[73]);
     d := (d shl 30) or (d shr 2);
-    Inc(a, ((b shl 5) or (b shr 27)) + (C xor d xor E) + $CA62C1D6 + W[74]);
-    C := (C shl 30) or (C shr 2);
-    Inc(E, ((a shl 5) or (a shr 27)) + (b xor C xor d) + $CA62C1D6 + W[75]);
+    Inc(a, ((b shl 5) or (b shr 27)) + (c xor d xor E) + $CA62C1D6 + W[74]);
+    c := (c shl 30) or (c shr 2);
+    Inc(E, ((a shl 5) or (a shr 27)) + (b xor c xor d) + $CA62C1D6 + W[75]);
     b := (b shl 30) or (b shr 2);
-    Inc(d, ((E shl 5) or (E shr 27)) + (a xor b xor C) + $CA62C1D6 + W[76]);
+    Inc(d, ((E shl 5) or (E shr 27)) + (a xor b xor c) + $CA62C1D6 + W[76]);
     a := (a shl 30) or (a shr 2);
-    Inc(C, ((d shl 5) or (d shr 27)) + (E xor a xor b) + $CA62C1D6 + W[77]);
+    Inc(c, ((d shl 5) or (d shr 27)) + (E xor a xor b) + $CA62C1D6 + W[77]);
     E := (E shl 30) or (E shr 2);
-    Inc(b, ((C shl 5) or (C shr 27)) + (d xor E xor a) + $CA62C1D6 + W[78]);
+    Inc(b, ((c shl 5) or (c shr 27)) + (d xor E xor a) + $CA62C1D6 + W[78]);
     d := (d shl 30) or (d shr 2);
-    Inc(a, ((b shl 5) or (b shr 27)) + (C xor d xor E) + $CA62C1D6 + W[79]);
-    C := (C shl 30) or (C shr 2);
+    Inc(a, ((b shl 5) or (b shr 27)) + (c xor d xor E) + $CA62C1D6 + W[79]);
+    c := (c shl 30) or (c shr 2);
     AContext.CurrentHash.I32[0] := AContext.CurrentHash.I32[0] + a;
     AContext.CurrentHash.I32[1] := AContext.CurrentHash.I32[1] + b;
-    AContext.CurrentHash.I32[2] := AContext.CurrentHash.I32[2] + C;
+    AContext.CurrentHash.I32[2] := AContext.CurrentHash.I32[2] + c;
     AContext.CurrentHash.I32[3] := AContext.CurrentHash.I32[3] + d;
     AContext.CurrentHash.I32[4] := AContext.CurrentHash.I32[4] + E;
     FillChar(AContext.HashBuffer, 64, 0);
   end;
   procedure SHA256Compress;
   var
-    a, b, C, d, E, F, G, H, t1, t2: LongWord;
+    a, b, c, d, E, F, G, H, t1, t2: LongWord;
     W: array [0 .. 63] of LongWord;
     I: LongWord;
   begin
@@ -637,7 +679,7 @@ procedure SHACompress(var AContext: TQSHAContext);
     FillChar(W, SizeOf(W), 0);
     a := AContext.CurrentHash.I32[0];
     b := AContext.CurrentHash.I32[1];
-    C := AContext.CurrentHash.I32[2];
+    c := AContext.CurrentHash.I32[2];
     d := AContext.CurrentHash.I32[3];
     E := AContext.CurrentHash.I32[4];
     F := AContext.CurrentHash.I32[5];
@@ -647,396 +689,526 @@ procedure SHACompress(var AContext: TQSHAContext);
     for I := 0 to 15 do
       W[I] := SwapDWord(W[I]);
     for I := 16 to 63 do
-      W[I] := (((W[I - 2] shr 17) or (W[I - 2] shl 15)) xor ((W[I - 2] shr 19) or (W[I - 2] shl 13)) xor (W[I - 2] shr 10)) +
-        W[I - 7] + (((W[I - 15] shr 7) or (W[I - 15] shl 25)) xor ((W[I - 15] shr 18) or (W[I - 15] shl 14))
-        xor (W[I - 15] shr 3)) + W[I - 16];
-    t1 := H + (((E shr 6) or (E shl 26)) xor ((E shr 11) or (E shl 21)) xor ((E shr 25) or (E shl 7))) +
-      ((E and F) xor (not E and G)) + $428A2F98 + W[0];
-    t2 := (((a shr 2) or (a shl 30)) xor ((a shr 13) or (a shl 19)) xor ((a shr 22) xor (a shl 10))) +
-      ((a and b) xor (a and C) xor (b and C));
+      W[I] := (((W[I - 2] shr 17) or (W[I - 2] shl 15))
+        xor ((W[I - 2] shr 19) or (W[I - 2] shl 13)) xor (W[I - 2] shr 10)) +
+        W[I - 7] + (((W[I - 15] shr 7) or (W[I - 15] shl 25))
+        xor ((W[I - 15] shr 18) or (W[I - 15] shl 14)) xor (W[I - 15] shr 3)) +
+        W[I - 16];
+    t1 := H + (((E shr 6) or (E shl 26)) xor ((E shr 11) or (E shl 21))
+      xor ((E shr 25) or (E shl 7))) + ((E and F) xor (not E and G)) +
+      $428A2F98 + W[0];
+    t2 := (((a shr 2) or (a shl 30)) xor ((a shr 13) or (a shl 19))
+      xor ((a shr 22) xor (a shl 10))) +
+      ((a and b) xor (a and c) xor (b and c));
     H := t1 + t2;
     d := d + t1;
-    t1 := G + (((d shr 6) or (d shl 26)) xor ((d shr 11) or (d shl 21)) xor ((d shr 25) or (d shl 7))) +
-      ((d and E) xor (not d and F)) + $71374491 + W[1];
-    t2 := (((H shr 2) or (H shl 30)) xor ((H shr 13) or (H shl 19)) xor ((H shr 22) xor (H shl 10))) +
+    t1 := G + (((d shr 6) or (d shl 26)) xor ((d shr 11) or (d shl 21))
+      xor ((d shr 25) or (d shl 7))) + ((d and E) xor (not d and F)) +
+      $71374491 + W[1];
+    t2 := (((H shr 2) or (H shl 30)) xor ((H shr 13) or (H shl 19))
+      xor ((H shr 22) xor (H shl 10))) +
       ((H and a) xor (H and b) xor (a and b));
     G := t1 + t2;
-    C := C + t1;
-    t1 := F + (((C shr 6) or (C shl 26)) xor ((C shr 11) or (C shl 21)) xor ((C shr 25) or (C shl 7))) +
-      ((C and d) xor (not C and E)) + $B5C0FBCF + W[2];
-    t2 := (((G shr 2) or (G shl 30)) xor ((G shr 13) or (G shl 19)) xor ((G shr 22) xor (G shl 10))) +
+    c := c + t1;
+    t1 := F + (((c shr 6) or (c shl 26)) xor ((c shr 11) or (c shl 21))
+      xor ((c shr 25) or (c shl 7))) + ((c and d) xor (not c and E)) +
+      $B5C0FBCF + W[2];
+    t2 := (((G shr 2) or (G shl 30)) xor ((G shr 13) or (G shl 19))
+      xor ((G shr 22) xor (G shl 10))) +
       ((G and H) xor (G and a) xor (H and a));
     F := t1 + t2;
     b := b + t1;
-    t1 := E + (((b shr 6) or (b shl 26)) xor ((b shr 11) or (b shl 21)) xor ((b shr 25) or (b shl 7))) +
-      ((b and C) xor (not b and d)) + $E9B5DBA5 + W[3];
-    t2 := (((F shr 2) or (F shl 30)) xor ((F shr 13) or (F shl 19)) xor ((F shr 22) xor (F shl 10))) +
+    t1 := E + (((b shr 6) or (b shl 26)) xor ((b shr 11) or (b shl 21))
+      xor ((b shr 25) or (b shl 7))) + ((b and c) xor (not b and d)) +
+      $E9B5DBA5 + W[3];
+    t2 := (((F shr 2) or (F shl 30)) xor ((F shr 13) or (F shl 19))
+      xor ((F shr 22) xor (F shl 10))) +
       ((F and G) xor (F and H) xor (G and H));
     E := t1 + t2;
     a := a + t1;
-    t1 := d + (((a shr 6) or (a shl 26)) xor ((a shr 11) or (a shl 21)) xor ((a shr 25) or (a shl 7))) +
-      ((a and b) xor (not a and C)) + $3956C25B + W[4];
-    t2 := (((E shr 2) or (E shl 30)) xor ((E shr 13) or (E shl 19)) xor ((E shr 22) xor (E shl 10))) +
+    t1 := d + (((a shr 6) or (a shl 26)) xor ((a shr 11) or (a shl 21))
+      xor ((a shr 25) or (a shl 7))) + ((a and b) xor (not a and c)) +
+      $3956C25B + W[4];
+    t2 := (((E shr 2) or (E shl 30)) xor ((E shr 13) or (E shl 19))
+      xor ((E shr 22) xor (E shl 10))) +
       ((E and F) xor (E and G) xor (F and G));
     d := t1 + t2;
     H := H + t1;
-    t1 := C + (((H shr 6) or (H shl 26)) xor ((H shr 11) or (H shl 21)) xor ((H shr 25) or (H shl 7))) +
-      ((H and a) xor (not H and b)) + $59F111F1 + W[5];
-    t2 := (((d shr 2) or (d shl 30)) xor ((d shr 13) or (d shl 19)) xor ((d shr 22) xor (d shl 10))) +
+    t1 := c + (((H shr 6) or (H shl 26)) xor ((H shr 11) or (H shl 21))
+      xor ((H shr 25) or (H shl 7))) + ((H and a) xor (not H and b)) +
+      $59F111F1 + W[5];
+    t2 := (((d shr 2) or (d shl 30)) xor ((d shr 13) or (d shl 19))
+      xor ((d shr 22) xor (d shl 10))) +
       ((d and E) xor (d and F) xor (E and F));
-    C := t1 + t2;
+    c := t1 + t2;
     G := G + t1;
-    t1 := b + (((G shr 6) or (G shl 26)) xor ((G shr 11) or (G shl 21)) xor ((G shr 25) or (G shl 7))) +
-      ((G and H) xor (not G and a)) + $923F82A4 + W[6];
-    t2 := (((C shr 2) or (C shl 30)) xor ((C shr 13) or (C shl 19)) xor ((C shr 22) xor (C shl 10))) +
-      ((C and d) xor (C and E) xor (d and E));
+    t1 := b + (((G shr 6) or (G shl 26)) xor ((G shr 11) or (G shl 21))
+      xor ((G shr 25) or (G shl 7))) + ((G and H) xor (not G and a)) +
+      $923F82A4 + W[6];
+    t2 := (((c shr 2) or (c shl 30)) xor ((c shr 13) or (c shl 19))
+      xor ((c shr 22) xor (c shl 10))) +
+      ((c and d) xor (c and E) xor (d and E));
     b := t1 + t2;
     F := F + t1;
-    t1 := a + (((F shr 6) or (F shl 26)) xor ((F shr 11) or (F shl 21)) xor ((F shr 25) or (F shl 7))) +
-      ((F and G) xor (not F and H)) + $AB1C5ED5 + W[7];
-    t2 := (((b shr 2) or (b shl 30)) xor ((b shr 13) or (b shl 19)) xor ((b shr 22) xor (b shl 10))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 6) or (F shl 26)) xor ((F shr 11) or (F shl 21))
+      xor ((F shr 25) or (F shl 7))) + ((F and G) xor (not F and H)) +
+      $AB1C5ED5 + W[7];
+    t2 := (((b shr 2) or (b shl 30)) xor ((b shr 13) or (b shl 19))
+      xor ((b shr 22) xor (b shl 10))) +
+      ((b and c) xor (b and d) xor (c and d));
     a := t1 + t2;
     E := E + t1;
-    t1 := H + (((E shr 6) or (E shl 26)) xor ((E shr 11) or (E shl 21)) xor ((E shr 25) or (E shl 7))) +
-      ((E and F) xor (not E and G)) + $D807AA98 + W[8];
-    t2 := (((a shr 2) or (a shl 30)) xor ((a shr 13) or (a shl 19)) xor ((a shr 22) xor (a shl 10))) +
-      ((a and b) xor (a and C) xor (b and C));
+    t1 := H + (((E shr 6) or (E shl 26)) xor ((E shr 11) or (E shl 21))
+      xor ((E shr 25) or (E shl 7))) + ((E and F) xor (not E and G)) +
+      $D807AA98 + W[8];
+    t2 := (((a shr 2) or (a shl 30)) xor ((a shr 13) or (a shl 19))
+      xor ((a shr 22) xor (a shl 10))) +
+      ((a and b) xor (a and c) xor (b and c));
     H := t1 + t2;
     d := d + t1;
-    t1 := G + (((d shr 6) or (d shl 26)) xor ((d shr 11) or (d shl 21)) xor ((d shr 25) or (d shl 7))) +
-      ((d and E) xor (not d and F)) + $12835B01 + W[9];
-    t2 := (((H shr 2) or (H shl 30)) xor ((H shr 13) or (H shl 19)) xor ((H shr 22) xor (H shl 10))) +
+    t1 := G + (((d shr 6) or (d shl 26)) xor ((d shr 11) or (d shl 21))
+      xor ((d shr 25) or (d shl 7))) + ((d and E) xor (not d and F)) +
+      $12835B01 + W[9];
+    t2 := (((H shr 2) or (H shl 30)) xor ((H shr 13) or (H shl 19))
+      xor ((H shr 22) xor (H shl 10))) +
       ((H and a) xor (H and b) xor (a and b));
     G := t1 + t2;
-    C := C + t1;
-    t1 := F + (((C shr 6) or (C shl 26)) xor ((C shr 11) or (C shl 21)) xor ((C shr 25) or (C shl 7))) +
-      ((C and d) xor (not C and E)) + $243185BE + W[10];
-    t2 := (((G shr 2) or (G shl 30)) xor ((G shr 13) or (G shl 19)) xor ((G shr 22) xor (G shl 10))) +
+    c := c + t1;
+    t1 := F + (((c shr 6) or (c shl 26)) xor ((c shr 11) or (c shl 21))
+      xor ((c shr 25) or (c shl 7))) + ((c and d) xor (not c and E)) +
+      $243185BE + W[10];
+    t2 := (((G shr 2) or (G shl 30)) xor ((G shr 13) or (G shl 19))
+      xor ((G shr 22) xor (G shl 10))) +
       ((G and H) xor (G and a) xor (H and a));
     F := t1 + t2;
     b := b + t1;
-    t1 := E + (((b shr 6) or (b shl 26)) xor ((b shr 11) or (b shl 21)) xor ((b shr 25) or (b shl 7))) +
-      ((b and C) xor (not b and d)) + $550C7DC3 + W[11];
-    t2 := (((F shr 2) or (F shl 30)) xor ((F shr 13) or (F shl 19)) xor ((F shr 22) xor (F shl 10))) +
+    t1 := E + (((b shr 6) or (b shl 26)) xor ((b shr 11) or (b shl 21))
+      xor ((b shr 25) or (b shl 7))) + ((b and c) xor (not b and d)) +
+      $550C7DC3 + W[11];
+    t2 := (((F shr 2) or (F shl 30)) xor ((F shr 13) or (F shl 19))
+      xor ((F shr 22) xor (F shl 10))) +
       ((F and G) xor (F and H) xor (G and H));
     E := t1 + t2;
     a := a + t1;
-    t1 := d + (((a shr 6) or (a shl 26)) xor ((a shr 11) or (a shl 21)) xor ((a shr 25) or (a shl 7))) +
-      ((a and b) xor (not a and C)) + $72BE5D74 + W[12];
-    t2 := (((E shr 2) or (E shl 30)) xor ((E shr 13) or (E shl 19)) xor ((E shr 22) xor (E shl 10))) +
+    t1 := d + (((a shr 6) or (a shl 26)) xor ((a shr 11) or (a shl 21))
+      xor ((a shr 25) or (a shl 7))) + ((a and b) xor (not a and c)) +
+      $72BE5D74 + W[12];
+    t2 := (((E shr 2) or (E shl 30)) xor ((E shr 13) or (E shl 19))
+      xor ((E shr 22) xor (E shl 10))) +
       ((E and F) xor (E and G) xor (F and G));
     d := t1 + t2;
     H := H + t1;
-    t1 := C + (((H shr 6) or (H shl 26)) xor ((H shr 11) or (H shl 21)) xor ((H shr 25) or (H shl 7))) +
-      ((H and a) xor (not H and b)) + $80DEB1FE + W[13];
-    t2 := (((d shr 2) or (d shl 30)) xor ((d shr 13) or (d shl 19)) xor ((d shr 22) xor (d shl 10))) +
+    t1 := c + (((H shr 6) or (H shl 26)) xor ((H shr 11) or (H shl 21))
+      xor ((H shr 25) or (H shl 7))) + ((H and a) xor (not H and b)) +
+      $80DEB1FE + W[13];
+    t2 := (((d shr 2) or (d shl 30)) xor ((d shr 13) or (d shl 19))
+      xor ((d shr 22) xor (d shl 10))) +
       ((d and E) xor (d and F) xor (E and F));
-    C := t1 + t2;
+    c := t1 + t2;
     G := G + t1;
-    t1 := b + (((G shr 6) or (G shl 26)) xor ((G shr 11) or (G shl 21)) xor ((G shr 25) or (G shl 7))) +
-      ((G and H) xor (not G and a)) + $9BDC06A7 + W[14];
-    t2 := (((C shr 2) or (C shl 30)) xor ((C shr 13) or (C shl 19)) xor ((C shr 22) xor (C shl 10))) +
-      ((C and d) xor (C and E) xor (d and E));
+    t1 := b + (((G shr 6) or (G shl 26)) xor ((G shr 11) or (G shl 21))
+      xor ((G shr 25) or (G shl 7))) + ((G and H) xor (not G and a)) +
+      $9BDC06A7 + W[14];
+    t2 := (((c shr 2) or (c shl 30)) xor ((c shr 13) or (c shl 19))
+      xor ((c shr 22) xor (c shl 10))) +
+      ((c and d) xor (c and E) xor (d and E));
     b := t1 + t2;
     F := F + t1;
-    t1 := a + (((F shr 6) or (F shl 26)) xor ((F shr 11) or (F shl 21)) xor ((F shr 25) or (F shl 7))) +
-      ((F and G) xor (not F and H)) + $C19BF174 + W[15];
-    t2 := (((b shr 2) or (b shl 30)) xor ((b shr 13) or (b shl 19)) xor ((b shr 22) xor (b shl 10))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 6) or (F shl 26)) xor ((F shr 11) or (F shl 21))
+      xor ((F shr 25) or (F shl 7))) + ((F and G) xor (not F and H)) +
+      $C19BF174 + W[15];
+    t2 := (((b shr 2) or (b shl 30)) xor ((b shr 13) or (b shl 19))
+      xor ((b shr 22) xor (b shl 10))) +
+      ((b and c) xor (b and d) xor (c and d));
     a := t1 + t2;
     E := E + t1;
-    t1 := H + (((E shr 6) or (E shl 26)) xor ((E shr 11) or (E shl 21)) xor ((E shr 25) or (E shl 7))) +
-      ((E and F) xor (not E and G)) + $E49B69C1 + W[16];
-    t2 := (((a shr 2) or (a shl 30)) xor ((a shr 13) or (a shl 19)) xor ((a shr 22) xor (a shl 10))) +
-      ((a and b) xor (a and C) xor (b and C));
+    t1 := H + (((E shr 6) or (E shl 26)) xor ((E shr 11) or (E shl 21))
+      xor ((E shr 25) or (E shl 7))) + ((E and F) xor (not E and G)) +
+      $E49B69C1 + W[16];
+    t2 := (((a shr 2) or (a shl 30)) xor ((a shr 13) or (a shl 19))
+      xor ((a shr 22) xor (a shl 10))) +
+      ((a and b) xor (a and c) xor (b and c));
     H := t1 + t2;
     d := d + t1;
-    t1 := G + (((d shr 6) or (d shl 26)) xor ((d shr 11) or (d shl 21)) xor ((d shr 25) or (d shl 7))) +
-      ((d and E) xor (not d and F)) + $EFBE4786 + W[17];
-    t2 := (((H shr 2) or (H shl 30)) xor ((H shr 13) or (H shl 19)) xor ((H shr 22) xor (H shl 10))) +
+    t1 := G + (((d shr 6) or (d shl 26)) xor ((d shr 11) or (d shl 21))
+      xor ((d shr 25) or (d shl 7))) + ((d and E) xor (not d and F)) +
+      $EFBE4786 + W[17];
+    t2 := (((H shr 2) or (H shl 30)) xor ((H shr 13) or (H shl 19))
+      xor ((H shr 22) xor (H shl 10))) +
       ((H and a) xor (H and b) xor (a and b));
     G := t1 + t2;
-    C := C + t1;
-    t1 := F + (((C shr 6) or (C shl 26)) xor ((C shr 11) or (C shl 21)) xor ((C shr 25) or (C shl 7))) +
-      ((C and d) xor (not C and E)) + $0FC19DC6 + W[18];
-    t2 := (((G shr 2) or (G shl 30)) xor ((G shr 13) or (G shl 19)) xor ((G shr 22) xor (G shl 10))) +
+    c := c + t1;
+    t1 := F + (((c shr 6) or (c shl 26)) xor ((c shr 11) or (c shl 21))
+      xor ((c shr 25) or (c shl 7))) + ((c and d) xor (not c and E)) +
+      $0FC19DC6 + W[18];
+    t2 := (((G shr 2) or (G shl 30)) xor ((G shr 13) or (G shl 19))
+      xor ((G shr 22) xor (G shl 10))) +
       ((G and H) xor (G and a) xor (H and a));
     F := t1 + t2;
     b := b + t1;
-    t1 := E + (((b shr 6) or (b shl 26)) xor ((b shr 11) or (b shl 21)) xor ((b shr 25) or (b shl 7))) +
-      ((b and C) xor (not b and d)) + $240CA1CC + W[19];
-    t2 := (((F shr 2) or (F shl 30)) xor ((F shr 13) or (F shl 19)) xor ((F shr 22) xor (F shl 10))) +
+    t1 := E + (((b shr 6) or (b shl 26)) xor ((b shr 11) or (b shl 21))
+      xor ((b shr 25) or (b shl 7))) + ((b and c) xor (not b and d)) +
+      $240CA1CC + W[19];
+    t2 := (((F shr 2) or (F shl 30)) xor ((F shr 13) or (F shl 19))
+      xor ((F shr 22) xor (F shl 10))) +
       ((F and G) xor (F and H) xor (G and H));
     E := t1 + t2;
     a := a + t1;
-    t1 := d + (((a shr 6) or (a shl 26)) xor ((a shr 11) or (a shl 21)) xor ((a shr 25) or (a shl 7))) +
-      ((a and b) xor (not a and C)) + $2DE92C6F + W[20];
-    t2 := (((E shr 2) or (E shl 30)) xor ((E shr 13) or (E shl 19)) xor ((E shr 22) xor (E shl 10))) +
+    t1 := d + (((a shr 6) or (a shl 26)) xor ((a shr 11) or (a shl 21))
+      xor ((a shr 25) or (a shl 7))) + ((a and b) xor (not a and c)) +
+      $2DE92C6F + W[20];
+    t2 := (((E shr 2) or (E shl 30)) xor ((E shr 13) or (E shl 19))
+      xor ((E shr 22) xor (E shl 10))) +
       ((E and F) xor (E and G) xor (F and G));
     d := t1 + t2;
     H := H + t1;
-    t1 := C + (((H shr 6) or (H shl 26)) xor ((H shr 11) or (H shl 21)) xor ((H shr 25) or (H shl 7))) +
-      ((H and a) xor (not H and b)) + $4A7484AA + W[21];
-    t2 := (((d shr 2) or (d shl 30)) xor ((d shr 13) or (d shl 19)) xor ((d shr 22) xor (d shl 10))) +
+    t1 := c + (((H shr 6) or (H shl 26)) xor ((H shr 11) or (H shl 21))
+      xor ((H shr 25) or (H shl 7))) + ((H and a) xor (not H and b)) +
+      $4A7484AA + W[21];
+    t2 := (((d shr 2) or (d shl 30)) xor ((d shr 13) or (d shl 19))
+      xor ((d shr 22) xor (d shl 10))) +
       ((d and E) xor (d and F) xor (E and F));
-    C := t1 + t2;
+    c := t1 + t2;
     G := G + t1;
-    t1 := b + (((G shr 6) or (G shl 26)) xor ((G shr 11) or (G shl 21)) xor ((G shr 25) or (G shl 7))) +
-      ((G and H) xor (not G and a)) + $5CB0A9DC + W[22];
-    t2 := (((C shr 2) or (C shl 30)) xor ((C shr 13) or (C shl 19)) xor ((C shr 22) xor (C shl 10))) +
-      ((C and d) xor (C and E) xor (d and E));
+    t1 := b + (((G shr 6) or (G shl 26)) xor ((G shr 11) or (G shl 21))
+      xor ((G shr 25) or (G shl 7))) + ((G and H) xor (not G and a)) +
+      $5CB0A9DC + W[22];
+    t2 := (((c shr 2) or (c shl 30)) xor ((c shr 13) or (c shl 19))
+      xor ((c shr 22) xor (c shl 10))) +
+      ((c and d) xor (c and E) xor (d and E));
     b := t1 + t2;
     F := F + t1;
-    t1 := a + (((F shr 6) or (F shl 26)) xor ((F shr 11) or (F shl 21)) xor ((F shr 25) or (F shl 7))) +
-      ((F and G) xor (not F and H)) + $76F988DA + W[23];
-    t2 := (((b shr 2) or (b shl 30)) xor ((b shr 13) or (b shl 19)) xor ((b shr 22) xor (b shl 10))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 6) or (F shl 26)) xor ((F shr 11) or (F shl 21))
+      xor ((F shr 25) or (F shl 7))) + ((F and G) xor (not F and H)) +
+      $76F988DA + W[23];
+    t2 := (((b shr 2) or (b shl 30)) xor ((b shr 13) or (b shl 19))
+      xor ((b shr 22) xor (b shl 10))) +
+      ((b and c) xor (b and d) xor (c and d));
     a := t1 + t2;
     E := E + t1;
-    t1 := H + (((E shr 6) or (E shl 26)) xor ((E shr 11) or (E shl 21)) xor ((E shr 25) or (E shl 7))) +
-      ((E and F) xor (not E and G)) + $983E5152 + W[24];
-    t2 := (((a shr 2) or (a shl 30)) xor ((a shr 13) or (a shl 19)) xor ((a shr 22) xor (a shl 10))) +
-      ((a and b) xor (a and C) xor (b and C));
+    t1 := H + (((E shr 6) or (E shl 26)) xor ((E shr 11) or (E shl 21))
+      xor ((E shr 25) or (E shl 7))) + ((E and F) xor (not E and G)) +
+      $983E5152 + W[24];
+    t2 := (((a shr 2) or (a shl 30)) xor ((a shr 13) or (a shl 19))
+      xor ((a shr 22) xor (a shl 10))) +
+      ((a and b) xor (a and c) xor (b and c));
     H := t1 + t2;
     d := d + t1;
-    t1 := G + (((d shr 6) or (d shl 26)) xor ((d shr 11) or (d shl 21)) xor ((d shr 25) or (d shl 7))) +
-      ((d and E) xor (not d and F)) + $A831C66D + W[25];
-    t2 := (((H shr 2) or (H shl 30)) xor ((H shr 13) or (H shl 19)) xor ((H shr 22) xor (H shl 10))) +
+    t1 := G + (((d shr 6) or (d shl 26)) xor ((d shr 11) or (d shl 21))
+      xor ((d shr 25) or (d shl 7))) + ((d and E) xor (not d and F)) +
+      $A831C66D + W[25];
+    t2 := (((H shr 2) or (H shl 30)) xor ((H shr 13) or (H shl 19))
+      xor ((H shr 22) xor (H shl 10))) +
       ((H and a) xor (H and b) xor (a and b));
     G := t1 + t2;
-    C := C + t1;
-    t1 := F + (((C shr 6) or (C shl 26)) xor ((C shr 11) or (C shl 21)) xor ((C shr 25) or (C shl 7))) +
-      ((C and d) xor (not C and E)) + $B00327C8 + W[26];
-    t2 := (((G shr 2) or (G shl 30)) xor ((G shr 13) or (G shl 19)) xor ((G shr 22) xor (G shl 10))) +
+    c := c + t1;
+    t1 := F + (((c shr 6) or (c shl 26)) xor ((c shr 11) or (c shl 21))
+      xor ((c shr 25) or (c shl 7))) + ((c and d) xor (not c and E)) +
+      $B00327C8 + W[26];
+    t2 := (((G shr 2) or (G shl 30)) xor ((G shr 13) or (G shl 19))
+      xor ((G shr 22) xor (G shl 10))) +
       ((G and H) xor (G and a) xor (H and a));
     F := t1 + t2;
     b := b + t1;
-    t1 := E + (((b shr 6) or (b shl 26)) xor ((b shr 11) or (b shl 21)) xor ((b shr 25) or (b shl 7))) +
-      ((b and C) xor (not b and d)) + $BF597FC7 + W[27];
-    t2 := (((F shr 2) or (F shl 30)) xor ((F shr 13) or (F shl 19)) xor ((F shr 22) xor (F shl 10))) +
+    t1 := E + (((b shr 6) or (b shl 26)) xor ((b shr 11) or (b shl 21))
+      xor ((b shr 25) or (b shl 7))) + ((b and c) xor (not b and d)) +
+      $BF597FC7 + W[27];
+    t2 := (((F shr 2) or (F shl 30)) xor ((F shr 13) or (F shl 19))
+      xor ((F shr 22) xor (F shl 10))) +
       ((F and G) xor (F and H) xor (G and H));
     E := t1 + t2;
     a := a + t1;
-    t1 := d + (((a shr 6) or (a shl 26)) xor ((a shr 11) or (a shl 21)) xor ((a shr 25) or (a shl 7))) +
-      ((a and b) xor (not a and C)) + $C6E00BF3 + W[28];
-    t2 := (((E shr 2) or (E shl 30)) xor ((E shr 13) or (E shl 19)) xor ((E shr 22) xor (E shl 10))) +
+    t1 := d + (((a shr 6) or (a shl 26)) xor ((a shr 11) or (a shl 21))
+      xor ((a shr 25) or (a shl 7))) + ((a and b) xor (not a and c)) +
+      $C6E00BF3 + W[28];
+    t2 := (((E shr 2) or (E shl 30)) xor ((E shr 13) or (E shl 19))
+      xor ((E shr 22) xor (E shl 10))) +
       ((E and F) xor (E and G) xor (F and G));
     d := t1 + t2;
     H := H + t1;
-    t1 := C + (((H shr 6) or (H shl 26)) xor ((H shr 11) or (H shl 21)) xor ((H shr 25) or (H shl 7))) +
-      ((H and a) xor (not H and b)) + $D5A79147 + W[29];
-    t2 := (((d shr 2) or (d shl 30)) xor ((d shr 13) or (d shl 19)) xor ((d shr 22) xor (d shl 10))) +
+    t1 := c + (((H shr 6) or (H shl 26)) xor ((H shr 11) or (H shl 21))
+      xor ((H shr 25) or (H shl 7))) + ((H and a) xor (not H and b)) +
+      $D5A79147 + W[29];
+    t2 := (((d shr 2) or (d shl 30)) xor ((d shr 13) or (d shl 19))
+      xor ((d shr 22) xor (d shl 10))) +
       ((d and E) xor (d and F) xor (E and F));
-    C := t1 + t2;
+    c := t1 + t2;
     G := G + t1;
-    t1 := b + (((G shr 6) or (G shl 26)) xor ((G shr 11) or (G shl 21)) xor ((G shr 25) or (G shl 7))) +
-      ((G and H) xor (not G and a)) + $06CA6351 + W[30];
-    t2 := (((C shr 2) or (C shl 30)) xor ((C shr 13) or (C shl 19)) xor ((C shr 22) xor (C shl 10))) +
-      ((C and d) xor (C and E) xor (d and E));
+    t1 := b + (((G shr 6) or (G shl 26)) xor ((G shr 11) or (G shl 21))
+      xor ((G shr 25) or (G shl 7))) + ((G and H) xor (not G and a)) +
+      $06CA6351 + W[30];
+    t2 := (((c shr 2) or (c shl 30)) xor ((c shr 13) or (c shl 19))
+      xor ((c shr 22) xor (c shl 10))) +
+      ((c and d) xor (c and E) xor (d and E));
     b := t1 + t2;
     F := F + t1;
-    t1 := a + (((F shr 6) or (F shl 26)) xor ((F shr 11) or (F shl 21)) xor ((F shr 25) or (F shl 7))) +
-      ((F and G) xor (not F and H)) + $14292967 + W[31];
-    t2 := (((b shr 2) or (b shl 30)) xor ((b shr 13) or (b shl 19)) xor ((b shr 22) xor (b shl 10))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 6) or (F shl 26)) xor ((F shr 11) or (F shl 21))
+      xor ((F shr 25) or (F shl 7))) + ((F and G) xor (not F and H)) +
+      $14292967 + W[31];
+    t2 := (((b shr 2) or (b shl 30)) xor ((b shr 13) or (b shl 19))
+      xor ((b shr 22) xor (b shl 10))) +
+      ((b and c) xor (b and d) xor (c and d));
     a := t1 + t2;
     E := E + t1;
-    t1 := H + (((E shr 6) or (E shl 26)) xor ((E shr 11) or (E shl 21)) xor ((E shr 25) or (E shl 7))) +
-      ((E and F) xor (not E and G)) + $27B70A85 + W[32];
-    t2 := (((a shr 2) or (a shl 30)) xor ((a shr 13) or (a shl 19)) xor ((a shr 22) xor (a shl 10))) +
-      ((a and b) xor (a and C) xor (b and C));
+    t1 := H + (((E shr 6) or (E shl 26)) xor ((E shr 11) or (E shl 21))
+      xor ((E shr 25) or (E shl 7))) + ((E and F) xor (not E and G)) +
+      $27B70A85 + W[32];
+    t2 := (((a shr 2) or (a shl 30)) xor ((a shr 13) or (a shl 19))
+      xor ((a shr 22) xor (a shl 10))) +
+      ((a and b) xor (a and c) xor (b and c));
     H := t1 + t2;
     d := d + t1;
-    t1 := G + (((d shr 6) or (d shl 26)) xor ((d shr 11) or (d shl 21)) xor ((d shr 25) or (d shl 7))) +
-      ((d and E) xor (not d and F)) + $2E1B2138 + W[33];
-    t2 := (((H shr 2) or (H shl 30)) xor ((H shr 13) or (H shl 19)) xor ((H shr 22) xor (H shl 10))) +
+    t1 := G + (((d shr 6) or (d shl 26)) xor ((d shr 11) or (d shl 21))
+      xor ((d shr 25) or (d shl 7))) + ((d and E) xor (not d and F)) +
+      $2E1B2138 + W[33];
+    t2 := (((H shr 2) or (H shl 30)) xor ((H shr 13) or (H shl 19))
+      xor ((H shr 22) xor (H shl 10))) +
       ((H and a) xor (H and b) xor (a and b));
     G := t1 + t2;
-    C := C + t1;
-    t1 := F + (((C shr 6) or (C shl 26)) xor ((C shr 11) or (C shl 21)) xor ((C shr 25) or (C shl 7))) +
-      ((C and d) xor (not C and E)) + $4D2C6DFC + W[34];
-    t2 := (((G shr 2) or (G shl 30)) xor ((G shr 13) or (G shl 19)) xor ((G shr 22) xor (G shl 10))) +
+    c := c + t1;
+    t1 := F + (((c shr 6) or (c shl 26)) xor ((c shr 11) or (c shl 21))
+      xor ((c shr 25) or (c shl 7))) + ((c and d) xor (not c and E)) +
+      $4D2C6DFC + W[34];
+    t2 := (((G shr 2) or (G shl 30)) xor ((G shr 13) or (G shl 19))
+      xor ((G shr 22) xor (G shl 10))) +
       ((G and H) xor (G and a) xor (H and a));
     F := t1 + t2;
     b := b + t1;
-    t1 := E + (((b shr 6) or (b shl 26)) xor ((b shr 11) or (b shl 21)) xor ((b shr 25) or (b shl 7))) +
-      ((b and C) xor (not b and d)) + $53380D13 + W[35];
-    t2 := (((F shr 2) or (F shl 30)) xor ((F shr 13) or (F shl 19)) xor ((F shr 22) xor (F shl 10))) +
+    t1 := E + (((b shr 6) or (b shl 26)) xor ((b shr 11) or (b shl 21))
+      xor ((b shr 25) or (b shl 7))) + ((b and c) xor (not b and d)) +
+      $53380D13 + W[35];
+    t2 := (((F shr 2) or (F shl 30)) xor ((F shr 13) or (F shl 19))
+      xor ((F shr 22) xor (F shl 10))) +
       ((F and G) xor (F and H) xor (G and H));
     E := t1 + t2;
     a := a + t1;
-    t1 := d + (((a shr 6) or (a shl 26)) xor ((a shr 11) or (a shl 21)) xor ((a shr 25) or (a shl 7))) +
-      ((a and b) xor (not a and C)) + $650A7354 + W[36];
-    t2 := (((E shr 2) or (E shl 30)) xor ((E shr 13) or (E shl 19)) xor ((E shr 22) xor (E shl 10))) +
+    t1 := d + (((a shr 6) or (a shl 26)) xor ((a shr 11) or (a shl 21))
+      xor ((a shr 25) or (a shl 7))) + ((a and b) xor (not a and c)) +
+      $650A7354 + W[36];
+    t2 := (((E shr 2) or (E shl 30)) xor ((E shr 13) or (E shl 19))
+      xor ((E shr 22) xor (E shl 10))) +
       ((E and F) xor (E and G) xor (F and G));
     d := t1 + t2;
     H := H + t1;
-    t1 := C + (((H shr 6) or (H shl 26)) xor ((H shr 11) or (H shl 21)) xor ((H shr 25) or (H shl 7))) +
-      ((H and a) xor (not H and b)) + $766A0ABB + W[37];
-    t2 := (((d shr 2) or (d shl 30)) xor ((d shr 13) or (d shl 19)) xor ((d shr 22) xor (d shl 10))) +
+    t1 := c + (((H shr 6) or (H shl 26)) xor ((H shr 11) or (H shl 21))
+      xor ((H shr 25) or (H shl 7))) + ((H and a) xor (not H and b)) +
+      $766A0ABB + W[37];
+    t2 := (((d shr 2) or (d shl 30)) xor ((d shr 13) or (d shl 19))
+      xor ((d shr 22) xor (d shl 10))) +
       ((d and E) xor (d and F) xor (E and F));
-    C := t1 + t2;
+    c := t1 + t2;
     G := G + t1;
-    t1 := b + (((G shr 6) or (G shl 26)) xor ((G shr 11) or (G shl 21)) xor ((G shr 25) or (G shl 7))) +
-      ((G and H) xor (not G and a)) + $81C2C92E + W[38];
-    t2 := (((C shr 2) or (C shl 30)) xor ((C shr 13) or (C shl 19)) xor ((C shr 22) xor (C shl 10))) +
-      ((C and d) xor (C and E) xor (d and E));
+    t1 := b + (((G shr 6) or (G shl 26)) xor ((G shr 11) or (G shl 21))
+      xor ((G shr 25) or (G shl 7))) + ((G and H) xor (not G and a)) +
+      $81C2C92E + W[38];
+    t2 := (((c shr 2) or (c shl 30)) xor ((c shr 13) or (c shl 19))
+      xor ((c shr 22) xor (c shl 10))) +
+      ((c and d) xor (c and E) xor (d and E));
     b := t1 + t2;
     F := F + t1;
-    t1 := a + (((F shr 6) or (F shl 26)) xor ((F shr 11) or (F shl 21)) xor ((F shr 25) or (F shl 7))) +
-      ((F and G) xor (not F and H)) + $92722C85 + W[39];
-    t2 := (((b shr 2) or (b shl 30)) xor ((b shr 13) or (b shl 19)) xor ((b shr 22) xor (b shl 10))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 6) or (F shl 26)) xor ((F shr 11) or (F shl 21))
+      xor ((F shr 25) or (F shl 7))) + ((F and G) xor (not F and H)) +
+      $92722C85 + W[39];
+    t2 := (((b shr 2) or (b shl 30)) xor ((b shr 13) or (b shl 19))
+      xor ((b shr 22) xor (b shl 10))) +
+      ((b and c) xor (b and d) xor (c and d));
     a := t1 + t2;
     E := E + t1;
-    t1 := H + (((E shr 6) or (E shl 26)) xor ((E shr 11) or (E shl 21)) xor ((E shr 25) or (E shl 7))) +
-      ((E and F) xor (not E and G)) + $A2BFE8A1 + W[40];
-    t2 := (((a shr 2) or (a shl 30)) xor ((a shr 13) or (a shl 19)) xor ((a shr 22) xor (a shl 10))) +
-      ((a and b) xor (a and C) xor (b and C));
+    t1 := H + (((E shr 6) or (E shl 26)) xor ((E shr 11) or (E shl 21))
+      xor ((E shr 25) or (E shl 7))) + ((E and F) xor (not E and G)) +
+      $A2BFE8A1 + W[40];
+    t2 := (((a shr 2) or (a shl 30)) xor ((a shr 13) or (a shl 19))
+      xor ((a shr 22) xor (a shl 10))) +
+      ((a and b) xor (a and c) xor (b and c));
     H := t1 + t2;
     d := d + t1;
-    t1 := G + (((d shr 6) or (d shl 26)) xor ((d shr 11) or (d shl 21)) xor ((d shr 25) or (d shl 7))) +
-      ((d and E) xor (not d and F)) + $A81A664B + W[41];
-    t2 := (((H shr 2) or (H shl 30)) xor ((H shr 13) or (H shl 19)) xor ((H shr 22) xor (H shl 10))) +
+    t1 := G + (((d shr 6) or (d shl 26)) xor ((d shr 11) or (d shl 21))
+      xor ((d shr 25) or (d shl 7))) + ((d and E) xor (not d and F)) +
+      $A81A664B + W[41];
+    t2 := (((H shr 2) or (H shl 30)) xor ((H shr 13) or (H shl 19))
+      xor ((H shr 22) xor (H shl 10))) +
       ((H and a) xor (H and b) xor (a and b));
     G := t1 + t2;
-    C := C + t1;
-    t1 := F + (((C shr 6) or (C shl 26)) xor ((C shr 11) or (C shl 21)) xor ((C shr 25) or (C shl 7))) +
-      ((C and d) xor (not C and E)) + $C24B8B70 + W[42];
-    t2 := (((G shr 2) or (G shl 30)) xor ((G shr 13) or (G shl 19)) xor ((G shr 22) xor (G shl 10))) +
+    c := c + t1;
+    t1 := F + (((c shr 6) or (c shl 26)) xor ((c shr 11) or (c shl 21))
+      xor ((c shr 25) or (c shl 7))) + ((c and d) xor (not c and E)) +
+      $C24B8B70 + W[42];
+    t2 := (((G shr 2) or (G shl 30)) xor ((G shr 13) or (G shl 19))
+      xor ((G shr 22) xor (G shl 10))) +
       ((G and H) xor (G and a) xor (H and a));
     F := t1 + t2;
     b := b + t1;
-    t1 := E + (((b shr 6) or (b shl 26)) xor ((b shr 11) or (b shl 21)) xor ((b shr 25) or (b shl 7))) +
-      ((b and C) xor (not b and d)) + $C76C51A3 + W[43];
-    t2 := (((F shr 2) or (F shl 30)) xor ((F shr 13) or (F shl 19)) xor ((F shr 22) xor (F shl 10))) +
+    t1 := E + (((b shr 6) or (b shl 26)) xor ((b shr 11) or (b shl 21))
+      xor ((b shr 25) or (b shl 7))) + ((b and c) xor (not b and d)) +
+      $C76C51A3 + W[43];
+    t2 := (((F shr 2) or (F shl 30)) xor ((F shr 13) or (F shl 19))
+      xor ((F shr 22) xor (F shl 10))) +
       ((F and G) xor (F and H) xor (G and H));
     E := t1 + t2;
     a := a + t1;
-    t1 := d + (((a shr 6) or (a shl 26)) xor ((a shr 11) or (a shl 21)) xor ((a shr 25) or (a shl 7))) +
-      ((a and b) xor (not a and C)) + $D192E819 + W[44];
-    t2 := (((E shr 2) or (E shl 30)) xor ((E shr 13) or (E shl 19)) xor ((E shr 22) xor (E shl 10))) +
+    t1 := d + (((a shr 6) or (a shl 26)) xor ((a shr 11) or (a shl 21))
+      xor ((a shr 25) or (a shl 7))) + ((a and b) xor (not a and c)) +
+      $D192E819 + W[44];
+    t2 := (((E shr 2) or (E shl 30)) xor ((E shr 13) or (E shl 19))
+      xor ((E shr 22) xor (E shl 10))) +
       ((E and F) xor (E and G) xor (F and G));
     d := t1 + t2;
     H := H + t1;
-    t1 := C + (((H shr 6) or (H shl 26)) xor ((H shr 11) or (H shl 21)) xor ((H shr 25) or (H shl 7))) +
-      ((H and a) xor (not H and b)) + $D6990624 + W[45];
-    t2 := (((d shr 2) or (d shl 30)) xor ((d shr 13) or (d shl 19)) xor ((d shr 22) xor (d shl 10))) +
+    t1 := c + (((H shr 6) or (H shl 26)) xor ((H shr 11) or (H shl 21))
+      xor ((H shr 25) or (H shl 7))) + ((H and a) xor (not H and b)) +
+      $D6990624 + W[45];
+    t2 := (((d shr 2) or (d shl 30)) xor ((d shr 13) or (d shl 19))
+      xor ((d shr 22) xor (d shl 10))) +
       ((d and E) xor (d and F) xor (E and F));
-    C := t1 + t2;
+    c := t1 + t2;
     G := G + t1;
-    t1 := b + (((G shr 6) or (G shl 26)) xor ((G shr 11) or (G shl 21)) xor ((G shr 25) or (G shl 7))) +
-      ((G and H) xor (not G and a)) + $F40E3585 + W[46];
-    t2 := (((C shr 2) or (C shl 30)) xor ((C shr 13) or (C shl 19)) xor ((C shr 22) xor (C shl 10))) +
-      ((C and d) xor (C and E) xor (d and E));
+    t1 := b + (((G shr 6) or (G shl 26)) xor ((G shr 11) or (G shl 21))
+      xor ((G shr 25) or (G shl 7))) + ((G and H) xor (not G and a)) +
+      $F40E3585 + W[46];
+    t2 := (((c shr 2) or (c shl 30)) xor ((c shr 13) or (c shl 19))
+      xor ((c shr 22) xor (c shl 10))) +
+      ((c and d) xor (c and E) xor (d and E));
     b := t1 + t2;
     F := F + t1;
-    t1 := a + (((F shr 6) or (F shl 26)) xor ((F shr 11) or (F shl 21)) xor ((F shr 25) or (F shl 7))) +
-      ((F and G) xor (not F and H)) + $106AA070 + W[47];
-    t2 := (((b shr 2) or (b shl 30)) xor ((b shr 13) or (b shl 19)) xor ((b shr 22) xor (b shl 10))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 6) or (F shl 26)) xor ((F shr 11) or (F shl 21))
+      xor ((F shr 25) or (F shl 7))) + ((F and G) xor (not F and H)) +
+      $106AA070 + W[47];
+    t2 := (((b shr 2) or (b shl 30)) xor ((b shr 13) or (b shl 19))
+      xor ((b shr 22) xor (b shl 10))) +
+      ((b and c) xor (b and d) xor (c and d));
     a := t1 + t2;
     E := E + t1;
-    t1 := H + (((E shr 6) or (E shl 26)) xor ((E shr 11) or (E shl 21)) xor ((E shr 25) or (E shl 7))) +
-      ((E and F) xor (not E and G)) + $19A4C116 + W[48];
-    t2 := (((a shr 2) or (a shl 30)) xor ((a shr 13) or (a shl 19)) xor ((a shr 22) xor (a shl 10))) +
-      ((a and b) xor (a and C) xor (b and C));
+    t1 := H + (((E shr 6) or (E shl 26)) xor ((E shr 11) or (E shl 21))
+      xor ((E shr 25) or (E shl 7))) + ((E and F) xor (not E and G)) +
+      $19A4C116 + W[48];
+    t2 := (((a shr 2) or (a shl 30)) xor ((a shr 13) or (a shl 19))
+      xor ((a shr 22) xor (a shl 10))) +
+      ((a and b) xor (a and c) xor (b and c));
     H := t1 + t2;
     d := d + t1;
-    t1 := G + (((d shr 6) or (d shl 26)) xor ((d shr 11) or (d shl 21)) xor ((d shr 25) or (d shl 7))) +
-      ((d and E) xor (not d and F)) + $1E376C08 + W[49];
-    t2 := (((H shr 2) or (H shl 30)) xor ((H shr 13) or (H shl 19)) xor ((H shr 22) xor (H shl 10))) +
+    t1 := G + (((d shr 6) or (d shl 26)) xor ((d shr 11) or (d shl 21))
+      xor ((d shr 25) or (d shl 7))) + ((d and E) xor (not d and F)) +
+      $1E376C08 + W[49];
+    t2 := (((H shr 2) or (H shl 30)) xor ((H shr 13) or (H shl 19))
+      xor ((H shr 22) xor (H shl 10))) +
       ((H and a) xor (H and b) xor (a and b));
     G := t1 + t2;
-    C := C + t1;
-    t1 := F + (((C shr 6) or (C shl 26)) xor ((C shr 11) or (C shl 21)) xor ((C shr 25) or (C shl 7))) +
-      ((C and d) xor (not C and E)) + $2748774C + W[50];
-    t2 := (((G shr 2) or (G shl 30)) xor ((G shr 13) or (G shl 19)) xor ((G shr 22) xor (G shl 10))) +
+    c := c + t1;
+    t1 := F + (((c shr 6) or (c shl 26)) xor ((c shr 11) or (c shl 21))
+      xor ((c shr 25) or (c shl 7))) + ((c and d) xor (not c and E)) +
+      $2748774C + W[50];
+    t2 := (((G shr 2) or (G shl 30)) xor ((G shr 13) or (G shl 19))
+      xor ((G shr 22) xor (G shl 10))) +
       ((G and H) xor (G and a) xor (H and a));
     F := t1 + t2;
     b := b + t1;
-    t1 := E + (((b shr 6) or (b shl 26)) xor ((b shr 11) or (b shl 21)) xor ((b shr 25) or (b shl 7))) +
-      ((b and C) xor (not b and d)) + $34B0BCB5 + W[51];
-    t2 := (((F shr 2) or (F shl 30)) xor ((F shr 13) or (F shl 19)) xor ((F shr 22) xor (F shl 10))) +
+    t1 := E + (((b shr 6) or (b shl 26)) xor ((b shr 11) or (b shl 21))
+      xor ((b shr 25) or (b shl 7))) + ((b and c) xor (not b and d)) +
+      $34B0BCB5 + W[51];
+    t2 := (((F shr 2) or (F shl 30)) xor ((F shr 13) or (F shl 19))
+      xor ((F shr 22) xor (F shl 10))) +
       ((F and G) xor (F and H) xor (G and H));
     E := t1 + t2;
     a := a + t1;
-    t1 := d + (((a shr 6) or (a shl 26)) xor ((a shr 11) or (a shl 21)) xor ((a shr 25) or (a shl 7))) +
-      ((a and b) xor (not a and C)) + $391C0CB3 + W[52];
-    t2 := (((E shr 2) or (E shl 30)) xor ((E shr 13) or (E shl 19)) xor ((E shr 22) xor (E shl 10))) +
+    t1 := d + (((a shr 6) or (a shl 26)) xor ((a shr 11) or (a shl 21))
+      xor ((a shr 25) or (a shl 7))) + ((a and b) xor (not a and c)) +
+      $391C0CB3 + W[52];
+    t2 := (((E shr 2) or (E shl 30)) xor ((E shr 13) or (E shl 19))
+      xor ((E shr 22) xor (E shl 10))) +
       ((E and F) xor (E and G) xor (F and G));
     d := t1 + t2;
     H := H + t1;
-    t1 := C + (((H shr 6) or (H shl 26)) xor ((H shr 11) or (H shl 21)) xor ((H shr 25) or (H shl 7))) +
-      ((H and a) xor (not H and b)) + $4ED8AA4A + W[53];
-    t2 := (((d shr 2) or (d shl 30)) xor ((d shr 13) or (d shl 19)) xor ((d shr 22) xor (d shl 10))) +
+    t1 := c + (((H shr 6) or (H shl 26)) xor ((H shr 11) or (H shl 21))
+      xor ((H shr 25) or (H shl 7))) + ((H and a) xor (not H and b)) +
+      $4ED8AA4A + W[53];
+    t2 := (((d shr 2) or (d shl 30)) xor ((d shr 13) or (d shl 19))
+      xor ((d shr 22) xor (d shl 10))) +
       ((d and E) xor (d and F) xor (E and F));
-    C := t1 + t2;
+    c := t1 + t2;
     G := G + t1;
-    t1 := b + (((G shr 6) or (G shl 26)) xor ((G shr 11) or (G shl 21)) xor ((G shr 25) or (G shl 7))) +
-      ((G and H) xor (not G and a)) + $5B9CCA4F + W[54];
-    t2 := (((C shr 2) or (C shl 30)) xor ((C shr 13) or (C shl 19)) xor ((C shr 22) xor (C shl 10))) +
-      ((C and d) xor (C and E) xor (d and E));
+    t1 := b + (((G shr 6) or (G shl 26)) xor ((G shr 11) or (G shl 21))
+      xor ((G shr 25) or (G shl 7))) + ((G and H) xor (not G and a)) +
+      $5B9CCA4F + W[54];
+    t2 := (((c shr 2) or (c shl 30)) xor ((c shr 13) or (c shl 19))
+      xor ((c shr 22) xor (c shl 10))) +
+      ((c and d) xor (c and E) xor (d and E));
     b := t1 + t2;
     F := F + t1;
-    t1 := a + (((F shr 6) or (F shl 26)) xor ((F shr 11) or (F shl 21)) xor ((F shr 25) or (F shl 7))) +
-      ((F and G) xor (not F and H)) + $682E6FF3 + W[55];
-    t2 := (((b shr 2) or (b shl 30)) xor ((b shr 13) or (b shl 19)) xor ((b shr 22) xor (b shl 10))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 6) or (F shl 26)) xor ((F shr 11) or (F shl 21))
+      xor ((F shr 25) or (F shl 7))) + ((F and G) xor (not F and H)) +
+      $682E6FF3 + W[55];
+    t2 := (((b shr 2) or (b shl 30)) xor ((b shr 13) or (b shl 19))
+      xor ((b shr 22) xor (b shl 10))) +
+      ((b and c) xor (b and d) xor (c and d));
     a := t1 + t2;
     E := E + t1;
-    t1 := H + (((E shr 6) or (E shl 26)) xor ((E shr 11) or (E shl 21)) xor ((E shr 25) or (E shl 7))) +
-      ((E and F) xor (not E and G)) + $748F82EE + W[56];
-    t2 := (((a shr 2) or (a shl 30)) xor ((a shr 13) or (a shl 19)) xor ((a shr 22) xor (a shl 10))) +
-      ((a and b) xor (a and C) xor (b and C));
+    t1 := H + (((E shr 6) or (E shl 26)) xor ((E shr 11) or (E shl 21))
+      xor ((E shr 25) or (E shl 7))) + ((E and F) xor (not E and G)) +
+      $748F82EE + W[56];
+    t2 := (((a shr 2) or (a shl 30)) xor ((a shr 13) or (a shl 19))
+      xor ((a shr 22) xor (a shl 10))) +
+      ((a and b) xor (a and c) xor (b and c));
     H := t1 + t2;
     d := d + t1;
-    t1 := G + (((d shr 6) or (d shl 26)) xor ((d shr 11) or (d shl 21)) xor ((d shr 25) or (d shl 7))) +
-      ((d and E) xor (not d and F)) + $78A5636F + W[57];
-    t2 := (((H shr 2) or (H shl 30)) xor ((H shr 13) or (H shl 19)) xor ((H shr 22) xor (H shl 10))) +
+    t1 := G + (((d shr 6) or (d shl 26)) xor ((d shr 11) or (d shl 21))
+      xor ((d shr 25) or (d shl 7))) + ((d and E) xor (not d and F)) +
+      $78A5636F + W[57];
+    t2 := (((H shr 2) or (H shl 30)) xor ((H shr 13) or (H shl 19))
+      xor ((H shr 22) xor (H shl 10))) +
       ((H and a) xor (H and b) xor (a and b));
     G := t1 + t2;
-    C := C + t1;
-    t1 := F + (((C shr 6) or (C shl 26)) xor ((C shr 11) or (C shl 21)) xor ((C shr 25) or (C shl 7))) +
-      ((C and d) xor (not C and E)) + $84C87814 + W[58];
-    t2 := (((G shr 2) or (G shl 30)) xor ((G shr 13) or (G shl 19)) xor ((G shr 22) xor (G shl 10))) +
+    c := c + t1;
+    t1 := F + (((c shr 6) or (c shl 26)) xor ((c shr 11) or (c shl 21))
+      xor ((c shr 25) or (c shl 7))) + ((c and d) xor (not c and E)) +
+      $84C87814 + W[58];
+    t2 := (((G shr 2) or (G shl 30)) xor ((G shr 13) or (G shl 19))
+      xor ((G shr 22) xor (G shl 10))) +
       ((G and H) xor (G and a) xor (H and a));
     F := t1 + t2;
     b := b + t1;
-    t1 := E + (((b shr 6) or (b shl 26)) xor ((b shr 11) or (b shl 21)) xor ((b shr 25) or (b shl 7))) +
-      ((b and C) xor (not b and d)) + $8CC70208 + W[59];
-    t2 := (((F shr 2) or (F shl 30)) xor ((F shr 13) or (F shl 19)) xor ((F shr 22) xor (F shl 10))) +
+    t1 := E + (((b shr 6) or (b shl 26)) xor ((b shr 11) or (b shl 21))
+      xor ((b shr 25) or (b shl 7))) + ((b and c) xor (not b and d)) +
+      $8CC70208 + W[59];
+    t2 := (((F shr 2) or (F shl 30)) xor ((F shr 13) or (F shl 19))
+      xor ((F shr 22) xor (F shl 10))) +
       ((F and G) xor (F and H) xor (G and H));
     E := t1 + t2;
     a := a + t1;
-    t1 := d + (((a shr 6) or (a shl 26)) xor ((a shr 11) or (a shl 21)) xor ((a shr 25) or (a shl 7))) +
-      ((a and b) xor (not a and C)) + $90BEFFFA + W[60];
-    t2 := (((E shr 2) or (E shl 30)) xor ((E shr 13) or (E shl 19)) xor ((E shr 22) xor (E shl 10))) +
+    t1 := d + (((a shr 6) or (a shl 26)) xor ((a shr 11) or (a shl 21))
+      xor ((a shr 25) or (a shl 7))) + ((a and b) xor (not a and c)) +
+      $90BEFFFA + W[60];
+    t2 := (((E shr 2) or (E shl 30)) xor ((E shr 13) or (E shl 19))
+      xor ((E shr 22) xor (E shl 10))) +
       ((E and F) xor (E and G) xor (F and G));
     d := t1 + t2;
     H := H + t1;
-    t1 := C + (((H shr 6) or (H shl 26)) xor ((H shr 11) or (H shl 21)) xor ((H shr 25) or (H shl 7))) +
-      ((H and a) xor (not H and b)) + $A4506CEB + W[61];
-    t2 := (((d shr 2) or (d shl 30)) xor ((d shr 13) or (d shl 19)) xor ((d shr 22) xor (d shl 10))) +
+    t1 := c + (((H shr 6) or (H shl 26)) xor ((H shr 11) or (H shl 21))
+      xor ((H shr 25) or (H shl 7))) + ((H and a) xor (not H and b)) +
+      $A4506CEB + W[61];
+    t2 := (((d shr 2) or (d shl 30)) xor ((d shr 13) or (d shl 19))
+      xor ((d shr 22) xor (d shl 10))) +
       ((d and E) xor (d and F) xor (E and F));
-    C := t1 + t2;
+    c := t1 + t2;
     G := G + t1;
-    t1 := b + (((G shr 6) or (G shl 26)) xor ((G shr 11) or (G shl 21)) xor ((G shr 25) or (G shl 7))) +
-      ((G and H) xor (not G and a)) + $BEF9A3F7 + W[62];
-    t2 := (((C shr 2) or (C shl 30)) xor ((C shr 13) or (C shl 19)) xor ((C shr 22) xor (C shl 10))) +
-      ((C and d) xor (C and E) xor (d and E));
+    t1 := b + (((G shr 6) or (G shl 26)) xor ((G shr 11) or (G shl 21))
+      xor ((G shr 25) or (G shl 7))) + ((G and H) xor (not G and a)) +
+      $BEF9A3F7 + W[62];
+    t2 := (((c shr 2) or (c shl 30)) xor ((c shr 13) or (c shl 19))
+      xor ((c shr 22) xor (c shl 10))) +
+      ((c and d) xor (c and E) xor (d and E));
     b := t1 + t2;
     F := F + t1;
-    t1 := a + (((F shr 6) or (F shl 26)) xor ((F shr 11) or (F shl 21)) xor ((F shr 25) or (F shl 7))) +
-      ((F and G) xor (not F and H)) + $C67178F2 + W[63];
-    t2 := (((b shr 2) or (b shl 30)) xor ((b shr 13) or (b shl 19)) xor ((b shr 22) xor (b shl 10))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 6) or (F shl 26)) xor ((F shr 11) or (F shl 21))
+      xor ((F shr 25) or (F shl 7))) + ((F and G) xor (not F and H)) +
+      $C67178F2 + W[63];
+    t2 := (((b shr 2) or (b shl 30)) xor ((b shr 13) or (b shl 19))
+      xor ((b shr 22) xor (b shl 10))) +
+      ((b and c) xor (b and d) xor (c and d));
     a := t1 + t2;
     E := E + t1;
     AContext.CurrentHash.I32[0] := AContext.CurrentHash.I32[0] + a;
     AContext.CurrentHash.I32[1] := AContext.CurrentHash.I32[1] + b;
-    AContext.CurrentHash.I32[2] := AContext.CurrentHash.I32[2] + C;
+    AContext.CurrentHash.I32[2] := AContext.CurrentHash.I32[2] + c;
     AContext.CurrentHash.I32[3] := AContext.CurrentHash.I32[3] + d;
     AContext.CurrentHash.I32[4] := AContext.CurrentHash.I32[4] + E;
     AContext.CurrentHash.I32[5] := AContext.CurrentHash.I32[5] + F;
@@ -1046,7 +1218,7 @@ procedure SHACompress(var AContext: TQSHAContext);
   end;
   procedure SHA384Compress;
   var
-    a, b, C, d, E, F, G, H, t1, t2: Int64;
+    a, b, c, d, E, F, G, H, t1, t2: Int64;
     W: array [0 .. 79] of Int64;
     I: LongWord;
   begin
@@ -1054,7 +1226,7 @@ procedure SHACompress(var AContext: TQSHAContext);
     FillChar(W, SizeOf(W), 0);
     a := AContext.CurrentHash.I64[0];
     b := AContext.CurrentHash.I64[1];
-    C := AContext.CurrentHash.I64[2];
+    c := AContext.CurrentHash.I64[2];
     d := AContext.CurrentHash.I64[3];
     E := AContext.CurrentHash.I64[4];
     F := AContext.CurrentHash.I64[5];
@@ -1064,492 +1236,574 @@ procedure SHACompress(var AContext: TQSHAContext);
     for I := 0 to 15 do
       W[I] := SwapQWord(W[I]);
     for I := 16 to 79 do
-      W[I] := (((W[I - 2] shr 19) or (W[I - 2] shl 45)) xor ((W[I - 2] shr 61) or (W[I - 2] shl 3)) xor (W[I - 2] shr 6)) +
-        W[I - 7] + (((W[I - 15] shr 1) or (W[I - 15] shl 63)) xor ((W[I - 15] shr 8) or (W[I - 15] shl 56))
-        xor (W[I - 15] shr 7)) + W[I - 16];
-    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46)) xor ((E shr 41) or (E shl 23))) +
-      ((E and F) xor (not E and G)) + $428A2F98D728AE22 + W[0];
-    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30)) xor ((a shr 39) or (a shl 25))) +
-      ((a and b) xor (a and C) xor (b and C));
+      W[I] := (((W[I - 2] shr 19) or (W[I - 2] shl 45))
+        xor ((W[I - 2] shr 61) or (W[I - 2] shl 3)) xor (W[I - 2] shr 6)) +
+        W[I - 7] + (((W[I - 15] shr 1) or (W[I - 15] shl 63))
+        xor ((W[I - 15] shr 8) or (W[I - 15] shl 56)) xor (W[I - 15] shr 7)) +
+        W[I - 16];
+    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46))
+      xor ((E shr 41) or (E shl 23))) + ((E and F) xor (not E and G)) +
+      $428A2F98D728AE22 + W[0];
+    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30))
+      xor ((a shr 39) or (a shl 25))) + ((a and b) xor (a and c) xor (b and c));
     d := d + t1;
     H := t1 + t2;
-    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46)) xor ((d shr 41) or (d shl 23))) +
-      ((d and E) xor (not d and F)) + $7137449123EF65CD + W[1];
-    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30)) xor ((H shr 39) or (H shl 25))) +
-      ((H and a) xor (H and b) xor (a and b));
-    C := C + t1;
+    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46))
+      xor ((d shr 41) or (d shl 23))) + ((d and E) xor (not d and F)) +
+      $7137449123EF65CD + W[1];
+    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30))
+      xor ((H shr 39) or (H shl 25))) + ((H and a) xor (H and b) xor (a and b));
+    c := c + t1;
     G := t1 + t2;
-    t1 := F + (((C shr 14) or (C shl 50)) xor ((C shr 18) or (C shl 46)) xor ((C shr 41) or (C shl 23))) +
-      ((C and d) xor (not C and E)) + $B5C0FBCFEC4D3B2F + W[2];
-    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30)) xor ((G shr 39) or (G shl 25))) +
-      ((G and H) xor (G and a) xor (H and a));
+    t1 := F + (((c shr 14) or (c shl 50)) xor ((c shr 18) or (c shl 46))
+      xor ((c shr 41) or (c shl 23))) + ((c and d) xor (not c and E)) +
+      $B5C0FBCFEC4D3B2F + W[2];
+    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30))
+      xor ((G shr 39) or (G shl 25))) + ((G and H) xor (G and a) xor (H and a));
     b := b + t1;
     F := t1 + t2;
-    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46)) xor ((b shr 41) or (b shl 23))) +
-      ((b and C) xor (not b and d)) + $E9B5DBA58189DBBC + W[3];
-    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30)) xor ((F shr 39) or (F shl 25))) +
-      ((F and G) xor (F and H) xor (G and H));
+    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46))
+      xor ((b shr 41) or (b shl 23))) + ((b and c) xor (not b and d)) +
+      $E9B5DBA58189DBBC + W[3];
+    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30))
+      xor ((F shr 39) or (F shl 25))) + ((F and G) xor (F and H) xor (G and H));
     a := a + t1;
     E := t1 + t2;
-    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46)) xor ((a shr 41) or (a shl 23))) +
-      ((a and b) xor (not a and C)) + $3956C25BF348B538 + W[4];
-    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30)) xor ((E shr 39) or (E shl 25))) +
-      ((E and F) xor (E and G) xor (F and G));
+    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46))
+      xor ((a shr 41) or (a shl 23))) + ((a and b) xor (not a and c)) +
+      $3956C25BF348B538 + W[4];
+    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30))
+      xor ((E shr 39) or (E shl 25))) + ((E and F) xor (E and G) xor (F and G));
     H := H + t1;
     d := t1 + t2;
-    t1 := C + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46)) xor ((H shr 41) or (H shl 23))) +
-      ((H and a) xor (not H and b)) + $59F111F1B605D019 + W[5];
-    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30)) xor ((d shr 39) or (d shl 25))) +
-      ((d and E) xor (d and F) xor (E and F));
+    t1 := c + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46))
+      xor ((H shr 41) or (H shl 23))) + ((H and a) xor (not H and b)) +
+      $59F111F1B605D019 + W[5];
+    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30))
+      xor ((d shr 39) or (d shl 25))) + ((d and E) xor (d and F) xor (E and F));
     G := G + t1;
-    C := t1 + t2;
-    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46)) xor ((G shr 41) or (G shl 23))) +
-      ((G and H) xor (not G and a)) + $923F82A4AF194F9B + W[6];
-    t2 := (((C shr 28) or (C shl 36)) xor ((C shr 34) or (C shl 30)) xor ((C shr 39) or (C shl 25))) +
-      ((C and d) xor (C and E) xor (d and E));
+    c := t1 + t2;
+    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46))
+      xor ((G shr 41) or (G shl 23))) + ((G and H) xor (not G and a)) +
+      $923F82A4AF194F9B + W[6];
+    t2 := (((c shr 28) or (c shl 36)) xor ((c shr 34) or (c shl 30))
+      xor ((c shr 39) or (c shl 25))) + ((c and d) xor (c and E) xor (d and E));
     F := F + t1;
     b := t1 + t2;
-    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46)) xor ((F shr 41) or (F shl 23))) +
-      ((F and G) xor (not F and H)) + $AB1C5ED5DA6D8118 + W[7];
-    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30)) xor ((b shr 39) or (b shl 25))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46))
+      xor ((F shr 41) or (F shl 23))) + ((F and G) xor (not F and H)) +
+      $AB1C5ED5DA6D8118 + W[7];
+    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30))
+      xor ((b shr 39) or (b shl 25))) + ((b and c) xor (b and d) xor (c and d));
     E := E + t1;
     a := t1 + t2;
-    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46)) xor ((E shr 41) or (E shl 23))) +
-      ((E and F) xor (not E and G)) + $D807AA98A3030242 + W[8];
-    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30)) xor ((a shr 39) or (a shl 25))) +
-      ((a and b) xor (a and C) xor (b and C));
+    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46))
+      xor ((E shr 41) or (E shl 23))) + ((E and F) xor (not E and G)) +
+      $D807AA98A3030242 + W[8];
+    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30))
+      xor ((a shr 39) or (a shl 25))) + ((a and b) xor (a and c) xor (b and c));
     d := d + t1;
     H := t1 + t2;
-    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46)) xor ((d shr 41) or (d shl 23))) +
-      ((d and E) xor (not d and F)) + $12835B0145706FBE + W[9];
-    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30)) xor ((H shr 39) or (H shl 25))) +
-      ((H and a) xor (H and b) xor (a and b));
-    C := C + t1;
+    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46))
+      xor ((d shr 41) or (d shl 23))) + ((d and E) xor (not d and F)) +
+      $12835B0145706FBE + W[9];
+    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30))
+      xor ((H shr 39) or (H shl 25))) + ((H and a) xor (H and b) xor (a and b));
+    c := c + t1;
     G := t1 + t2;
-    t1 := F + (((C shr 14) or (C shl 50)) xor ((C shr 18) or (C shl 46)) xor ((C shr 41) or (C shl 23))) +
-      ((C and d) xor (not C and E)) + $243185BE4EE4B28C + W[10];
-    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30)) xor ((G shr 39) or (G shl 25))) +
-      ((G and H) xor (G and a) xor (H and a));
+    t1 := F + (((c shr 14) or (c shl 50)) xor ((c shr 18) or (c shl 46))
+      xor ((c shr 41) or (c shl 23))) + ((c and d) xor (not c and E)) +
+      $243185BE4EE4B28C + W[10];
+    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30))
+      xor ((G shr 39) or (G shl 25))) + ((G and H) xor (G and a) xor (H and a));
     b := b + t1;
     F := t1 + t2;
-    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46)) xor ((b shr 41) or (b shl 23))) +
-      ((b and C) xor (not b and d)) + $550C7DC3D5FFB4E2 + W[11];
-    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30)) xor ((F shr 39) or (F shl 25))) +
-      ((F and G) xor (F and H) xor (G and H));
+    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46))
+      xor ((b shr 41) or (b shl 23))) + ((b and c) xor (not b and d)) +
+      $550C7DC3D5FFB4E2 + W[11];
+    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30))
+      xor ((F shr 39) or (F shl 25))) + ((F and G) xor (F and H) xor (G and H));
     a := a + t1;
     E := t1 + t2;
-    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46)) xor ((a shr 41) or (a shl 23))) +
-      ((a and b) xor (not a and C)) + $72BE5D74F27B896F + W[12];
-    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30)) xor ((E shr 39) or (E shl 25))) +
-      ((E and F) xor (E and G) xor (F and G));
+    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46))
+      xor ((a shr 41) or (a shl 23))) + ((a and b) xor (not a and c)) +
+      $72BE5D74F27B896F + W[12];
+    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30))
+      xor ((E shr 39) or (E shl 25))) + ((E and F) xor (E and G) xor (F and G));
     H := H + t1;
     d := t1 + t2;
-    t1 := C + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46)) xor ((H shr 41) or (H shl 23))) +
-      ((H and a) xor (not H and b)) + $80DEB1FE3B1696B1 + W[13];
-    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30)) xor ((d shr 39) or (d shl 25))) +
-      ((d and E) xor (d and F) xor (E and F));
+    t1 := c + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46))
+      xor ((H shr 41) or (H shl 23))) + ((H and a) xor (not H and b)) +
+      $80DEB1FE3B1696B1 + W[13];
+    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30))
+      xor ((d shr 39) or (d shl 25))) + ((d and E) xor (d and F) xor (E and F));
     G := G + t1;
-    C := t1 + t2;
-    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46)) xor ((G shr 41) or (G shl 23))) +
-      ((G and H) xor (not G and a)) + $9BDC06A725C71235 + W[14];
-    t2 := (((C shr 28) or (C shl 36)) xor ((C shr 34) or (C shl 30)) xor ((C shr 39) or (C shl 25))) +
-      ((C and d) xor (C and E) xor (d and E));
+    c := t1 + t2;
+    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46))
+      xor ((G shr 41) or (G shl 23))) + ((G and H) xor (not G and a)) +
+      $9BDC06A725C71235 + W[14];
+    t2 := (((c shr 28) or (c shl 36)) xor ((c shr 34) or (c shl 30))
+      xor ((c shr 39) or (c shl 25))) + ((c and d) xor (c and E) xor (d and E));
     F := F + t1;
     b := t1 + t2;
-    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46)) xor ((F shr 41) or (F shl 23))) +
-      ((F and G) xor (not F and H)) + $C19BF174CF692694 + W[15];
-    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30)) xor ((b shr 39) or (b shl 25))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46))
+      xor ((F shr 41) or (F shl 23))) + ((F and G) xor (not F and H)) +
+      $C19BF174CF692694 + W[15];
+    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30))
+      xor ((b shr 39) or (b shl 25))) + ((b and c) xor (b and d) xor (c and d));
     E := E + t1;
     a := t1 + t2;
-    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46)) xor ((E shr 41) or (E shl 23))) +
-      ((E and F) xor (not E and G)) + $E49B69C19EF14AD2 + W[16];
-    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30)) xor ((a shr 39) or (a shl 25))) +
-      ((a and b) xor (a and C) xor (b and C));
+    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46))
+      xor ((E shr 41) or (E shl 23))) + ((E and F) xor (not E and G)) +
+      $E49B69C19EF14AD2 + W[16];
+    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30))
+      xor ((a shr 39) or (a shl 25))) + ((a and b) xor (a and c) xor (b and c));
     d := d + t1;
     H := t1 + t2;
-    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46)) xor ((d shr 41) or (d shl 23))) +
-      ((d and E) xor (not d and F)) + $EFBE4786384F25E3 + W[17];
-    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30)) xor ((H shr 39) or (H shl 25))) +
-      ((H and a) xor (H and b) xor (a and b));
-    C := C + t1;
+    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46))
+      xor ((d shr 41) or (d shl 23))) + ((d and E) xor (not d and F)) +
+      $EFBE4786384F25E3 + W[17];
+    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30))
+      xor ((H shr 39) or (H shl 25))) + ((H and a) xor (H and b) xor (a and b));
+    c := c + t1;
     G := t1 + t2;
-    t1 := F + (((C shr 14) or (C shl 50)) xor ((C shr 18) or (C shl 46)) xor ((C shr 41) or (C shl 23))) +
-      ((C and d) xor (not C and E)) + $0FC19DC68B8CD5B5 + W[18];
-    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30)) xor ((G shr 39) or (G shl 25))) +
-      ((G and H) xor (G and a) xor (H and a));
+    t1 := F + (((c shr 14) or (c shl 50)) xor ((c shr 18) or (c shl 46))
+      xor ((c shr 41) or (c shl 23))) + ((c and d) xor (not c and E)) +
+      $0FC19DC68B8CD5B5 + W[18];
+    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30))
+      xor ((G shr 39) or (G shl 25))) + ((G and H) xor (G and a) xor (H and a));
     b := b + t1;
     F := t1 + t2;
-    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46)) xor ((b shr 41) or (b shl 23))) +
-      ((b and C) xor (not b and d)) + $240CA1CC77AC9C65 + W[19];
-    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30)) xor ((F shr 39) or (F shl 25))) +
-      ((F and G) xor (F and H) xor (G and H));
+    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46))
+      xor ((b shr 41) or (b shl 23))) + ((b and c) xor (not b and d)) +
+      $240CA1CC77AC9C65 + W[19];
+    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30))
+      xor ((F shr 39) or (F shl 25))) + ((F and G) xor (F and H) xor (G and H));
     a := a + t1;
     E := t1 + t2;
-    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46)) xor ((a shr 41) or (a shl 23))) +
-      ((a and b) xor (not a and C)) + $2DE92C6F592B0275 + W[20];
-    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30)) xor ((E shr 39) or (E shl 25))) +
-      ((E and F) xor (E and G) xor (F and G));
+    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46))
+      xor ((a shr 41) or (a shl 23))) + ((a and b) xor (not a and c)) +
+      $2DE92C6F592B0275 + W[20];
+    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30))
+      xor ((E shr 39) or (E shl 25))) + ((E and F) xor (E and G) xor (F and G));
     H := H + t1;
     d := t1 + t2;
-    t1 := C + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46)) xor ((H shr 41) or (H shl 23))) +
-      ((H and a) xor (not H and b)) + $4A7484AA6EA6E483 + W[21];
-    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30)) xor ((d shr 39) or (d shl 25))) +
-      ((d and E) xor (d and F) xor (E and F));
+    t1 := c + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46))
+      xor ((H shr 41) or (H shl 23))) + ((H and a) xor (not H and b)) +
+      $4A7484AA6EA6E483 + W[21];
+    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30))
+      xor ((d shr 39) or (d shl 25))) + ((d and E) xor (d and F) xor (E and F));
     G := G + t1;
-    C := t1 + t2;
-    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46)) xor ((G shr 41) or (G shl 23))) +
-      ((G and H) xor (not G and a)) + $5CB0A9DCBD41FBD4 + W[22];
-    t2 := (((C shr 28) or (C shl 36)) xor ((C shr 34) or (C shl 30)) xor ((C shr 39) or (C shl 25))) +
-      ((C and d) xor (C and E) xor (d and E));
+    c := t1 + t2;
+    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46))
+      xor ((G shr 41) or (G shl 23))) + ((G and H) xor (not G and a)) +
+      $5CB0A9DCBD41FBD4 + W[22];
+    t2 := (((c shr 28) or (c shl 36)) xor ((c shr 34) or (c shl 30))
+      xor ((c shr 39) or (c shl 25))) + ((c and d) xor (c and E) xor (d and E));
     F := F + t1;
     b := t1 + t2;
-    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46)) xor ((F shr 41) or (F shl 23))) +
-      ((F and G) xor (not F and H)) + $76F988DA831153B5 + W[23];
-    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30)) xor ((b shr 39) or (b shl 25))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46))
+      xor ((F shr 41) or (F shl 23))) + ((F and G) xor (not F and H)) +
+      $76F988DA831153B5 + W[23];
+    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30))
+      xor ((b shr 39) or (b shl 25))) + ((b and c) xor (b and d) xor (c and d));
     E := E + t1;
     a := t1 + t2;
-    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46)) xor ((E shr 41) or (E shl 23))) +
-      ((E and F) xor (not E and G)) + $983E5152EE66DFAB + W[24];
-    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30)) xor ((a shr 39) or (a shl 25))) +
-      ((a and b) xor (a and C) xor (b and C));
+    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46))
+      xor ((E shr 41) or (E shl 23))) + ((E and F) xor (not E and G)) +
+      $983E5152EE66DFAB + W[24];
+    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30))
+      xor ((a shr 39) or (a shl 25))) + ((a and b) xor (a and c) xor (b and c));
     d := d + t1;
     H := t1 + t2;
-    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46)) xor ((d shr 41) or (d shl 23))) +
-      ((d and E) xor (not d and F)) + $A831C66D2DB43210 + W[25];
-    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30)) xor ((H shr 39) or (H shl 25))) +
-      ((H and a) xor (H and b) xor (a and b));
-    C := C + t1;
+    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46))
+      xor ((d shr 41) or (d shl 23))) + ((d and E) xor (not d and F)) +
+      $A831C66D2DB43210 + W[25];
+    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30))
+      xor ((H shr 39) or (H shl 25))) + ((H and a) xor (H and b) xor (a and b));
+    c := c + t1;
     G := t1 + t2;
-    t1 := F + (((C shr 14) or (C shl 50)) xor ((C shr 18) or (C shl 46)) xor ((C shr 41) or (C shl 23))) +
-      ((C and d) xor (not C and E)) + $B00327C898FB213F + W[26];
-    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30)) xor ((G shr 39) or (G shl 25))) +
-      ((G and H) xor (G and a) xor (H and a));
+    t1 := F + (((c shr 14) or (c shl 50)) xor ((c shr 18) or (c shl 46))
+      xor ((c shr 41) or (c shl 23))) + ((c and d) xor (not c and E)) +
+      $B00327C898FB213F + W[26];
+    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30))
+      xor ((G shr 39) or (G shl 25))) + ((G and H) xor (G and a) xor (H and a));
     b := b + t1;
     F := t1 + t2;
-    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46)) xor ((b shr 41) or (b shl 23))) +
-      ((b and C) xor (not b and d)) + $BF597FC7BEEF0EE4 + W[27];
-    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30)) xor ((F shr 39) or (F shl 25))) +
-      ((F and G) xor (F and H) xor (G and H));
+    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46))
+      xor ((b shr 41) or (b shl 23))) + ((b and c) xor (not b and d)) +
+      $BF597FC7BEEF0EE4 + W[27];
+    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30))
+      xor ((F shr 39) or (F shl 25))) + ((F and G) xor (F and H) xor (G and H));
     a := a + t1;
     E := t1 + t2;
-    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46)) xor ((a shr 41) or (a shl 23))) +
-      ((a and b) xor (not a and C)) + $C6E00BF33DA88FC2 + W[28];
-    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30)) xor ((E shr 39) or (E shl 25))) +
-      ((E and F) xor (E and G) xor (F and G));
+    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46))
+      xor ((a shr 41) or (a shl 23))) + ((a and b) xor (not a and c)) +
+      $C6E00BF33DA88FC2 + W[28];
+    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30))
+      xor ((E shr 39) or (E shl 25))) + ((E and F) xor (E and G) xor (F and G));
     H := H + t1;
     d := t1 + t2;
-    t1 := C + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46)) xor ((H shr 41) or (H shl 23))) +
-      ((H and a) xor (not H and b)) + $D5A79147930AA725 + W[29];
-    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30)) xor ((d shr 39) or (d shl 25))) +
-      ((d and E) xor (d and F) xor (E and F));
+    t1 := c + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46))
+      xor ((H shr 41) or (H shl 23))) + ((H and a) xor (not H and b)) +
+      $D5A79147930AA725 + W[29];
+    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30))
+      xor ((d shr 39) or (d shl 25))) + ((d and E) xor (d and F) xor (E and F));
     G := G + t1;
-    C := t1 + t2;
-    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46)) xor ((G shr 41) or (G shl 23))) +
-      ((G and H) xor (not G and a)) + $06CA6351E003826F + W[30];
-    t2 := (((C shr 28) or (C shl 36)) xor ((C shr 34) or (C shl 30)) xor ((C shr 39) or (C shl 25))) +
-      ((C and d) xor (C and E) xor (d and E));
+    c := t1 + t2;
+    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46))
+      xor ((G shr 41) or (G shl 23))) + ((G and H) xor (not G and a)) +
+      $06CA6351E003826F + W[30];
+    t2 := (((c shr 28) or (c shl 36)) xor ((c shr 34) or (c shl 30))
+      xor ((c shr 39) or (c shl 25))) + ((c and d) xor (c and E) xor (d and E));
     F := F + t1;
     b := t1 + t2;
-    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46)) xor ((F shr 41) or (F shl 23))) +
-      ((F and G) xor (not F and H)) + $142929670A0E6E70 + W[31];
-    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30)) xor ((b shr 39) or (b shl 25))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46))
+      xor ((F shr 41) or (F shl 23))) + ((F and G) xor (not F and H)) +
+      $142929670A0E6E70 + W[31];
+    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30))
+      xor ((b shr 39) or (b shl 25))) + ((b and c) xor (b and d) xor (c and d));
     E := E + t1;
     a := t1 + t2;
-    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46)) xor ((E shr 41) or (E shl 23))) +
-      ((E and F) xor (not E and G)) + $27B70A8546D22FFC + W[32];
-    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30)) xor ((a shr 39) or (a shl 25))) +
-      ((a and b) xor (a and C) xor (b and C));
+    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46))
+      xor ((E shr 41) or (E shl 23))) + ((E and F) xor (not E and G)) +
+      $27B70A8546D22FFC + W[32];
+    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30))
+      xor ((a shr 39) or (a shl 25))) + ((a and b) xor (a and c) xor (b and c));
     d := d + t1;
     H := t1 + t2;
-    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46)) xor ((d shr 41) or (d shl 23))) +
-      ((d and E) xor (not d and F)) + $2E1B21385C26C926 + W[33];
-    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30)) xor ((H shr 39) or (H shl 25))) +
-      ((H and a) xor (H and b) xor (a and b));
-    C := C + t1;
+    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46))
+      xor ((d shr 41) or (d shl 23))) + ((d and E) xor (not d and F)) +
+      $2E1B21385C26C926 + W[33];
+    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30))
+      xor ((H shr 39) or (H shl 25))) + ((H and a) xor (H and b) xor (a and b));
+    c := c + t1;
     G := t1 + t2;
-    t1 := F + (((C shr 14) or (C shl 50)) xor ((C shr 18) or (C shl 46)) xor ((C shr 41) or (C shl 23))) +
-      ((C and d) xor (not C and E)) + $4D2C6DFC5AC42AED + W[34];
-    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30)) xor ((G shr 39) or (G shl 25))) +
-      ((G and H) xor (G and a) xor (H and a));
+    t1 := F + (((c shr 14) or (c shl 50)) xor ((c shr 18) or (c shl 46))
+      xor ((c shr 41) or (c shl 23))) + ((c and d) xor (not c and E)) +
+      $4D2C6DFC5AC42AED + W[34];
+    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30))
+      xor ((G shr 39) or (G shl 25))) + ((G and H) xor (G and a) xor (H and a));
     b := b + t1;
     F := t1 + t2;
-    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46)) xor ((b shr 41) or (b shl 23))) +
-      ((b and C) xor (not b and d)) + $53380D139D95B3DF + W[35];
-    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30)) xor ((F shr 39) or (F shl 25))) +
-      ((F and G) xor (F and H) xor (G and H));
+    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46))
+      xor ((b shr 41) or (b shl 23))) + ((b and c) xor (not b and d)) +
+      $53380D139D95B3DF + W[35];
+    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30))
+      xor ((F shr 39) or (F shl 25))) + ((F and G) xor (F and H) xor (G and H));
     a := a + t1;
     E := t1 + t2;
-    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46)) xor ((a shr 41) or (a shl 23))) +
-      ((a and b) xor (not a and C)) + $650A73548BAF63DE + W[36];
-    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30)) xor ((E shr 39) or (E shl 25))) +
-      ((E and F) xor (E and G) xor (F and G));
+    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46))
+      xor ((a shr 41) or (a shl 23))) + ((a and b) xor (not a and c)) +
+      $650A73548BAF63DE + W[36];
+    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30))
+      xor ((E shr 39) or (E shl 25))) + ((E and F) xor (E and G) xor (F and G));
     H := H + t1;
     d := t1 + t2;
-    t1 := C + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46)) xor ((H shr 41) or (H shl 23))) +
-      ((H and a) xor (not H and b)) + $766A0ABB3C77B2A8 + W[37];
-    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30)) xor ((d shr 39) or (d shl 25))) +
-      ((d and E) xor (d and F) xor (E and F));
+    t1 := c + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46))
+      xor ((H shr 41) or (H shl 23))) + ((H and a) xor (not H and b)) +
+      $766A0ABB3C77B2A8 + W[37];
+    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30))
+      xor ((d shr 39) or (d shl 25))) + ((d and E) xor (d and F) xor (E and F));
     G := G + t1;
-    C := t1 + t2;
-    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46)) xor ((G shr 41) or (G shl 23))) +
-      ((G and H) xor (not G and a)) + $81C2C92E47EDAEE6 + W[38];
-    t2 := (((C shr 28) or (C shl 36)) xor ((C shr 34) or (C shl 30)) xor ((C shr 39) or (C shl 25))) +
-      ((C and d) xor (C and E) xor (d and E));
+    c := t1 + t2;
+    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46))
+      xor ((G shr 41) or (G shl 23))) + ((G and H) xor (not G and a)) +
+      $81C2C92E47EDAEE6 + W[38];
+    t2 := (((c shr 28) or (c shl 36)) xor ((c shr 34) or (c shl 30))
+      xor ((c shr 39) or (c shl 25))) + ((c and d) xor (c and E) xor (d and E));
     F := F + t1;
     b := t1 + t2;
-    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46)) xor ((F shr 41) or (F shl 23))) +
-      ((F and G) xor (not F and H)) + $92722C851482353B + W[39];
-    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30)) xor ((b shr 39) or (b shl 25))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46))
+      xor ((F shr 41) or (F shl 23))) + ((F and G) xor (not F and H)) +
+      $92722C851482353B + W[39];
+    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30))
+      xor ((b shr 39) or (b shl 25))) + ((b and c) xor (b and d) xor (c and d));
     E := E + t1;
     a := t1 + t2;
-    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46)) xor ((E shr 41) or (E shl 23))) +
-      ((E and F) xor (not E and G)) + $A2BFE8A14CF10364 + W[40];
-    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30)) xor ((a shr 39) or (a shl 25))) +
-      ((a and b) xor (a and C) xor (b and C));
+    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46))
+      xor ((E shr 41) or (E shl 23))) + ((E and F) xor (not E and G)) +
+      $A2BFE8A14CF10364 + W[40];
+    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30))
+      xor ((a shr 39) or (a shl 25))) + ((a and b) xor (a and c) xor (b and c));
     d := d + t1;
     H := t1 + t2;
-    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46)) xor ((d shr 41) or (d shl 23))) +
-      ((d and E) xor (not d and F)) + $A81A664BBC423001 + W[41];
-    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30)) xor ((H shr 39) or (H shl 25))) +
-      ((H and a) xor (H and b) xor (a and b));
-    C := C + t1;
+    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46))
+      xor ((d shr 41) or (d shl 23))) + ((d and E) xor (not d and F)) +
+      $A81A664BBC423001 + W[41];
+    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30))
+      xor ((H shr 39) or (H shl 25))) + ((H and a) xor (H and b) xor (a and b));
+    c := c + t1;
     G := t1 + t2;
-    t1 := F + (((C shr 14) or (C shl 50)) xor ((C shr 18) or (C shl 46)) xor ((C shr 41) or (C shl 23))) +
-      ((C and d) xor (not C and E)) + $C24B8B70D0F89791 + W[42];
-    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30)) xor ((G shr 39) or (G shl 25))) +
-      ((G and H) xor (G and a) xor (H and a));
+    t1 := F + (((c shr 14) or (c shl 50)) xor ((c shr 18) or (c shl 46))
+      xor ((c shr 41) or (c shl 23))) + ((c and d) xor (not c and E)) +
+      $C24B8B70D0F89791 + W[42];
+    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30))
+      xor ((G shr 39) or (G shl 25))) + ((G and H) xor (G and a) xor (H and a));
     b := b + t1;
     F := t1 + t2;
-    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46)) xor ((b shr 41) or (b shl 23))) +
-      ((b and C) xor (not b and d)) + $C76C51A30654BE30 + W[43];
-    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30)) xor ((F shr 39) or (F shl 25))) +
-      ((F and G) xor (F and H) xor (G and H));
+    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46))
+      xor ((b shr 41) or (b shl 23))) + ((b and c) xor (not b and d)) +
+      $C76C51A30654BE30 + W[43];
+    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30))
+      xor ((F shr 39) or (F shl 25))) + ((F and G) xor (F and H) xor (G and H));
     a := a + t1;
     E := t1 + t2;
-    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46)) xor ((a shr 41) or (a shl 23))) +
-      ((a and b) xor (not a and C)) + $D192E819D6EF5218 + W[44];
-    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30)) xor ((E shr 39) or (E shl 25))) +
-      ((E and F) xor (E and G) xor (F and G));
+    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46))
+      xor ((a shr 41) or (a shl 23))) + ((a and b) xor (not a and c)) +
+      $D192E819D6EF5218 + W[44];
+    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30))
+      xor ((E shr 39) or (E shl 25))) + ((E and F) xor (E and G) xor (F and G));
     H := H + t1;
     d := t1 + t2;
-    t1 := C + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46)) xor ((H shr 41) or (H shl 23))) +
-      ((H and a) xor (not H and b)) + $D69906245565A910 + W[45];
-    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30)) xor ((d shr 39) or (d shl 25))) +
-      ((d and E) xor (d and F) xor (E and F));
+    t1 := c + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46))
+      xor ((H shr 41) or (H shl 23))) + ((H and a) xor (not H and b)) +
+      $D69906245565A910 + W[45];
+    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30))
+      xor ((d shr 39) or (d shl 25))) + ((d and E) xor (d and F) xor (E and F));
     G := G + t1;
-    C := t1 + t2;
-    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46)) xor ((G shr 41) or (G shl 23))) +
-      ((G and H) xor (not G and a)) + $F40E35855771202A + W[46];
-    t2 := (((C shr 28) or (C shl 36)) xor ((C shr 34) or (C shl 30)) xor ((C shr 39) or (C shl 25))) +
-      ((C and d) xor (C and E) xor (d and E));
+    c := t1 + t2;
+    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46))
+      xor ((G shr 41) or (G shl 23))) + ((G and H) xor (not G and a)) +
+      $F40E35855771202A + W[46];
+    t2 := (((c shr 28) or (c shl 36)) xor ((c shr 34) or (c shl 30))
+      xor ((c shr 39) or (c shl 25))) + ((c and d) xor (c and E) xor (d and E));
     F := F + t1;
     b := t1 + t2;
-    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46)) xor ((F shr 41) or (F shl 23))) +
-      ((F and G) xor (not F and H)) + $106AA07032BBD1B8 + W[47];
-    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30)) xor ((b shr 39) or (b shl 25))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46))
+      xor ((F shr 41) or (F shl 23))) + ((F and G) xor (not F and H)) +
+      $106AA07032BBD1B8 + W[47];
+    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30))
+      xor ((b shr 39) or (b shl 25))) + ((b and c) xor (b and d) xor (c and d));
     E := E + t1;
     a := t1 + t2;
-    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46)) xor ((E shr 41) or (E shl 23))) +
-      ((E and F) xor (not E and G)) + $19A4C116B8D2D0C8 + W[48];
-    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30)) xor ((a shr 39) or (a shl 25))) +
-      ((a and b) xor (a and C) xor (b and C));
+    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46))
+      xor ((E shr 41) or (E shl 23))) + ((E and F) xor (not E and G)) +
+      $19A4C116B8D2D0C8 + W[48];
+    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30))
+      xor ((a shr 39) or (a shl 25))) + ((a and b) xor (a and c) xor (b and c));
     d := d + t1;
     H := t1 + t2;
-    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46)) xor ((d shr 41) or (d shl 23))) +
-      ((d and E) xor (not d and F)) + $1E376C085141AB53 + W[49];
-    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30)) xor ((H shr 39) or (H shl 25))) +
-      ((H and a) xor (H and b) xor (a and b));
-    C := C + t1;
+    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46))
+      xor ((d shr 41) or (d shl 23))) + ((d and E) xor (not d and F)) +
+      $1E376C085141AB53 + W[49];
+    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30))
+      xor ((H shr 39) or (H shl 25))) + ((H and a) xor (H and b) xor (a and b));
+    c := c + t1;
     G := t1 + t2;
-    t1 := F + (((C shr 14) or (C shl 50)) xor ((C shr 18) or (C shl 46)) xor ((C shr 41) or (C shl 23))) +
-      ((C and d) xor (not C and E)) + $2748774CDF8EEB99 + W[50];
-    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30)) xor ((G shr 39) or (G shl 25))) +
-      ((G and H) xor (G and a) xor (H and a));
+    t1 := F + (((c shr 14) or (c shl 50)) xor ((c shr 18) or (c shl 46))
+      xor ((c shr 41) or (c shl 23))) + ((c and d) xor (not c and E)) +
+      $2748774CDF8EEB99 + W[50];
+    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30))
+      xor ((G shr 39) or (G shl 25))) + ((G and H) xor (G and a) xor (H and a));
     b := b + t1;
     F := t1 + t2;
-    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46)) xor ((b shr 41) or (b shl 23))) +
-      ((b and C) xor (not b and d)) + $34B0BCB5E19B48A8 + W[51];
-    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30)) xor ((F shr 39) or (F shl 25))) +
-      ((F and G) xor (F and H) xor (G and H));
+    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46))
+      xor ((b shr 41) or (b shl 23))) + ((b and c) xor (not b and d)) +
+      $34B0BCB5E19B48A8 + W[51];
+    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30))
+      xor ((F shr 39) or (F shl 25))) + ((F and G) xor (F and H) xor (G and H));
     a := a + t1;
     E := t1 + t2;
-    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46)) xor ((a shr 41) or (a shl 23))) +
-      ((a and b) xor (not a and C)) + $391C0CB3C5C95A63 + W[52];
-    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30)) xor ((E shr 39) or (E shl 25))) +
-      ((E and F) xor (E and G) xor (F and G));
+    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46))
+      xor ((a shr 41) or (a shl 23))) + ((a and b) xor (not a and c)) +
+      $391C0CB3C5C95A63 + W[52];
+    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30))
+      xor ((E shr 39) or (E shl 25))) + ((E and F) xor (E and G) xor (F and G));
     H := H + t1;
     d := t1 + t2;
-    t1 := C + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46)) xor ((H shr 41) or (H shl 23))) +
-      ((H and a) xor (not H and b)) + $4ED8AA4AE3418ACB + W[53];
-    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30)) xor ((d shr 39) or (d shl 25))) +
-      ((d and E) xor (d and F) xor (E and F));
+    t1 := c + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46))
+      xor ((H shr 41) or (H shl 23))) + ((H and a) xor (not H and b)) +
+      $4ED8AA4AE3418ACB + W[53];
+    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30))
+      xor ((d shr 39) or (d shl 25))) + ((d and E) xor (d and F) xor (E and F));
     G := G + t1;
-    C := t1 + t2;
-    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46)) xor ((G shr 41) or (G shl 23))) +
-      ((G and H) xor (not G and a)) + $5B9CCA4F7763E373 + W[54];
-    t2 := (((C shr 28) or (C shl 36)) xor ((C shr 34) or (C shl 30)) xor ((C shr 39) or (C shl 25))) +
-      ((C and d) xor (C and E) xor (d and E));
+    c := t1 + t2;
+    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46))
+      xor ((G shr 41) or (G shl 23))) + ((G and H) xor (not G and a)) +
+      $5B9CCA4F7763E373 + W[54];
+    t2 := (((c shr 28) or (c shl 36)) xor ((c shr 34) or (c shl 30))
+      xor ((c shr 39) or (c shl 25))) + ((c and d) xor (c and E) xor (d and E));
     F := F + t1;
     b := t1 + t2;
-    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46)) xor ((F shr 41) or (F shl 23))) +
-      ((F and G) xor (not F and H)) + $682E6FF3D6B2B8A3 + W[55];
-    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30)) xor ((b shr 39) or (b shl 25))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46))
+      xor ((F shr 41) or (F shl 23))) + ((F and G) xor (not F and H)) +
+      $682E6FF3D6B2B8A3 + W[55];
+    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30))
+      xor ((b shr 39) or (b shl 25))) + ((b and c) xor (b and d) xor (c and d));
     E := E + t1;
     a := t1 + t2;
-    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46)) xor ((E shr 41) or (E shl 23))) +
-      ((E and F) xor (not E and G)) + $748F82EE5DEFB2FC + W[56];
-    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30)) xor ((a shr 39) or (a shl 25))) +
-      ((a and b) xor (a and C) xor (b and C));
+    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46))
+      xor ((E shr 41) or (E shl 23))) + ((E and F) xor (not E and G)) +
+      $748F82EE5DEFB2FC + W[56];
+    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30))
+      xor ((a shr 39) or (a shl 25))) + ((a and b) xor (a and c) xor (b and c));
     d := d + t1;
     H := t1 + t2;
-    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46)) xor ((d shr 41) or (d shl 23))) +
-      ((d and E) xor (not d and F)) + $78A5636F43172F60 + W[57];
-    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30)) xor ((H shr 39) or (H shl 25))) +
-      ((H and a) xor (H and b) xor (a and b));
-    C := C + t1;
+    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46))
+      xor ((d shr 41) or (d shl 23))) + ((d and E) xor (not d and F)) +
+      $78A5636F43172F60 + W[57];
+    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30))
+      xor ((H shr 39) or (H shl 25))) + ((H and a) xor (H and b) xor (a and b));
+    c := c + t1;
     G := t1 + t2;
-    t1 := F + (((C shr 14) or (C shl 50)) xor ((C shr 18) or (C shl 46)) xor ((C shr 41) or (C shl 23))) +
-      ((C and d) xor (not C and E)) + $84C87814A1F0AB72 + W[58];
-    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30)) xor ((G shr 39) or (G shl 25))) +
-      ((G and H) xor (G and a) xor (H and a));
+    t1 := F + (((c shr 14) or (c shl 50)) xor ((c shr 18) or (c shl 46))
+      xor ((c shr 41) or (c shl 23))) + ((c and d) xor (not c and E)) +
+      $84C87814A1F0AB72 + W[58];
+    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30))
+      xor ((G shr 39) or (G shl 25))) + ((G and H) xor (G and a) xor (H and a));
     b := b + t1;
     F := t1 + t2;
-    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46)) xor ((b shr 41) or (b shl 23))) +
-      ((b and C) xor (not b and d)) + $8CC702081A6439EC + W[59];
-    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30)) xor ((F shr 39) or (F shl 25))) +
-      ((F and G) xor (F and H) xor (G and H));
+    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46))
+      xor ((b shr 41) or (b shl 23))) + ((b and c) xor (not b and d)) +
+      $8CC702081A6439EC + W[59];
+    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30))
+      xor ((F shr 39) or (F shl 25))) + ((F and G) xor (F and H) xor (G and H));
     a := a + t1;
     E := t1 + t2;
-    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46)) xor ((a shr 41) or (a shl 23))) +
-      ((a and b) xor (not a and C)) + $90BEFFFA23631E28 + W[60];
-    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30)) xor ((E shr 39) or (E shl 25))) +
-      ((E and F) xor (E and G) xor (F and G));
+    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46))
+      xor ((a shr 41) or (a shl 23))) + ((a and b) xor (not a and c)) +
+      $90BEFFFA23631E28 + W[60];
+    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30))
+      xor ((E shr 39) or (E shl 25))) + ((E and F) xor (E and G) xor (F and G));
     H := H + t1;
     d := t1 + t2;
-    t1 := C + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46)) xor ((H shr 41) or (H shl 23))) +
-      ((H and a) xor (not H and b)) + $A4506CEBDE82BDE9 + W[61];
-    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30)) xor ((d shr 39) or (d shl 25))) +
-      ((d and E) xor (d and F) xor (E and F));
+    t1 := c + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46))
+      xor ((H shr 41) or (H shl 23))) + ((H and a) xor (not H and b)) +
+      $A4506CEBDE82BDE9 + W[61];
+    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30))
+      xor ((d shr 39) or (d shl 25))) + ((d and E) xor (d and F) xor (E and F));
     G := G + t1;
-    C := t1 + t2;
-    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46)) xor ((G shr 41) or (G shl 23))) +
-      ((G and H) xor (not G and a)) + $BEF9A3F7B2C67915 + W[62];
-    t2 := (((C shr 28) or (C shl 36)) xor ((C shr 34) or (C shl 30)) xor ((C shr 39) or (C shl 25))) +
-      ((C and d) xor (C and E) xor (d and E));
+    c := t1 + t2;
+    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46))
+      xor ((G shr 41) or (G shl 23))) + ((G and H) xor (not G and a)) +
+      $BEF9A3F7B2C67915 + W[62];
+    t2 := (((c shr 28) or (c shl 36)) xor ((c shr 34) or (c shl 30))
+      xor ((c shr 39) or (c shl 25))) + ((c and d) xor (c and E) xor (d and E));
     F := F + t1;
     b := t1 + t2;
-    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46)) xor ((F shr 41) or (F shl 23))) +
-      ((F and G) xor (not F and H)) + $C67178F2E372532B + W[63];
-    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30)) xor ((b shr 39) or (b shl 25))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46))
+      xor ((F shr 41) or (F shl 23))) + ((F and G) xor (not F and H)) +
+      $C67178F2E372532B + W[63];
+    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30))
+      xor ((b shr 39) or (b shl 25))) + ((b and c) xor (b and d) xor (c and d));
     E := E + t1;
     a := t1 + t2;
-    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46)) xor ((E shr 41) or (E shl 23))) +
-      ((E and F) xor (not E and G)) + $CA273ECEEA26619C + W[64];
-    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30)) xor ((a shr 39) or (a shl 25))) +
-      ((a and b) xor (a and C) xor (b and C));
+    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46))
+      xor ((E shr 41) or (E shl 23))) + ((E and F) xor (not E and G)) +
+      $CA273ECEEA26619C + W[64];
+    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30))
+      xor ((a shr 39) or (a shl 25))) + ((a and b) xor (a and c) xor (b and c));
     d := d + t1;
     H := t1 + t2;
-    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46)) xor ((d shr 41) or (d shl 23))) +
-      ((d and E) xor (not d and F)) + $D186B8C721C0C207 + W[65];
-    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30)) xor ((H shr 39) or (H shl 25))) +
-      ((H and a) xor (H and b) xor (a and b));
-    C := C + t1;
+    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46))
+      xor ((d shr 41) or (d shl 23))) + ((d and E) xor (not d and F)) +
+      $D186B8C721C0C207 + W[65];
+    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30))
+      xor ((H shr 39) or (H shl 25))) + ((H and a) xor (H and b) xor (a and b));
+    c := c + t1;
     G := t1 + t2;
-    t1 := F + (((C shr 14) or (C shl 50)) xor ((C shr 18) or (C shl 46)) xor ((C shr 41) or (C shl 23))) +
-      ((C and d) xor (not C and E)) + $EADA7DD6CDE0EB1E + W[66];
-    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30)) xor ((G shr 39) or (G shl 25))) +
-      ((G and H) xor (G and a) xor (H and a));
+    t1 := F + (((c shr 14) or (c shl 50)) xor ((c shr 18) or (c shl 46))
+      xor ((c shr 41) or (c shl 23))) + ((c and d) xor (not c and E)) +
+      $EADA7DD6CDE0EB1E + W[66];
+    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30))
+      xor ((G shr 39) or (G shl 25))) + ((G and H) xor (G and a) xor (H and a));
     b := b + t1;
     F := t1 + t2;
-    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46)) xor ((b shr 41) or (b shl 23))) +
-      ((b and C) xor (not b and d)) + $F57D4F7FEE6ED178 + W[67];
-    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30)) xor ((F shr 39) or (F shl 25))) +
-      ((F and G) xor (F and H) xor (G and H));
+    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46))
+      xor ((b shr 41) or (b shl 23))) + ((b and c) xor (not b and d)) +
+      $F57D4F7FEE6ED178 + W[67];
+    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30))
+      xor ((F shr 39) or (F shl 25))) + ((F and G) xor (F and H) xor (G and H));
     a := a + t1;
     E := t1 + t2;
-    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46)) xor ((a shr 41) or (a shl 23))) +
-      ((a and b) xor (not a and C)) + $06F067AA72176FBA + W[68];
-    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30)) xor ((E shr 39) or (E shl 25))) +
-      ((E and F) xor (E and G) xor (F and G));
+    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46))
+      xor ((a shr 41) or (a shl 23))) + ((a and b) xor (not a and c)) +
+      $06F067AA72176FBA + W[68];
+    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30))
+      xor ((E shr 39) or (E shl 25))) + ((E and F) xor (E and G) xor (F and G));
     H := H + t1;
     d := t1 + t2;
-    t1 := C + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46)) xor ((H shr 41) or (H shl 23))) +
-      ((H and a) xor (not H and b)) + $0A637DC5A2C898A6 + W[69];
-    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30)) xor ((d shr 39) or (d shl 25))) +
-      ((d and E) xor (d and F) xor (E and F));
+    t1 := c + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46))
+      xor ((H shr 41) or (H shl 23))) + ((H and a) xor (not H and b)) +
+      $0A637DC5A2C898A6 + W[69];
+    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30))
+      xor ((d shr 39) or (d shl 25))) + ((d and E) xor (d and F) xor (E and F));
     G := G + t1;
-    C := t1 + t2;
-    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46)) xor ((G shr 41) or (G shl 23))) +
-      ((G and H) xor (not G and a)) + $113F9804BEF90DAE + W[70];
-    t2 := (((C shr 28) or (C shl 36)) xor ((C shr 34) or (C shl 30)) xor ((C shr 39) or (C shl 25))) +
-      ((C and d) xor (C and E) xor (d and E));
+    c := t1 + t2;
+    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46))
+      xor ((G shr 41) or (G shl 23))) + ((G and H) xor (not G and a)) +
+      $113F9804BEF90DAE + W[70];
+    t2 := (((c shr 28) or (c shl 36)) xor ((c shr 34) or (c shl 30))
+      xor ((c shr 39) or (c shl 25))) + ((c and d) xor (c and E) xor (d and E));
     F := F + t1;
     b := t1 + t2;
-    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46)) xor ((F shr 41) or (F shl 23))) +
-      ((F and G) xor (not F and H)) + $1B710B35131C471B + W[71];
-    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30)) xor ((b shr 39) or (b shl 25))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46))
+      xor ((F shr 41) or (F shl 23))) + ((F and G) xor (not F and H)) +
+      $1B710B35131C471B + W[71];
+    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30))
+      xor ((b shr 39) or (b shl 25))) + ((b and c) xor (b and d) xor (c and d));
     E := E + t1;
     a := t1 + t2;
-    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46)) xor ((E shr 41) or (E shl 23))) +
-      ((E and F) xor (not E and G)) + $28DB77F523047D84 + W[72];
-    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30)) xor ((a shr 39) or (a shl 25))) +
-      ((a and b) xor (a and C) xor (b and C));
+    t1 := H + (((E shr 14) or (E shl 50)) xor ((E shr 18) or (E shl 46))
+      xor ((E shr 41) or (E shl 23))) + ((E and F) xor (not E and G)) +
+      $28DB77F523047D84 + W[72];
+    t2 := (((a shr 28) or (a shl 36)) xor ((a shr 34) or (a shl 30))
+      xor ((a shr 39) or (a shl 25))) + ((a and b) xor (a and c) xor (b and c));
     d := d + t1;
     H := t1 + t2;
-    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46)) xor ((d shr 41) or (d shl 23))) +
-      ((d and E) xor (not d and F)) + $32CAAB7B40C72493 + W[73];
-    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30)) xor ((H shr 39) or (H shl 25))) +
-      ((H and a) xor (H and b) xor (a and b));
-    C := C + t1;
+    t1 := G + (((d shr 14) or (d shl 50)) xor ((d shr 18) or (d shl 46))
+      xor ((d shr 41) or (d shl 23))) + ((d and E) xor (not d and F)) +
+      $32CAAB7B40C72493 + W[73];
+    t2 := (((H shr 28) or (H shl 36)) xor ((H shr 34) or (H shl 30))
+      xor ((H shr 39) or (H shl 25))) + ((H and a) xor (H and b) xor (a and b));
+    c := c + t1;
     G := t1 + t2;
-    t1 := F + (((C shr 14) or (C shl 50)) xor ((C shr 18) or (C shl 46)) xor ((C shr 41) or (C shl 23))) +
-      ((C and d) xor (not C and E)) + $3C9EBE0A15C9BEBC + W[74];
-    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30)) xor ((G shr 39) or (G shl 25))) +
-      ((G and H) xor (G and a) xor (H and a));
+    t1 := F + (((c shr 14) or (c shl 50)) xor ((c shr 18) or (c shl 46))
+      xor ((c shr 41) or (c shl 23))) + ((c and d) xor (not c and E)) +
+      $3C9EBE0A15C9BEBC + W[74];
+    t2 := (((G shr 28) or (G shl 36)) xor ((G shr 34) or (G shl 30))
+      xor ((G shr 39) or (G shl 25))) + ((G and H) xor (G and a) xor (H and a));
     b := b + t1;
     F := t1 + t2;
-    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46)) xor ((b shr 41) or (b shl 23))) +
-      ((b and C) xor (not b and d)) + $431D67C49C100D4C + W[75];
-    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30)) xor ((F shr 39) or (F shl 25))) +
-      ((F and G) xor (F and H) xor (G and H));
+    t1 := E + (((b shr 14) or (b shl 50)) xor ((b shr 18) or (b shl 46))
+      xor ((b shr 41) or (b shl 23))) + ((b and c) xor (not b and d)) +
+      $431D67C49C100D4C + W[75];
+    t2 := (((F shr 28) or (F shl 36)) xor ((F shr 34) or (F shl 30))
+      xor ((F shr 39) or (F shl 25))) + ((F and G) xor (F and H) xor (G and H));
     a := a + t1;
     E := t1 + t2;
-    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46)) xor ((a shr 41) or (a shl 23))) +
-      ((a and b) xor (not a and C)) + $4CC5D4BECB3E42B6 + W[76];
-    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30)) xor ((E shr 39) or (E shl 25))) +
-      ((E and F) xor (E and G) xor (F and G));
+    t1 := d + (((a shr 14) or (a shl 50)) xor ((a shr 18) or (a shl 46))
+      xor ((a shr 41) or (a shl 23))) + ((a and b) xor (not a and c)) +
+      $4CC5D4BECB3E42B6 + W[76];
+    t2 := (((E shr 28) or (E shl 36)) xor ((E shr 34) or (E shl 30))
+      xor ((E shr 39) or (E shl 25))) + ((E and F) xor (E and G) xor (F and G));
     H := H + t1;
     d := t1 + t2;
-    t1 := C + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46)) xor ((H shr 41) or (H shl 23))) +
-      ((H and a) xor (not H and b)) + $597F299CFC657E2A + W[77];
-    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30)) xor ((d shr 39) or (d shl 25))) +
-      ((d and E) xor (d and F) xor (E and F));
+    t1 := c + (((H shr 14) or (H shl 50)) xor ((H shr 18) or (H shl 46))
+      xor ((H shr 41) or (H shl 23))) + ((H and a) xor (not H and b)) +
+      $597F299CFC657E2A + W[77];
+    t2 := (((d shr 28) or (d shl 36)) xor ((d shr 34) or (d shl 30))
+      xor ((d shr 39) or (d shl 25))) + ((d and E) xor (d and F) xor (E and F));
     G := G + t1;
-    C := t1 + t2;
-    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46)) xor ((G shr 41) or (G shl 23))) +
-      ((G and H) xor (not G and a)) + $5FCB6FAB3AD6FAEC + W[78];
-    t2 := (((C shr 28) or (C shl 36)) xor ((C shr 34) or (C shl 30)) xor ((C shr 39) or (C shl 25))) +
-      ((C and d) xor (C and E) xor (d and E));
+    c := t1 + t2;
+    t1 := b + (((G shr 14) or (G shl 50)) xor ((G shr 18) or (G shl 46))
+      xor ((G shr 41) or (G shl 23))) + ((G and H) xor (not G and a)) +
+      $5FCB6FAB3AD6FAEC + W[78];
+    t2 := (((c shr 28) or (c shl 36)) xor ((c shr 34) or (c shl 30))
+      xor ((c shr 39) or (c shl 25))) + ((c and d) xor (c and E) xor (d and E));
     F := F + t1;
     b := t1 + t2;
-    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46)) xor ((F shr 41) or (F shl 23))) +
-      ((F and G) xor (not F and H)) + $6C44198C4A475817 + W[79];
-    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30)) xor ((b shr 39) or (b shl 25))) +
-      ((b and C) xor (b and d) xor (C and d));
+    t1 := a + (((F shr 14) or (F shl 50)) xor ((F shr 18) or (F shl 46))
+      xor ((F shr 41) or (F shl 23))) + ((F and G) xor (not F and H)) +
+      $6C44198C4A475817 + W[79];
+    t2 := (((b shr 28) or (b shl 36)) xor ((b shr 34) or (b shl 30))
+      xor ((b shr 39) or (b shl 25))) + ((b and c) xor (b and d) xor (c and d));
     E := E + t1;
     a := t1 + t2;
     AContext.CurrentHash.I64[0] := AContext.CurrentHash.I64[0] + a;
     AContext.CurrentHash.I64[1] := AContext.CurrentHash.I64[1] + b;
-    AContext.CurrentHash.I64[2] := AContext.CurrentHash.I64[2] + C;
+    AContext.CurrentHash.I64[2] := AContext.CurrentHash.I64[2] + c;
     AContext.CurrentHash.I64[3] := AContext.CurrentHash.I64[3] + d;
     AContext.CurrentHash.I64[4] := AContext.CurrentHash.I64[4] + E;
     AContext.CurrentHash.I64[5] := AContext.CurrentHash.I64[5] + F;
@@ -1575,7 +1829,8 @@ begin
   end;
 end;
 
-procedure SHAUpdate(var AContext: TQSHAContext; const p: Pointer; ASize: LongWord);
+procedure SHAUpdate(var AContext: TQSHAContext; const p: Pointer;
+  ASize: LongWord);
 var
   pBuf: PByte;
   procedure SHA160Update;
@@ -1747,7 +2002,8 @@ begin
   end;
 end;
 
-procedure SHAHash(var ADigest: TQSHADigest; const p: Pointer; len: Integer; AType: TQSHADigestType); inline;
+procedure SHAHash(var ADigest: TQSHADigest; const p: Pointer; len: Integer;
+  AType: TQSHADigestType); inline;
 var
   AContext: TQSHAContext;
 begin
@@ -1762,7 +2018,8 @@ begin
   SHAHash(Result, p, len, sdt160);
 end;
 
-procedure SHAHashString(const S: QStringW; AType: TQSHADigestType; var ADigest: TQSHADigest);
+procedure SHAHashString(const S: QStringW; AType: TQSHADigestType;
+  var ADigest: TQSHADigest);
 var
   a: QStringA;
 begin
@@ -1770,7 +2027,8 @@ begin
   SHAHash(ADigest, PQCharA(a), a.Length, AType);
 end;
 
-procedure SHAHashStream(AStream: TStream; AType: TQSHADigestType; var ADigest: TQSHADigest; AOnProgress: TQHashProgressNotify);
+procedure SHAHashStream(AStream: TStream; AType: TQSHADigestType;
+  var ADigest: TQSHADigest; AOnProgress: TQHashProgressNotify);
 var
   AContext: TQSHAContext;
   ABuf: array [0 .. 65535] of Byte;
@@ -1784,7 +2042,8 @@ var
       begin
 {$IFDEF UNICODE}
         if TMethod(AOnProgress).Data = Pointer(-1) then
-          TQHashProgressNotifyA(TMethod(AOnProgress).Code)(AStream.Position, AStream.Size)
+          TQHashProgressNotifyA(TMethod(AOnProgress).Code)
+            (AStream.Position, AStream.Size)
         else
 {$ENDIF}
           AOnProgress(AStream.Position, AStream.Size);
@@ -1808,7 +2067,8 @@ begin
   ADigest := AContext.CurrentHash;
 end;
 
-procedure SHAHashFile(AFile: QStringW; AType: TQSHADigestType; var ADigest: TQSHADigest; AOnProgress: TQHashProgressNotify);
+procedure SHAHashFile(AFile: QStringW; AType: TQSHADigestType;
+  var ADigest: TQSHADigest; AOnProgress: TQHashProgressNotify);
 var
   AStream: TFileStream;
 begin
@@ -1825,19 +2085,22 @@ begin
   SHAHashString(S, sdt160, Result);
 end;
 
-function SHA160Hash(AStream: TStream; AOnProgress: TQHashProgressNotify): TQSHADigest;
+function SHA160Hash(AStream: TStream; AOnProgress: TQHashProgressNotify)
+  : TQSHADigest;
 begin
   SHAHashStream(AStream, sdt160, Result, AOnProgress);
 end;
 
-function SHA160File(AFileName: QStringW; AOnProgress: TQHashProgressNotify = nil): TQSHADigest;
+function SHA160File(AFileName: QStringW;
+  AOnProgress: TQHashProgressNotify = nil): TQSHADigest;
 begin
   SHAHashFile(AFileName, sdt160, Result, AOnProgress);
 end;
 
 {$IFDEF UNICODE}
 
-function SHA160Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA): TQSHADigest; overload;
+function SHA160Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA)
+  : TQSHADigest; overload;
 var
   AEvent: TQHashProgressNotify;
 begin
@@ -1856,7 +2119,8 @@ begin
     Result := SHA160Hash(AStream, TQHashProgressNotify(nil));
 end;
 
-function SHA160File(AFileName: QStringW; AOnProgress: TQHashProgressNotifyA): TQSHADigest; overload;
+function SHA160File(AFileName: QStringW; AOnProgress: TQHashProgressNotifyA)
+  : TQSHADigest; overload;
 var
   AEvent: TQHashProgressNotify;
 begin
@@ -1886,18 +2150,21 @@ begin
   SHAHashString(S, sdt256, Result);
 end;
 
-function SHA256Hash(AStream: TStream; AOnProgress: TQHashProgressNotify): TQSHADigest;
+function SHA256Hash(AStream: TStream; AOnProgress: TQHashProgressNotify)
+  : TQSHADigest;
 begin
   SHAHashStream(AStream, sdt256, Result, AOnProgress);
 end;
 
-function SHA256File(AFileName: QStringW; AOnProgress: TQHashProgressNotify): TQSHADigest;
+function SHA256File(AFileName: QStringW; AOnProgress: TQHashProgressNotify)
+  : TQSHADigest;
 begin
   SHAHashFile(AFileName, sdt256, Result, AOnProgress);
 end;
 {$IFDEF UNICODE}
 
-function SHA256Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA): TQSHADigest; overload;
+function SHA256Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA)
+  : TQSHADigest; overload;
 var
   AEvent: TQHashProgressNotify;
 begin
@@ -1916,7 +2183,8 @@ begin
     Result := SHA256Hash(AStream, TQHashProgressNotify(nil));
 end;
 
-function SHA256File(AFileName: QStringW; AOnProgress: TQHashProgressNotifyA): TQSHADigest; overload;
+function SHA256File(AFileName: QStringW; AOnProgress: TQHashProgressNotifyA)
+  : TQSHADigest; overload;
 var
   AEvent: TQHashProgressNotify;
 begin
@@ -1946,19 +2214,22 @@ begin
   SHAHashString(S, sdt384, Result);
 end;
 
-function SHA384Hash(AStream: TStream; AOnProgress: TQHashProgressNotify): TQSHADigest;
+function SHA384Hash(AStream: TStream; AOnProgress: TQHashProgressNotify)
+  : TQSHADigest;
 begin
   SHAHashStream(AStream, sdt384, Result, AOnProgress);
 end;
 
-function SHA384File(AFileName: QStringW; AOnProgress: TQHashProgressNotify): TQSHADigest;
+function SHA384File(AFileName: QStringW; AOnProgress: TQHashProgressNotify)
+  : TQSHADigest;
 begin
   SHAHashFile(AFileName, sdt384, Result, AOnProgress);
 end;
 
 {$IFDEF UNICODE}
 
-function SHA384Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA): TQSHADigest; overload;
+function SHA384Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA)
+  : TQSHADigest; overload;
 var
   AEvent: TQHashProgressNotify;
 begin
@@ -1977,7 +2248,8 @@ begin
     Result := SHA384Hash(AStream, TQHashProgressNotify(nil));
 end;
 
-function SHA384File(AFileName: QStringW; AOnProgress: TQHashProgressNotifyA): TQSHADigest; overload;
+function SHA384File(AFileName: QStringW; AOnProgress: TQHashProgressNotifyA)
+  : TQSHADigest; overload;
 var
   AEvent: TQHashProgressNotify;
 begin
@@ -2007,19 +2279,22 @@ begin
   SHAHashString(S, sdt512, Result);
 end;
 
-function SHA512Hash(AStream: TStream; AOnProgress: TQHashProgressNotify): TQSHADigest;
+function SHA512Hash(AStream: TStream; AOnProgress: TQHashProgressNotify)
+  : TQSHADigest;
 begin
   SHAHashStream(AStream, sdt512, Result, AOnProgress);
 end;
 
-function SHA512File(AFileName: QStringW; AOnProgress: TQHashProgressNotify): TQSHADigest;
+function SHA512File(AFileName: QStringW; AOnProgress: TQHashProgressNotify)
+  : TQSHADigest;
 begin
   SHAHashFile(AFileName, sdt512, Result, AOnProgress);
 end;
 
 {$IFDEF UNICODE}
 
-function SHA512Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA): TQSHADigest; overload;
+function SHA512Hash(AStream: TStream; AOnProgress: TQHashProgressNotifyA)
+  : TQSHADigest; overload;
 var
   AEvent: TQHashProgressNotify;
 begin
@@ -2038,7 +2313,8 @@ begin
     Result := SHA512Hash(AStream, TQHashProgressNotify(nil));
 end;
 
-function SHA512File(AFileName: QStringW; AOnProgress: TQHashProgressNotifyA): TQSHADigest; overload;
+function SHA512File(AFileName: QStringW; AOnProgress: TQHashProgressNotifyA)
+  : TQSHADigest; overload;
 var
   AEvent: TQHashProgressNotify;
 begin
@@ -2058,7 +2334,8 @@ begin
 end;
 {$ENDIF}
 
-function DigestToString(const ADigest: TQSHADigest; ALowerCase: Boolean): QStringW;
+function DigestToString(const ADigest: TQSHADigest; ALowerCase: Boolean)
+  : QStringW;
 begin
   case ADigest.HashType of
     sdt160:
@@ -2083,7 +2360,7 @@ end;
 procedure TQHashMD5.Decode(Dst: PCardinal; Src: PByte; len, AShift: Integer);
 var
   J: Integer;
-  a, b, C, d: Byte;
+  a, b, c, d: Byte;
 begin
   J := 0;
   Inc(Src, AShift);
@@ -2093,11 +2370,12 @@ begin
     Inc(Src);
     b := Src^;
     Inc(Src);
-    C := Src^;
+    c := Src^;
     Inc(Src);
     d := Src^;
     Inc(Src);
-    Dst^ := Cardinal(a and $FF) or (Cardinal(b and $FF) shl 8) or (Cardinal(C and $FF) shl 16) or (Cardinal(d and $FF) shl 24);
+    Dst^ := Cardinal(a and $FF) or (Cardinal(b and $FF) shl 8) or
+      (Cardinal(c and $FF) shl 16) or (Cardinal(d and $FF) shl 24);
     Inc(J, 4);
     Inc(Dst);
   end;
@@ -2176,7 +2454,8 @@ begin
   Result := DigestToString(GetHMACAsBytes(AData, AKey));
 end;
 
-class function TQHashMD5.GetHMACAsBytes(const AData, AKey: QStringW): TQMD5Digest;
+class function TQHashMD5.GetHMACAsBytes(const AData, AKey: QStringW)
+  : TQMD5Digest;
 const
   CInnerPad: Byte = $36;
   COuterPad: Byte = $5C;
@@ -2282,30 +2561,30 @@ procedure TQHashMD5.Transform(const ABlock: PByte; AShift: Integer);
     x := (x shl n) or (x shr (32 - n));
   end;
 
-  procedure FF(var a: Cardinal; b, C, d, x: Cardinal; S: Byte; ac: Cardinal);
+  procedure FF(var a: Cardinal; b, c, d, x: Cardinal; S: Byte; ac: Cardinal);
   begin
-    Inc(a, F(b, C, d) + x + ac);
+    Inc(a, F(b, c, d) + x + ac);
     RL(a, S);
     Inc(a, b);
   end;
 
-  procedure GG(var a: Cardinal; b, C, d, x: Cardinal; S: Byte; ac: Cardinal);
+  procedure GG(var a: Cardinal; b, c, d, x: Cardinal; S: Byte; ac: Cardinal);
   begin
-    Inc(a, G(b, C, d) + x + ac);
+    Inc(a, G(b, c, d) + x + ac);
     RL(a, S);
     Inc(a, b);
   end;
 
-  procedure HH(var a: Cardinal; b, C, d, x: Cardinal; S: Byte; ac: Cardinal);
+  procedure HH(var a: Cardinal; b, c, d, x: Cardinal; S: Byte; ac: Cardinal);
   begin
-    Inc(a, H(b, C, d) + x + ac);
+    Inc(a, H(b, c, d) + x + ac);
     RL(a, S);
     Inc(a, b);
   end;
 
-  procedure II(var a: Cardinal; b, C, d, x: Cardinal; S: Byte; ac: Cardinal);
+  procedure II(var a: Cardinal; b, c, d, x: Cardinal; S: Byte; ac: Cardinal);
   begin
-    Inc(a, I(b, C, d) + x + ac);
+    Inc(a, I(b, c, d) + x + ac);
     RL(a, S);
     Inc(a, b);
   end;
@@ -2332,91 +2611,91 @@ const
   S44 = 21;
 
 var
-  a, b, C, d: Cardinal;
+  a, b, c, d: Cardinal;
   x: TContextState;
 begin
   a := FContextState[0];
   b := FContextState[1];
-  C := FContextState[2];
+  c := FContextState[2];
   d := FContextState[3];
 
   Decode(PCardinal(@x[0]), ABlock, 64, AShift);
 
   { Round 1 }
-  FF(a, b, C, d, x[0], S11, $D76AA478); { 1 }
-  FF(d, a, b, C, x[1], S12, $E8C7B756); { 2 }
-  FF(C, d, a, b, x[2], S13, $242070DB); { 3 }
-  FF(b, C, d, a, x[3], S14, $C1BDCEEE); { 4 }
-  FF(a, b, C, d, x[4], S11, $F57C0FAF); { 5 }
-  FF(d, a, b, C, x[5], S12, $4787C62A); { 6 }
-  FF(C, d, a, b, x[6], S13, $A8304613); { 7 }
-  FF(b, C, d, a, x[7], S14, $FD469501); { 8 }
-  FF(a, b, C, d, x[8], S11, $698098D8); { 9 }
-  FF(d, a, b, C, x[9], S12, $8B44F7AF); { 10 }
-  FF(C, d, a, b, x[10], S13, $FFFF5BB1); { 11 }
-  FF(b, C, d, a, x[11], S14, $895CD7BE); { 12 }
-  FF(a, b, C, d, x[12], S11, $6B901122); { 13 }
-  FF(d, a, b, C, x[13], S12, $FD987193); { 14 }
-  FF(C, d, a, b, x[14], S13, $A679438E); { 15 }
-  FF(b, C, d, a, x[15], S14, $49B40821); { 16 }
+  FF(a, b, c, d, x[0], S11, $D76AA478); { 1 }
+  FF(d, a, b, c, x[1], S12, $E8C7B756); { 2 }
+  FF(c, d, a, b, x[2], S13, $242070DB); { 3 }
+  FF(b, c, d, a, x[3], S14, $C1BDCEEE); { 4 }
+  FF(a, b, c, d, x[4], S11, $F57C0FAF); { 5 }
+  FF(d, a, b, c, x[5], S12, $4787C62A); { 6 }
+  FF(c, d, a, b, x[6], S13, $A8304613); { 7 }
+  FF(b, c, d, a, x[7], S14, $FD469501); { 8 }
+  FF(a, b, c, d, x[8], S11, $698098D8); { 9 }
+  FF(d, a, b, c, x[9], S12, $8B44F7AF); { 10 }
+  FF(c, d, a, b, x[10], S13, $FFFF5BB1); { 11 }
+  FF(b, c, d, a, x[11], S14, $895CD7BE); { 12 }
+  FF(a, b, c, d, x[12], S11, $6B901122); { 13 }
+  FF(d, a, b, c, x[13], S12, $FD987193); { 14 }
+  FF(c, d, a, b, x[14], S13, $A679438E); { 15 }
+  FF(b, c, d, a, x[15], S14, $49B40821); { 16 }
 
   { Round 2 }
-  GG(a, b, C, d, x[1], S21, $F61E2562); { 17 }
-  GG(d, a, b, C, x[6], S22, $C040B340); { 18 }
-  GG(C, d, a, b, x[11], S23, $265E5A51); { 19 }
-  GG(b, C, d, a, x[0], S24, $E9B6C7AA); { 20 }
-  GG(a, b, C, d, x[5], S21, $D62F105D); { 21 }
-  GG(d, a, b, C, x[10], S22, $2441453); { 22 }
-  GG(C, d, a, b, x[15], S23, $D8A1E681); { 23 }
-  GG(b, C, d, a, x[4], S24, $E7D3FBC8); { 24 }
-  GG(a, b, C, d, x[9], S21, $21E1CDE6); { 25 }
-  GG(d, a, b, C, x[14], S22, $C33707D6); { 26 }
-  GG(C, d, a, b, x[3], S23, $F4D50D87); { 27 }
-  GG(b, C, d, a, x[8], S24, $455A14ED); { 28 }
-  GG(a, b, C, d, x[13], S21, $A9E3E905); { 29 }
-  GG(d, a, b, C, x[2], S22, $FCEFA3F8); { 30 }
-  GG(C, d, a, b, x[7], S23, $676F02D9); { 31 }
-  GG(b, C, d, a, x[12], S24, $8D2A4C8A); { 32 }
+  GG(a, b, c, d, x[1], S21, $F61E2562); { 17 }
+  GG(d, a, b, c, x[6], S22, $C040B340); { 18 }
+  GG(c, d, a, b, x[11], S23, $265E5A51); { 19 }
+  GG(b, c, d, a, x[0], S24, $E9B6C7AA); { 20 }
+  GG(a, b, c, d, x[5], S21, $D62F105D); { 21 }
+  GG(d, a, b, c, x[10], S22, $2441453); { 22 }
+  GG(c, d, a, b, x[15], S23, $D8A1E681); { 23 }
+  GG(b, c, d, a, x[4], S24, $E7D3FBC8); { 24 }
+  GG(a, b, c, d, x[9], S21, $21E1CDE6); { 25 }
+  GG(d, a, b, c, x[14], S22, $C33707D6); { 26 }
+  GG(c, d, a, b, x[3], S23, $F4D50D87); { 27 }
+  GG(b, c, d, a, x[8], S24, $455A14ED); { 28 }
+  GG(a, b, c, d, x[13], S21, $A9E3E905); { 29 }
+  GG(d, a, b, c, x[2], S22, $FCEFA3F8); { 30 }
+  GG(c, d, a, b, x[7], S23, $676F02D9); { 31 }
+  GG(b, c, d, a, x[12], S24, $8D2A4C8A); { 32 }
 
   { Round 3 }
-  HH(a, b, C, d, x[5], S31, $FFFA3942); { 33 }
-  HH(d, a, b, C, x[8], S32, $8771F681); { 34 }
-  HH(C, d, a, b, x[11], S33, $6D9D6122); { 35 }
-  HH(b, C, d, a, x[14], S34, $FDE5380C); { 36 }
-  HH(a, b, C, d, x[1], S31, $A4BEEA44); { 37 }
-  HH(d, a, b, C, x[4], S32, $4BDECFA9); { 38 }
-  HH(C, d, a, b, x[7], S33, $F6BB4B60); { 39 }
-  HH(b, C, d, a, x[10], S34, $BEBFBC70); { 40 }
-  HH(a, b, C, d, x[13], S31, $289B7EC6); { 41 }
-  HH(d, a, b, C, x[0], S32, $EAA127FA); { 42 }
-  HH(C, d, a, b, x[3], S33, $D4EF3085); { 43 }
-  HH(b, C, d, a, x[6], S34, $4881D05); { 44 }
-  HH(a, b, C, d, x[9], S31, $D9D4D039); { 45 }
-  HH(d, a, b, C, x[12], S32, $E6DB99E5); { 46 }
-  HH(C, d, a, b, x[15], S33, $1FA27CF8); { 47 }
-  HH(b, C, d, a, x[2], S34, $C4AC5665); { 48 }
+  HH(a, b, c, d, x[5], S31, $FFFA3942); { 33 }
+  HH(d, a, b, c, x[8], S32, $8771F681); { 34 }
+  HH(c, d, a, b, x[11], S33, $6D9D6122); { 35 }
+  HH(b, c, d, a, x[14], S34, $FDE5380C); { 36 }
+  HH(a, b, c, d, x[1], S31, $A4BEEA44); { 37 }
+  HH(d, a, b, c, x[4], S32, $4BDECFA9); { 38 }
+  HH(c, d, a, b, x[7], S33, $F6BB4B60); { 39 }
+  HH(b, c, d, a, x[10], S34, $BEBFBC70); { 40 }
+  HH(a, b, c, d, x[13], S31, $289B7EC6); { 41 }
+  HH(d, a, b, c, x[0], S32, $EAA127FA); { 42 }
+  HH(c, d, a, b, x[3], S33, $D4EF3085); { 43 }
+  HH(b, c, d, a, x[6], S34, $4881D05); { 44 }
+  HH(a, b, c, d, x[9], S31, $D9D4D039); { 45 }
+  HH(d, a, b, c, x[12], S32, $E6DB99E5); { 46 }
+  HH(c, d, a, b, x[15], S33, $1FA27CF8); { 47 }
+  HH(b, c, d, a, x[2], S34, $C4AC5665); { 48 }
 
   { Round 4 }
-  II(a, b, C, d, x[0], S41, $F4292244); { 49 }
-  II(d, a, b, C, x[7], S42, $432AFF97); { 50 }
-  II(C, d, a, b, x[14], S43, $AB9423A7); { 51 }
-  II(b, C, d, a, x[5], S44, $FC93A039); { 52 }
-  II(a, b, C, d, x[12], S41, $655B59C3); { 53 }
-  II(d, a, b, C, x[3], S42, $8F0CCC92); { 54 }
-  II(C, d, a, b, x[10], S43, $FFEFF47D); { 55 }
-  II(b, C, d, a, x[1], S44, $85845DD1); { 56 }
-  II(a, b, C, d, x[8], S41, $6FA87E4F); { 57 }
-  II(d, a, b, C, x[15], S42, $FE2CE6E0); { 58 }
-  II(C, d, a, b, x[6], S43, $A3014314); { 59 }
-  II(b, C, d, a, x[13], S44, $4E0811A1); { 60 }
-  II(a, b, C, d, x[4], S41, $F7537E82); { 61 }
-  II(d, a, b, C, x[11], S42, $BD3AF235); { 62 }
-  II(C, d, a, b, x[2], S43, $2AD7D2BB); { 63 }
-  II(b, C, d, a, x[9], S44, $EB86D391); { 64 }
+  II(a, b, c, d, x[0], S41, $F4292244); { 49 }
+  II(d, a, b, c, x[7], S42, $432AFF97); { 50 }
+  II(c, d, a, b, x[14], S43, $AB9423A7); { 51 }
+  II(b, c, d, a, x[5], S44, $FC93A039); { 52 }
+  II(a, b, c, d, x[12], S41, $655B59C3); { 53 }
+  II(d, a, b, c, x[3], S42, $8F0CCC92); { 54 }
+  II(c, d, a, b, x[10], S43, $FFEFF47D); { 55 }
+  II(b, c, d, a, x[1], S44, $85845DD1); { 56 }
+  II(a, b, c, d, x[8], S41, $6FA87E4F); { 57 }
+  II(d, a, b, c, x[15], S42, $FE2CE6E0); { 58 }
+  II(c, d, a, b, x[6], S43, $A3014314); { 59 }
+  II(b, c, d, a, x[13], S44, $4E0811A1); { 60 }
+  II(a, b, c, d, x[4], S41, $F7537E82); { 61 }
+  II(d, a, b, c, x[11], S42, $BD3AF235); { 62 }
+  II(c, d, a, b, x[2], S43, $2AD7D2BB); { 63 }
+  II(b, c, d, a, x[9], S44, $EB86D391); { 64 }
 
   Inc(FContextState[0], a);
   Inc(FContextState[1], b);
-  Inc(FContextState[2], C);
+  Inc(FContextState[2], c);
   Inc(FContextState[3], d);
 end;
 

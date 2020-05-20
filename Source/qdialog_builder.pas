@@ -29,7 +29,6 @@ type
 {$IFDEF UNICODE}
   // TNotifyEvent 的匿名版本
   TNotifyCallback = reference to procedure(Sender: TObject);
-  TDialogNotifyCallback = reference to procedure(ADialog: IDialogBuilder);
 {$ENDIF}
 
   // 项目分组列表接口，只支持枚举，添加和移除是通过设置对应的 GroupName 自动完成的
@@ -101,8 +100,7 @@ type
     // 添加一下控件项目，注意有些控件并不能自动调整合适的大小，需要赋值
     function AddControl(AClass: TControlClass; APropText: String = ''): IControlDialogItem; overload;
 {$IFDEF UNICODE}
-    function AddControl(AClass: TControlClass; AOnClick: TNotifyCallback; APropText: String = '')
-      : IControlDialogItem; overload;
+    function AddControl(AClass: TControlClass; AOnClick: TNotifyCallback; APropText: String = ''): IControlDialogItem; overload;
 {$ENDIF}
     // 添加一个子容器
     function AddContainer(AlignMode: TDialogItemAlignMode): IDialogContainer;
@@ -197,21 +195,6 @@ type
   end;
 
   TDialogIcon = (diNone, diWarning, diHelp, diError, diInformation, diShield);
-  TInputType = (itNormal, itPhone, itMobile, itEMail, itUrl, itFile, itNumeric, itInteger);
-
-  TInputItem = record
-    Hint: String;
-    DefVal: String;
-    Value: String;
-    &Type: TInputType;
-    UseTextHint, AllowEmpty: Boolean;
-    procedure Construct(AType: TInputType; AHint, ADefVal: String; AUseTextHint: Boolean);
-    class function Create(AType: TInputType; AHint, ADefVal: String; AUseTextHint: Boolean): TInputItem; static;
-  end;
-
-  TInputItems = array of TInputItem;
-  TStringArray = array of String;
-
   // 新建一个对话框接口，如果不指定标题，则为Application.Title
 function NewDialog(ACaption: String = ''): IDialogBuilder; overload;
 function NewDialog(AClass: TFormClass): IDialogBuilder; overload;
@@ -222,12 +205,6 @@ function CustomDialog(const ACaption, ATitle, AMessage: String; AButtons: array 
   AFlags: Integer = 0; const ACustomProps: String = ''): Integer; overload;
 function CustomDialog(const ACaption, ATitle, AMessage: String; AButtons: array of String; AIconResId: Integer;
   AIconREsFile: String; AIconSize: TSize; AFlags: Integer = 0; const ACustomProps: String = ''): Integer; overload;
-function CustomInput(const ACaption, AHint, ADefVal: String; var AValue: String;
-  ABeforeAddEditors: TDialogNotifyCallback = nil; AfterAddEditors: TDialogNotifyCallback = nil): Boolean; overload;
-function CustomInput(const ACaption: String; const AHints, ADefVals: TStringArray; var AValues: TStringArray;
-  ABeforeAddEditors: TDialogNotifyCallback = nil; AfterAddEditors: TDialogNotifyCallback = nil): Boolean; overload;
-function CustomInput(const ACaption: String; AItems: TInputItems; ABeforeAddEditors: TDialogNotifyCallback = nil;
-  AfterAddEditors: TDialogNotifyCallback = nil): Boolean; overload;
 
 implementation
 
@@ -312,8 +289,7 @@ type
     function Add(const AItem: IBaseDialogItem): IDialogContainer;
     function AddControl(AClass: TControlClass; APropText: String = ''): IControlDialogItem; overload;
 {$IFDEF UNICODE}
-    function AddControl(AClass: TControlClass; AOnClick: TNotifyCallback; APropText: String = '')
-      : IControlDialogItem; overload;
+    function AddControl(AClass: TControlClass; AOnClick: TNotifyCallback; APropText: String = ''): IControlDialogItem; overload;
 {$ENDIF}
     function AddContainer(AlignMode: TDialogItemAlignMode): IDialogContainer;
     procedure Delete(const AIndex: Integer);
@@ -426,25 +402,6 @@ type
     property PopupMonitor: TMonitor read GetPopupMonitor write SetPopupMonitor;
   end;
 
-  IInputHelper = interface
-    ['{639ED5D3-DBEE-435E-94EA-2C75A4DD7A57}']
-    function ShowModal: TModalResult;
-  end;
-
-  TInputHelper = class(TInterfacedObject, IInputHelper)
-  protected
-    FBuilder: IDialogBuilder;
-    FItems: TInputItems;
-    FEditors: array of TEdit;
-    FOkButton: TButton;
-    procedure DoEditKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure DoOkClick(Sender: TObject);
-  public
-    constructor Create(ACaption: String; AItems: TInputItems; ABeforeAddEditors: TDialogNotifyCallback;
-      AfterAddEditors: TDialogNotifyCallback);
-    function ShowModal: TModalResult;
-  end;
-
 function NewDialog(ACaption: String): IDialogBuilder;
 begin
   if Length(ACaption) = 0 then
@@ -458,8 +415,7 @@ begin
   Result := TDialogBuilder.Create(AClass);
 end;
 
-function LoadDialogIcon(APicture: TPicture; const AIconREsFile: String; const AIconResId: Integer;
-  ASize: TSize): Boolean;
+function LoadDialogIcon(APicture: TPicture; const AIconREsFile: String; const AIconResId: Integer; ASize: TSize): Boolean;
 var
   AIcon: TIcon;
 begin
@@ -483,8 +439,8 @@ begin
   Result := LoadDialogIcon(APicture, user32, IconResId[AIcon], ASize);
 end;
 
-function CustomDialog(const ACaption, ATitle, AMessage: String; AButtons: array of String; AIcon: TDialogIcon;
-  AFlags: Integer; const ACustomProps: String): Integer;
+function CustomDialog(const ACaption, ATitle, AMessage: String; AButtons: array of String; AIcon: TDialogIcon; AFlags: Integer;
+  const ACustomProps: String): Integer;
 var
   AIconSize: TSize;
 const
@@ -492,8 +448,7 @@ const
 begin
   AIconSize.cx := 32;
   AIconSize.cy := 32;
-  Result := CustomDialog(ACaption, ATitle, AMessage, AButtons, IconResId[AIcon], user32, AIconSize, AFlags,
-    ACustomProps);
+  Result := CustomDialog(ACaption, ATitle, AMessage, AButtons, IconResId[AIcon], user32, AIconSize, AFlags, ACustomProps);
 end;
 
 function CustomDialog(const ACaption, ATitle, AMessage: String; AButtons: array of String; AIconResId: Integer;
@@ -507,7 +462,6 @@ begin
   ABuilder := NewDialog(ACaption);
   ABuilder.ItemSpace := 10;
   ABuilder.AutoSize := True;
-  ABuilder.Dialog.FormStyle := fsStayOnTop;
   // ABuilder.Dialog.Padding.SetBounds(5, 10, 5, 5);
   // ABuilder.Dialog.Color := clWhite;
   // 首行，可能是标题，图标+标题，图标+消息，消息
@@ -603,49 +557,6 @@ begin
     Result := -1;
 end;
 
-function CustomInput(const ACaption, AHint, ADefVal: String; var AValue: String;
-  ABeforeAddEditors, AfterAddEditors: TDialogNotifyCallback): Boolean;
-var
-  AItems: TInputItems;
-begin
-  SetLength(AItems, 1);
-  AItems[0].Construct(itNormal, AHint, ADefVal, false);
-  Result := CustomInput(ACaption, AItems, ABeforeAddEditors, AfterAddEditors);
-  if Result then
-    AValue := AItems[0].Value;
-end;
-
-function CustomInput(const ACaption: String; const AHints, ADefVals: TStringArray; var AValues: TStringArray;
-  ABeforeAddEditors, AfterAddEditors: TDialogNotifyCallback): Boolean;
-var
-  AItems: TInputItems;
-  I: Integer;
-begin
-  SetLength(AItems, Length(AHints));
-  for I := 0 to High(AItems) do
-  begin
-    if I < Length(ADefVals) then
-      AItems[I].Construct(itNormal, AHints[I], ADefVals[I], false)
-    else
-      AItems[I].Construct(itNormal, AHints[I], '', false);
-  end;
-  Result := CustomInput(ACaption, AItems, ABeforeAddEditors, AfterAddEditors);
-  if Result then
-  begin
-    SetLength(AValues, Length(AHints));
-    for I := 0 to High(AItems) do
-      AValues[I] := AItems[I].Value;
-  end;
-end;
-
-function CustomInput(const ACaption: String; AItems: TInputItems;
-  ABeforeAddEditors, AfterAddEditors: TDialogNotifyCallback): Boolean;
-var
-  AHelper: IInputHelper;
-begin
-  AHelper := TInputHelper.Create(ACaption, AItems, ABeforeAddEditors, AfterAddEditors);
-  Result := AHelper.ShowModal = mrOk;
-end;
 { TDialogContainer }
 
 function TDialogContainer.Add(const AItem: IBaseDialogItem): IDialogContainer;
@@ -670,8 +581,7 @@ end;
 
 {$IFDEF UNICODE}
 
-function TDialogContainer.AddControl(AClass: TControlClass; AOnClick: TNotifyCallback; APropText: String)
-  : IControlDialogItem;
+function TDialogContainer.AddControl(AClass: TControlClass; AOnClick: TNotifyCallback; APropText: String): IControlDialogItem;
 var
   AEvent: TNotifyEvent;
 begin
@@ -1250,13 +1160,12 @@ end;
 procedure TDialogBuilder.DoDialogWndProc(var AMsg: TMessage);
   procedure DrawFrames;
   var
-    R: TRect;
+    R:TRect;
   begin
-    // 弹出下拉窗口时，绘制一个边界，以便和背景分离呈现立体效果
-    R := Dialog.ClientRect;
-    Frame3D(Dialog.Canvas, R, clBtnHighlight, clBtnShadow, 1);
+    //弹出下拉窗口时，绘制一个边界，以便和背景分离呈现立体效果
+    R:=Dialog.ClientRect;
+    Frame3D(Dialog.Canvas,R,clBtnHighlight,clBtnShadow,1);
   end;
-
 begin
   if dbsPopup in FStates then
   begin
@@ -1858,226 +1767,6 @@ begin
   FControl := Value;
   if Value <> nil then
     Value.FreeNotification(Self);
-end;
-
-{ TInputItem }
-
-procedure TInputItem.Construct(AType: TInputType; AHint, ADefVal: String; AUseTextHint: Boolean);
-begin
-  &Type := AType;
-  Hint := AHint;
-  DefVal := ADefVal;
-  Value := '';
-  UseTextHint := AUseTextHint;
-  AllowEmpty := false;
-end;
-
-class function TInputItem.Create(AType: TInputType; AHint, ADefVal: String; AUseTextHint: Boolean): TInputItem;
-begin
-  Result.Construct(AType, AHint, ADefVal, AUseTextHint);
-end;
-
-{ TInputHelper }
-
-constructor TInputHelper.Create(ACaption: String; AItems: TInputItems; ABeforeAddEditors: TDialogNotifyCallback;
-  AfterAddEditors: TDialogNotifyCallback);
-var
-  I: Integer;
-begin
-  FItems := AItems;
-  FBuilder := NewDialog(ACaption);
-  FBuilder.ItemSpace := 5;
-  FBuilder.AutoSize := True;
-  with FBuilder.Dialog.Padding do
-  begin
-    Left := 10;
-    Top := 10;
-    Right := 10;
-    Bottom := 10;
-  end;
-  SetLength(FEditors, Length(AItems));
-  if Assigned(ABeforeAddEditors) then
-    ABeforeAddEditors(FBuilder);
-  for I := 0 to High(AItems) do
-  begin
-    with TLabel(FBuilder.AddControl(TLabel).Control) do
-    begin
-      Layout := tlCenter;
-      AlignWithMargins := True;
-      Caption := AItems[I].Hint;
-    end;
-    FEditors[I] := TEdit(FBuilder.AddControl(TEdit).Control);
-    with FEditors[I] do
-    begin
-      Tag := I;
-      Width := 200;
-      AlignWithMargins := True;
-      Text := FItems[I].DefVal;
-      OnKeyDown := DoEditKeyDown;
-    end
-  end;
-  with TBevel(FBuilder.AddControl(TBevel).Control) do
-  begin
-    Height := 2;
-    Shape := bsTopLine;
-  end;
-  with FBuilder.AddContainer(amHorizRight) do
-  begin
-    AutoSize := True;
-    FOkButton := TButton(AddControl(TButton).Control);
-    with FOkButton do
-    begin
-      Caption := '确定';
-      Default := True;
-      Width := 75;
-      OnClick := DoOkClick;
-    end;
-    with TButton(AddControl(TButton).Control) do
-    begin
-      Caption := '取消';
-      ModalResult := mrCancel;
-    end;
-  end;
-  if Assigned(AfterAddEditors) then
-    AfterAddEditors(FBuilder);
-end;
-
-procedure TInputHelper.DoEditKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-var
-  AEdit: TEdit;
-begin
-  if Key = VK_RETURN then
-  begin
-    Key := 0;
-    AEdit := TEdit(Sender);
-    if AEdit.Tag = High(FItems) then
-      FOkButton.Click
-    else
-      FEditors[AEdit.Tag + 1].SetFocus;
-  end;
-end;
-
-procedure TInputHelper.DoOkClick(Sender: TObject);
-var
-  I: Integer;
-  IVal: Int64;
-  FVal: Double;
-  procedure DoError(AMsg: String);
-  var
-    ADialog: IDialogBuilder;
-  begin
-    ADialog := NewDialog;
-    ADialog.AutoSize := True;
-    ADialog.PopupPosition := TQDialogPopupPosition.dppCenter;
-    with TLabel(ADialog.AddControl(TLabel).Control) do
-    begin
-      AlignWithMargins := True;
-      Caption := AMsg;
-      Font.Color := clRed;
-      Color := clWhite;
-      Transparent := false;
-    end;
-    ADialog.CloseDelay := 5;
-    ADialog.Popup(Sender as TControl);
-  end;
-
-  function IsFileName(const S: QStringW): Boolean;
-  var
-    p, ps: PQCharW;
-  begin
-    Result := True;
-    p := PQCharW(S);
-    if StartWithW(p, 'file://', True) then
-      Inc(p, 7);
-    ps := p;
-    while p^ <> #0 do
-    begin
-      if (p^ = ':') and (ps - p > 1) then
-      begin
-        Result := false;
-        Exit;
-      end
-      else if not CharInW(p, '/\*"><') then
-      begin
-        Result := false;
-        Break;
-      end;
-    end;
-  end;
-
-begin
-  for I := 0 to High(FItems) do
-  begin
-    FItems[I].Value := Trim(FEditors[I].Text);
-    if (Length(FItems[I].Value) = 0) and (not FItems[I].AllowEmpty) then
-    begin
-      DoError('该项目值不能为空');
-      Exit;
-    end;
-    case FItems[I].&Type of
-      itPhone:
-        if not IsChinesePhone(FItems[I].Value) then
-        begin
-          DoError(FItems[I].Value + ' 不是有效的电话号码。');
-          Exit;
-        end;
-      itMobile:
-        if not IsChineseMobile(FItems[I].Value) then
-        begin
-          DoError(FItems[I].Value + ' 不是有效的手机号码');
-          Exit;
-        end;
-      itEMail:
-        begin
-          if not IsEmailAddr(FItems[I].Value) then
-          begin
-            DoError(FItems[I].Value + ' 不是有效的电子邮箱地址');
-            Exit;
-          end;
-        end;
-      itUrl:
-        begin
-          if StrStrW(PQCharW(FItems[I].Value), '://') = nil then
-          begin
-            DoError(FItems[I].Value + ' 不是有效的电子邮箱地址');
-            Exit;
-          end;
-        end;
-      itFile:
-        begin
-          if not IsFileName(FItems[I].Value) then
-          begin
-            DoError(FItems[I].Value + ' 不是有效的文件名');
-            Exit;
-          end;
-        end;
-      itNumeric:
-        begin
-          FItems[I].Value := CnFullToHalf(FItems[I].Value);
-          if not TryStrToFloat(FItems[I].Value, FVal) then
-          begin
-            DoError(FItems[I].Value + ' 不是有效的浮点数');
-            Exit;
-          end;
-        end;
-      itInteger:
-        begin
-          FItems[I].Value := CnFullToHalf(FItems[I].Value);
-          if not TryStrToInt64(FItems[I].Value, IVal) then
-          begin
-            DoError(FItems[I].Value + ' 不是有效的整数值');
-            Exit;
-          end;
-        end;
-    end;
-  end;
-  FBuilder.ModalResult := mrOk;
-end;
-
-function TInputHelper.ShowModal: TModalResult;
-begin
-  FBuilder.ShowModal;
-  Result := FBuilder.ModalResult;
 end;
 
 end.
