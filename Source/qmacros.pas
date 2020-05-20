@@ -88,19 +88,17 @@ const
 type
   TQMacroManager = class;
   TQMacroItem = class;
-  TQMacroComplied = class;
+  TQMacroCompiled = class;
+  TQMacroComplied = TQMacroCompiled; // 保持兼容
   /// <summary>
   /// 查找动态宏的值时的通过回调函数获取相应的值，返回值直接赋给AMacro.Value.Value即可。
   /// </summary>
   /// <param name="AMacro">宏</param>
   /// <param name="AQuoter">引号类型，值可能是#0(0)或英文的单引号或双引号</param>
-  TQMacroValueFetchEvent = procedure(AMacro: TQMacroItem; const AQuoter: QCharW)
-    of object;
-  TQMacroValueFetchEventG = procedure(AMacro: TQMacroItem;
-    const AQuoter: QCharW);
+  TQMacroValueFetchEvent = procedure(AMacro: TQMacroItem; const AQuoter: QCharW) of object;
+  TQMacroValueFetchEventG = procedure(AMacro: TQMacroItem; const AQuoter: QCharW);
 {$IFDEF UNICODE}
-  TQMacroValueFetchEventA = reference to procedure(AMacro: TQMacroItem;
-    const AQuoter: QCharW);
+  TQMacroValueFetchEventA = reference to procedure(AMacro: TQMacroItem; const AQuoter: QCharW);
   PQMacroValueFetchEventA = ^TQMacroValueFetchEventA;
 {$ENDIF}
   /// <summary>指不到指定的宏时触发的事件</summary>
@@ -108,32 +106,30 @@ type
   /// <param name="AName">宏名称</param>
   /// <param name="AQuoter">引号类型，值可能是#0(\0)或英文的单引号或双引号</param>
   /// <param name="AHandled">如果事件处理了宏不存的问题，则设置为True，否则请勿设置</param>
-  TQMacroMissEvent = procedure(ASender: TQMacroManager; AName: QStringW;
-    const AQuoter: QCharW; var AHandled: Boolean) of object;
-  TQMacroMissEventG = procedure(ASender: TQMacroManager; AName: QStringW;
-    const AQuoter: QCharW; var AHandled: Boolean);
+  TQMacroMissEvent = procedure(ASender: TQMacroManager; AName: QStringW; const AQuoter: QCharW; var AHandled: Boolean)
+    of object;
+  TQMacroMissEventG = procedure(ASender: TQMacroManager; AName: QStringW; const AQuoter: QCharW; var AHandled: Boolean);
 {$IFDEF UNICODE}
-  TQMacroMissEventA = reference to procedure(ASender: TQMacroManager;
-    AName: QStringW; const AQuoter: QCharW; var AHandled: Boolean);
+  TQMacroMissEventA = reference to procedure(ASender: TQMacroManager; AName: QStringW; const AQuoter: QCharW;
+    var AHandled: Boolean);
   PQMacroMissEventA = ^TQMacroMissEventA;
 {$ENDIF}
   TQMacroCharType = (mctChar, mctNameStart, mctNameEnd);
-  TQMacroNameTestEvent = procedure(ASender: TQMacroManager; p: PQCharW;
-    var ALen: Integer; var AType: TQMacroCharType) of object;
-  TQMacroNameTestEventG = procedure(ASender: TQMacroManager; p: PQCharW;
-    var ALen: Integer; var AType: TQMacroCharType);
+  TQMacroNameTestEvent = procedure(ASender: TQMacroManager; p: PQCharW; var ALen: Integer; var AType: TQMacroCharType)
+    of object;
+  TQMacroNameTestEventG = procedure(ASender: TQMacroManager; p: PQCharW; var ALen: Integer; var AType: TQMacroCharType);
 {$IFDEF UNICODE}
-  TQMacroNameTestEventA = reference to procedure(ASender: TQMacroManager;
-    p: PQCharW; var ALen: Integer; var AType: TQMacroCharType);
+  TQMacroNameTestEventA = reference to procedure(ASender: TQMacroManager; p: PQCharW; var ALen: Integer;
+    var AType: TQMacroCharType);
   PQMacroNameTestEventA = ^TQMacroNameTestEventA;
 {$ENDIF}
-  TQMacroCompileErrorEvent = procedure(ASender: TQMacroManager;
-    AError: Exception; const AText: QStringW; const AOffset: Integer) of object;
-  TQMacroCompileErrorEventG = procedure(ASender: TQMacroManager;
-    AError: Exception; const AText: QStringW; const AOffset: Integer);
+  TQMacroCompileErrorEvent = procedure(ASender: TQMacroManager; AError: Exception; const AText: QStringW;
+    const AOffset: Integer) of object;
+  TQMacroCompileErrorEventG = procedure(ASender: TQMacroManager; AError: Exception; const AText: QStringW;
+    const AOffset: Integer);
 {$IFDEF UNICODE}
-  TQMacroCompileErrorEventA = reference to procedure(ASender: TQMacroManager;
-    AError: Exception; const AText: QStringW; const AOffset: Integer);
+  TQMacroCompileErrorEventA = reference to procedure(ASender: TQMacroManager; AError: Exception; const AText: QStringW;
+    const AOffset: Integer);
 {$ENDIF}
   /// <summary>
   /// 宏定义值的稳定性定义
@@ -219,7 +215,8 @@ type
   TQCompliedArray = array of TQMacroCompliedItem;
 
   // TQMacroComplied用于保存解析后的要替换内容的信息，以加速多次替换
-  TQMacroComplied = class
+
+  TQMacroCompiled = class
   protected
     FOwner: TQMacroManager; // 所有者
     FMinSize: Integer; // 结果最小需要分配的内存长度
@@ -257,8 +254,9 @@ type
     /// <param name="AMacroEnd">宏定义结束字符</param>
     /// <param name="AFlags">标志位，可取 MRF_IN_DBL_QUOTER 和 MRF_IN_SINGLE_QUOTER 的组合</param>
     /// <returns>编译成功，返回True，失败，返回False</returns>
-    function Complie(AText: QStringW; AMacroStart, AMacroEnd: QStringW;
-      const AFlags: Integer = MRF_ENABLE_ESCAPE): Boolean;
+    function Compile(AText: QStringW; AMacroStart, AMacroEnd: QStringW; const AFlags: Integer = MRF_ENABLE_ESCAPE): Boolean;
+    function Complie(AText: QStringW; AMacroStart, AMacroEnd: QStringW; const AFlags: Integer = MRF_ENABLE_ESCAPE)
+      : Boolean; inline;
     /// <summary>枚举用到的宏名称</summary>
     /// <param name="AList">用来存贮宏名称的列表</param>
     /// <returns>返回使用的宏的数量</returns>
@@ -291,7 +289,7 @@ type
   TQMacroStringsIterator = class(TQMacroIterator)
   protected
     FList: TStrings;
-    FComplied: TQMacroComplied;
+    FCompiled: TQMacroComplied;
     procedure BeginReplace(AMacro: TQMacroItem); override;
     function HasNext: Boolean; override;
     function Replace: QStringW; override;
@@ -324,20 +322,17 @@ type
     FVolatileCount: Integer;
     FLastPushId: Integer;
     FBooleanAsInt: Boolean;
-    function InternalMacroValue(const AName: QStringW; const AQuoter: QCharW;
-      var AValue: QStringW): Integer;
-    function MacroValue(const AName: QStringW; const AQuoter: QCharW)
-      : QStringW; overload;
+    function InternalMacroValue(const AName: QStringW; const AQuoter: QCharW; var AValue: QStringW): Integer;
+    function MacroValue(const AName: QStringW; const AQuoter: QCharW): QStringW; overload;
     function DateTimeToStr(ADateTime: TDateTime): String;
     procedure DoFetchFieldValue(AMacro: TQMacroItem; const AQuoter: QCharW);
-    procedure DoFetchFieldQuotedValue(AMacro: TQMacroItem;
-      const AQuoter: QCharW);
+    procedure DoFetchFieldQuotedValue(AMacro: TQMacroItem; const AQuoter: QCharW);
     procedure DoFetchRecordNo(AMacro: TQMacroItem; const AQuoter: QCharW);
     function IncW(p: PQCharW; ALen: Integer): PQCharW; inline;
-    procedure InternalPush(AMacro: TQMacroItem; const AValue: QStringW;
-      AOnFetch: TQMacroValueFetchEvent; AStable: TQMacroVolatile; ATag: IntPtr);
-    procedure InternalComplie(var AResult: TQMacroComplied; AText: QStringW;
-      AMacroStart, AMacroEnd: QStringW; const AFlags: Integer);
+    procedure InternalPush(AMacro: TQMacroItem; const AValue: QStringW; AOnFetch: TQMacroValueFetchEvent;
+      AStable: TQMacroVolatile; ATag: IntPtr);
+    procedure InternalComplie(var AResult: TQMacroComplied; AText: QStringW; AMacroStart, AMacroEnd: QStringW;
+      const AFlags: Integer);
     function DoMacroMissed(AName: QStringW; const AQuoter: QCharW): Boolean;
     procedure DoFetchValue(AMacro: TQMacroItem; const AQuoter: QCharW);
     function CharUnescape(var p: PQCharW): QCharW;
@@ -345,8 +340,7 @@ type
     function Unescape(p: PQCharW; ALen: Integer): QStringW; overload;
     procedure DoFetchIterator(AMacro: TQMacroItem; const AQuoter: QCharW);
     procedure DoFetchIteratorIndex(AMacro: TQMacroItem; const AQuoter: QCharW);
-    procedure DoCompileError(AError: Exception; const AText: String;
-      AErrorOffset: Integer);
+    procedure DoCompileError(AError: Exception; const AText: String; AErrorOffset: Integer);
   public
     /// <summary>构造函数</summary>
     constructor Create; overload;
@@ -363,9 +357,8 @@ type
     /// <param name="AVolatile">函数返回值的稳定性</param>
     /// <param name="ATag">用户附加的标签数据</param>
     /// <returns>返回添加的宏定义对象</returns>
-    function Push(const AName: QStringW; AOnFetchValue: TQMacroValueFetchEvent;
-      AVolatile: TQMacroVolatile = mvVolatile; ATag: IntPtr = 0)
-      : TQMacroItem; overload;
+    function Push(const AName: QStringW; AOnFetchValue: TQMacroValueFetchEvent; AVolatile: TQMacroVolatile = mvVolatile;
+      ATag: IntPtr = 0): TQMacroItem; overload;
 
     /// <summary>入栈指定名称和值的宏定义</summary>
     /// <param name="AName">宏名称</param>
@@ -373,9 +366,8 @@ type
     /// <param name="AVolatile">函数返回值的稳定性</param>
     /// <param name="ATag">用户附加的标签数据</param>
     /// <returns>返回添加的宏定义对象</returns>
-    function Push(const AName: QStringW; AOnFetchValue: TQMacroValueFetchEventG;
-      AVolatile: TQMacroVolatile = mvVolatile; ATag: IntPtr = 0)
-      : TQMacroItem; overload;
+    function Push(const AName: QStringW; AOnFetchValue: TQMacroValueFetchEventG; AVolatile: TQMacroVolatile = mvVolatile;
+      ATag: IntPtr = 0): TQMacroItem; overload;
 {$IFDEF UNICODE}
     /// <summary>入栈指定名称和值的宏定义</summary>
     /// <param name="AName">宏名称</param>
@@ -383,24 +375,21 @@ type
     /// <param name="AVolatile">函数返回值的稳定性</param>
     /// <param name="ATag">用户附加的标签数据</param>
     /// <returns>返回添加的宏定义对象</returns>
-    function Push(const AName: QStringW; AOnFetchValue: TQMacroValueFetchEventA;
-      AVolatile: TQMacroVolatile = mvVolatile; ATag: IntPtr = 0)
-      : TQMacroItem; overload;
+    function Push(const AName: QStringW; AOnFetchValue: TQMacroValueFetchEventA; AVolatile: TQMacroVolatile = mvVolatile;
+      ATag: IntPtr = 0): TQMacroItem; overload;
 {$ENDIF}
     /// <summary>入栈指定数据集的所有字段为宏定义</summary>
     /// <param name="ADataSet">数据集对象</param>
     /// <param name="ANameSpace">命名前缀，如果不为空，则为前缀.字段名的宏定义名称</param>
     // <remarks>同时会添加[ANameSpace.]ADataSet.Name.Rows的宏定义，用于迭代输出
-    procedure Push(ADataSet: TDataSet;
-      const ANameSpace: QStringW = ''); overload;
+    procedure Push(ADataSet: TDataSet; const ANameSpace: QStringW = ''); overload;
     /// <summary>入栈指定的迭代器</summary>
     /// <param name="AName">宏名称</param>
     /// <param name="AIterator">迭代器接口实例</param>
     /// <param name="AVolatile"> 函数返回值的稳定性</param>
     /// <param name="ATag">用户附加的标签数据</param>
     /// <returns>返回添加的宏定义对象</returns>
-    function Push(const AName: QStringW; AIterator: IQMacroIterator;
-      AVolatile: TQMacroVolatile = mvVolatile; ATag: IntPtr = 0)
+    function Push(const AName: QStringW; AIterator: IQMacroIterator; AVolatile: TQMacroVolatile = mvVolatile; ATag: IntPtr = 0)
       : TQMacroItem; overload;
     /// <summary>出栈指定名称的宏定义</summary>
     /// <param name="AName">要出栈的宏定义名称</param>
@@ -436,8 +425,10 @@ type
     /// <param name="AMacroEnd">宏定义结束字符</param>
     /// <param name="AFlags">标志位，可取 MRF_IN_DBL_QUOTER 和 MRF_IN_SINGLE_QUOTER 的组合</param>
     /// <returns>编译成功，返回编译中间结果句柄，失败，返回空，返回的TQComplied可以直接用Free释放</returns>
-    function Complie(AText: QStringW; AMacroStart, AMacroEnd: QStringW;
-      const AFlags: Integer = MRF_ENABLE_ESCAPE): TQMacroComplied;
+    function Compile(AText: QStringW; AMacroStart, AMacroEnd: QStringW; const AFlags: Integer = MRF_ENABLE_ESCAPE)
+      : TQMacroComplied;
+    function Complie(AText: QStringW; AMacroStart, AMacroEnd: QStringW; const AFlags: Integer = MRF_ENABLE_ESCAPE)
+      : TQMacroComplied; inline;
     /// <summary>使用指定的编译结果执行一次替换操作</summary>
     /// <param name="AHandle">使用Complie函数编译的中间结果</param>
     /// <returns>返回替换结果</returns>
@@ -449,8 +440,8 @@ type
     /// <param name="AMacroEnd">宏定义结束字符</param>
     /// <param name="AFlags">标志位，可取 MRF_IN_DBL_QUOTER 和 MRF_IN_SINGLE_QUOTER 的组合</param>
     /// <returns>返回替换完成的结果字符串</returns>
-    function Replace(const AText: QStringW; AMacroStart, AMacroEnd: QStringW;
-      const AFlags: Integer = MRF_ENABLE_ESCAPE): QStringW; overload;
+    function Replace(const AText: QStringW; AMacroStart, AMacroEnd: QStringW; const AFlags: Integer = MRF_ENABLE_ESCAPE)
+      : QStringW; overload;
     /// <summary>获指指定名称的宏的当前值，如果未找到，抛出异常</summary>
     /// <param name="AName">宏名称</param>
     /// <returns>返回指定的宏的当前值</returns>
@@ -472,14 +463,10 @@ type
     /// <summary>指定名称宏的值，如果不存在，返回空字符串</summary>
     property Values[AName: QStringW]: QStringW read GetValues;
     /// <summary>在宏未找到触发该事件，你可以在该事件中为其赋默认值</summary>
-    property OnMacroMissed: TQMacroMissEvent read FOnMacroMissed
-      write SetOnMacroMissed;
-    property OnTestNameStart: TQMacroNameTestEvent read FOnTestNameStart
-      write SetOnTestNameStart;
-    property OnTestNameEnd: TQMacroNameTestEvent read FOnTestNameEnd
-      write SetOnTestNameEnd;
-    property OnCompileError: TQMacroCompileErrorEvent read FOnCompileError
-      write FOnCompileError;
+    property OnMacroMissed: TQMacroMissEvent read FOnMacroMissed write SetOnMacroMissed;
+    property OnTestNameStart: TQMacroNameTestEvent read FOnTestNameStart write SetOnTestNameStart;
+    property OnTestNameEnd: TQMacroNameTestEvent read FOnTestNameEnd write SetOnTestNameEnd;
+    property OnCompileError: TQMacroCompileErrorEvent read FOnCompileError write FOnCompileError;
     property BooleanAsInt: Boolean read FBooleanAsInt write FBooleanAsInt;
   end;
 
@@ -515,7 +502,7 @@ type
   TQMacroDataSetIterator = class(TQMacroIterator)
   protected
     FDataSet: TDataSet;
-    FComplied: TQMacroComplied;
+    FCompiled: TQMacroComplied;
     function HasNext: Boolean; override;
     procedure BeginReplace(AMacro: TQMacroItem); override;
     function Replace: QStringW; override;
@@ -536,8 +523,7 @@ end;
 
 function EventEqual(AHandler1, AHandler2: TMethod): Boolean;
 begin
-  Result := (AHandler1.Code = AHandler2.Code) and
-    (AHandler1.Data = AHandler2.Data);
+  Result := (AHandler1.Code = AHandler2.Code) and (AHandler1.Data = AHandler2.Data);
 end;
 
 function TQMacroManager.CharUnescape(var p: PQCharW): QCharW;
@@ -615,16 +601,13 @@ begin
     'u':
       begin
         // \uXXXX
-        if IsHexChar(p[1]) and IsHexChar(p[2]) and IsHexChar(p[3]) and
-          IsHexChar(p[4]) then
+        if IsHexChar(p[1]) and IsHexChar(p[2]) and IsHexChar(p[3]) and IsHexChar(p[4]) then
         begin
-          Result := WideChar((HexValue(p[1]) shl 12) or (HexValue(p[2]) shl 8)
-            or (HexValue(p[3]) shl 4) or HexValue(p[4]));
+          Result := WideChar((HexValue(p[1]) shl 12) or (HexValue(p[2]) shl 8) or (HexValue(p[3]) shl 4) or HexValue(p[4]));
           Inc(p, 5);
         end
         else
-          raise Exception.CreateFmt(SCharNeeded,
-            ['0-9A-Fa-f', StrDupW(p, 0, 4)]);
+          raise Exception.CreateFmt(SCharNeeded, ['0-9A-Fa-f', StrDupW(p, 0, 4)]);
       end;
     '/':
       begin
@@ -655,11 +638,15 @@ const
   QMERR_TAG_NOT_CLOSED = 2;
   QMERR_MACRO_NOT_FOUND = 3;
 
-function TQMacroManager.Complie(AText: QStringW;
-  AMacroStart, AMacroEnd: QStringW; const AFlags: Integer): TQMacroComplied;
+function TQMacroManager.Compile(AText: QStringW; AMacroStart, AMacroEnd: QStringW; const AFlags: Integer): TQMacroComplied;
 begin
   Result := nil;
   InternalComplie(Result, AText, AMacroStart, AMacroEnd, AFlags);
+end;
+
+function TQMacroManager.Complie(AText: QStringW; AMacroStart, AMacroEnd: QStringW; const AFlags: Integer): TQMacroComplied;
+begin
+  Result := Compile(AText, AMacroStart, AMacroEnd, AFlags);
 end;
 
 constructor TQMacroManager.Create;
@@ -698,26 +685,22 @@ begin
   inherited;
 end;
 
-procedure TQMacroManager.DoCompileError(AError: Exception; const AText: String;
-  AErrorOffset: Integer);
+procedure TQMacroManager.DoCompileError(AError: Exception; const AText: String; AErrorOffset: Integer);
 begin
   if Assigned(FOnCompileError) then
   begin
     if TMethod(FOnCompileError).Data = nil then
-      TQMacroCompileErrorEventG(TMethod(FOnCompileError).Code)
-        (Self, AError, AText, AErrorOffset)
+      TQMacroCompileErrorEventG(TMethod(FOnCompileError).Code)(Self, AError, AText, AErrorOffset)
 {$IFDEF UNICODE}
     else if TMethod(FOnCompileError).Data = Pointer(-1) then
-      TQMacroCompileErrorEventA(TMethod(FOnCompileError).Code)
-        (Self, AError, AText, AErrorOffset)
+      TQMacroCompileErrorEventA(TMethod(FOnCompileError).Code)(Self, AError, AText, AErrorOffset)
 {$ENDIF}
     else
       FOnCompileError(Self, AError, AText, AErrorOffset);
   end;
 end;
 
-procedure TQMacroManager.DoFetchFieldQuotedValue(AMacro: TQMacroItem;
-  const AQuoter: QCharW);
+procedure TQMacroManager.DoFetchFieldQuotedValue(AMacro: TQMacroItem; const AQuoter: QCharW);
 var
   AField: TField;
 begin
@@ -743,8 +726,7 @@ begin
   end;
 end;
 
-procedure TQMacroManager.DoFetchFieldValue(AMacro: TQMacroItem;
-  const AQuoter: QCharW);
+procedure TQMacroManager.DoFetchFieldValue(AMacro: TQMacroItem; const AQuoter: QCharW);
 var
   AField: TField;
 begin
@@ -770,8 +752,7 @@ begin
   end;
 end;
 
-procedure TQMacroManager.DoFetchIterator(AMacro: TQMacroItem;
-  const AQuoter: QCharW);
+procedure TQMacroManager.DoFetchIterator(AMacro: TQMacroItem; const AQuoter: QCharW);
 var
   ABuilder: TQStringCatHelperW;
 begin
@@ -793,8 +774,7 @@ begin
   end;
 end;
 
-procedure TQMacroManager.DoFetchIteratorIndex(AMacro: TQMacroItem;
-  const AQuoter: QCharW);
+procedure TQMacroManager.DoFetchIteratorIndex(AMacro: TQMacroItem; const AQuoter: QCharW);
 var
   AIterator: IQMacroIterator;
 begin
@@ -802,8 +782,7 @@ begin
   AMacro.Value.Value := IntToStr(AIterator.GetItemIndex);
 end;
 
-procedure TQMacroManager.DoFetchRecordNo(AMacro: TQMacroItem;
-  const AQuoter: QCharW);
+procedure TQMacroManager.DoFetchRecordNo(AMacro: TQMacroItem; const AQuoter: QCharW);
 var
   ADataSet: TDataSet;
 begin
@@ -811,42 +790,35 @@ begin
   AMacro.Value.Value := IntToStr(ADataSet.RecNo);
 end;
 
-procedure TQMacroManager.DoFetchValue(AMacro: TQMacroItem;
-  const AQuoter: QCharW);
+procedure TQMacroManager.DoFetchValue(AMacro: TQMacroItem; const AQuoter: QCharW);
 begin
   if TMethod(AMacro.Value.OnFetchValue).Data = nil then
-    TQMacroValueFetchEventG(TMethod(AMacro.Value.OnFetchValue).Code)
-      (AMacro, AQuoter)
+    TQMacroValueFetchEventG(TMethod(AMacro.Value.OnFetchValue).Code)(AMacro, AQuoter)
 {$IFDEF UNICODE}
   else if TMethod(AMacro.Value.OnFetchValue).Data = Pointer(-1) then
-    TQMacroValueFetchEventA(TMethod(AMacro.Value.OnFetchValue).Code)
-      (AMacro, AQuoter)
+    TQMacroValueFetchEventA(TMethod(AMacro.Value.OnFetchValue).Code)(AMacro, AQuoter)
 {$ENDIF}
   else
     AMacro.Value.OnFetchValue(AMacro, AQuoter);
 end;
 
-function TQMacroManager.DoMacroMissed(AName: QStringW;
-  const AQuoter: QCharW): Boolean;
+function TQMacroManager.DoMacroMissed(AName: QStringW; const AQuoter: QCharW): Boolean;
 begin
   Result := False;
   if TMethod(FOnMacroMissed).Code <> nil then
   begin
     if TMethod(FOnMacroMissed).Data = nil then
-      TQMacroMissEventG(TMethod(FOnMacroMissed).Code)
-        (Self, AName, AQuoter, Result)
+      TQMacroMissEventG(TMethod(FOnMacroMissed).Code)(Self, AName, AQuoter, Result)
 {$IFDEF UNICODE}
     else if IntPtr(TMethod(FOnMacroMissed).Data) = -1 then
-      TQMacroMissEventA(TMethod(FOnMacroMissed).Code)
-        (Self, AName, AQuoter, Result)
+      TQMacroMissEventA(TMethod(FOnMacroMissed).Code)(Self, AName, AQuoter, Result)
 {$ENDIF}
     else
       FOnMacroMissed(Self, AName, AQuoter, Result);
   end;
 end;
 
-function TQMacroManager.Find(const AName: QStringW;
-  var AIndex: Integer): Boolean;
+function TQMacroManager.Find(const AName: QStringW; var AIndex: Integer): Boolean;
 var
   L, H, I, C: Integer;
 begin
@@ -900,8 +872,8 @@ begin
     Result := -1;
 end;
 
-procedure TQMacroManager.InternalComplie(var AResult: TQMacroComplied;
-  AText, AMacroStart, AMacroEnd: QStringW; const AFlags: Integer);
+procedure TQMacroManager.InternalComplie(var AResult: TQMacroComplied; AText, AMacroStart, AMacroEnd: QStringW;
+  const AFlags: Integer);
 var
   LS, LE, AIndex: Integer;
   prs, pts, p, ps, pms, pme, pl: PQCharW;
@@ -914,8 +886,7 @@ var
   function IsMacroEndChar: Boolean;
   begin
     if (AFlags and MRF_END_WITH_INVALID_CHAR) <> 0 then
-      Result := not(((p^ >= '0') and (p^ <= '9')) or
-        ((p^ >= 'A') and (p^ <= 'Z')) or ((p^ >= 'a') and (p^ <= 'z')) or
+      Result := not(((p^ >= '0') and (p^ <= '9')) or ((p^ >= 'A') and (p^ <= 'Z')) or ((p^ >= 'a') and (p^ <= 'z')) or
         (p^ > #$7F))
     else
       Result := StartWithW(p, pme, False);
@@ -929,12 +900,10 @@ var
       if TMethod(OnTestNameEnd).Code <> nil then
       begin
         if TMethod(OnTestNameEnd).Data = nil then
-          TQMacroNameTestEventG(TMethod(OnTestNameEnd).Code)
-            (Self, p, ALen, Result)
+          TQMacroNameTestEventG(TMethod(OnTestNameEnd).Code)(Self, p, ALen, Result)
 {$IFDEF UNICODE}
         else if TMethod(OnTestNameEnd).Data = Pointer(-1) then
-          TQMacroNameTestEventA(TMethod(OnTestNameEnd).Code)
-            (Self, p, ALen, Result)
+          TQMacroNameTestEventA(TMethod(OnTestNameEnd).Code)(Self, p, ALen, Result)
 {$ENDIF}
         else
           OnTestNameEnd(Self, p, ALen, Result);
@@ -947,12 +916,10 @@ var
       if TMethod(OnTestNameStart).Code <> nil then
       begin
         if TMethod(OnTestNameStart).Data = nil then
-          TQMacroNameTestEventG(TMethod(OnTestNameStart).Code)
-            (Self, p, ALen, Result)
+          TQMacroNameTestEventG(TMethod(OnTestNameStart).Code)(Self, p, ALen, Result)
 {$IFDEF UNICODE}
         else if TMethod(OnTestNameStart).Data = Pointer(-1) then
-          TQMacroNameTestEventA(TMethod(OnTestNameStart).Code)
-            (Self, p, ALen, Result)
+          TQMacroNameTestEventA(TMethod(OnTestNameStart).Code)(Self, p, ALen, Result)
 {$ENDIF}
         else
           OnTestNameStart(Self, p, ALen, Result);
@@ -968,7 +935,7 @@ var
     end;
   end;
 
-  procedure TestMacro(AQuoter:QCharW);
+  procedure TestMacro(AQuoter: QCharW);
   var
     pq: PQCharW;
     ALine, ACol: Integer;
@@ -1105,7 +1072,7 @@ var
   end;
   procedure ParseInQuoter;
   var
-    AQuoted:QCharW;
+    AQuoted: QCharW;
   begin
     AQuoter := p^;
     Inc(p);
@@ -1329,8 +1296,7 @@ begin
   SetLength(AResult.FItems, AResult.Count);
 end;
 
-function TQMacroManager.InternalMacroValue(const AName: QStringW;
-  const AQuoter: QCharW; var AValue: QStringW): Integer;
+function TQMacroManager.InternalMacroValue(const AName: QStringW; const AQuoter: QCharW; var AValue: QStringW): Integer;
 var
   AIdx: Integer;
   AItem: TQMacroItem;
@@ -1363,8 +1329,7 @@ begin
   end;
 end;
 
-procedure TQMacroManager.InternalPush(AMacro: TQMacroItem;
-  const AValue: QStringW; AOnFetch: TQMacroValueFetchEvent;
+procedure TQMacroManager.InternalPush(AMacro: TQMacroItem; const AValue: QStringW; AOnFetch: TQMacroValueFetchEvent;
   AStable: TQMacroVolatile; ATag: IntPtr);
 var
   ALast: PQMacroValue;
@@ -1392,8 +1357,7 @@ begin
   Result := MacroValue(AName, QCharW(#0));
 end;
 
-function TQMacroManager.MacroValue(const AName: QStringW; const AQuoter: QCharW)
-  : QStringW;
+function TQMacroManager.MacroValue(const AName: QStringW; const AQuoter: QCharW): QStringW;
 begin
   case InternalMacroValue(AName, AQuoter, Result) of
     1: //
@@ -1432,8 +1396,7 @@ begin
   end;
 end;
 
-function TQMacroManager.Push(const AName: QStringW;
-  AOnFetchValue: TQMacroValueFetchEvent; AVolatile: TQMacroVolatile;
+function TQMacroManager.Push(const AName: QStringW; AOnFetchValue: TQMacroValueFetchEvent; AVolatile: TQMacroVolatile;
   ATag: IntPtr): TQMacroItem;
 var
   AIndex: Integer;
@@ -1471,8 +1434,7 @@ begin
   end;
 end;
 
-function TQMacroManager.Replace(const AText: QStringW;
-  AMacroStart, AMacroEnd: QStringW; const AFlags: Integer): QStringW;
+function TQMacroManager.Replace(const AText: QStringW; AMacroStart, AMacroEnd: QStringW; const AFlags: Integer): QStringW;
 var
   ATemp: TQMacroComplied;
 begin
@@ -1715,15 +1677,12 @@ begin
     begin
       AField := ADataSet.Fields[I];
       Push(AField.FieldName, DoFetchFieldValue, mvVolatile, IntPtr(AField));
-      Push(AField.FieldName + '.Quoted', DoFetchFieldQuotedValue, mvVolatile,
-        IntPtr(AField));
+      Push(AField.FieldName + '.Quoted', DoFetchFieldQuotedValue, mvVolatile, IntPtr(AField));
     end;
     if Length(ADataSet.Name) > 0 then
     begin
-      Push(ADataSet.Name + '.@Rows', TQMacroDataSetIterator.Create(ADataSet),
-        mvVolatile);
-      Push(ADataSet.Name + '.@RecNo', DoFetchRecordNo, mvVolatile,
-        IntPtr(ADataSet));
+      Push(ADataSet.Name + '.@Rows', TQMacroDataSetIterator.Create(ADataSet), mvVolatile);
+      Push(ADataSet.Name + '.@RecNo', DoFetchRecordNo, mvVolatile, IntPtr(ADataSet));
     end;
   end
   else
@@ -1731,23 +1690,18 @@ begin
     for I := 0 to ADataSet.FieldCount - 1 do
     begin
       AField := ADataSet.Fields[I];
-      Push(ANameSpace + '.' + AField.FieldName, DoFetchFieldValue, mvVolatile,
-        IntPtr(AField));
-      Push(ANameSpace + '.' + AField.FieldName + '.Quoted',
-        DoFetchFieldQuotedValue, mvVolatile, IntPtr(AField));
+      Push(ANameSpace + '.' + AField.FieldName, DoFetchFieldValue, mvVolatile, IntPtr(AField));
+      Push(ANameSpace + '.' + AField.FieldName + '.Quoted', DoFetchFieldQuotedValue, mvVolatile, IntPtr(AField));
     end;
     if Length(ADataSet.Name) > 0 then
     begin
-      Push(ANameSpace + '.' + ADataSet.Name + '.@Rows',
-        TQMacroDataSetIterator.Create(ADataSet), mvVolatile);
-      Push(ANameSpace + '.' + ADataSet.Name + '.@RecNo', DoFetchRecordNo,
-        mvVolatile, IntPtr(ADataSet));
+      Push(ANameSpace + '.' + ADataSet.Name + '.@Rows', TQMacroDataSetIterator.Create(ADataSet), mvVolatile);
+      Push(ANameSpace + '.' + ADataSet.Name + '.@RecNo', DoFetchRecordNo, mvVolatile, IntPtr(ADataSet));
     end;
   end;
 end;
 
-function TQMacroManager.Push(const AName: QStringW;
-  AOnFetchValue: TQMacroValueFetchEventG; AVolatile: TQMacroVolatile;
+function TQMacroManager.Push(const AName: QStringW; AOnFetchValue: TQMacroValueFetchEventG; AVolatile: TQMacroVolatile;
   ATag: IntPtr): TQMacroItem;
 var
   AHandler: TQMacroValueFetchEvent;
@@ -1763,8 +1717,7 @@ begin
 end;
 {$IFDEF UNICODE}
 
-function TQMacroManager.Push(const AName: QStringW;
-  AOnFetchValue: TQMacroValueFetchEventA; AVolatile: TQMacroVolatile;
+function TQMacroManager.Push(const AName: QStringW; AOnFetchValue: TQMacroValueFetchEventA; AVolatile: TQMacroVolatile;
   ATag: IntPtr): TQMacroItem;
 var
   AHandler: TQMacroValueFetchEvent;
@@ -1867,8 +1820,8 @@ begin
   Result := Unescape(PQCharW(S), Length(S));
 end;
 
-function TQMacroManager.Push(const AName: QStringW; AIterator: IQMacroIterator;
-  AVolatile: TQMacroVolatile; ATag: IntPtr): TQMacroItem;
+function TQMacroManager.Push(const AName: QStringW; AIterator: IQMacroIterator; AVolatile: TQMacroVolatile; ATag: IntPtr)
+  : TQMacroItem;
 begin
   Result := Push(AName, DoFetchIterator, AVolatile, ATag);
   Result.FValue.Iterator := AIterator;
@@ -1926,8 +1879,7 @@ begin
   end;
 end;
 
-function TQMacroComplied.Complie(AText, AMacroStart, AMacroEnd: QStringW;
-  const AFlags: Integer): Boolean;
+function TQMacroComplied.Compile(AText, AMacroStart, AMacroEnd: QStringW; const AFlags: Integer): Boolean;
 var
   AResult: TQMacroComplied;
 begin
@@ -1938,6 +1890,11 @@ begin
   except
     Result := False;
   end;
+end;
+
+function TQMacroComplied.Complie(AText: QStringW; AMacroStart, AMacroEnd: QStringW; const AFlags: Integer): Boolean;
+begin
+  Result := Compile(AText, AMacroStart, AMacroEnd, AFlags);
 end;
 
 constructor TQMacroComplied.Create(AOwner: TQMacroManager);
@@ -2099,11 +2056,10 @@ begin
   if AMacro <> FMacro then
   begin
     FMacro := AMacro;
-    if Assigned(FComplied) then
-      FreeAndNil(FComplied);
+    if Assigned(FCompiled) then
+      FreeAndNil(FCompiled);
     if Assigned(AMacro.Params) and (AMacro.Params.Count = 3) then
-      FComplied := AMacro.Owner.Complie(AMacro.Params[0].AsString,
-        AMacro.Params[1].AsString, AMacro.Params[2].AsString);
+      FCompiled := AMacro.Owner.Compile(AMacro.Params[0].AsString, AMacro.Params[1].AsString, AMacro.Params[2].AsString);
   end;
 end;
 
@@ -2115,8 +2071,8 @@ end;
 
 destructor TQMacroDataSetIterator.Destroy;
 begin
-  if Assigned(FComplied) then
-    FreeAndNil(FComplied);
+  if Assigned(FCompiled) then
+    FreeAndNil(FCompiled);
   inherited;
 end;
 
@@ -2137,8 +2093,8 @@ end;
 
 function TQMacroDataSetIterator.Replace: QStringW;
 begin
-  if Assigned(FComplied) then
-    Result := FComplied.Replace
+  if Assigned(FCompiled) then
+    Result := FCompiled.Replace
   else
     Result := '';
 end;
@@ -2152,11 +2108,10 @@ begin
   if AMacro <> FMacro then
   begin
     FMacro := AMacro;
-    if Assigned(FComplied) then
-      FreeAndNil(FComplied);
+    if Assigned(FCompiled) then
+      FreeAndNil(FCompiled);
     if Assigned(AMacro.Params) and (AMacro.Params.Count = 3) then
-      FComplied := AMacro.Owner.Complie(AMacro.Params[0].AsString,
-        AMacro.Params[1].AsString, AMacro.Params[2].AsString);
+      FCompiled := AMacro.Owner.Complie(AMacro.Params[0].AsString, AMacro.Params[1].AsString, AMacro.Params[2].AsString);
   end;
 end;
 
@@ -2168,8 +2123,8 @@ end;
 
 destructor TQMacroStringsIterator.Destroy;
 begin
-  if Assigned(FComplied) then
-    FreeAndNil(FComplied);
+  if Assigned(FCompiled) then
+    FreeAndNil(FCompiled);
   inherited;
 end;
 
@@ -2182,8 +2137,8 @@ end;
 
 function TQMacroStringsIterator.Replace: QStringW;
 begin
-  if Assigned(FComplied) then
-    Result := FComplied.Replace
+  if Assigned(FCompiled) then
+    Result := FCompiled.Replace
   else
     Result := '';
 end;

@@ -313,10 +313,8 @@ const
   SQL_PG_ROWS = SQL_MASK_SPEC OR SQL_MASK_COMPLEX OR SQL_BASE_ROWS;
   SQL_PG_ACL = SQL_MASK_SPEC OR SQL_MASK_COMPLEX OR SQL_BASE_ACL;
   SQL_PG_ENUM = SQL_MASK_SPEC OR SQL_MASK_COMPLEX OR SQL_BASE_ENUM;
-  SQL_PG_TSVECTOR = SQL_MASK_SPEC OR SQL_MASK_COMPLEX OR SQL_MASK_CHAR OR
-    SQL_BASE_TSVECTOR;
-  SQL_PG_TSQUERY = SQL_MASK_SPEC OR SQL_MASK_COMPLEX OR SQL_MASK_CHAR OR
-    SQL_BASE_TSQUERY;
+  SQL_PG_TSVECTOR = SQL_MASK_SPEC OR SQL_MASK_COMPLEX OR SQL_MASK_CHAR OR SQL_BASE_TSVECTOR;
+  SQL_PG_TSQUERY = SQL_MASK_SPEC OR SQL_MASK_COMPLEX OR SQL_MASK_CHAR OR SQL_BASE_TSQUERY;
 
   // 已知错误代码
   PROV_ERROR_SQL_EMPTY = $80000001; // 脚本为空
@@ -404,9 +402,8 @@ type
     foEndWith : 以指定的字符串结束
     foContains : 包含
     foRegex : 正则表达式匹配 }
-  TQFilterOperator = (foUnknown, foEQ, foLT, foGT, foLE, foGE, foNotEQ, foIn,
-    foNotIn, foIsNull, foIsNotNull, foLike, foNotLike, foStartWith, foEndWith,
-    foContains, foRegex);
+  TQFilterOperator = (foUnknown, foEQ, foLT, foGT, foLE, foGE, foNotEQ, foIn, foNotIn, foIsNull, foIsNotNull, foLike, foNotLike,
+    foStartWith, foEndWith, foContains, foRegex);
   { 过滤操作时表达式之间的逻辑关系，内部使用
     fgoUnknown : 未知
     fgoAnd : 并且
@@ -513,8 +510,7 @@ type
   /// rilBackwardOnly : 只退迭代器，仅支持 Last 和 Prior 操作
   /// rilBidirection : 双向迭代器，支持 First/Last/Prior/Next 操作
   /// riRandom : 随机迭代器，支持First/Last/Next/Prior/MoveTo 操作
-  TQRecordIteratorLevel = (rilForwardOnly, rilBackwardOnly, rilBidirection,
-    rilRandom);
+  TQRecordIteratorLevel = (rilForwardOnly, rilBackwardOnly, rilBidirection, rilRandom);
 
   /// <summary> TQRecords 接口用于实现一个记录集，TQDataSet、TQConverter 者实现了该
   /// 接口，以便能够实现对数据的遍历
@@ -531,10 +527,8 @@ type
     procedure FreeRecord(ARec: TQRecord); // 释放一个记录
     procedure AddRecord(ARec: TQRecord; Append: Boolean);
     function GetIteratorType: TQRecordIteratorLevel; // 支持的迭代级别
-    procedure GetFieldValue(ARecord: PQRecord; AField: TField;
-      var AValue: TQValue);
-    procedure SetFieldValue(ARecord: PQRecord; AField: TField;
-      const AValue: TQValue);
+    procedure GetFieldValue(ARecord: PQRecord; AField: TField; var AValue: TQValue);
+    procedure SetFieldValue(ARecord: PQRecord; AField: TField; const AValue: TQValue);
   end;
 
   TQDirtyIndexType = (ditOrigin, ditChanged, ditSorted, ditFiltered);
@@ -561,8 +555,7 @@ type
     procedure Insert(Index: Integer; const Value: TQRecord);
     procedure MoveTo(AFrom, ATo: Integer);
     procedure Unlink;
-    property Records[AIndex: Integer]: TQRecord read GetRecords
-      write SetRecords; default;
+    property Records[AIndex: Integer]: TQRecord read GetRecords write SetRecords; default;
     property Count: Integer read GetCount;
   end;
 
@@ -612,8 +605,7 @@ type
     function LookupCompareProc(AIgnoreCase: Boolean): TQValueCompare;
   public
     constructor Create(Owner: TFieldDefs; const Name:
-{$IFDEF UNICODE}string{$ELSE}WideString{$ENDIF}; DataType: TFieldType;
-      Size: Integer; Required: Boolean; FieldNo: Integer);
+{$IFDEF UNICODE}string{$ELSE}WideString{$ENDIF}; DataType: TFieldType; Size: Integer; Required: Boolean; FieldNo: Integer);
 {$IFDEF UNICODE }override; {$ELSE}overload; {$ENDIF}
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
@@ -627,22 +619,18 @@ type
     property Field: TField read FField write SetField;
     property Scale: Word read FScale write SetScale;
     property DBNo: Word read FDBNo write FDBNo;
-    property IsPrimary: Boolean index SCHEMA_ISPRIMARY read GetFlags
-      write SetFlags;
+    property IsPrimary: Boolean index SCHEMA_ISPRIMARY read GetFlags write SetFlags;
     property IsIndex: Boolean index SCHEMA_ISINDEX read GetFlags write SetFlags;
     property IsUnique: Boolean index SCHEMA_UNIQUE read GetFlags write SetFlags;
     property Nullable: Boolean read GetNullable write SetNullable;
     property IsFixed: Boolean read GetFixed write SetFixed;
-    property IsAutoInc: Boolean index SCHEMA_AUTOINC read GetFlags
-      write SetFlags;
+    property IsAutoInc: Boolean index SCHEMA_AUTOINC read GetFlags write SetFlags;
     property Visible: Boolean read GetVisible write SetVisible;
     property ReadOnly: Boolean read GetReadOnly write SetReadOnly;
     property IsCalc: Boolean index SCHEMA_CALC read GetFlags write SetFlags;
-    property InWhere: Boolean index SCHEMA_INWHERE read GetInWhere
-      write SetFlags;
+    property InWhere: Boolean index SCHEMA_INWHERE read GetInWhere write SetFlags;
     property IsArray: Boolean read GetIsArray write SetIsArray;
-    property HasDefault: Boolean index SCHEMA_HASDEFAULT read GetFlags
-      write SetFlags;
+    property HasDefault: Boolean index SCHEMA_HASDEFAULT read GetFlags write SetFlags;
     property IsBlob: Boolean read GetIsBlob;
     property IsBinary: Boolean read GetIsBinary;
     property Flags: Integer read GetInternalFlags write SetInternalFlags;
@@ -655,8 +643,7 @@ type
 
   TQFieldDefs = class(TFieldDefs)
   protected
-    procedure Notify(Item: TCollectionItem;
-      Action: classes.TCollectionNotification); override;
+    procedure Notify(Item: TCollectionItem; Action: classes.TCollectionNotification); override;
 {$IFDEF UNICODE}
     function GetFieldDefClass: TFieldDefClass; override;
 {$ENDIF}
@@ -693,10 +680,8 @@ type
     property TextEncoding: TTextEncoding read FTextEncoding write FTextEncoding;
   end;
 
-  TQRecordCheckEvent = procedure(ADataSet: TQDataSet; ACheck: TQLocalCheck;
-    var Accept: Boolean) of object;
-  TQRecordCheckConflictEvent = procedure(ADataSet: TQDataSet;
-    ACheck: TQLocalCheck; var AHandled: Boolean) of object;
+  TQRecordCheckEvent = procedure(ADataSet: TQDataSet; ACheck: TQLocalCheck; var Accept: Boolean) of object;
+  TQRecordCheckConflictEvent = procedure(ADataSet: TQDataSet; ACheck: TQLocalCheck; var AHandled: Boolean) of object;
   /// <summary>
   /// lctUnique - 唯一约束，Expression中指定的字段列表值的组合，在当前数据集中必需唯一
   /// lctDefault - 默认值约束，Expression中指定的值为表达式默认值
@@ -773,11 +758,9 @@ type
     // property DataSet: TQDataSet read FDataSet;
   end;
 
-  TQConvertStep = (csBeforeImport, csBeginImport, csLoadFields, csLoadData,
-    csEndImport, csAfterImport, csBeforeExport, csBeginExport, csSaveFields,
-    csSaveData, csEndExport, csAfterExport);
-  TQDataConveterProgress = procedure(ASender: TQConverter; AStep: TQConvertStep;
-    AProgress, ATotal: Integer) of object;
+  TQConvertStep = (csBeforeImport, csBeginImport, csLoadFields, csLoadData, csEndImport, csAfterImport, csBeforeExport,
+    csBeginExport, csSaveFields, csSaveData, csEndExport, csAfterExport);
+  TQDataConveterProgress = procedure(ASender: TQConverter; AStep: TQConvertStep; AProgress, ATotal: Integer) of object;
   /// <summary>
   /// 导出范围选项
   /// </summary>
@@ -791,22 +774,17 @@ type
   /// <remarks>
   ///
   /// </remarks>
-  TQExportRange = (merMeta, merUnmodified, merInserted, merModified,
-    merDeleted);
-  TQRecordEnumProc = procedure(ASender: TComponent; AIndex: Integer;
-    ARecord: TQRecord; AParam: Pointer) of object;
+  TQExportRange = (merMeta, merUnmodified, merInserted, merModified, merDeleted);
+  TQRecordEnumProc = procedure(ASender: TComponent; AIndex: Integer; ARecord: TQRecord; AParam: Pointer) of object;
 {$IFDEF UNICODE}
-  TQRecordEnumProcA = reference to procedure(ASender: TComponent;
-    AIndex: Integer; ARecord: TQRecord);
+  TQRecordEnumProcA = reference to procedure(ASender: TComponent; AIndex: Integer; ARecord: TQRecord);
 {$ENDIF}
   TQExportRanges = set of TQExportRange;
 
   TQStreamProcessor = class(TComponent)
   protected
-    procedure BeforeSave(ASourceStream: TStream; ATargetStream: TStream);
-      virtual; abstract;
-    procedure BeforeLoad(ASourceStream: TStream; ATargetStream: TStream);
-      virtual; abstract;
+    procedure BeforeSave(ASourceStream: TStream; ATargetStream: TStream); virtual; abstract;
+    procedure BeforeLoad(ASourceStream: TStream; ATargetStream: TStream); virtual; abstract;
   end;
 
   TQStreamProcessorItem = class(TCollectionItem)
@@ -823,8 +801,7 @@ type
   public
     constructor Create; overload;
     function Add: TQStreamProcessorItem; reintroduce;
-    property Items[Index: Integer]: TQStreamProcessorItem read GetProcessor
-      write SetProcessor; default;
+    property Items[Index: Integer]: TQStreamProcessorItem read GetProcessor write SetProcessor; default;
   end;
 
   TQConverter = class(TComponent)
@@ -869,34 +846,24 @@ type
     /// <summary>
     procedure LoadFromStream(ADataSet: TQDataSet; AStream: TStream); overload;
     procedure LoadFromFile(ADataSet: TQDataSet; AFileName: QStringW); overload;
-    procedure LoadFromConverter(AConverter: TQConverter;
-      ASourceStream, ATargetStream: TStream); overload;
-    procedure LoadFromConverter(AConverter: TQConverter;
-      ASourceFile, ATargetFile: QStringW); overload;
-    procedure LoadFromConverter(AConverter: TQConverterClass;
-      ASourceStream, ATargetStream: TStream); overload;
-    procedure LoadFromConverter(AConverter: TQConverterClass;
-      ASourceFile, ATargetFile: QStringW); overload;
+    procedure LoadFromConverter(AConverter: TQConverter; ASourceStream, ATargetStream: TStream); overload;
+    procedure LoadFromConverter(AConverter: TQConverter; ASourceFile, ATargetFile: QStringW); overload;
+    procedure LoadFromConverter(AConverter: TQConverterClass; ASourceStream, ATargetStream: TStream); overload;
+    procedure LoadFromConverter(AConverter: TQConverterClass; ASourceFile, ATargetFile: QStringW); overload;
 
     procedure SaveToStream(ADataSet: TQDataSet; AStream: TStream); overload;
     procedure SaveToFile(ADataSet: TQDataSet; AFileName: QStringW); overload;
-    procedure SaveToConverter(AConverter: TQConverter;
-      ASourceStream, ATargetStream: TStream); overload;
-    procedure SaveToConverter(AConverter: TQConverter;
-      ASourceFile, ATargetFile: QStringW); overload;
-    procedure SaveToConverter(AConverter: TQConverterClass;
-      ASourceStream, ATargetStream: TStream); overload;
-    procedure SaveToConverter(AConverter: TQConverterClass;
-      ASourceFile, ATargetFile: QStringW); overload;
+    procedure SaveToConverter(AConverter: TQConverter; ASourceStream, ATargetStream: TStream); overload;
+    procedure SaveToConverter(AConverter: TQConverter; ASourceFile, ATargetFile: QStringW); overload;
+    procedure SaveToConverter(AConverter: TQConverterClass; ASourceStream, ATargetStream: TStream); overload;
+    procedure SaveToConverter(AConverter: TQConverterClass; ASourceFile, ATargetFile: QStringW); overload;
     property ActiveRecCount: Integer read GetActiveRecCount;
+    property Stream: TStream read FStream;
   published
-    property ExportRanges: TQExportRanges read FExportRanges
-      write FExportRanges; // 导出范围选择
-    property OnProgress: TQDataConveterProgress read FOnProgress
-      write FOnProgress;
+    property ExportRanges: TQExportRanges read FExportRanges write FExportRanges; // 导出范围选择
+    property OnProgress: TQDataConveterProgress read FOnProgress write FOnProgress;
     property DataSet: TQDataSet read FDataSet write SetDataSet;
-    property StreamProcessors: TQStreamProcessors read FStreamProcessors
-      write SetFStreamProcessors;
+    property StreamProcessors: TQStreamProcessors read FStreamProcessors write SetFStreamProcessors;
   end;
 
   { 复制数据来源类型，可取以下值之一：
@@ -916,8 +883,8 @@ type
     dcmFiltered     按表达式过滤后的数据
     dcmMetaOnly   仅复制表结构，不复制数据
     </table> }
-  TQDataCopySource = (dcmUnknown, dcmView, dcmCurrents, dcmOrigins, dcmInserted,
-    dcmDeleted, dcmModified, dcmChanged, dcmSorted, dcmFiltered, dcmMetaOnly);
+  TQDataCopySource = (dcmUnknown, dcmView, dcmCurrents, dcmOrigins, dcmInserted, dcmDeleted, dcmModified, dcmChanged, dcmSorted,
+    dcmFiltered, dcmMetaOnly);
 
   /// <summary> 数据集打开方法，内部使用</summary>
   /// <list>
@@ -927,8 +894,7 @@ type
   /// <item><term>dsomByClone</term><description>从源克隆得到</description></item>
   /// <item><term>dsomByCopy</term><description>从源复制得到</description></item>
   /// </list>
-  TQDataSetOpenMethod = (dsomByCreate, dsomByProvider, dsomByConverter,
-    dsomByClone, dsomByCopy);
+  TQDataSetOpenMethod = (dsomByCreate, dsomByProvider, dsomByConverter, dsomByClone, dsomByCopy);
 
   /// <summary>数据集对象允许的编辑操作</summary>
   /// <list>
@@ -965,10 +931,8 @@ type
     procedure Truncate;
   end;
 
-  TQCustomSortEvent = procedure(ADataSet: TQDataSet;
-    ARecord1, ARecord2: TQRecord; var AResult: Integer) of object;
-  TQRecordCompareProc = function(AExp: PQSortExp; ARec1, ARec2: TQRecord)
-    : Integer of object;
+  TQCustomSortEvent = procedure(ADataSet: TQDataSet; ARecord1, ARecord2: TQRecord; var AResult: Integer) of object;
+  TQRecordCompareProc = function(AExp: PQSortExp; ARec1, ARec2: TQRecord): Integer of object;
 
   // 记录哈希的结果
   TQRecordHash = record
@@ -992,13 +956,10 @@ type
     procedure RecordChanged(Field: TField); override;
   end;
 
-  TQHashDupFoundEvent = procedure(ATable: TQHashTable; AHash: PQRecordHash;
-    AParam: Pointer) of object;
+  TQHashDupFoundEvent = procedure(ATable: TQHashTable; AHash: PQRecordHash; AParam: Pointer) of object;
 {$IF RTLVersion>=23}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64{$IF RTLVersion>=24} or
-    pidOSX32{$IFEND}{$IF RTLVersion>=25} or pidiOSSimulator or
-    pidiOSDevice{$IFEND}{$IF RTLVersion>=26} or
-    pidAndroid{$IFEND}{$IF RTLVersion>=29} or pidiOSDevice32 or
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64{$IF RTLVersion>=24} or pidOSX32{$IFEND}{$IF RTLVersion>=25} or
+    pidiOSSimulator or pidiOSDevice{$IFEND}{$IF RTLVersion>=26} or pidAndroid{$IFEND}{$IF RTLVersion>=29} or pidiOSDevice32 or
     pidiOSDevice64{$IFEND})]
 {$IFEND}
   TQDataSetPostOption = (poResort, poRefilter);
@@ -1090,41 +1051,33 @@ type
 {$IF RTLVERSION>23}override; {$IFEND XE3}
     procedure SetBookmarkData(Buffer: TRecordBuffer; Data: TBookmark); overload;
 {$IF RTLVersion>23} override; {$IFEND}
-    procedure GetBookmarkData(Buffer: TRecordBuffer; Data: Pointer);
-      overload; override;
+    procedure GetBookmarkData(Buffer: TRecordBuffer; Data: Pointer); overload; override;
     procedure SetBookmarkData(Buffer: TRecordBuffer; Data: Pointer); override;
-    procedure SetBookmarkFlag(Buffer: TRecordBuffer; Value: TBookmarkFlag);
-      overload; override;
-    function GetBookmarkFlag(Buffer: TRecordBuffer): TBookmarkFlag;
-      overload; override;
+    procedure SetBookmarkFlag(Buffer: TRecordBuffer; Value: TBookmarkFlag); overload; override;
+    function GetBookmarkFlag(Buffer: TRecordBuffer): TBookmarkFlag; overload; override;
+    function CompareBookmarks(Bookmark1, Bookmark2: TBookmark): Integer; override;
 {$IF RTLVersion>23}
-    procedure InternalAddRecord(Buffer: TRecordBuffer; Append: Boolean);
-      overload; override;
+    procedure InternalAddRecord(Buffer: TRecordBuffer; Append: Boolean); overload; override;
 {$IFEND XE3}
-    function GetRecord(Buffer: TRecordBuffer; GetMode: TGetMode;
-      DoCheck: Boolean): TGetResult; overload; override;
+    function GetRecord(Buffer: TRecordBuffer; GetMode: TGetMode; DoCheck: Boolean): TGetResult; overload; override;
     procedure InternalInitRecord(Buffer: TRecordBuffer); overload; override;
     procedure InternalSetToRecord(Buffer: TRecordBuffer); overload; override;
 {$IF RTLVersion>23}
     procedure InternalGotoBookmark(Bookmark: TBookmark); overload; override;
-    procedure SetFieldData(Field: TField; Buffer: TValueBuffer);
-      overload; override;
+    procedure SetFieldData(Field: TField; Buffer: TValueBuffer); overload; override;
 {$IFEND >XE3}
 {$IFEND 2009+}
     procedure SetFieldData(Field: TField; Buffer: Pointer); overload; override;
-    procedure InternalAddRecord(Buffer: Pointer; Append: Boolean);
-      overload; override;
+    procedure InternalAddRecord(Buffer: Pointer; Append: Boolean); overload; override;
 {$IFNDEF UNICODE}
-    function GetRecord(Buffer: PChar; GetMode: TGetMode; DoCheck: Boolean)
-      : TGetResult; overload; override;
+    function GetRecord(Buffer: PChar; GetMode: TGetMode; DoCheck: Boolean): TGetResult; overload; override;
     procedure InternalInitRecord(Buffer: PChar); overload; override;
     function AllocRecordBuffer: PChar; overload; override;
     procedure FreeRecordBuffer(var Buffer: PChar); overload; override;
     procedure GetBookmarkData(Buffer: PChar; Data: Pointer); overload; override;
     function GetBookmarkFlag(Buffer: PChar): TBookmarkFlag; overload; override;
     procedure InternalSetToRecord(Buffer: PChar); overload; override;
-    procedure SetBookmarkFlag(Buffer: PChar; Value: TBookmarkFlag);
-      overload; override;
+    procedure SetBookmarkFlag(Buffer: PChar; Value: TBookmarkFlag); overload; override;
     procedure SetBookmarkData(Buffer: PChar; Data: Pointer); overload; override;
 
 {$ENDIF}
@@ -1134,33 +1087,25 @@ type
     procedure SetRecNo(Value: Integer); override;
     procedure InternalInitRecord(Buffer: TQRecord); reintroduce; overload;
 {$IF RTLVersion>24}// XE4
-    procedure SetBookmarkFlag(Buffer: TRecBuf; Value: TBookmarkFlag);
-      overload; override;
+    procedure SetBookmarkFlag(Buffer: TRecBuf; Value: TBookmarkFlag); overload; override;
     procedure InternalInitRecord(Buffer: TRecBuf); overload; override;
-    function GetRecord(Buffer: TRecBuf; GetMode: TGetMode; DoCheck: Boolean)
-      : TGetResult; overload; override;
-    procedure GetBookmarkData(Buffer: TRecBuf; Data: TBookmark);
-      overload; override;
-    procedure SetBookmarkData(Buffer: TRecBuf; Data: TBookmark);
-      overload; override;
-    function GetBookmarkFlag(Buffer: TRecBuf): TBookmarkFlag; overload;
-      override;
-    procedure InternalAddRecord(Buffer: TRecBuf; Append: Boolean);
-      overload; override;
+    function GetRecord(Buffer: TRecBuf; GetMode: TGetMode; DoCheck: Boolean): TGetResult; overload; override;
+    procedure GetBookmarkData(Buffer: TRecBuf; Data: TBookmark); overload; override;
+    procedure SetBookmarkData(Buffer: TRecBuf; Data: TBookmark); overload; override;
+    function GetBookmarkFlag(Buffer: TRecBuf): TBookmarkFlag; overload; override;
+    procedure InternalAddRecord(Buffer: TRecBuf; Append: Boolean); overload; override;
     procedure InternalSetToRecord(Buffer: TRecBuf); overload; override;
 {$IFEND}
     function GetRecordSize: Word; override;
-    procedure InternalAddRecord(Buffer: TQRecord; Append: Boolean);
-      reintroduce; overload;
+    procedure InternalAddRecord(Buffer: TQRecord; Append: Boolean); reintroduce; overload;
     procedure InternalSetToRecord(Buffer: TQRecord); reintroduce; overload;
     function InternalAddToFiltered(ABuf: TQRecord): Boolean;
     procedure InternalAddToSorted(ABuf: TQRecord);
-    function InternalGetFieldData(ARecord: TQRecord; AField: TField;
-      ABuffer: Pointer; AIsOld: Boolean): Boolean;
-    procedure InternalSetFieldData(ARecord: TQRecord; AField: TField;
-      ABuffer: Pointer; AIsOld: Boolean);
+    function InternalGetFieldData(ARecord: TQRecord; AField: TField; ABuffer: Pointer; AIsOld: Boolean): Boolean;
+    procedure InternalSetFieldData(ARecord: TQRecord; AField: TField; ABuffer: Pointer; AIsOld: Boolean);
     procedure InternalDelete; override;
     procedure InternalInsert; override;
+    procedure InternalRefresh; override;
     procedure InternalEdit; override;
     procedure InternalCancel; override;
     procedure InternalFirst; override;
@@ -1171,18 +1116,15 @@ type
     procedure InternalInitFieldDefs; override;
     procedure InternalOpen; override;
     function IsCursorOpen: Boolean; override;
-    function InternalFind(ASorted: TQRecords; AExp: PQSortExp; ABuf: TQRecord;
-      var AIndex: Integer): Boolean;
-    function GetRecord(Buffer: TQRecord; GetMode: TGetMode; DoCheck: Boolean)
-      : TGetResult; reintroduce; overload;
+    function InternalFind(ASorted: TQRecords; AExp: PQSortExp; ABuf: TQRecord; var AIndex: Integer): Boolean;
+    function GetRecord(Buffer: TQRecord; GetMode: TGetMode; DoCheck: Boolean): TGetResult; reintroduce; overload;
     function BufferOfRecNo(ARecNo: Integer): TQRecord;
     procedure FetchProviderRecord(ARec: TQRecord);
     procedure FetchAllRecords;
     procedure ClearSort(var AExp: PQSortExp);
     function ParseSort(const S: QStringW): PQSortExp;
     procedure DoSort(AFireNotify: Boolean);
-    procedure QuickSort(ARecords: TQRecords; AExp: PQSortExp; L, R: Integer;
-      ACompareProc: TQRecordCompareProc);
+    procedure QuickSort(ARecords: TQRecords; AExp: PQSortExp; L, R: Integer; ACompareProc: TQRecordCompareProc);
     function SortCompare(AExp: PQSortExp; ARec1, ARec2: TQRecord): Integer;
     procedure DoDelete(ABuf: TQRecord);
     procedure InternalApplyChanges(AProvider: TQProvider);
@@ -1192,11 +1134,9 @@ type
     procedure CloneSourceDeleted(ARec: TQRecord);
     procedure CloneSourceInserted(ARec: TQRecord);
     procedure CloneSourceEdited(ARec: TQRecord);
-    procedure FilterRecord(ARec: TQRecord; var Accept: Boolean;
-      AParser: TQFilterExp);
+    procedure FilterRecord(ARec: TQRecord; var Accept: Boolean; AParser: TQFilterExp);
     procedure FilterRecords(AParseNeeded, AFireNotify: Boolean);
-    procedure DoThreadFilterJob(ALoopMgr: TQForJobs; AJob: PQJob;
-      AIndex: NativeInt);
+    procedure DoThreadFilterJob(ALoopMgr: TQForJobs; AJob: PQJob; AIndex: NativeInt);
     procedure HandleExceptionInMainThread(ASender: Pointer);
 {$IFDEF UNICODE}
     function GetFieldDefsClass: TFieldDefsClass; override;
@@ -1213,33 +1153,23 @@ type
     procedure BindFields(Binding: Boolean); {$IFDEF UNICODE}override;
 {$ELSE}reintroduce; overload; {$ENDIF}
     procedure MarkRecordStatus(ARec: TQRecord; ANewStatus: TUpdateStatus);
-    procedure FlatFieldValues(ARec: TQRecord; const AFields: TQFieldDefArray;
-      var ABytes: TBytes);
-    function MD5OfRecord(ARec: TQRecord; const AFields: TQFieldDefArray)
-      : TQMD5Digest;
-    function HashOfRecord(ARec: TQRecord; const AFields: TQFieldDefArray)
-      : TQHashType; overload;
-    procedure DecodeFieldDefs(AFieldList: QStringW;
-      var AFieldDefs: TQFieldDefArray);
-    procedure HashOfRecord(ARec: TQRecord; const AFields: TQFieldDefArray;
-      var AResult: TQRecordHash); overload;
-    procedure HashRecords(ARecords: TQRecords; const AFields: TQFieldDefArray;
-      AHashs: TQHashTable);
-    procedure RemoveDupFromHash(AHashs: TQHashTable;
-      AOnFound: TQHashDupFoundEvent; AParam: Pointer);
+    procedure FlatFieldValues(ARec: TQRecord; const AFields: TQFieldDefArray; var ABytes: TBytes);
+    function MD5OfRecord(ARec: TQRecord; const AFields: TQFieldDefArray): TQMD5Digest;
+    function HashOfRecord(ARec: TQRecord; const AFields: TQFieldDefArray): TQHashType; overload;
+    procedure DecodeFieldDefs(AFieldList: QStringW; var AFieldDefs: TQFieldDefArray);
+    procedure HashOfRecord(ARec: TQRecord; const AFields: TQFieldDefArray; var AResult: TQRecordHash); overload;
+    procedure HashRecords(ARecords: TQRecords; const AFields: TQFieldDefArray; AHashs: TQHashTable);
+    procedure RemoveDupFromHash(AHashs: TQHashTable; AOnFound: TQHashDupFoundEvent; AParam: Pointer);
     procedure ClearHashs(AHashs: TQHashTable);
-    procedure DoDupCount(AHashs: TQHashTable; AHash: PQRecordHash;
-      AParam: Pointer);
-    procedure PrepareDiffCheck(ASource1, ASource2: TQDataSet; AFields: QStringW;
-      var AHash1, AHash2: TQDiffCache);
+    procedure DoDupCount(AHashs: TQHashTable; AHash: PQRecordHash; AParam: Pointer);
+    procedure PrepareDiffCheck(ASource1, ASource2: TQDataSet; AFields: QStringW; var AHash1, AHash2: TQDiffCache);
     function LoadFields(ADefs: TQFieldDefs): Boolean;
     procedure AddRecord(ARec: TQRecord; Append: Boolean);
     function GetFieldClass(FieldType: TFieldType): TFieldClass; override;
     function RealRecord(ARec: TQRecord): TQRecord;
     function GetAggregateValue(Field: TField): Variant; override;
 
-    procedure Notification(AComponent: TComponent;
-      Operation: TOperation); override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     property ChangedRecords: TQRecords read GetChangedRecords;
   public
     constructor Create(AOwner: TComponent); override;
@@ -1247,10 +1177,8 @@ type
     procedure CreateDataSet; // 创建一个纯内存数据集
     procedure RecreateDataSet; // 清除所有的数据，重建空的数据集
     function CreateFieldsByUser: Boolean;
-    function CreateBlobStream(Field: TField; Mode: TBlobStreamMode)
-      : TStream; override;
-    function GetBlobFieldData(FieldNo: Integer; var Buffer: TBlobByteData)
-      : Integer; override;
+    function CreateBlobStream(Field: TField; Mode: TBlobStreamMode): TStream; override;
+    function GetBlobFieldData(FieldNo: Integer; var Buffer: TBlobByteData): Integer; override;
     function GetFieldData(Field: TField; Buffer: Pointer): Boolean; override;
     function BookmarkValid(Bookmark: TBookmark): Boolean; override;
     function GetBookmark: TBookmark;
@@ -1260,15 +1188,11 @@ type
     function AllocRecord: TQRecord; // 分配一个新的记录
     procedure FreeRecord(ARec: TQRecord); // 释放一个记录
     function GetIteratorType: TQRecordIteratorLevel; // 支持的迭代级别
-    procedure GetFieldValue(ARecord: PQRecord; AField: TField;
-      var AValue: TQValue);
-    procedure SetFieldValue(ARecord: PQRecord; AField: TField;
-      const AValue: TQValue);
-    function ForEach(AProc: TQRecordEnumProc; AParam: Pointer)
-      : Integer; overload;
+    procedure GetFieldValue(ARecord: PQRecord; AField: TField; var AValue: TQValue);
+    procedure SetFieldValue(ARecord: PQRecord; AField: TField; const AValue: TQValue);
+    function ForEach(AProc: TQRecordEnumProc; AParam: Pointer): Integer; overload;
 {$IF RTLVersion>24}
-    function GetFieldData(Field: TField; var Buffer: TValueBuffer): Boolean;
-      overload; override;
+    function GetFieldData(Field: TField; var Buffer: TValueBuffer): Boolean; overload; override;
 {$IFEND}
     function UpdateStatus: TUpdateStatus; override;
 {$IFDEF UNICODE}
@@ -1283,14 +1207,12 @@ type
     /// 1.如果 AWaitDone 为False，则函数始终返回True，并计划异步执行；
     /// 2.要用此函数，则 Provider 属性必需指向一个有效的数据提供者
     /// </remarks>
-    function Merge(const ACmdText: QStringW; AType: TQDataMergeMethod;
-      AWaitDone: Boolean): Boolean; overload;
+    function Merge(const ACmdText: QStringW; AType: TQDataMergeMethod; AWaitDone: Boolean): Boolean; overload;
     /// <summary> 合并指定的数据集内容到当前数据集</summay>
     /// <param name="ASource"> 源数据集 </param>
     /// <param name="AType"> 合并方式 </param>
     /// <param name="ACheckDeleted"> 是否检查已删除的记录</param>
-    procedure Merge(ASource: TQDataSet; AType: TQDataMergeMethod;
-      ACheckDeleted: Boolean = False); overload;
+    procedure Merge(ASource: TQDataSet; AType: TQDataMergeMethod; ACheckDeleted: Boolean = False); overload;
     /// <summary> 合并指定的数据集内容到当前数据集</summay>
     /// <param name="ASource"> 源数据集 </param>
     /// <param name="AUnionAll"> 是否直接追加数据 </param>
@@ -1316,8 +1238,7 @@ type
     /// 其中，FieldName1 是第一个数据集的字段名，FieldName2 是第二个数据集的字段名。
     /// 另外，注意两个要计算的源数据集对应字段的类型应保持一致.
     /// </remarks>
-    procedure Diff(ASource1, ASource2: TQDataSet; AFields: QStringW;
-      AIncSource1, AIncSource2: Boolean);
+    procedure Diff(ASource1, ASource2: TQDataSet; AFields: QStringW; AIncSource1, AIncSource2: Boolean);
 
     function FindRecord(Restart, GoForward: Boolean): Boolean; override;
     /// <summary>定位到下一条符合条件的记录</summary>
@@ -1325,8 +1246,7 @@ type
     /// <param name="KeyValues"> 要比较的字段的关键值列表</param>
     /// <param name="Options"> 定位的选项</param>
     /// <returns>成功，移动到指定的记录并返回True，否则，返回False</returns>
-    function Locate(const KeyFields: string; const KeyValues: Variant;
-      Options: TLocateOptions): Boolean; override;
+    function Locate(const KeyFields: string; const KeyValues: Variant; Options: TLocateOptions): Boolean; override;
     /// <summary>定位到下一条符合条件的记录</summary>
     /// <param name="KeyFields"> 要比较的字段列表，中间以","或";"分隔</param>
     /// <param name="KeyValues"> 要比较的字段的关键值列表</param>
@@ -1334,42 +1254,37 @@ type
     /// <param name="ARestart"> 是否重新开始定位</param>
     /// <param name="AGoBack"> 是否往回查找</param>
     /// <returns>成功，移动到指定的记录并返回True，否则，返回False</returns>
-    function LocateEx(const KeyFields: QStringW; const KeyValues: Variant;
-      Options: TLocateOptions; ARestart, AGoBack: Boolean): Boolean;
+    function LocateEx(const KeyFields: QStringW; const KeyValues: Variant; Options: TLocateOptions;
+      ARestart, AGoBack: Boolean): Boolean;
     /// <summary>定位到首条符合条件的记录</summary>
     /// <param name="KeyFields"> 要比较的字段列表，中间以","或";"分隔</param>
     /// <param name="KeyValues"> 要比较的字段的关键值列表</param>
     /// <param name="Options"> 定位的选项</param>
     /// <returns>成功，移动到指定的记录并返回True，否则，返回False</returns>
-    function LocateFirst(const KeyFields: string; const KeyValues: Variant;
-      Options: TLocateOptions): Boolean;
+    function LocateFirst(const KeyFields: string; const KeyValues: Variant; Options: TLocateOptions): Boolean;
     /// <summary>定位到下一条符合条件的记录</summary>
     /// <param name="KeyFields"> 要比较的字段列表，中间以","或";"分隔</param>
     /// <param name="KeyValues"> 要比较的字段的关键值列表</param>
     /// <param name="Options"> 定位的选项</param>
     /// <returns>成功，移动到指定的记录并返回True，否则，返回False</returns>
-    function LocateNext(const KeyFields: string; const KeyValues: Variant;
-      Options: TLocateOptions): Boolean;
+    function LocateNext(const KeyFields: string; const KeyValues: Variant; Options: TLocateOptions): Boolean;
     /// <summary>定位到上一条符合条件的记录</summary>
     /// <param name="KeyFields"> 要比较的字段列表，中间以","或";"分隔</param>
     /// <param name="KeyValues"> 要比较的字段的关键值列表</param>
     /// <param name="Options"> 定位的选项</param>
     /// <returns>成功，移动到指定的记录并返回True，否则，返回False</returns>
-    function LocatePrior(const KeyFields: string; const KeyValues: Variant;
-      Options: TLocateOptions): Boolean;
+    function LocatePrior(const KeyFields: string; const KeyValues: Variant; Options: TLocateOptions): Boolean;
     /// <summary>定位到最后一条符合条件的记录</summary>
     /// <param name="KeyFields"> 要比较的字段列表，中间以","或";"分隔</param>
     /// <param name="KeyValues"> 要比较的字段的关键值列表</param>
     /// <param name="Options"> 定位的选项</param>
     /// <returns>成功，移动到指定的记录并返回True，否则，返回False</returns>
-    function LocateLast(const KeyFields: string; const KeyValues: Variant;
-      Options: TLocateOptions): Boolean;
+    function LocateLast(const KeyFields: string; const KeyValues: Variant; Options: TLocateOptions): Boolean;
     /// <summary>判断是否存在符合指定条件的记录</summary>
     /// <param name="AFilterExp">条件过滤表达式，与 Filter 的格式相同</param>
     /// <param name="AFilterOptions">过滤选项</param>
     /// <returns>如果存在符合条件的记录，返回true，否则返回false</returns>
-    function Exists(const AFilterExp: QStringW;
-      AFilterOptions: TFilterOptions): Boolean;
+    function Exists(const AFilterExp: QStringW; AFilterOptions: TFilterOptions): Boolean;
     /// <summary> 从源数据集克隆一个新实例 </summary>
     /// <param name="ASource">克隆的源数据集</param>
     procedure Clone(ASource: TQDataSet);
@@ -1380,8 +1295,7 @@ type
     /// <param name="ASource"> 源数据集 </param>
     /// <param name="AMethod"> 复制方式</param>
     /// <param name="AFields"> 要复制的字段列表，多个字段之间以“,”或“;”分隔，如果为空，则复制全部</param>
-    procedure CopyFrom(ASource: TQDataSet; AMethod: TQDataCopySource;
-      AFields: QStringW = ''); overload;
+    procedure CopyFrom(ASource: TQDataSet; AMethod: TQDataCopySource; AFields: QStringW = ''); overload;
     /// <summary> 从源数据集拷贝一个新实例</summary>
     /// <param name="ASource"> 源数据集 </param>
     /// <param name="AFields"> 要复制的字段列表，多个字段之间以“,”或“;”分隔，如果为空，则复制全部</param>
@@ -1397,23 +1311,15 @@ type
     /// <param name="AValueField"> 用于做为交叉值的字段名</param>
     /// <param name="AKeyName"> 转换后行主键字段的名称，如果为空，则使用AKeyField</param>
     procedure Cross(AColField, AKeyField, AValueField, AKeyName: QStringW);
-    function EnumValues(const AFields: QStringW; AList: TStrings;
-      AValueDelimiter: Char; AIgnoreNull: Boolean): Integer;
-    procedure LoadFromStream(AStream: TStream;
-      AConverter: TQConverter); overload;
-    procedure LoadFromStream(AStream: TStream;
-      AConverterClass: TQConverterClass); overload;
-    procedure LoadFromFile(const AFileName: QStringW;
-      AConverter: TQConverter); overload;
-    procedure LoadFromFile(const AFileName: QStringW;
-      AConverterClass: TQConverterClass); overload;
+    function EnumValues(const AFields: QStringW; AList: TStrings; AValueDelimiter: Char; AIgnoreNull: Boolean): Integer;
+    procedure LoadFromStream(AStream: TStream; AConverter: TQConverter); overload;
+    procedure LoadFromStream(AStream: TStream; AConverterClass: TQConverterClass); overload;
+    procedure LoadFromFile(const AFileName: QStringW; AConverter: TQConverter); overload;
+    procedure LoadFromFile(const AFileName: QStringW; AConverterClass: TQConverterClass); overload;
     procedure SaveToStream(AStream: TStream; AConverter: TQConverter); overload;
-    procedure SaveToStream(AStream: TStream; AConverterClass: TQConverterClass;
-      AExports: TQExportRanges); overload;
-    procedure SaveToFile(const AFileName: QStringW;
-      AConverter: TQConverter); overload;
-    procedure SaveToFile(const AFileName: QStringW;
-      AConverterClass: TQConverterClass; AExports: TQExportRanges); overload;
+    procedure SaveToStream(AStream: TStream; AConverterClass: TQConverterClass; AExports: TQExportRanges); overload;
+    procedure SaveToFile(const AFileName: QStringW; AConverter: TQConverter); overload;
+    procedure SaveToFile(const AFileName: QStringW; AConverterClass: TQConverterClass; AExports: TQExportRanges); overload;
     procedure ApplyChanges;
     procedure CancelChanges;
     procedure Empty;
@@ -1426,8 +1332,7 @@ type
     function Min(AFieldName: QStringW): Variant;
     function DistinctCount(AFieldNames: QStringW): Integer;
     function GroupBy(AFields, AFilter, AOrderBy: QStringW): TQDataSet; overload;
-    procedure GroupBy(ADataSet: TQDataSet;
-      AFields, AFilter, AOrderBy: QStringW); overload;
+    procedure GroupBy(ADataSet: TQDataSet; AFields, AFilter, AOrderBy: QStringW); overload;
     property Handle: THandle read FHandle;
     property Recordsets[AIndex: Integer]: TQDataSet read GetRecordsets;
     property Records[AIndex: Integer]: TQRecord read GetRecords;
@@ -1446,22 +1351,16 @@ type
     property PostOptions: TQDataSetPostOptions read FPostOptions
       write SetPostOptions;
     property Active default False;
-    property AllowEditActions: TQDataSetEditActions read FAllowEditActions
-      write SetAllowEditActions;
+    property AllowEditActions: TQDataSetEditActions read FAllowEditActions write SetAllowEditActions;
     property NaturalFilter: Boolean read FNaturalFilter write FNaturalFilter;
     property AutoCalcFields;
     property DataSetField;
     property RecordsetCount: Integer read GetRecordsetCount;
-    property ActiveRecordset: Integer read FActiveRecordset
-      write SetActiveRecordset;
-    property OnCustomSort: TQCustomSortEvent read FOnCustomSort
-      write SetOnCustomSort;
-    property MasterSource: TDataSource read GetMasterSource
-      write SetMasterSource;
-    property MasterFields: QStringW read FMasterDetailFields
-      write SetMasterFields;
-    property OnMasterChanged: TDataSetNotifyEvent read FOnMasterChanged
-      write FOnMasterChanged;
+    property ActiveRecordset: Integer read FActiveRecordset write SetActiveRecordset;
+    property OnCustomSort: TQCustomSortEvent read FOnCustomSort write SetOnCustomSort;
+    property MasterSource: TDataSource read GetMasterSource write SetMasterSource;
+    property MasterFields: QStringW read FMasterDetailFields write SetMasterFields;
+    property OnMasterChanged: TDataSetNotifyEvent read FOnMasterChanged write FOnMasterChanged;
     { <summary> 过滤条件，支持以下运算符：
       运算符         备注
       ----------  ---------------
@@ -1516,10 +1415,8 @@ type
   /// dilSerializable - 串行
   /// dilSnapshot - 快照
 
-  TQDBIsolationLevel = (dilUnspecified, dilReadCommitted, dilReadUncommitted,
-    dilRepeatableRead, dilSerializable, dilSnapshot);
-  TQCommandAction = (caPrepare, caFetchStream, caFetchRecords, caExecute,
-    caUnprepare);
+  TQDBIsolationLevel = (dilUnspecified, dilReadCommitted, dilReadUncommitted, dilRepeatableRead, dilSerializable, dilSnapshot);
+  TQCommandAction = (caPrepare, caFetchStream, caFetchRecords, caExecute, caUnprepare);
 
   /// <summary>TQCommand用于SQL脚本相关信息记录</summary>
   TQCommand = record
@@ -1555,16 +1452,14 @@ type
   /// <param name="ASender">当前执行的Provider对象</param>
   /// <param name="ACommand">当前要执行的脚本对象</param>
   /// </params>
-  TQBeforeExecuteEvent = procedure(ASender: TQProvider;
-    const ACommand: TQCommand) of object;
+  TQBeforeExecuteEvent = procedure(ASender: TQProvider; const ACommand: TQCommand) of object;
   /// <summary>在命令执行完成后触发的事件</summary>
   /// <params>
   /// <param name="ASender">提供者对象</param>
   /// <param name="ACommand">执行的命令对象</param>
   /// <param name="AResult">执行结果</param>
   /// </params>
-  TQAfterExecuteEvent = procedure(ASender: TQProvider;
-    const ACommand: TQCommand; const AResult: TQExecuteResult) of object;
+  TQAfterExecuteEvent = procedure(ASender: TQProvider; const ACommand: TQCommand; const AResult: TQExecuteResult) of object;
 
   PQSQLRequest = ^TQSQLRequest;
 
@@ -1577,14 +1472,11 @@ type
   end;
 
   /// <summary>通知信息级别</summary>
-  TQNoticeLevel = (nlLog, nlInfo, nlDebug, nlNotice, nlWarning, nlError,
-    nlPanic, nlFatal);
+  TQNoticeLevel = (nlLog, nlInfo, nlDebug, nlNotice, nlWarning, nlError, nlPanic, nlFatal);
 
-  TQServerNotificationEvent = procedure(ASender: TQProvider;
-    ALevel: TQNoticeLevel; const AMsg: QStringW) of object;
+  TQServerNotificationEvent = procedure(ASender: TQProvider; ALevel: TQNoticeLevel; const AMsg: QStringW) of object;
 
-  TQServerNotifyEvent = procedure(ASender: TQProvider;
-    const AName, APayload: QStringW) of object;
+  TQServerNotifyEvent = procedure(ASender: TQProvider; const AName, APayload: QStringW) of object;
 
   TQSQLResultset = record
     FieldDefs: TQFieldDefs;
@@ -1646,8 +1538,7 @@ type
     /// <param name="ARequest">命令执行参数</param>
     /// </params>
     /// <returns>成功，返回原始结果句柄，失败，返回-1。</returns>
-    function InternalExecute(var ARequest: TQSQLRequest): Boolean;
-      virtual; abstract;
+    function InternalExecute(var ARequest: TQSQLRequest): Boolean; virtual; abstract;
     { 执行实际的关闭连接动作 }
     procedure InternalClose; virtual; abstract;
     { 执行实际的建立连接动作 }
@@ -1656,8 +1547,7 @@ type
       Parameters
       ARootField :  根字段，它可能隶属于一个数据集，也可能是临时创建的一个对象
       ARecords :    要更新的记录列表 }
-    procedure InternalApplyChanges(Fields: TFieldDefs;
-      ARecords: TQRecords); virtual;
+    procedure InternalApplyChanges(Fields: TFieldDefs; ARecords: TQRecords); virtual;
     // { 组件加载完成后，检查属性，以确定是否连接（如Connected在设计时设置为True) }
     procedure Loaded; override;
     /// <summary>执行指定的脚本</summary>
@@ -1667,8 +1557,7 @@ type
     /// <returns>成功，返回原始结果句柄，失败，返回-1。</returns>
     function Execute(var ARequest: TQSQLRequest): Boolean; virtual;
     procedure KeepAliveNeeded; virtual;
-    procedure Notification(AComponent: TComponent;
-      Operation: TOperation); override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure SetKeepAlive(const Value: Boolean);
     procedure SetPeekInterval(const Value: Integer);
     procedure DoLivePeek(AJob: PQJob);
@@ -1677,11 +1566,9 @@ type
     function GetFlags(const Index: Integer): Boolean;
     procedure SetFlags(AFlag: Integer; AValue: Boolean);
     procedure InternalSetParams(ADest: TParams; const ASource: array of const);
-    procedure InitializeRequest(var ARequest: TQSQLRequest;
-      const ASQL: QStringW; ACreateParams: Boolean);
+    procedure InitializeRequest(var ARequest: TQSQLRequest; const ASQL: QStringW; ACreateParams: Boolean);
     procedure InternalApplyUpdate(ADataSource: TObject); virtual;
-    function PrepareChangeRequest(var ARequest: TQSQLRequest;
-      AUpdatStatus: TUpdateStatus): Boolean; virtual;
+    function PrepareChangeRequest(var ARequest: TQSQLRequest; AUpdatStatus: TUpdateStatus): Boolean; virtual;
     function ParseNameToken(var S: QStringW): QStringW;
     function GetDatabase: String;
     function GetPassword: String;
@@ -1690,19 +1577,16 @@ type
     procedure SetPassword(const Value: String);
     procedure SetUserName(const Value: String);
     procedure ServerNotice(ALevel: TQNoticeLevel; const AMsg: QStringW);
-    procedure AddResultField(const AFieldName: QStringW;
-      ACol: TQSColumn); virtual;
+    procedure AddResultField(const AFieldName: QStringW; ACol: TQSColumn); virtual;
     procedure AddResultRecord(var ARecord: TQRecord); virtual;
     function AllocRecord: TQRecord;
-    procedure SetFetching(ADefs: TQFieldDefs; ARecords: TQRecords);
-      overload; inline;
+    procedure SetFetching(ADefs: TQFieldDefs; ARecords: TQRecords); overload; inline;
     procedure SetFetching(ADataSet: TQDataSet); overload; inline;
     procedure AddResultSet;
     function CreateDefaultDefs: TQFieldDefs;
     procedure DisablePeek;
     procedure EnablePeek;
-    procedure ParamValues(var ACommand: TQCommand;
-      const AParams: array of const);
+    procedure ParamValues(var ACommand: TQCommand; const AParams: array of const);
     procedure ConnectionAborted; virtual;
     procedure SetDataSetHandle(ADataSet: TQDataSet; AHandle: THandle);
   public
@@ -1715,45 +1599,31 @@ type
     function Open: Boolean;
     // OpenStream函数
 
-    function OpenStream(ACmdText: QStringW; AStreamFormat: TQConverterClass)
-      : TMemoryStream; overload;
-    function OpenStream(AStream: TStream; ACmdText: QStringW;
-      AStreamFormat: TQConverterClass): Boolean; overload; virtual;
-    function OpenStream(AStream: TStream; ASQL: TQCommand;
-      AStreamFormat: TQConverterClass): Boolean; overload; virtual;
-    function OpenStream(ASQL: TQCommand; AStreamFormat: TQConverterClass)
-      : TMemoryStream; overload;
-    function OpenStream(AStream: TStream; ACmdText: QStringW;
-      AStreamFormat: TQConverterClass; AParams: array of const)
+    function OpenStream(ACmdText: QStringW; AStreamFormat: TQConverterClass): TMemoryStream; overload;
+    function OpenStream(AStream: TStream; ACmdText: QStringW; AStreamFormat: TQConverterClass): Boolean; overload; virtual;
+    function OpenStream(AStream: TStream; ASQL: TQCommand; AStreamFormat: TQConverterClass): Boolean; overload; virtual;
+    function OpenStream(ASQL: TQCommand; AStreamFormat: TQConverterClass): TMemoryStream; overload;
+    function OpenStream(AStream: TStream; ACmdText: QStringW; AStreamFormat: TQConverterClass; AParams: array of const)
       : Boolean; overload;
-    function OpenStream(ACmdText: QStringW; AStreamFormat: TQConverterClass;
-      AParams: array of const): TMemoryStream; overload;
-    function OpenStream(ACmdText: QStringW; AStreamFormat: TQConverter)
-      : TMemoryStream; overload;
-    function OpenStream(AStream: TStream; ACmdText: QStringW;
-      AStreamFormat: TQConverter): Boolean; overload; virtual;
-    function OpenStream(AStream: TStream; ASQL: TQCommand;
-      AStreamFormat: TQConverter): Boolean; overload; virtual;
-    function OpenStream(ASQL: TQCommand; AStreamFormat: TQConverter)
-      : TMemoryStream; overload;
-    function OpenStream(AStream: TStream; ACmdText: QStringW;
-      AStreamFormat: TQConverter; AParams: array of const): Boolean; overload;
-    function OpenStream(ACmdText: QStringW; AStreamFormat: TQConverter;
-      AParams: array of const): TMemoryStream; overload;
+    function OpenStream(ACmdText: QStringW; AStreamFormat: TQConverterClass; AParams: array of const): TMemoryStream; overload;
+    function OpenStream(ACmdText: QStringW; AStreamFormat: TQConverter): TMemoryStream; overload;
+    function OpenStream(AStream: TStream; ACmdText: QStringW; AStreamFormat: TQConverter): Boolean; overload; virtual;
+    function OpenStream(AStream: TStream; ASQL: TQCommand; AStreamFormat: TQConverter): Boolean; overload; virtual;
+    function OpenStream(ASQL: TQCommand; AStreamFormat: TQConverter): TMemoryStream; overload;
+    function OpenStream(AStream: TStream; ACmdText: QStringW; AStreamFormat: TQConverter; AParams: array of const)
+      : Boolean; overload;
+    function OpenStream(ACmdText: QStringW; AStreamFormat: TQConverter; AParams: array of const): TMemoryStream; overload;
 
     // OpenDataSet函数
 
     function OpenDataSet(ACmdText: QStringW): TQDataSet; overload;
-    function OpenDataSet(ADataSet: TQDataSet; ACmdText: QStringW;
-      AfterOpen: TQAfterExecuteEvent = nil): Boolean; overload; virtual;
-    function OpenDataSet(ADataSet: TQDataSet; ASQL: TQCommand;
-      AParams: array of const; AfterOpen: TQAfterExecuteEvent = nil): Boolean;
+    function OpenDataSet(ADataSet: TQDataSet; ACmdText: QStringW; AfterOpen: TQAfterExecuteEvent = nil): Boolean;
       overload; virtual;
-    function OpenDataSet(ADataSet: TQDataSet; ACmdText: QStringW;
-      AParams: array of const; AfterOpen: TQAfterExecuteEvent = nil)
+    function OpenDataSet(ADataSet: TQDataSet; ASQL: TQCommand; AParams: array of const; AfterOpen: TQAfterExecuteEvent = nil)
+      : Boolean; overload; virtual;
+    function OpenDataSet(ADataSet: TQDataSet; ACmdText: QStringW; AParams: array of const; AfterOpen: TQAfterExecuteEvent = nil)
       : Boolean; overload;
-    function OpenDataSet(ACmdText: QStringW; AParams: array of const)
-      : TQDataSet; overload;
+    function OpenDataSet(ACmdText: QStringW; AParams: array of const): TQDataSet; overload;
     // ExecuteCmd函数
     /// <summary>执行一个脚本并返回影响的行数</summary>
     /// <param name="ACmdText">要执行的SQL脚本</param>
@@ -1763,14 +1633,12 @@ type
     /// <param name="APrepared">要执行的SQL脚本，如果没有准备，则会准备并执行</param>
     /// <param name="AParams">附加的参数值</param>
     /// <returns>返回影响的行数，如果小于0，则出错</returns>
-    function ExecuteCmd(var APrepared: TQCommand; const AParams: array of const)
-      : Integer; overload; virtual;
+    function ExecuteCmd(var APrepared: TQCommand; const AParams: array of const): Integer; overload; virtual;
     /// <summary>执行一个脚本并返回影响的行数</summary>
     /// <param name="ACmdText">要执行的SQL脚本</param>
     /// <param name="AParams">附加的要执行的参数</param>
     /// <returns>返回影响的行数，如果小于0，则出错</returns>
-    function ExecuteCmd(ACmdText: QStringW; const AParams: array of const)
-      : Integer; overload;
+    function ExecuteCmd(ACmdText: QStringW; const AParams: array of const): Integer; overload;
 
     // Prepare
     /// <summary>准备一个SQL脚本，以便重复执行</summary>
@@ -1780,8 +1648,7 @@ type
     /// </params>
     /// <returns>成功，返回准备完成的SQL语句对象，可以用于OpenStream/OpenDataSet/ExecuteCmd语句</returns>
     /// <remarks>返回的TQCommand对象需要手动释放
-    function Prepare(var AResult: TQCommand; ACmdText, AId: QStringW)
-      : Boolean; virtual;
+    function Prepare(var AResult: TQCommand; ACmdText, AId: QStringW): Boolean; virtual;
     procedure Unprepare(var ACmd: TQCommand); virtual;
     procedure FreeCommand(var ACmd: TQCommand);
     /// <summary> 开启事务或保存点</summary>
@@ -1790,8 +1657,7 @@ type
     /// <param name="ASavePointName">数据库事务保存点名称</param>
     /// </params>
     /// <returns>成功开启事务，返回true，否则，返回false</returns>
-    function BeginTrans(ALevel: TQDBIsolationLevel = dilUnspecified;
-      ASavePointName: QStringW = ''): Boolean; virtual;
+    function BeginTrans(ALevel: TQDBIsolationLevel = dilUnspecified; ASavePointName: QStringW = ''): Boolean; virtual;
 
     { 判断是否存在指定的物理表（不包含视图）
       Parameters
@@ -1855,19 +1721,15 @@ type
       Parameters
       AStream :  源数据流
       AFormat :  数据流内容的格式转换器类型 }
-    procedure ApplyChanges(AStream: TStream; AFormat: TQConverterClass);
-      overload; virtual;
-    procedure ApplyChanges(AStream: TStream; AConverter: TQConverter);
-      overload; virtual;
+    procedure ApplyChanges(AStream: TStream; AFormat: TQConverterClass); overload; virtual;
+    procedure ApplyChanges(AStream: TStream; AConverter: TQConverter); overload; virtual;
 
     { 将指定文件中的变更信息应用
       Parameters
       AFileName :  文件名
       AFormat :    文件格式转换器类型 }
-    procedure ApplyChanges(AFileName: QStringW; AFormat: TQConverterClass);
-      overload; virtual;
-    procedure ApplyChanges(AFileName: QStringW; AConverter: TQConverter);
-      overload; virtual;
+    procedure ApplyChanges(AFileName: QStringW; AFormat: TQConverterClass); overload; virtual;
+    procedure ApplyChanges(AFileName: QStringW; AConverter: TQConverter); overload; virtual;
     { 从缓存中分配一个数据集对象，如果不存在，就创建一个新的数据集对象返回。 }
     class function AcquireDataSet: TQDataSet;
     { 将一个由OpenDataSet或AcquireDataSet返回的数据集对象交还回缓冲池 }
@@ -1889,30 +1751,20 @@ type
     // 事务隔离级别;//事务隔离级别
     property Handle: THandle read FHandle;
   published
-    property BeforeExecute: TQBeforeExecuteEvent read FBeforeExecute
-      write FBeforeExecute; // 执行脚本前触发事件
-    property AfterExecute: TQAfterExecuteEvent read FAfterExecute
-      write FAfterExecute; // 执行脚本后触发事件
-    property BeforeConnect: TNotifyEvent read FBeforeConnect
-      write FBeforeConnect; // 连接建立前触发
-    property AfterConnected: TNotifyEvent read FAfterConnected
-      write FAfterConnected; // 连接建立后触发
-    property BeforeDisconnect: TNotifyEvent read FBeforeDisconnect
-      write FBeforeDisconnect; // 连接断开前触发
-    property AfterDisconnect: TNotifyEvent read FAfterDisconnect
-      write FAfterDisconnect; // 连接断开后触发
-    property OnParamChanged: TNotifyEvent read FOnParamChanged
-      write FOnParamChanged;
-    property OnServerNotification: TQServerNotificationEvent
-      read FOnServerNotification write FOnServerNotification;
+    property BeforeExecute: TQBeforeExecuteEvent read FBeforeExecute write FBeforeExecute; // 执行脚本前触发事件
+    property AfterExecute: TQAfterExecuteEvent read FAfterExecute write FAfterExecute; // 执行脚本后触发事件
+    property BeforeConnect: TNotifyEvent read FBeforeConnect write FBeforeConnect; // 连接建立前触发
+    property AfterConnected: TNotifyEvent read FAfterConnected write FAfterConnected; // 连接建立后触发
+    property BeforeDisconnect: TNotifyEvent read FBeforeDisconnect write FBeforeDisconnect; // 连接断开前触发
+    property AfterDisconnect: TNotifyEvent read FAfterDisconnect write FAfterDisconnect; // 连接断开后触发
+    property OnParamChanged: TNotifyEvent read FOnParamChanged write FOnParamChanged;
+    property OnServerNotification: TQServerNotificationEvent read FOnServerNotification write FOnServerNotification;
     property OnNotify: TQServerNotifyEvent read FOnNotify write FOnNotify;
     property Params: TStrings read FParams write SetParams;
     // 连接参数，注意使用的应为UTF8编码
     property Connected: Boolean read GetConnected write SetConnected; // 是否已连接
-    property ConnectionString: QStringW read GetConnectionString
-      write SetConnectionString; // 连接字符串
-    property CommandTimeout: Cardinal read FCommandTimeout write FCommandTimeout
-      default 30; { 命令执行超时时间，对于部分提供者对象，可能无意义 }
+    property ConnectionString: QStringW read GetConnectionString write SetConnectionString; // 连接字符串
+    property CommandTimeout: Cardinal read FCommandTimeout write FCommandTimeout default 30; { 命令执行超时时间，对于部分提供者对象，可能无意义 }
     property Connecting: Boolean Index PF_CONNECTING read GetFlags; // 是否正在连接数据库
     property Closing: Boolean Index PF_CLOSING read GetFlags;
     property Executing: Boolean Index PF_EXECUTING read GetFlags;
@@ -1975,8 +1827,7 @@ type
     destructor Destroy; override;
     property ServerHost: QStringW read GetServerHost write SetServerHost;
     property ServerPort: Word read GetServerPort write SetServerPort;
-    property ConnectTimeout: Cardinal read FConnectTimeout write FConnectTimeout
-      default 30;
+    property ConnectTimeout: Cardinal read FConnectTimeout write FConnectTimeout default 30;
   end;
 
   // 元数据信息记录
@@ -2076,8 +1927,7 @@ type
     function CreateItem: TQSchema; override;
   public
     constructor Create(AOwner: TQSchemas); overload;
-    function Add(AName: QStringW; const ATypeId, ABaseId, ASQLType: Cardinal;
-      ASize: Smallint): TQSType;
+    function Add(AName: QStringW; const ATypeId, ABaseId, ASQLType: Cardinal; ASize: Smallint): TQSType;
     function FindById(const AId: Cardinal): TQSType; overload;
     function FindByName(const AName: QStringW): TQSType; overload;
     property Columns[AIndex: Integer]: TQSType read GetTypes;
@@ -2096,17 +1946,13 @@ type
     constructor Create(AOwner: TQSchemas); overload;
     property IsIndex: Boolean index SCHEMA_ISINDEX read GetFlags write SetFlags;
     // 是否是索引
-    property IsPrimary: Boolean index SCHEMA_ISPRIMARY read GetFlags
-      write SetFlags; // 是否是主键
-    property Nullable: Boolean index SCHEMA_NULLABLE read GetFlags
-      write SetFlags; // 是否允许为空
+    property IsPrimary: Boolean index SCHEMA_ISPRIMARY read GetFlags write SetFlags; // 是否是主键
+    property Nullable: Boolean index SCHEMA_NULLABLE read GetFlags write SetFlags; // 是否允许为空
     property IsFixed: Boolean index SCHEMA_ISFIXED read GetFlags write SetFlags;
     property IsUnique: Boolean index SCHEMA_UNIQUE read GetFlags write SetFlags;
-    property IsAutoInc: Boolean index SCHEMA_AUTOINC read GetFlags
-      write SetFlags;
+    property IsAutoInc: Boolean index SCHEMA_AUTOINC read GetFlags write SetFlags;
     property Visible: Boolean index SCHEMA_VISIBLE read GetFlags write SetFlags;
-    property ReadOnly: Boolean index SCHEMA_READONLY read GetFlags
-      write SetFlags;
+    property ReadOnly: Boolean index SCHEMA_READONLY read GetFlags write SetFlags;
     property IsCalc: Boolean index SCHEMA_CALC read GetFlags write SetFlags;
     property InWhere: Boolean index SCHEMA_INWHERE read GetFlags write SetFlags;
     property IsArray: Boolean index SCHEMA_ARRAY read GetFlags write SetFlags;
@@ -2136,23 +1982,19 @@ const
     // ftUnknown, ftString, ftSmallint, ftInteger, ftWord,// 0..4
     SQL_UNKNOWN, SQL_VARCHAR, SQL_SMALLINT, SQL_INTEGER, SQL_WORD,
     // ftBoolean, ftFloat, ftCurrency, ftBCD, ftDate, ftTime, ftDateTime,// 5..11
-    SQL_BOOLEAN, SQL_FLOAT, SQL_MONEY, SQL_BCD, SQL_DATE, SQL_TIME,
-    SQL_DATETIME,
+    SQL_BOOLEAN, SQL_FLOAT, SQL_MONEY, SQL_BCD, SQL_DATE, SQL_TIME, SQL_DATETIME,
     // ftBytes, ftVarBytes, ftAutoInc, ftBlob, ftMemo, ftGraphic, ftFmtMemo, // 12..18
-    SQL_BYTES, SQL_VARBYTES, SQL_SERIAL, SQL_LARGEOBJECT, SQL_TEXT,
-    SQL_PICTURE, SQL_TEXT,
+    SQL_BYTES, SQL_VARBYTES, SQL_SERIAL, SQL_LARGEOBJECT, SQL_TEXT, SQL_PICTURE, SQL_TEXT,
     // ftParadoxOle, ftDBaseOle, ftTypedBinary, ftCursor, ftFixedChar, ftQStringW, // 19..24
     SQL_OLE, SQL_OLE, SQL_LARGEOBJECT, SQL_CURSOR, SQL_CHAR, SQL_WIDEVARCHAR,
     // ftLargeint, ftADT, ftArray, ftReference, ftDataSet, ftOraBlob, ftOraClob, // 25..31
-    SQL_INT64, SQL_ADT, SQL_ARRAY, SQL_REFERENCE, SQL_DATASET, SQL_LARGEOBJECT,
-    SQL_WIDETEXT,
+    SQL_INT64, SQL_ADT, SQL_ARRAY, SQL_REFERENCE, SQL_DATASET, SQL_LARGEOBJECT, SQL_WIDETEXT,
     // ftVariant, ftInterface, ftIDispatch, ftGuid, ftTimeStamp, ftFMTBcd, // 32..37
     SQL_VARIANT, SQL_INTERFACE, SQL_IDISPATCH, SQL_GUID, SQL_TIMESTAMP, SQL_BCD,
     // ftFixedWideChar, ftWideMemo, ftOraTimeStamp, ftOraInterval, // 38..41
     SQL_WIDECHAR, SQL_WIDETEXT, SQL_TIMESTAMP, SQL_INTERVAL{$IFDEF UNICODE},
     // ftLongWord, ftShortint, ftByte, ftExtended, ftConnection, ftParams, ftStream, //42..48
-    SQL_DWORD, SQL_TINYINT, SQL_BYTE, SQL_EXTENDED, SQL_CONNECTION, SQL_PARAMS,
-    SQL_STREAM{$IF RTLVersion>20},
+    SQL_DWORD, SQL_TINYINT, SQL_BYTE, SQL_EXTENDED, SQL_CONNECTION, SQL_PARAMS, SQL_STREAM{$IF RTLVersion>20},
     // ftTimeStampOffset, ftObject, ftSingle
     SQL_TIMEOFFSET, SQL_OBJECT, SQL_SINGLE{$IFEND >=2010}{$ENDIF >=2009});
 
@@ -2214,8 +2056,7 @@ const
     // ftUnknown, ftString, ftSmallint, ftInteger, ftWord,// 0..4
     vdtNull, vdtString, vdtInteger, vdtInteger, vdtInteger,
     // ftBoolean, ftFloat, ftCurrency, ftBCD, ftDate, ftTime, ftDateTime,// 5..11
-    vdtBoolean, vdtFloat, vdtCurrency, vdtBcd, vdtDateTime, vdtDateTime,
-    vdtDateTime,
+    vdtBoolean, vdtFloat, vdtCurrency, vdtBcd, vdtDateTime, vdtDateTime, vdtDateTime,
     // ftBytes, ftVarBytes, ftAutoInc, ftBlob, ftMemo, ftGraphic, ftFmtMemo, // 12..18
     vdtStream, vdtStream, vdtInt64, vdtStream, vdtStream, vdtStream, vdtStream,
     // ftParadoxOle, ftDBaseOle, ftTypedBinary, ftCursor, ftFixedChar, ftQStringW, // 19..24
@@ -2227,8 +2068,7 @@ const
     // ftFixedWideChar, ftWideMemo, ftOraTimeStamp, ftOraInterval, // 38..41
     vdtString, vdtStream, vdtDateTime, vdtInterval{$IFDEF UNICODE},
     // ftLongWord, ftShortint, ftByte, ftExtended, ftConnection, ftParams, ftStream, //42..48
-    vdtInt64, vdtInteger, vdtInteger, vdtFloat, vdtInt64, vdtInt64,
-    vdtStream{$IF RTLVersion>20},
+    vdtInt64, vdtInteger, vdtInteger, vdtFloat, vdtInt64, vdtInt64, vdtStream{$IF RTLVersion>20},
     // ftTimeStampOffset, ftObject, ftSingle
     vdtDateTime, vdtInt64, vdtFloat{$IFEND >=2010}{$ENDIF >=2009});
 
@@ -2579,8 +2419,7 @@ begin
 end;
 
 constructor TQFieldDef.Create(Owner: TFieldDefs; const Name:
-{$IFDEF UNICODE}string{$ELSE}WideString{$ENDIF}; DataType: TFieldType;
-  Size: Integer; Required: Boolean; FieldNo: Integer);
+{$IFDEF UNICODE}string{$ELSE}WideString{$ENDIF}; DataType: TFieldType; Size: Integer; Required: Boolean; FieldNo: Integer);
 begin
   inherited;
   LookupValueType;
@@ -2684,8 +2523,7 @@ end;
 
 function TQFieldDef.LookupCompareProc(AIgnoreCase: Boolean): TQValueCompare;
 begin
-  FOnCompare := qvalue.LookupCompareProc(FValueType, FValueType,
-    AIgnoreCase, False);
+  FOnCompare := qvalue.LookupCompareProc(FValueType, FValueType, AIgnoreCase, False);
   Result := FOnCompare;
 end;
 
@@ -2960,8 +2798,7 @@ begin
       ARec := FChangedRecords[I];
       if ARec.Status = usDeleted then
       begin
-        if (ARec.FOriginIndex >= 0) and
-          (ARec.FOriginIndex < FOriginRecords.Count) then
+        if (ARec.FOriginIndex >= 0) and (ARec.FOriginIndex < FOriginRecords.Count) then
           FOriginRecords.Insert(ARec.FOriginIndex, ARec);
       end;
       Inc(I);
@@ -3117,13 +2954,31 @@ begin
   Resync([]);
 end;
 
+function TQDataSet.CompareBookmarks(Bookmark1, Bookmark2: TBookmark): Integer;
+var
+  ARec1: TQRecord;
+  ARec2: TQRecord;
+begin
+  if BookmarkValid(Bookmark1) and BookmarkValid(Bookmark2) then
+  begin
+    ARec1:=PPointer(@Bookmark1[0])^;
+    ARec2:=PPointer(@Bookmark2[0])^;
+    while Assigned(ARec1.FBookmark) do
+      ARec1 := ARec1.Bookmark;
+    while Assigned(ARec2.FBookmark) do
+      ARec1 := ARec2.Bookmark;
+    Result := ARec1.FOriginIndex - ARec2.FOriginIndex;
+  end
+  else
+    Result:=IntPtr(ARec1)-IntPtr(ARec2);
+end;
+
 procedure TQDataSet.CopyFrom(ASource: TDataSet; AFields: QStringW = '');
 var
   ABookmark: {$IFDEF UNICODE}TBookmark{$ELSE}TBookmarkStr{$ENDIF};
   ARec: TQRecord;
   ACopyFields: array of TFieldDef;
-  procedure CopyValue(ADef: TQFieldDef; var ADest: TQValue;
-    const ASource: Variant);
+  procedure CopyValue(ADef: TQFieldDef; var ADest: TQValue; const ASource: Variant);
   begin
     if VarIsNull(ASource) then
       ADest.Reset
@@ -3281,8 +3136,7 @@ begin
   end;
 end;
 
-procedure TQDataSet.CopyFrom(ASource: TQDataSet; AMethod: TQDataCopySource;
-  AFields: QStringW);
+procedure TQDataSet.CopyFrom(ASource: TQDataSet; AMethod: TQDataCopySource; AFields: QStringW);
 var
   I, J: Integer;
   ARec, ACopy: TQRecord;
@@ -3326,8 +3180,7 @@ var
       FieldDefs.EndUpdate;
     end;
   end;
-  procedure CopyRecords(AList: TQRecords; AStartIdx, ACount: Integer;
-    AcceptStatus: TUpdateStatusSet);
+  procedure CopyRecords(AList: TQRecords; AStartIdx, ACount: Integer; AcceptStatus: TUpdateStatusSet);
   var
     AValue: PQColumnValue;
   begin
@@ -3385,24 +3238,20 @@ begin
         end;
         if ASource.Filtered or (Length(ASource.Sort) > 0) then
         begin
-          CopyRecords(ASource.FActiveRecords, I, J, [usUnmodified, usInserted,
-            usDeleted, usModified]);
+          CopyRecords(ASource.FActiveRecords, I, J, [usUnmodified, usInserted, usDeleted, usModified]);
         end
         else
         begin
           if Assigned(ASource.FCloneSource) then
-            CopyRecords(ASource.FCloneSource.FOriginRecords, I, J,
-              [usUnmodified, usInserted, usDeleted, usModified])
+            CopyRecords(ASource.FCloneSource.FOriginRecords, I, J, [usUnmodified, usInserted, usDeleted, usModified])
           else
-            CopyRecords(ASource.FOriginRecords, I, J,
-              [usUnmodified, usInserted, usDeleted, usModified]);
+            CopyRecords(ASource.FOriginRecords, I, J, [usUnmodified, usInserted, usDeleted, usModified]);
         end;
       end;
     dcmCurrents:
       begin
         if Assigned(ASource.FCloneSource) then
-          CopyRecords(ASource.FCloneSource.FOriginRecords, 0,
-            ASource.FCloneSource.FOriginRecords.Count,
+          CopyRecords(ASource.FCloneSource.FOriginRecords, 0, ASource.FCloneSource.FOriginRecords.Count,
             [usUnmodified, usInserted, usDeleted, usModified])
         else
           CopyRecords(ASource.FOriginRecords, 0, ASource.FOriginRecords.Count,
@@ -3411,44 +3260,33 @@ begin
     dcmOrigins: // 最原始未变更的记录，注意，如果删除过记录，则被删除过的记录始终位于最后
       begin
         if Assigned(ASource.FCloneSource) then
-          CopyRecords(ASource.FCloneSource.FOriginRecords, 0,
-            ASource.FCloneSource.FOriginRecords.Count, [usUnmodified])
+          CopyRecords(ASource.FCloneSource.FOriginRecords, 0, ASource.FCloneSource.FOriginRecords.Count, [usUnmodified])
         else
-          CopyRecords(ASource.FOriginRecords, 0, ASource.FOriginRecords.Count,
-            [usUnmodified]);
+          CopyRecords(ASource.FOriginRecords, 0, ASource.FOriginRecords.Count, [usUnmodified]);
       end;
     dcmInserted:
       if Assigned(ASource.FCloneSource) then
-        CopyRecords(ASource.FCloneSource.ChangedRecords, 0,
-          ASource.FCloneSource.ChangedRecords.Count, [usInserted])
+        CopyRecords(ASource.FCloneSource.ChangedRecords, 0, ASource.FCloneSource.ChangedRecords.Count, [usInserted])
       else
-        CopyRecords(ASource.ChangedRecords, 0, ASource.ChangedRecords.Count,
-          [usInserted]);
+        CopyRecords(ASource.ChangedRecords, 0, ASource.ChangedRecords.Count, [usInserted]);
     dcmDeleted:
       if Assigned(ASource.FCloneSource) then
-        CopyRecords(ASource.FCloneSource.ChangedRecords, 0,
-          ASource.FCloneSource.ChangedRecords.Count, [usDeleted])
+        CopyRecords(ASource.FCloneSource.ChangedRecords, 0, ASource.FCloneSource.ChangedRecords.Count, [usDeleted])
       else
-        CopyRecords(ASource.ChangedRecords, 0, ASource.ChangedRecords.Count,
-          [usDeleted]);
+        CopyRecords(ASource.ChangedRecords, 0, ASource.ChangedRecords.Count, [usDeleted]);
     dcmModified:
       if Assigned(ASource.FCloneSource) then
-        CopyRecords(ASource.FCloneSource.ChangedRecords, 0,
-          ASource.FCloneSource.ChangedRecords.Count, [usModified])
+        CopyRecords(ASource.FCloneSource.ChangedRecords, 0, ASource.FCloneSource.ChangedRecords.Count, [usModified])
       else
-        CopyRecords(ASource.ChangedRecords, 0, ASource.ChangedRecords.Count,
-          [usModified]);
+        CopyRecords(ASource.ChangedRecords, 0, ASource.ChangedRecords.Count, [usModified]);
     dcmChanged:
       if Assigned(ASource.FCloneSource) then
-        CopyRecords(ASource.FCloneSource.ChangedRecords, 0,
-          ASource.FCloneSource.ChangedRecords.Count,
+        CopyRecords(ASource.FCloneSource.ChangedRecords, 0, ASource.FCloneSource.ChangedRecords.Count,
           [usInserted, usDeleted, usModified])
       else
-        CopyRecords(ASource.ChangedRecords, 0, ASource.ChangedRecords.Count,
-          [usInserted, usDeleted, usModified]);
+        CopyRecords(ASource.ChangedRecords, 0, ASource.ChangedRecords.Count, [usInserted, usDeleted, usModified]);
     dcmSorted: // 以排序结果为依据复制数据
-      CopyRecords(ASource.FSortedRecords, 0, ASource.FSortedRecords.Count,
-        [usUnmodified, usInserted, usDeleted, usModified]);
+      CopyRecords(ASource.FSortedRecords, 0, ASource.FSortedRecords.Count, [usUnmodified, usInserted, usDeleted, usModified]);
     dcmFiltered:
       CopyRecords(ASource.FFilteredRecords, 0, ASource.FFilteredRecords.Count,
         [usUnmodified, usInserted, usDeleted, usModified]);
@@ -3483,11 +3321,9 @@ begin
   FMasterLink.OnMasterChange := MasterChanged;
   FMasterLink.OnMasterDisable := MasterDisabled;
   FOpenBy := dsomByCreate;
-  FPostOptions := [poResort, poRefilter];
 end;
 
-function TQDataSet.CreateBlobStream(Field: TField;
-  Mode: TBlobStreamMode): TStream;
+function TQDataSet.CreateBlobStream(Field: TField; Mode: TBlobStreamMode): TStream;
 begin
   Result := TQBlobStream.Create(Field as TBlobField, Mode);
 end;
@@ -3503,15 +3339,13 @@ end;
 function TQDataSet.CreateFieldsByUser: Boolean;
 begin
 {$IF RTLVersion>=27}
-  Result := (FieldOptions.AutoCreateMode <> acExclusive) or
-    not(lcPersistent in Fields.LifeCycles);
+  Result := (FieldOptions.AutoCreateMode <> acExclusive) or not(lcPersistent in Fields.LifeCycles);
 {$ELSE}
   Result := DefaultFields;
 {$IFEND}
 end;
 
-procedure TQDataSet.Cross(AColField, AKeyField, AValueField,
-  AKeyName: QStringW);
+procedure TQDataSet.Cross(AColField, AKeyField, AValueField, AKeyName: QStringW);
 var
   AFieldNames: TStringList;
   I, J, AKeyIdx, AColIdx, AValIdx: Integer;
@@ -3573,8 +3407,7 @@ begin
   ACopy := TQDataSet.Create(nil);
   ASorts := TQRecords.Create(ditSorted);
   try
-    ACopy.CopyFrom(Self, dcmView, AKeyField + ',' + AColField + ',' +
-      AValueField);
+    ACopy.CopyFrom(Self, dcmView, AKeyField + ',' + AColField + ',' + AValueField);
     ACopy.EnumValues(AColField, AFieldNames, #0, False);
     Close;
     FieldDefs.Clear;
@@ -3583,12 +3416,10 @@ begin
     CheckField(AValIdx, AValueField);
     if Length(AKeyName) = 0 then
       AKeyName := AKeyField;
-    FieldDefs.Add(AKeyName, ACopy.FieldDefs[AKeyIdx].DataType,
-      ACopy.FieldDefs[AKeyIdx].Size);
+    FieldDefs.Add(AKeyName, ACopy.FieldDefs[AKeyIdx].DataType, ACopy.FieldDefs[AKeyIdx].Size);
     ACompare := (ACopy.FieldDefs[AKeyIdx] as TQFieldDef).FOnCompare;
     for I := 0 to AFieldNames.Count - 1 do
-      FieldDefs.Add(AFieldNames[I], ACopy.FieldDefs[AValIdx].DataType,
-        ACopy.FieldDefs[AValIdx].Size);
+      FieldDefs.Add(AFieldNames[I], ACopy.FieldDefs[AValIdx].DataType, ACopy.FieldDefs[AValIdx].Size);
     // 复制字段值
     for I := 0 to ACopy.FOriginRecords.Count - 1 do
     begin
@@ -3599,12 +3430,11 @@ begin
       begin
         ADest := AllocRecord;
         ADest.FOriginIndex := FOriginRecords.Add(ADest);
-        ADest.Values[0].OldValue.Copy
-          (ASrc.Values[AKeyIdx].CurrentValue^, False);
+        ADest.Values[0].OldValue.Copy(ASrc.Values[AKeyIdx].CurrentValue^, False);
         ASorts.Insert(J, ADest);
       end;
-      ADest.Values[FieldDefs.Find(ASrc.Values[AColIdx].CurrentValue^.AsString)
-        .FieldNo - 1].OldValue.Copy(ASrc.Values[AValIdx].CurrentValue^, False);
+      ADest.Values[FieldDefs.Find(ASrc.Values[AColIdx].CurrentValue^.AsString).FieldNo - 1]
+        .OldValue.Copy(ASrc.Values[AValIdx].CurrentValue^, False);
     end;
   finally
     FreeObject(AFieldNames);
@@ -3615,8 +3445,7 @@ begin
   Open;
 end;
 
-procedure TQDataSet.DecodeFieldDefs(AFieldList: QStringW;
-  var AFieldDefs: TQFieldDefArray);
+procedure TQDataSet.DecodeFieldDefs(AFieldList: QStringW; var AFieldDefs: TQFieldDefArray);
 var
   I: Integer;
   AFieldName: QStringW;
@@ -3694,8 +3523,7 @@ begin
   FreeObject(FMasterLink);
 end;
 
-procedure TQDataSet.Diff(ASource1, ASource2: TQDataSet; AFields: QStringW;
-  AIncSource1, AIncSource2: Boolean);
+procedure TQDataSet.Diff(ASource1, ASource2: TQDataSet; AFields: QStringW; AIncSource1, AIncSource2: Boolean);
 var
   AHash1, AHash2: TQDiffCache;
   I: Integer;
@@ -3723,8 +3551,7 @@ var
       R2.FChangedIndex := FChangedRecords.Add(R2);
   end;
 
-  function DoCompareInHashTable(const V1: TBytes; AFirst: PQHashList;
-    ATable: TQDiffCache): Boolean;
+  function DoCompareInHashTable(const V1: TBytes; AFirst: PQHashList; ATable: TQDiffCache): Boolean;
   var
     V2: TBytes;
   begin
@@ -3732,8 +3559,7 @@ var
     while AFirst <> nil do
     begin
       FlatFieldValues(AFirst.Data, ATable.Fields, V2);
-      if (Length(V1) = Length(V2)) and CompareMem(@V1[0], @V2[0], Length(V1))
-      then
+      if (Length(V1) = Length(V2)) and CompareMem(@V1[0], @V2[0], Length(V1)) then
       begin
         Result := True;
         Exit;
@@ -3790,8 +3616,7 @@ var
           begin
             R1 := ATemp.Data;
             FlatFieldValues(R1, ACache.Fields, V2);
-            if (Length(V1) = Length(V2)) and CompareMem(@V1[0], @V2[0],
-              Length(V1)) then
+            if (Length(V1) = Length(V2)) and CompareMem(@V1[0], @V2[0], Length(V1)) then
             begin
               ATemp := ACache.HashTable.FindNext(ATemp);
               ACache.HashTable.Delete(R1, AList1.Hash);
@@ -3900,8 +3725,7 @@ var
           begin
             ADup := ATemp.Data;
             FlatFieldValues(ADup, AFieldList, V2);
-            if (Length(V1) = Length(V2)) and CompareMem(@V1[0], @V2[0],
-              Length(V1)) then
+            if (Length(V1) = Length(V2)) and CompareMem(@V1[0], @V2[0], Length(V1)) then
             begin
               AHash.Delete(ADup, AHashList.Hash);
               if ADup.FOriginIndex < ARec.FOriginIndex then
@@ -3937,8 +3761,7 @@ begin
   end;
 end;
 
-function TQDataSet.DoCustomSort(AExp: PQSortExp;
-  ARec1, ARec2: TQRecord): Integer;
+function TQDataSet.DoCustomSort(AExp: PQSortExp; ARec1, ARec2: TQRecord): Integer;
 begin
   FOnCustomSort(Self, ARec1, ARec2, Result);
 end;
@@ -3995,8 +3818,7 @@ begin
   end;
 end;
 
-procedure TQDataSet.DoDupCount(AHashs: TQHashTable; AHash: PQRecordHash;
-  AParam: Pointer);
+procedure TQDataSet.DoDupCount(AHashs: TQHashTable; AHash: PQRecordHash; AParam: Pointer);
 begin
   Inc(PCardinal(AParam)^);
 end;
@@ -4023,11 +3845,9 @@ begin
   FSortedRecords.Assign(AList);
   // 暂时先直接单线程直接排序，将来再处理多线程排序
   if Assigned(FOnCustomSort) then
-    QuickSort(FSortedRecords, FSortExp, 0, FSortedRecords.Count - 1,
-      DoCustomSort)
+    QuickSort(FSortedRecords, FSortExp, 0, FSortedRecords.Count - 1, DoCustomSort)
   else
-    QuickSort(FSortedRecords, FSortExp, 0, FSortedRecords.Count - 1,
-      SortCompare);
+    QuickSort(FSortedRecords, FSortExp, 0, FSortedRecords.Count - 1, SortCompare);
   // OutputDebugString(PAnsiChar(Format('Sort Used:%dms',[GetTickCount-T])));
   for I := 0 to FSortedRecords.Count - 1 do
     TQRecord(FSortedRecords[I]).FSortedIndex := I;
@@ -4040,8 +3860,7 @@ begin
   end;
 end;
 
-procedure TQDataSet.DoThreadFilterJob(ALoopMgr: TQForJobs; AJob: PQJob;
-  AIndex: NativeInt);
+procedure TQDataSet.DoThreadFilterJob(ALoopMgr: TQForJobs; AJob: PQJob; AIndex: NativeInt);
 var
   Accept: Boolean;
   ARec: TQRecord;
@@ -4071,14 +3890,12 @@ begin
   Resync([]);
 end;
 
-function DoEnumValuesCompare(List: TStringList;
-  Index1, Index2: Integer): Integer;
+function DoEnumValuesCompare(List: TStringList; Index1, Index2: Integer): Integer;
 begin
   Result := IntPtr(List.Objects[Index1]) - IntPtr(List.Objects[Index2]);
 end;
 
-function TQDataSet.EnumValues(const AFields: QStringW; AList: TStrings;
-  AValueDelimiter: Char; AIgnoreNull: Boolean): Integer;
+function TQDataSet.EnumValues(const AFields: QStringW; AList: TStrings; AValueDelimiter: Char; AIgnoreNull: Boolean): Integer;
 var
   I, K: Integer;
   ADef: TFieldDef;
@@ -4102,8 +3919,7 @@ const
       begin
         Result := True;
         if (Length(S) > 0) and (AValueDelimiter <> #0) then
-          S := S + AValueDelimiter + ARec.Values[AFieldList[K]]
-            .CurrentValue^.AsString
+          S := S + AValueDelimiter + ARec.Values[AFieldList[K]].CurrentValue^.AsString
         else
           S := S + ARec.Values[AFieldList[K]].CurrentValue^.AsString;
       end;
@@ -4153,8 +3969,7 @@ begin
   Result := AList.Count;
 end;
 
-function TQDataSet.Exists(const AFilterExp: QStringW;
-  AFilterOptions: TFilterOptions): Boolean;
+function TQDataSet.Exists(const AFilterExp: QStringW; AFilterOptions: TFilterOptions): Boolean;
 var
   AExp: TQFilterExp;
   I: Integer;
@@ -4208,8 +4023,7 @@ begin
 
 end;
 
-procedure TQDataSet.FilterRecord(ARec: TQRecord; var Accept: Boolean;
-  AParser: TQFilterExp);
+procedure TQDataSet.FilterRecord(ARec: TQRecord; var Accept: Boolean; AParser: TQFilterExp);
 begin
   Accept := True;
   ARec := RealRecord(ARec);
@@ -4290,7 +4104,10 @@ var
     ARec: TQRecord;
     ATempState: TDataSetState;
   begin
-    AFilterSource := FSortedRecords;
+    if Length(Sort) > 0 then
+      AFilterSource := FSortedRecords
+    else
+      AFilterSource := FOriginRecords;
     ATempState := SetTempState(dsFilter);
     try
       ActiveRecordsChanged;
@@ -4313,8 +4130,8 @@ var
             ARec.FFilteredIndex := FFilteredRecords.Add(ARec);
         end;
       end;
-      if Length(Sort) > 0 then
-        DoSort(False);
+      if AFilterSource = FSortedRecords then
+        FSortedRecords.Assign(FFilteredRecords);
     finally
       RestoreState(ATempState);
     end;
@@ -4362,8 +4179,7 @@ begin
       begin
         repeat
           Inc(AIndex);
-          if (AIndex < RecordCount) and
-            FFilterExp.Accept(FActiveRecords[AIndex], FilterOptions) then
+          if (AIndex < RecordCount) and FFilterExp.Accept(FActiveRecords[AIndex], FilterOptions) then
           begin
             Result := True;
             RecNo := AIndex + 1;
@@ -4392,8 +4208,7 @@ begin
   end;
 end;
 
-procedure TQDataSet.FlatFieldValues(ARec: TQRecord;
-  const AFields: TQFieldDefArray; var ABytes: TBytes);
+procedure TQDataSet.FlatFieldValues(ARec: TQRecord; const AFields: TQFieldDefArray; var ABytes: TBytes);
 var
   I, ASize: Integer;
   ADef: TQFieldDef;
@@ -4431,14 +4246,12 @@ var
         end;
       vdtString:
         begin
-          Move(PQCharW(AValue.Value.AsString^)^, ABytes[ASize],
-            Length(AValue.Value.AsString^) shl 1);
+          Move(PQCharW(AValue.Value.AsString^)^, ABytes[ASize], Length(AValue.Value.AsString^) shl 1);
           Inc(ASize, Length(AValue.Value.AsString^) shl 1);
         end;
       vdtStream:
         begin
-          Move(TMemoryStream(AValue.Value.AsStream).Memory^, ABytes[ASize],
-            TMemoryStream(AValue.Value.AsStream).Size);
+          Move(TMemoryStream(AValue.Value.AsStream).Memory^, ABytes[ASize], TMemoryStream(AValue.Value.AsStream).Size);
           Inc(ASize, TMemoryStream(AValue.Value.AsStream).Size);
         end;
       vdtArray:
@@ -4545,8 +4358,7 @@ begin
     VarClear(Result);
 end;
 
-function TQDataSet.GetBlobFieldData(FieldNo: Integer;
-  var Buffer: TBlobByteData): Integer;
+function TQDataSet.GetBlobFieldData(FieldNo: Integer; var Buffer: TBlobByteData): Integer;
 var
   AValue: PQValue;
   ARec: TQRecord;
@@ -4576,12 +4388,11 @@ begin
   if RecordCount > 0 then
   begin
 {$IFDEF UNICODE}
-    SetLength(Result, BookmarkSize);
-    GetBookmarkData(TRecordBuffer(ActiveBuffer), @Result[0]);
-
+  SetLength(Result, BookmarkSize);
+  GetBookmarkData(TRecordBuffer(ActiveBuffer), @Result[0]);
 {$ELSE}
-    GetMem(Result, BookmarkSize);
-    GetBookmarkData(PChar(ActiveBuffer), Result);
+  GetMem(Result, BookmarkSize);
+  GetBookmarkData(PChar(ActiveBuffer), Result);
 {$ENDIF}
   end
   else
@@ -4592,8 +4403,13 @@ end;
 {$IFNDEF UNICODE}
 
 procedure TQDataSet.GetBookmarkData(Buffer: PChar; Data: Pointer);
+var
+  pBookmark: PPointer;
 begin
-  PPointer(Data)^ := TQRecord(Buffer).Bookmark;
+  pBookmark := PPointer(Data);
+  pBookmark^ := TQRecord(Buffer).Bookmark;
+  Inc(pBookmark);
+  pBookmark^ := Self;
 end;
 
 function TQDataSet.GetBookmarkFlag(Buffer: PChar): TBookmarkFlag;
@@ -4658,8 +4474,7 @@ begin
 end;
 {$IF RTLVersion>24}
 
-function TQDataSet.GetFieldData(Field: TField;
-  var Buffer: TValueBuffer): Boolean;
+function TQDataSet.GetFieldData(Field: TField; var Buffer: TValueBuffer): Boolean;
 begin
   Result := GetFieldData(Field, @Buffer[0]);
 end;
@@ -4697,8 +4512,7 @@ begin
 end;
 {$ENDIF}
 
-procedure TQDataSet.GetFieldValue(ARecord: PQRecord; AField: TField;
-  var AValue: TQValue);
+procedure TQDataSet.GetFieldValue(ARecord: PQRecord; AField: TField; var AValue: TQValue);
 var
   ASource: PQValue;
 begin
@@ -4740,8 +4554,7 @@ end;
 {$IFNDEF NEXTGEN}
 {$IF RTLVersion>19}
 
-function TQDataSet.GetRecord(Buffer: TRecordBuffer; GetMode: TGetMode;
-  DoCheck: Boolean): TGetResult;
+function TQDataSet.GetRecord(Buffer: TRecordBuffer; GetMode: TGetMode; DoCheck: Boolean): TGetResult;
 begin
   Result := GetRecord(TQRecord(Buffer), GetMode, DoCheck);
 end;
@@ -4749,8 +4562,7 @@ end;
 {$ENDIF}
 {$IF RTLVersion>24}
 
-function TQDataSet.GetRecord(Buffer: TRecBuf; GetMode: TGetMode;
-  DoCheck: Boolean): TGetResult;
+function TQDataSet.GetRecord(Buffer: TRecBuf; GetMode: TGetMode; DoCheck: Boolean): TGetResult;
 begin
   Result := GetRecord(TQRecord(Buffer), GetMode, DoCheck);
 end;
@@ -4784,8 +4596,7 @@ begin
     Result := -1;
 end;
 
-function TQDataSet.GetRecord(Buffer: TQRecord; GetMode: TGetMode;
-  DoCheck: Boolean): TGetResult;
+function TQDataSet.GetRecord(Buffer: TQRecord; GetMode: TGetMode; DoCheck: Boolean): TGetResult;
 var
   AOrigin: TQRecord;
   // ARecNo: Integer;
@@ -4834,10 +4645,11 @@ begin
     gmNext:
       begin
         Inc(FRecordNo);
+
         if FRecordNo >= RecordCount then
         begin
           Result := grEOF;
-          if (CurrentRecord = 0) or (FRecordNo > RecordCount) then
+          if CurrentRecord = 0 then
             Dec(FRecordNo);
         end
         else
@@ -4849,8 +4661,8 @@ begin
         if FRecordNo < 0 then
         begin
           Result := grBOF;
-          // if CurrentRecord < 0 then
-          Inc(FRecordNo);
+          if CurrentRecord < 0 then
+            Inc(FRecordNo);
         end
         else if FRecordNo < RecordCount then
         begin
@@ -4876,14 +4688,16 @@ begin
         end;
       end;
     grError:
-      if DoCheck then
-        DatabaseError(SNoRecord);
+      begin
+        TQRecord(Buffer.FBookmark) := nil;
+        if DoCheck then
+          DatabaseError(SNoRecord);
+      end;
   end;
 end;
 {$IFNDEF UNICODE}
 
-function TQDataSet.GetRecord(Buffer: PChar; GetMode: TGetMode; DoCheck: Boolean)
-  : TGetResult;
+function TQDataSet.GetRecord(Buffer: PChar; GetMode: TGetMode; DoCheck: Boolean): TGetResult;
 begin
   Result := GetRecord(TQRecord(Buffer), GetMode, DoCheck);
 end;
@@ -4925,8 +4739,7 @@ begin
   Result := SizeOf(TQRecord);
 end;
 
-procedure TQDataSet.GroupBy(ADataSet: TQDataSet;
-  AFields, AFilter, AOrderBy: QStringW);
+procedure TQDataSet.GroupBy(ADataSet: TQDataSet; AFields, AFilter, AOrderBy: QStringW);
 var
   ATemp: TQDataSet;
   ASourceFields, AHashFields: TQFieldDefArray;
@@ -4962,10 +4775,8 @@ var
           raise QException.CreateFmt(SFieldNotFound, [AFieldName]);
         if ContainsCharW(ANewName, '(') then // 是一个函数？
         begin
-          AFuncName := UpperCase(DecodeTokenW(ANewName, LeftBracket, NullChar,
-            True, True));
-          AFieldName := DecodeTokenW(ANewName, RightBracket, NullChar,
-            True, True);
+          AFuncName := UpperCase(DecodeTokenW(ANewName, LeftBracket, NullChar, True, True));
+          AFieldName := DecodeTokenW(ANewName, RightBracket, NullChar, True, True);
           Inc(ACalcFields);
           if AFieldName = '*' then
           begin
@@ -4975,11 +4786,9 @@ var
         end
         else
         begin
-          AFieldName := DecodeTokenW(ANewName, SpaceChars, NullChar,
-            True, True);
+          AFieldName := DecodeTokenW(ANewName, SpaceChars, NullChar, True, True);
           ASortFields := ASortFields + AFieldName + ',';
-          AHashFields[AHashFieldCount] := FieldDefs.Find(AFieldName)
-            as TQFieldDef;
+          AHashFields[AHashFieldCount] := FieldDefs.Find(AFieldName) as TQFieldDef;
           Inc(AHashFieldCount);
         end;
         if Length(ANewName) > 0 then
@@ -5094,13 +4903,11 @@ var
         if not AChanged then // 相同？
         begin
           // 先比较下内容长度
-          AChanged := Length(ASourceHash.FlatValues) <>
-            Length(ARecHash.FlatValues);
+          AChanged := Length(ASourceHash.FlatValues) <> Length(ARecHash.FlatValues);
           if (not AChanged) and (Length(ASourceHash.FlatValues) > 0) then
           begin
             // 再比较下实际的内容
-            AChanged := not CompareMem(@ASourceHash.FlatValues[0],
-              @ARecHash.FlatValues[0], Length(ASourceHash.FlatValues));
+            AChanged := not CompareMem(@ASourceHash.FlatValues[0], @ARecHash.FlatValues[0], Length(ASourceHash.FlatValues));
           end
         end;
       end;
@@ -5226,16 +5033,14 @@ begin
     ApplicationHandleException(ASender);
 end;
 
-procedure TQDataSet.HashOfRecord(ARec: TQRecord; const AFields: TQFieldDefArray;
-  var AResult: TQRecordHash);
+procedure TQDataSet.HashOfRecord(ARec: TQRecord; const AFields: TQFieldDefArray; var AResult: TQRecordHash);
 begin
   AResult.Rec := ARec;
   FlatFieldValues(ARec, AFields, AResult.FlatValues);
   FillChar(AResult.MD5, SizeOf(TQMD5Digest), 0);
   if Length(AResult.FlatValues) > 0 then
   begin
-    AResult.HashCode := HashOf(@AResult.FlatValues[0],
-      Length(AResult.FlatValues));
+    AResult.HashCode := HashOf(@AResult.FlatValues[0], Length(AResult.FlatValues));
     AResult.MD5Hashed := False;
   end
   else
@@ -5245,8 +5050,7 @@ begin
   end;
 end;
 
-procedure TQDataSet.HashRecords(ARecords: TQRecords;
-  const AFields: TQFieldDefArray; AHashs: TQHashTable);
+procedure TQDataSet.HashRecords(ARecords: TQRecords; const AFields: TQFieldDefArray; AHashs: TQHashTable);
 var
   I: Integer;
   AHash: PQRecordHash;
@@ -5260,8 +5064,7 @@ begin
   end;
 end;
 
-function TQDataSet.HashOfRecord(ARec: TQRecord; const AFields: TQFieldDefArray)
-  : TQHashType;
+function TQDataSet.HashOfRecord(ARec: TQRecord; const AFields: TQFieldDefArray): TQHashType;
 var
   ATemp: TBytes;
 begin
@@ -5475,8 +5278,7 @@ begin
   end;
 end;
 
-function TQDataSet.InternalFind(ASorted: TQRecords; AExp: PQSortExp;
-  ABuf: TQRecord; var AIndex: Integer): Boolean;
+function TQDataSet.InternalFind(ASorted: TQRecords; AExp: PQSortExp; ABuf: TQRecord; var AIndex: Integer): Boolean;
 var
   L, H, I, C: Integer;
 begin
@@ -5507,8 +5309,7 @@ begin
   FRecordNo := -1;
 end;
 
-function TQDataSet.InternalGetFieldData(ARecord: TQRecord; AField: TField;
-  ABuffer: Pointer; AIsOld: Boolean): Boolean;
+function TQDataSet.InternalGetFieldData(ARecord: TQRecord; AField: TField; ABuffer: Pointer; AIsOld: Boolean): Boolean;
 var
   AValue: PQValue;
   procedure AsAnsiString;
@@ -5534,18 +5335,15 @@ var
   end;
   procedure ToDate;
   begin
-    PDateTimeRec(ABuffer).Date := DateTimeToTimeStamp
-      (AValue.Value.AsDateTime).Date;
+    PDateTimeRec(ABuffer).Date := DateTimeToTimeStamp(AValue.Value.AsDateTime).Date;
   end;
   procedure ToTime;
   begin
-    PDateTimeRec(ABuffer).Time := DateTimeToTimeStamp
-      (AValue.Value.AsDateTime).Time;
+    PDateTimeRec(ABuffer).Time := DateTimeToTimeStamp(AValue.Value.AsDateTime).Time;
   end;
   procedure ToDateTime;
   begin
-    PDateTimeRec(ABuffer).DateTime :=
-      TimeStampToMSecs(DateTimeToTimeStamp(AValue.Value.AsDateTime));
+    PDateTimeRec(ABuffer).DateTime := TimeStampToMSecs(DateTimeToTimeStamp(AValue.Value.AsDateTime));
   end;
 
 begin
@@ -5568,8 +5366,7 @@ begin
           ftGuid:
             AsGuid;
           ftFixedWideChar, ftWideString:
-            Move(PQCharW(AValue.Value.AsString^)^, ABuffer^,
-              (Length(AValue.Value.AsString^) + 1) shl 1);
+            Move(PQCharW(AValue.Value.AsString^)^, ABuffer^, (Length(AValue.Value.AsString^) + 1) shl 1);
           ftSmallint, ftWord:
             PSmallint(ABuffer)^ := AValue.Value.AsInteger;
           ftInteger:
@@ -5599,21 +5396,18 @@ begin
           ftDateTime:
             ToDateTime;
           ftBytes, ftVarBytes:
-            Move(TMemoryStream(AValue.Value.AsStream).Memory^, ABuffer^,
-              TMemoryStream(AValue.Value.AsStream).Size);
+            Move(TMemoryStream(AValue.Value.AsStream).Memory^, ABuffer^, TMemoryStream(AValue.Value.AsStream).Size);
           ftBcd, ftFMTBcd:
             PBcd(ABuffer)^ := AValue.Value.AsBcd^;
           ftTimeStamp:
-            SqlTimSt.PSQLTimeStamp(ABuffer)^ :=
-              DateTimeToSQLTimeStamp(AValue.Value.AsDateTime);
+            SqlTimSt.PSQLTimeStamp(ABuffer)^ := DateTimeToSQLTimeStamp(AValue.Value.AsDateTime);
           ftBlob, ftGraphic, ftTypedBinary, ftMemo, ftFmtMemo, ftWideMemo:
             { 什么也不需要做，二进制数据的访问是通过CreateBlobStream来执行的 }
             ;
           ftOraInterval:
             PQInterval(ABuffer)^ := AValue.Value.AsInterval
         else
-          DatabaseError(Format(SUnsupportFieldType, [AField.DisplayName,
-            FieldTypeNames[AField.DataType]]));
+          DatabaseError(Format(SUnsupportFieldType, [AField.DisplayName, FieldTypeNames[AField.DataType]]));
         end;
       end;
     end
@@ -5717,8 +5511,7 @@ procedure TQDataSet.InternalOpen;
     for I := 0 to Fields.Count - 1 do
     begin
       AField := Fields[I];
-      FieldDefs.Add(AField.FieldName, AField.DataType, AField.Size,
-        AField.Required);
+      FieldDefs.Add(AField.FieldName, AField.DataType, AField.Size, AField.Required);
     end;
   end;
   procedure DoCustomCreate;
@@ -5857,8 +5650,7 @@ var
         ApplyRecordChanges(FEditingRow);
       if Assigned(FCloneSource) then
       begin
-        FCloneSource.FOriginRecords.Insert(FEditingRow.FOriginIndex,
-          FEditingRow);
+        FCloneSource.FOriginRecords.Insert(FEditingRow.FOriginIndex, FEditingRow);
         ACopy := AllocRecord;
         ACopy.FBookmark := FEditingRow;
         ACopy.FOriginIndex := FEditingRow.FOriginIndex;
@@ -5873,13 +5665,11 @@ var
         // 如果是新增的记录，则记录到变更里
         FEditingRow.FChangedIndex := ChangedRecords.Add(FEditingRow);
     end;
-
     if InternalAddToFiltered(FEditingRow) then
     begin
       InternalAddToSorted(FEditingRow);
       InternalSetToRecord(FEditingRow);
     end;
-
     if State = dsEdit then
       CloneNotify(FEditingRow, rcnModified)
     else
@@ -5918,6 +5708,16 @@ begin
   AEdited.FBookmark := nil;
   FEditingRow := nil;
 end;
+
+procedure TQDataSet.InternalRefresh;
+var
+  ARecNo: Integer;
+begin
+  inherited;
+  if Assigned(FProvider) and (Length(CommandText) > 0) then
+    FProvider.OpenDataSet(Self, CommandText);
+end;
+
 {$IF RTLVersion>24}
 
 procedure TQDataSet.InternalSetToRecord(Buffer: TRecBuf);
@@ -5926,8 +5726,7 @@ begin
 end;
 {$IFEND}
 
-procedure TQDataSet.InternalSetFieldData(ARecord: TQRecord; AField: TField;
-  ABuffer: Pointer; AIsOld: Boolean);
+procedure TQDataSet.InternalSetFieldData(ARecord: TQRecord; AField: TField; ABuffer: Pointer; AIsOld: Boolean);
 var
   AValue: PQValue;
   AFieldIdx: Integer;
@@ -5954,8 +5753,7 @@ var
   procedure AsDateTime;
   begin
     AValue.TypeNeeded(vdtDateTime);
-    AValue.Value.AsDateTime := TimeStampToDateTime
-      (MSecsToTimeStamp(PDateTimeRec(ABuffer).DateTime));
+    AValue.Value.AsDateTime := TimeStampToDateTime(MSecsToTimeStamp(PDateTimeRec(ABuffer).DateTime));
   end;
 
 begin
@@ -5986,8 +5784,7 @@ begin
         ftGuid:
           begin
             AValue.TypeNeeded(vdtGuid);
-            AValue.Value.AsGuid^ :=
-              StringToGUID(AnsiDecode(PQCharA(ABuffer), -1));
+            AValue.Value.AsGuid^ := StringToGUID(AnsiDecode(PQCharA(ABuffer), -1));
           end;
         ftFixedWideChar, ftWideString:
           begin
@@ -6069,14 +5866,12 @@ begin
           begin
             AValue.TypeNeeded(vdtStream);
             AValue.AsStream.Size := PQValue(ABuffer).AsStream.Size;
-            Move(PQValue(ABuffer).AsStream.Memory^, AValue.AsStream.Memory^,
-              AValue.AsStream.Size);
+            Move(PQValue(ABuffer).AsStream.Memory^, AValue.AsStream.Memory^, AValue.AsStream.Size);
           end;
         ftOraInterval:
           AValue.Value.AsInterval := PQInterval(ABuffer)^;
       else
-        DatabaseError(Format(SFieldCantSetData, [AField.DisplayName,
-          FieldTypeNames[AField.DataType]]));
+        DatabaseError(Format(SFieldCantSetData, [AField.DisplayName, FieldTypeNames[AField.DataType]]));
       end;
     end;
   end;
@@ -6127,8 +5922,7 @@ var
       R2.FChangedIndex := FChangedRecords.Add(R2);
   end;
 
-  function DoCompareInHashTable(const V1: TBytes; AFirst: PQHashList;
-    ATable: TQDiffCache): Boolean;
+  function DoCompareInHashTable(const V1: TBytes; AFirst: PQHashList; ATable: TQDiffCache): Boolean;
   var
     V2: TBytes;
   begin
@@ -6136,8 +5930,7 @@ var
     while AFirst <> nil do
     begin
       FlatFieldValues(AFirst.Data, ATable.Fields, V2);
-      if (Length(V1) = Length(V2)) and CompareMem(@V1[0], @V2[0], Length(V1))
-      then
+      if (Length(V1) = Length(V2)) and CompareMem(@V1[0], @V2[0], Length(V1)) then
       begin
         Result := True;
         Exit;
@@ -6194,8 +5987,7 @@ var
           begin
             R1 := ATemp.Data;
             FlatFieldValues(R1, ACache.Fields, V2);
-            if (Length(V1) = Length(V2)) and CompareMem(@V1[0], @V2[0],
-              Length(V1)) then
+            if (Length(V1) = Length(V2)) and CompareMem(@V1[0], @V2[0], Length(V1)) then
             begin
               ATemp := ACache.HashTable.FindNext(ATemp);
               ACache.HashTable.Delete(R1, AList1.Hash);
@@ -6244,8 +6036,7 @@ begin
   Result := True;
 end;
 
-procedure TQDataSet.LoadFromFile(const AFileName: QStringW;
-  AConverterClass: TQConverterClass);
+procedure TQDataSet.LoadFromFile(const AFileName: QStringW; AConverterClass: TQConverterClass);
 var
   AStream: TMemoryStream;
 begin
@@ -6258,8 +6049,7 @@ begin
   end;
 end;
 
-procedure TQDataSet.LoadFromFile(const AFileName: QStringW;
-  AConverter: TQConverter);
+procedure TQDataSet.LoadFromFile(const AFileName: QStringW; AConverter: TQConverter);
 var
   AStream: TFileStream;
 begin
@@ -6374,8 +6164,7 @@ begin
   end;
 end;
 
-procedure TQDataSet.LoadFromStream(AStream: TStream;
-  AConverterClass: TQConverterClass);
+procedure TQDataSet.LoadFromStream(AStream: TStream; AConverterClass: TQConverterClass);
 var
   AConverter: TQConverter;
 begin
@@ -6387,14 +6176,13 @@ begin
   end;
 end;
 
-function TQDataSet.Locate(const KeyFields: string; const KeyValues: Variant;
-  Options: TLocateOptions): Boolean;
+function TQDataSet.Locate(const KeyFields: string; const KeyValues: Variant; Options: TLocateOptions): Boolean;
 begin
   Result := LocateEx(KeyFields, KeyValues, Options, True, False);
 end;
 
-function TQDataSet.LocateEx(const KeyFields: QStringW; const KeyValues: Variant;
-  Options: TLocateOptions; ARestart, AGoBack: Boolean): Boolean;
+function TQDataSet.LocateEx(const KeyFields: QStringW; const KeyValues: Variant; Options: TLocateOptions;
+  ARestart, AGoBack: Boolean): Boolean;
 var
   AIndex, ADelta, ARange: Integer;
   ARec: TQRecord;
@@ -6443,8 +6231,7 @@ var
     SetLength(AFields, I);
     if I > 1 then
     begin
-      if not(VarIsArray(KeyValues) and (VarArrayHighBound(KeyValues, 1) <> I))
-      then
+      if not(VarIsArray(KeyValues) and (VarArrayHighBound(KeyValues, 1) <> I)) then
         DatabaseError(SBadLocateValues);
       SetLength(AValues, I);
       for I := 0 to High(AValues) do
@@ -6468,20 +6255,17 @@ var
       if loCaseInsensitive in Options then
       begin
         if loPartialKey in Options then
-          Result := StrIStrW(PQCharW(ARec.Values[AFields[I].FieldNo - 1]
-            .CurrentValue^.AsString), PQCharW(AValues[I])) <> nil
+          Result := StrIStrW(PQCharW(ARec.Values[AFields[I].FieldNo - 1].CurrentValue^.AsString), PQCharW(AValues[I])) <> nil
         else
-          Result := StrCmpW(PQCharW(ARec.Values[AFields[I].FieldNo - 1]
-            .CurrentValue^.AsString), PQCharW(AValues[I]), True) = 0;
+          Result := StrCmpW(PQCharW(ARec.Values[AFields[I].FieldNo - 1].CurrentValue^.AsString), PQCharW(AValues[I]), True) = 0;
       end
       else
       begin
         if loPartialKey in Options then
-          Result := StrStrW(PQCharW(ARec.Values[AFields[I].FieldNo - 1]
-            .CurrentValue^.AsString), PQCharW(AValues[I])) <> nil
+          Result := StrStrW(PQCharW(ARec.Values[AFields[I].FieldNo - 1].CurrentValue^.AsString), PQCharW(AValues[I])) <> nil
         else
-          Result := StrCmpW(PQCharW(ARec.Values[AFields[I].FieldNo - 1]
-            .CurrentValue^.AsString), PQCharW(AValues[I]), False) = 0;
+          Result := StrCmpW(PQCharW(ARec.Values[AFields[I].FieldNo - 1].CurrentValue^.AsString), PQCharW(AValues[I]),
+            False) = 0;
       end;
       if not Result then
         Break;
@@ -6504,14 +6288,12 @@ begin
   end;
 end;
 
-function TQDataSet.LocateFirst(const KeyFields: string;
-  const KeyValues: Variant; Options: TLocateOptions): Boolean;
+function TQDataSet.LocateFirst(const KeyFields: string; const KeyValues: Variant; Options: TLocateOptions): Boolean;
 begin
   Result := LocateEx(KeyFields, KeyValues, Options, True, False);
 end;
 
-function TQDataSet.LocateLast(const KeyFields: string; const KeyValues: Variant;
-  Options: TLocateOptions): Boolean;
+function TQDataSet.LocateLast(const KeyFields: string; const KeyValues: Variant; Options: TLocateOptions): Boolean;
 var
   ARecNo: Integer;
 begin
@@ -6528,14 +6310,12 @@ begin
   end;
 end;
 
-function TQDataSet.LocateNext(const KeyFields: string; const KeyValues: Variant;
-  Options: TLocateOptions): Boolean;
+function TQDataSet.LocateNext(const KeyFields: string; const KeyValues: Variant; Options: TLocateOptions): Boolean;
 begin
   Result := LocateEx(KeyFields, KeyValues, Options, False, False);
 end;
 
-function TQDataSet.LocatePrior(const KeyFields: string;
-  const KeyValues: Variant; Options: TLocateOptions): Boolean;
+function TQDataSet.LocatePrior(const KeyFields: string; const KeyValues: Variant; Options: TLocateOptions): Boolean;
 begin
   Result := LocateEx(KeyFields, KeyValues, Options, False, True);
 end;
@@ -6723,15 +6503,13 @@ begin
     else if AField is TStringField then
       AFilter := AFilter + '=' + QuotedStrW(AField.AsWideString, '''') + ' and '
     else if (AField is TDateTimeField) or (AField is TSQLTimeStampField) then
-      AFilter := AFilter + '=''' + FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',
-        AField.AsDateTime) + ''' and '
+      AFilter := AFilter + '=''' + FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', AField.AsDateTime) + ''' and '
     else if AField is TNumericField then
       AFilter := AFilter + '=' + AField.AsWideString + ''' and '
     else if AField is TBooleanField then
       AFilter := AFilter + '=' + BoolToStr(AField.AsBoolean, True) + ' and '
     else
-      raise QException.CreateFmt(SUnsupportFieldType,
-        [AField.Name, FieldTypeNames[AField.DataType]]);
+      raise QException.CreateFmt(SUnsupportFieldType, [AField.Name, FieldTypeNames[AField.DataType]]);
   end;
   if Length(AFilter) > 0 then
     SetLength(AFilter, Length(AFilter) - 5);
@@ -6768,8 +6546,7 @@ begin
     for I := 1 to FActiveRecords.Count - 1 do
     begin
       ARec := FActiveRecords[I];
-      if ADef.ValueComparor(@AVal, ARec.Values[ADef.FieldNo - 1].CurrentValue) < 0
-      then
+      if ADef.ValueComparor(@AVal, ARec.Values[ADef.FieldNo - 1].CurrentValue) < 0 then
         AVal.Copy(ARec.Values[ADef.FieldNo - 1].CurrentValue^, False);
     end;
     Result := AVal.AsVariant;
@@ -6778,8 +6555,7 @@ begin
     VarClear(Result);
 end;
 
-function TQDataSet.MD5OfRecord(ARec: TQRecord; const AFields: TQFieldDefArray)
-  : TQMD5Digest;
+function TQDataSet.MD5OfRecord(ARec: TQRecord; const AFields: TQFieldDefArray): TQMD5Digest;
 var
   ATemp: TBytes;
 begin
@@ -6790,8 +6566,7 @@ begin
     FillChar(Result, SizeOf(TQMD5Digest), 0);
 end;
 
-procedure TQDataSet.Merge(ASource: TQDataSet; AType: TQDataMergeMethod;
-  ACheckDeleted: Boolean);
+procedure TQDataSet.Merge(ASource: TQDataSet; AType: TQDataMergeMethod; ACheckDeleted: Boolean);
 var
   AFields: TQFieldDefArray;
   I, J, ASrcIdx, ADestIdx: Integer;
@@ -6813,10 +6588,8 @@ var
               if not ASrc.Values[ASrcIdx].OldValue.IsNull then
               begin
                 ADestIdx := FieldDefs[J].FieldNo - 1;
-                ARec.Values[ADestIdx].OldValue.TypeNeeded
-                  (AFields[J].FValueType);
-                ARec.Values[ADestIdx].OldValue.Copy
-                  (ASrc.Values[ASrcIdx].OldValue, False);
+                ARec.Values[ADestIdx].OldValue.TypeNeeded(AFields[J].FValueType);
+                ARec.Values[ADestIdx].OldValue.Copy(ASrc.Values[ASrcIdx].OldValue, False);
               end;
             end;
             Inc(J);
@@ -6835,18 +6608,13 @@ var
               ARec.Values[ADestIdx].Changed := ASrc.Values[ASrcIdx].Changed;
               if not ASrc.Values[ASrcIdx].OldValue.IsNull then
               begin
-                ARec.Values[ADestIdx].OldValue.TypeNeeded
-                  (AFields[J].FValueType);
-                ARec.Values[ADestIdx].OldValue.Copy
-                  (ASrc.Values[ASrcIdx].OldValue, False);
+                ARec.Values[ADestIdx].OldValue.TypeNeeded(AFields[J].FValueType);
+                ARec.Values[ADestIdx].OldValue.Copy(ASrc.Values[ASrcIdx].OldValue, False);
               end;
-              if (ASrc.Values[ASrcIdx].Changed) and
-                (not ASrc.Values[ASrcIdx].NewValue.IsNull) then
+              if (ASrc.Values[ASrcIdx].Changed) and (not ASrc.Values[ASrcIdx].NewValue.IsNull) then
               begin
-                ARec.Values[ADestIdx].NewValue.TypeNeeded
-                  (AFields[J].FValueType);
-                ARec.Values[ADestIdx].NewValue.Copy
-                  (ASrc.Values[ASrcIdx].NewValue, False);
+                ARec.Values[ADestIdx].NewValue.TypeNeeded(AFields[J].FValueType);
+                ARec.Values[ADestIdx].NewValue.Copy(ASrc.Values[ASrcIdx].NewValue, False);
               end;
             end;
             Inc(J);
@@ -6866,10 +6634,8 @@ var
               if not ASrc.Values[ASrcIdx].NewValue.IsNull then
               begin
                 ADestIdx := FieldDefs[J].FieldNo - 1;
-                ARec.Values[ADestIdx].NewValue.TypeNeeded
-                  (AFields[J].FValueType);
-                ARec.Values[ADestIdx].NewValue.Copy
-                  (ASrc.Values[ASrcIdx].NewValue, False);
+                ARec.Values[ADestIdx].NewValue.TypeNeeded(AFields[J].FValueType);
+                ARec.Values[ADestIdx].NewValue.Copy(ASrc.Values[ASrcIdx].NewValue, False);
                 ARec.Values[ADestIdx].Changed := True;
               end;
             end;
@@ -6939,8 +6705,7 @@ var
         begin
           repeat
             FlatFieldValues(AList.Data, ADestFields, AValues2);
-            if (Length(AValues1) = Length(AValues2)) and
-              CompareMem(@AValues1[0], @AValues2[0], Length(AValues1)) then
+            if (Length(AValues1) = Length(AValues2)) and CompareMem(@AValues1[0], @AValues2[0], Length(AValues1)) then
               Break
             else
               AList := AList.Next;
@@ -7053,8 +6818,7 @@ begin
     for I := 1 to FActiveRecords.Count - 1 do
     begin
       ARec := FActiveRecords[I];
-      if ADef.ValueComparor(@AVal, ARec.Values[ADef.FieldNo - 1].CurrentValue) > 0
-      then
+      if ADef.ValueComparor(@AVal, ARec.Values[ADef.FieldNo - 1].CurrentValue) > 0 then
         AVal.Copy(ARec.Values[ADef.FieldNo - 1].CurrentValue^, False);
     end;
     Result := AVal.AsVariant;
@@ -7063,8 +6827,7 @@ begin
     VarClear(Result);
 end;
 
-function TQDataSet.Merge(const ACmdText: QStringW; AType: TQDataMergeMethod;
-  AWaitDone: Boolean): Boolean;
+function TQDataSet.Merge(const ACmdText: QStringW; AType: TQDataMergeMethod; AWaitDone: Boolean): Boolean;
 begin
   // Todo:从Provider中取出数据集结果并合并到当前结果集中
   raise Exception.CreateFmt(SUnsupportFunction, ['Merge']);
@@ -7158,16 +6921,14 @@ begin
           if ANext.Field.FValueType = vdtString then
           begin
             ANext.IgnoreCase := True;
-            ANext.OnCompare := LookupCompareProc(vdtString, vdtString,
-              True, False);
+            ANext.OnCompare := LookupCompareProc(vdtString, vdtString, True, False);
           end;
         end
         else if StrCmpW(n, 'NDESC', True) = 0 then
         begin
           ANext.Desc := True;
           if ANext.Field.FValueType = vdtString then
-            ANext.OnCompare := LookupCompareProc(vdtString, vdtString,
-              False, True);
+            ANext.OnCompare := LookupCompareProc(vdtString, vdtString, False, True);
         end
         else if StrCmpW(n, 'NIDESC', True) = 0 then
         begin
@@ -7175,8 +6936,7 @@ begin
           if ANext.Field.FValueType = vdtString then
           begin
             ANext.IgnoreCase := True;
-            ANext.OnCompare := LookupCompareProc(vdtString, vdtString,
-              True, True);
+            ANext.OnCompare := LookupCompareProc(vdtString, vdtString, True, True);
           end;
         end
         else if StrCmpW(n, 'IASC', True) = 0 then
@@ -7185,16 +6945,14 @@ begin
           if ANext.Field.FValueType = vdtString then
           begin
             ANext.IgnoreCase := True;
-            ANext.OnCompare := LookupCompareProc(vdtString, vdtString,
-              True, False);
+            ANext.OnCompare := LookupCompareProc(vdtString, vdtString, True, False);
           end;
         end
         else if StrCmpW(n, 'NASC', True) = 0 then
         begin
           ANext.Desc := False;
           if ANext.Field.FValueType = vdtString then
-            ANext.OnCompare := LookupCompareProc(vdtString, vdtString,
-              False, True);
+            ANext.OnCompare := LookupCompareProc(vdtString, vdtString, False, True);
         end
         else if StrCmpW(n, 'NIASC', True) = 0 then
         begin
@@ -7202,8 +6960,7 @@ begin
           if ANext.Field.FValueType = vdtString then
           begin
             ANext.IgnoreCase := True;
-            ANext.OnCompare := LookupCompareProc(vdtString, vdtString,
-              True, True);
+            ANext.OnCompare := LookupCompareProc(vdtString, vdtString, True, True);
           end;
         end
         else if StrCmpW(n, 'ASC', True) <> 0 then
@@ -7220,8 +6977,7 @@ begin
   end;
 end;
 
-procedure TQDataSet.PrepareDiffCheck(ASource1, ASource2: TQDataSet;
-  AFields: QStringW; var AHash1, AHash2: TQDiffCache);
+procedure TQDataSet.PrepareDiffCheck(ASource1, ASource2: TQDataSet; AFields: QStringW; var AHash1, AHash2: TQDiffCache);
 var
   I, ACount: Integer;
   AToken, AFieldName: QStringW;
@@ -7229,8 +6985,7 @@ var
 const
   ListDelimiters: PQCharW = ',;';
   NameValueSpliter: PWideChar = '=';
-  procedure HashRecords(AList: TQRecords; const AFieldList: TQFieldDefArray;
-    AHash: TQHashTable);
+  procedure HashRecords(AList: TQRecords; const AFieldList: TQFieldDefArray; AHash: TQHashTable);
   var
     AValue: TQHashType;
   begin
@@ -7265,8 +7020,7 @@ begin
   while p^ <> #0 do
   begin
     AToken := DecodeTokenW(p, ListDelimiters, QCharW(#0), True);
-    AFieldName := DecodeTokenW(AToken, NameValueSpliter, QCharW('"'),
-      True, True);
+    AFieldName := DecodeTokenW(AToken, NameValueSpliter, QCharW('"'), True, True);
     if I > ACount then
     begin
       ACount := ACount shl 1;
@@ -7289,8 +7043,7 @@ begin
         DatabaseError(Format(SFieldNotFound, [AFieldName]), ASource2);
     end;
     if AHash1.Fields[I].FValueType <> AHash2.Fields[I].FValueType then
-      DatabaseError(Format(SFieldTypeMissmatch, [AHash1.Fields[I].Name,
-        AHash2.Fields[I].Name]));
+      DatabaseError(Format(SFieldTypeMissmatch, [AHash1.Fields[I].Name, AHash2.Fields[I].Name]));
     Inc(I);
   end;
   SetLength(AHash1.Fields, I);
@@ -7309,8 +7062,7 @@ begin
   end;
 end;
 
-procedure TQDataSet.QuickSort(ARecords: TQRecords; AExp: PQSortExp;
-  L, R: Integer; ACompareProc: TQRecordCompareProc);
+procedure TQDataSet.QuickSort(ARecords: TQRecords; AExp: PQSortExp; L, R: Integer; ACompareProc: TQRecordCompareProc);
 var
   I, J: Integer;
   pivot, temp: TQRecord;
@@ -7371,8 +7123,7 @@ begin
   Active := True;
 end;
 
-procedure TQDataSet.RemoveDupFromHash(AHashs: TQHashTable;
-  AOnFound: TQHashDupFoundEvent; AParam: Pointer);
+procedure TQDataSet.RemoveDupFromHash(AHashs: TQHashTable; AOnFound: TQHashDupFoundEvent; AParam: Pointer);
 var
   AList, ANext, ATemp: PQHashList;
   I: Integer;
@@ -7389,8 +7140,7 @@ begin
         AFirstHash := AList.Data;
         if not AFirstHash.MD5Hashed then
         begin
-          AFirstHash.MD5 := MD5Hash(@AFirstHash.FlatValues[0],
-            Length(AFirstHash.FlatValues));
+          AFirstHash.MD5 := MD5Hash(@AFirstHash.FlatValues[0], Length(AFirstHash.FlatValues));
           AFirstHash.MD5Hashed := True;
         end;
         while ANext <> nil do
@@ -7398,8 +7148,7 @@ begin
           ANextHash := ANext.Data;
           if not ANextHash.MD5Hashed then
           begin
-            ANextHash.MD5 := MD5Hash(@ANextHash.FlatValues[0],
-              Length(ANextHash.FlatValues));
+            ANextHash.MD5 := MD5Hash(@ANextHash.FlatValues[0], Length(ANextHash.FlatValues));
             ANextHash.MD5Hashed := True;
           end;
           if MD5Equal(ANextHash.MD5, AFirstHash.MD5) then
@@ -7419,8 +7168,7 @@ begin
   end;
 end;
 
-procedure TQDataSet.SaveToFile(const AFileName: QStringW;
-  AConverter: TQConverter);
+procedure TQDataSet.SaveToFile(const AFileName: QStringW; AConverter: TQConverter);
 var
   AStream: TMemoryStream;
 begin
@@ -7433,8 +7181,7 @@ begin
   end;
 end;
 
-procedure TQDataSet.SaveToFile(const AFileName: QStringW;
-  AConverterClass: TQConverterClass; AExports: TQExportRanges);
+procedure TQDataSet.SaveToFile(const AFileName: QStringW; AConverterClass: TQConverterClass; AExports: TQExportRanges);
 var
   AStream: TMemoryStream;
 begin
@@ -7447,8 +7194,7 @@ begin
   end;
 end;
 
-procedure TQDataSet.SaveToStream(AStream: TStream;
-  AConverterClass: TQConverterClass; AExports: TQExportRanges);
+procedure TQDataSet.SaveToStream(AStream: TStream; AConverterClass: TQConverterClass; AExports: TQExportRanges);
 var
   AConverter: TQConverter;
 begin
@@ -7498,8 +7244,7 @@ var
         end;
         Inc(I);
       end;
-      if (AList <> ADataSet.FChangedRecords) and (usDeleted in AcceptStatus)
-      then
+      if (AList <> ADataSet.FChangedRecords) and (usDeleted in AcceptStatus) then
       begin
         I := 0;
         while I < ADataSet.FChangedRecords.Count do
@@ -7508,8 +7253,7 @@ var
           if ARec.Status = usDeleted then
           begin
             AConverter.WriteRecord(ARec);
-            AConverter.DoProgress(csSaveData, I,
-              ADataSet.FChangedRecords.Count);
+            AConverter.DoProgress(csSaveData, I, ADataSet.FChangedRecords.Count);
           end;
           Inc(I);
         end;
@@ -7610,8 +7354,7 @@ end;
 {$IFNDEF NEXTGEN}
 {$IF RTLVersion>19}
 
-procedure TQDataSet.SetBookmarkFlag(Buffer: TRecordBuffer;
-  Value: TBookmarkFlag);
+procedure TQDataSet.SetBookmarkFlag(Buffer: TRecordBuffer; Value: TBookmarkFlag);
 begin
   if Assigned(TQRecord(Buffer).Bookmark) then
     TQRecord(TQRecord(Buffer).Bookmark).FBookmarkFlag := Value
@@ -7677,8 +7420,7 @@ end;
 {$IFEND}
 {$ENDIF !NEXTGEN}
 
-procedure TQDataSet.SetFieldValue(ARecord: PQRecord; AField: TField;
-  const AValue: TQValue);
+procedure TQDataSet.SetFieldValue(ARecord: PQRecord; AField: TField; const AValue: TQValue);
 begin
   ARecord.Values[AField.FieldNo].NewValue.Copy(AValue, True);
 end;
@@ -7755,8 +7497,7 @@ end;
 
 procedure TQDataSet.SetOnCustomSort(const Value: TQCustomSortEvent);
 begin
-  if (TMethod(FOnCustomSort).Data <> TMethod(Value).Data) or
-    (TMethod(FOnCustomSort).Code <> TMethod(Value).Code) then
+  if (TMethod(FOnCustomSort).Data <> TMethod(Value).Data) or (TMethod(FOnCustomSort).Code <> TMethod(Value).Code) then
   begin
     FOnCustomSort := Value;
     if Active then
@@ -7906,8 +7647,7 @@ begin
   end;
 end;
 
-function TQDataSet.SortCompare(AExp: PQSortExp; ARec1, ARec2: TQRecord)
-  : Integer;
+function TQDataSet.SortCompare(AExp: PQSortExp; ARec1, ARec2: TQRecord): Integer;
 var
   AVal1, AVal2: PQValue;
 begin
@@ -7972,8 +7712,7 @@ begin
     FChangedRecords.Clear;
     for I := 0 to FCloneSource.FChangedRecords.Count do
     begin
-      ARec := FOriginRecords[TQRecord(FCloneSource.FChangedRecords[I])
-        .FOriginIndex];
+      ARec := FOriginRecords[TQRecord(FCloneSource.FChangedRecords[I]).FOriginIndex];
       ARec.FChangedIndex := FChangedRecords.Add(ARec);
     end;
     FChangedRecords.FFirstDirtyIndex := FChangedRecords.Count;
@@ -7997,10 +7736,8 @@ end;
 
 { TQFilterExp }
 
-function TQFilterExp.Accept(ARecord: TQRecord;
-  AFilterOptions: TFilterOptions): Boolean;
-  function DoCompare(AFieldVal, ACompareVal: PQValue; ACompare: TQValueCompare;
-    ACompareOpr: TQFilterOperator): Boolean;
+function TQFilterExp.Accept(ARecord: TQRecord; AFilterOptions: TFilterOptions): Boolean;
+  function DoCompare(AFieldVal, ACompareVal: PQValue; ACompare: TQValueCompare; ACompareOpr: TQFilterOperator): Boolean;
   begin
     Result := False;
     case ACompareOpr of
@@ -8085,8 +7822,7 @@ function TQFilterExp.Accept(ARecord: TQRecord;
   begin
     S2 := AExp.Value.AsString;
     S1 := ValueString(AFieldVal, AExp.FDisplayFormat);
-    Result := StrLikeW(PQCharW(S1), PQCharW(S2),
-      (foCaseInsensitive in AFilterOptions));
+    Result := StrLikeW(PQCharW(S1), PQCharW(S2), (foCaseInsensitive in AFilterOptions));
   end;
   function IsIn(const AFieldVal: PQValue; AExp: TQFilterExp): Boolean;
   var
@@ -8095,8 +7831,7 @@ function TQFilterExp.Accept(ARecord: TQRecord;
     Result := False;
     for I := 0 to AExp.FValue.Value.Size - 1 do
     begin
-      Result := DoCompare(AFieldVal, AExp.FValue.Items[I],
-        AExp.FOnCompare, foEQ);
+      Result := DoCompare(AFieldVal, AExp.FValue.Items[I], AExp.FOnCompare, foEQ);
       if Result then
         Break;
     end;
@@ -8140,8 +7875,7 @@ function TQFilterExp.Accept(ARecord: TQRecord;
             begin
               AExp.FLocker.Enter;
               try
-                AExp.FRegex.Subject :=
-                  RegexStr(ValueString(AFieldVal, AExp.FDisplayFormat));
+                AExp.FRegex.Subject := RegexStr(ValueString(AFieldVal, AExp.FDisplayFormat));
                 Result := AExp.FRegex.Match;
               finally
                 AExp.FLocker.Leave;
@@ -8156,8 +7890,7 @@ function TQFilterExp.Accept(ARecord: TQRecord;
           foIsNotNull:
             Result := not AFieldVal.IsNull
         else
-          Result := DoCompare(AFieldVal, @AExp.Value, AExp.FOnCompare,
-            AExp.CompareOpr);
+          Result := DoCompare(AFieldVal, @AExp.Value, AExp.FOnCompare, AExp.CompareOpr);
         end;
       end
       else
@@ -8218,8 +7951,7 @@ begin
   Result := FItems[AIndex];
 end;
 
-procedure TQFilterExp.Parse(const S: QStringW;
-  AIgnoreCase, ANaturalCompare: Boolean);
+procedure TQFilterExp.Parse(const S: QStringW; AIgnoreCase, ANaturalCompare: Boolean);
 var
   p: PQCharW;
   AExp: TQFilterExp;
@@ -8304,8 +8036,7 @@ var
           AExp.FField := FDataSet.FieldDefs.Find(AToken) as TQFieldDef;
           if not Assigned(AExp.FField) then
             DatabaseError(Format(SFieldCantFilter, [AToken]));
-          AExp.FOnCompare := qvalue.LookupCompareProc(AExp.Field.ValueType,
-            AExp.Field.ValueType, AIgnoreCase, ANaturalCompare);
+          AExp.FOnCompare := qvalue.LookupCompareProc(AExp.Field.ValueType, AExp.Field.ValueType, AIgnoreCase, ANaturalCompare);
           while p > S do
           begin
             Dec(p);
@@ -8441,8 +8172,7 @@ var
             end;
           end
           else
-            DatabaseError(Format(SUnknownFilterOperator,
-              [DecodeTokenW(p, ValueDelimiters, QCharW(#0), True)]));
+            DatabaseError(Format(SUnknownFilterOperator, [DecodeTokenW(p, ValueDelimiters, QCharW(#0), True)]));
           // 解析值
           SkipSpaceW(p);
           if AExp.CompareOpr in [foIn, foNotIn] then // In 操作
@@ -8477,12 +8207,10 @@ var
                 if (S^ = '"') or (S^ = '''') then
                 begin
                   AQuoter := S^;
-                  AToken := DequotedStrW(DecodeTokenW(S, ValueListDelimiters,
-                    S^, True), AQuoter)
+                  AToken := DequotedStrW(DecodeTokenW(S, ValueListDelimiters, S^, True), AQuoter)
                 end
                 else
-                  AToken := DecodeTokenW(S, ValueListDelimiters,
-                    QCharW(#0), True);
+                  AToken := DecodeTokenW(S, ValueListDelimiters, QCharW(#0), True);
                 AExp.FValue.Items[I].TypeNeeded(AExp.Field.FValueType);
                 AExp.FValue.Items[I].AsString := AToken;
                 Inc(I);
@@ -8500,14 +8228,12 @@ var
             if (p^ = '''') or (p^ = '"') then
             begin
               AQuoter := p^;
-              AToken := DequotedStrW(DecodeTokenW(p, ValueDelimiters, p^, True,
-                False), AQuoter);
+              AToken := DequotedStrW(DecodeTokenW(p, ValueDelimiters, p^, True, False), AQuoter);
             end
             else
             begin
               AQuoter := #0;
-              AToken := DecodeTokenW(p, ValueDelimiters, QCharW(#0),
-                True, False);
+              AToken := DecodeTokenW(p, ValueDelimiters, QCharW(#0), True, False);
               if AExp.FCompareOpr in [foEQ, foNotEQ] then
               begin
                 if StrCmpW(PQCharW(AToken), 'null', True) = 0 then
@@ -8536,16 +8262,14 @@ var
                   on E: Exception do
                   begin
                     FreeAndNil(AExp.FRegex);
-                    DatabaseError(Format(SRegexBadExpression,
-                      [AToken, E.Message]));
+                    DatabaseError(Format(SRegexBadExpression, [AToken, E.Message]));
                   end;
                 end;
               end;
             end
             else
             begin
-              if (AQuoter = #0) and (StrCmpW(PQCharW(AToken), 'null', True) = 0)
-              then // =null?
+              if (AQuoter = #0) and (StrCmpW(PQCharW(AToken), 'null', True) = 0) then // =null?
               begin
                 if AExp.FCompareOpr = foEQ then
                   AExp.FCompareOpr := foIsNull
@@ -8564,10 +8288,8 @@ var
           if foCaseInsensitive in FDataSet.FilterOptions then
           begin
             if (AExp.FValue.ValueType = vdtString) or
-              (AExp.CompareOpr in [foLike, foNotLike, foStartWith, foEndWith,
-              foContains, foIn, foNotIn]) then
-              AExp.FOnCompare := LookupCompareProc(AExp.Field.FValueType,
-                vdtString, True, FDataSet.NaturalFilter);
+              (AExp.CompareOpr in [foLike, foNotLike, foStartWith, foEndWith, foContains, foIn, foNotIn]) then
+              AExp.FOnCompare := LookupCompareProc(AExp.Field.FValueType, vdtString, True, FDataSet.NaturalFilter);
           end;
         end;
       end;
@@ -8671,8 +8393,7 @@ begin
   if FActiveRequest.Command.Action = caFetchRecords then
   begin
     ADataSet := TQDataSet(FActiveRequest.Command.DataObject);
-    if (Length(ADataSet.FRecordsets) = 0) and (ADataSet.FieldDefs.Count > 0)
-    then
+    if (Length(ADataSet.FRecordsets) = 0) and (ADataSet.FieldDefs.Count > 0) then
     begin
       // 返回了多个结果集，所以需要将当前的结果集的内容移动为第一个
       SetLength(ADataSet.FRecordsets, 2);
@@ -8708,8 +8429,7 @@ begin
   end;
 end;
 
-procedure TQProvider.AddResultField(const AFieldName: QStringW;
-  ACol: TQSColumn);
+procedure TQProvider.AddResultField(const AFieldName: QStringW; ACol: TQSColumn);
 var
   ADef: TQFieldDef;
   ASchema: TQSchema;
@@ -8813,8 +8533,7 @@ begin
   end;
 end;
 
-procedure TQProvider.ApplyChanges(AFileName: QStringW;
-  AFormat: TQConverterClass);
+procedure TQProvider.ApplyChanges(AFileName: QStringW; AFormat: TQConverterClass);
 var
   AStream: TMemoryStream;
 begin
@@ -8833,8 +8552,7 @@ begin
 
 end;
 
-function TQProvider.BeginTrans(ALevel: TQDBIsolationLevel;
-  ASavePointName: QStringW): Boolean;
+function TQProvider.BeginTrans(ALevel: TQDBIsolationLevel; ASavePointName: QStringW): Boolean;
 begin
   Result := True;
   Inc(FTransactionLevel);
@@ -8875,13 +8593,11 @@ var
 begin
   ASchema := ParseNameToken(ATableName);
   if Length(ASchema) > 0 then
-    ACmdText := 'select * from information_schema.columns where table_schema=' +
-      QuotedStrW(ASchema, '''') + ' and table_name=' + QuotedStrW(ATableName,
-      '''') + ' and column_name=' + QuotedStrW(AColName, '''') + ';'
+    ACmdText := 'select * from information_schema.columns where table_schema=' + QuotedStrW(ASchema, '''') + ' and table_name='
+      + QuotedStrW(ATableName, '''') + ' and column_name=' + QuotedStrW(AColName, '''') + ';'
   else
-    ACmdText := 'select * from information_schema.columns where table_name=' +
-      QuotedStrW(ATableName, '''') + ' and column_name=' +
-      QuotedStrW(AColName, '''') + ';';
+    ACmdText := 'select * from information_schema.columns where table_name=' + QuotedStrW(ATableName, '''') +
+      ' and column_name=' + QuotedStrW(AColName, '''') + ';';
   Result := RecordExists(ACmdText);
 end;
 
@@ -9114,15 +8830,13 @@ begin
   end;
 end;
 
-function TQProvider.ExecuteCmd(ACmdText: QStringW;
-  const AParams: array of const): Integer;
+function TQProvider.ExecuteCmd(ACmdText: QStringW; const AParams: array of const): Integer;
 begin
   ACmdText := Format(ACmdText, AParams);
   Result := ExecuteCmd(ACmdText);
 end;
 
-function TQProvider.ExecuteCmd(var APrepared: TQCommand;
-  const AParams: array of const): Integer;
+function TQProvider.ExecuteCmd(var APrepared: TQCommand; const AParams: array of const): Integer;
 var
   ARequest: TQSQLRequest;
 begin
@@ -9182,8 +8896,7 @@ begin
   begin
     if FPeekJobHandle <> 0 then
       Workers.ClearSingleJob(FPeekJobHandle);
-    FPeekJobHandle := Workers.Delay(DoLivePeek, FPeekInterval * Q1Second,
-      nil, True);
+    FPeekJobHandle := Workers.Delay(DoLivePeek, FPeekInterval * Q1Second, nil, True);
   end
   else if FPeekJobHandle <> 0 then
   begin
@@ -9213,13 +8926,11 @@ var
 begin
   ASchema := ParseNameToken(AName);
   if Length(ASchema) > 0 then
-    ACmdText :=
-      'select * from information_schema.routines where routine_schema=' +
-      QuotedStrW(ASchema, '''') + ' and routine_name=' + QuotedStrW(AName, '''')
-      + ' and routine_type=''FUNCTION'';'
+    ACmdText := 'select * from information_schema.routines where routine_schema=' + QuotedStrW(ASchema, '''') +
+      ' and routine_name=' + QuotedStrW(AName, '''') + ' and routine_type=''FUNCTION'';'
   else
-    ACmdText := 'select * from information_schema.routines where routine_name='
-      + QuotedStrW(AName, '''') + ' and routine_type=''FUNCTION'';';
+    ACmdText := 'select * from information_schema.routines where routine_name=' + QuotedStrW(AName, '''') +
+      ' and routine_type=''FUNCTION'';';
   Result := RecordExists(ACmdText);
 end;
 
@@ -9259,8 +8970,7 @@ begin
   Result := FParams.Values['user'];
 end;
 
-procedure TQProvider.InitializeRequest(var ARequest: TQSQLRequest;
-  const ASQL: QStringW; ACreateParams: Boolean);
+procedure TQProvider.InitializeRequest(var ARequest: TQSQLRequest; const ASQL: QStringW; ACreateParams: Boolean);
 begin
 
 end;
@@ -9270,14 +8980,12 @@ begin
 
 end;
 
-procedure TQProvider.InternalApplyChanges(Fields: TFieldDefs;
-  ARecords: TQRecords);
+procedure TQProvider.InternalApplyChanges(Fields: TFieldDefs; ARecords: TQRecords);
 begin
 
 end;
 
-procedure TQProvider.InternalSetParams(ADest: TParams;
-  const ASource: array of const);
+procedure TQProvider.InternalSetParams(ADest: TParams; const ASource: array of const);
 begin
 
 end;
@@ -9299,8 +9007,7 @@ begin
     Open;
 end;
 
-procedure TQProvider.Notification(AComponent: TComponent;
-  Operation: TOperation);
+procedure TQProvider.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited;
   if AComponent is TQDataSet then
@@ -9341,14 +9048,13 @@ begin
     Result := True;
 end;
 
-function TQProvider.OpenDataSet(ADataSet: TQDataSet; ASQL: TQCommand;
-  AParams: array of const; AfterOpen: TQAfterExecuteEvent): Boolean;
+function TQProvider.OpenDataSet(ADataSet: TQDataSet; ASQL: TQCommand; AParams: array of const;
+  AfterOpen: TQAfterExecuteEvent): Boolean;
 var
   ARequest: TQSQLRequest;
 begin
   if Length(AParams) <> Length(ASQL.Params) then
-    DatabaseError(Format(SParamNumberMismatch, [Length(AParams),
-      Length(ASQL.Params)]));
+    DatabaseError(Format(SParamNumberMismatch, [Length(AParams), Length(ASQL.Params)]));
   ARequest.Command.Action := caFetchRecords;
   ARequest.Command.Id := ASQL.Id;
   ARequest.Command.SQL := ASQL.SQL;
@@ -9373,8 +9079,7 @@ begin
     Result := True;
 end;
 
-function TQProvider.OpenDataSet(ADataSet: TQDataSet; ACmdText: QStringW;
-  AfterOpen: TQAfterExecuteEvent): Boolean;
+function TQProvider.OpenDataSet(ADataSet: TQDataSet; ACmdText: QStringW; AfterOpen: TQAfterExecuteEvent): Boolean;
 var
   ARequest: TQSQLRequest;
 begin
@@ -9411,20 +9116,18 @@ begin
   end;
 end;
 
-function TQProvider.OpenDataSet(ACmdText: QStringW; AParams: array of const)
-  : TQDataSet;
+function TQProvider.OpenDataSet(ACmdText: QStringW; AParams: array of const): TQDataSet;
 begin
   Result := OpenDataSet(Format(ACmdText, AParams));
 end;
 
-function TQProvider.OpenDataSet(ADataSet: TQDataSet; ACmdText: QStringW;
-  AParams: array of const; AfterOpen: TQAfterExecuteEvent): Boolean;
+function TQProvider.OpenDataSet(ADataSet: TQDataSet; ACmdText: QStringW; AParams: array of const;
+  AfterOpen: TQAfterExecuteEvent): Boolean;
 begin
   Result := OpenDataSet(ADataSet, Format(ACmdText, AParams), AfterOpen);
 end;
 
-function TQProvider.OpenStream(ACmdText: QStringW;
-  AStreamFormat: TQConverterClass; AParams: array of const): TMemoryStream;
+function TQProvider.OpenStream(ACmdText: QStringW; AStreamFormat: TQConverterClass; AParams: array of const): TMemoryStream;
 var
   AConverter: TQConverter;
 begin
@@ -9441,8 +9144,8 @@ begin
   end;
 end;
 
-function TQProvider.OpenStream(AStream: TStream; ACmdText: QStringW;
-  AStreamFormat: TQConverterClass; AParams: array of const): Boolean;
+function TQProvider.OpenStream(AStream: TStream; ACmdText: QStringW; AStreamFormat: TQConverterClass;
+  AParams: array of const): Boolean;
 var
   AConverter: TQConverter;
 begin
@@ -9454,8 +9157,7 @@ begin
   end;
 end;
 
-function TQProvider.OpenStream(AStream: TStream; ACmdText: QStringW;
-  AStreamFormat: TQConverter): Boolean;
+function TQProvider.OpenStream(AStream: TStream; ACmdText: QStringW; AStreamFormat: TQConverter): Boolean;
 var
   ARequest: TQSQLRequest;
 begin
@@ -9481,8 +9183,7 @@ begin
     Result := True;
 end;
 
-function TQProvider.OpenStream(ACmdText: QStringW; AStreamFormat: TQConverter)
-  : TMemoryStream;
+function TQProvider.OpenStream(ACmdText: QStringW; AStreamFormat: TQConverter): TMemoryStream;
 begin
   Result := TMemoryStream.Create;
   if not OpenStream(Result, ACmdText, AStreamFormat) then
@@ -9492,8 +9193,7 @@ begin
   end;
 end;
 
-function TQProvider.OpenStream(AStream: TStream; ACmdText: QStringW;
-  AStreamFormat: TQConverterClass): Boolean;
+function TQProvider.OpenStream(AStream: TStream; ACmdText: QStringW; AStreamFormat: TQConverterClass): Boolean;
 var
   AConverter: TQConverter;
 begin
@@ -9505,8 +9205,7 @@ begin
   end;
 end;
 
-function TQProvider.OpenStream(ACmdText: QStringW;
-  AStreamFormat: TQConverterClass): TMemoryStream;
+function TQProvider.OpenStream(ACmdText: QStringW; AStreamFormat: TQConverterClass): TMemoryStream;
 var
   AConverter: TQConverter;
 begin
@@ -9524,8 +9223,7 @@ begin
   end;
 end;
 
-function TQProvider.OpenStream(ASQL: TQCommand; AStreamFormat: TQConverterClass)
-  : TMemoryStream;
+function TQProvider.OpenStream(ASQL: TQCommand; AStreamFormat: TQConverterClass): TMemoryStream;
 var
   AConverter: TQConverter;
 begin
@@ -9537,8 +9235,7 @@ begin
   end;
 end;
 
-function TQProvider.OpenStream(AStream: TStream; ASQL: TQCommand;
-  AStreamFormat: TQConverterClass): Boolean;
+function TQProvider.OpenStream(AStream: TStream; ASQL: TQCommand; AStreamFormat: TQConverterClass): Boolean;
 var
   AConverter: TQConverter;
 begin
@@ -9550,8 +9247,7 @@ begin
   end;
 end;
 
-function TQProvider.OpenStream(AStream: TStream; ASQL: TQCommand;
-  AStreamFormat: TQConverter): Boolean;
+function TQProvider.OpenStream(AStream: TStream; ASQL: TQCommand; AStreamFormat: TQConverter): Boolean;
 var
   ARequest: TQSQLRequest;
 begin
@@ -9572,20 +9268,18 @@ begin
     Result := True;
 end;
 
-function TQProvider.OpenStream(ACmdText: QStringW; AStreamFormat: TQConverter;
-  AParams: array of const): TMemoryStream;
+function TQProvider.OpenStream(ACmdText: QStringW; AStreamFormat: TQConverter; AParams: array of const): TMemoryStream;
 begin
   Result := OpenStream(Format(ACmdText, AParams), AStreamFormat);
 end;
 
-function TQProvider.OpenStream(AStream: TStream; ACmdText: QStringW;
-  AStreamFormat: TQConverter; AParams: array of const): Boolean;
+function TQProvider.OpenStream(AStream: TStream; ACmdText: QStringW; AStreamFormat: TQConverter;
+  AParams: array of const): Boolean;
 begin
   Result := OpenStream(AStream, Format(ACmdText, AParams), AStreamFormat);
 end;
 
-function TQProvider.OpenStream(ASQL: TQCommand; AStreamFormat: TQConverter)
-  : TMemoryStream;
+function TQProvider.OpenStream(ASQL: TQCommand; AStreamFormat: TQConverter): TMemoryStream;
 var
   AConverter: TQConverter;
 begin
@@ -9597,8 +9291,7 @@ begin
   end;
 end;
 
-procedure TQProvider.ParamValues(var ACommand: TQCommand;
-  const AParams: array of const);
+procedure TQProvider.ParamValues(var ACommand: TQCommand; const AParams: array of const);
 var
   I: Integer;
   function ToVaraint(AVar: TVarRec): Variant;
@@ -9651,8 +9344,7 @@ var
 
 begin
   if Length(ACommand.Params) <> Length(AParams) then
-    DatabaseError(Format(SParamNumberMismatch, [Length(AParams),
-      Length(ACommand.Params)]));
+    DatabaseError(Format(SParamNumberMismatch, [Length(AParams), Length(ACommand.Params)]));
   for I := Low(ACommand.Params) to High(ACommand.Params) do
   begin
     case ACommand.Params[I].ValueType of
@@ -9671,8 +9363,7 @@ begin
       vdtBcd:
         ACommand.Params[I].AsBcd := VarToBcd(ToVaraint(AParams[I]));
       vdtGuid:
-        ACommand.Params[I].AsGuid := sysutils.StringToGUID
-          (ToVaraint(AParams[I]));
+        ACommand.Params[I].AsGuid := sysutils.StringToGUID(ToVaraint(AParams[I]));
       vdtDateTime:
         ACommand.Params[I].AsDateTime := ToVaraint(AParams[I]);
       vdtInterval:
@@ -9732,8 +9423,7 @@ begin
   Result := pe;
 end;
 
-function TQProvider.Prepare(var AResult: TQCommand;
-  ACmdText, AId: QStringW): Boolean;
+function TQProvider.Prepare(var AResult: TQCommand; ACmdText, AId: QStringW): Boolean;
 var
   ARequest: TQSQLRequest;
 begin
@@ -9758,8 +9448,7 @@ begin
   end;
 end;
 
-function TQProvider.PrepareChangeRequest(var ARequest: TQSQLRequest;
-  AUpdatStatus: TUpdateStatus): Boolean;
+function TQProvider.PrepareChangeRequest(var ARequest: TQSQLRequest; AUpdatStatus: TUpdateStatus): Boolean;
 begin
   Result := False;
 end;
@@ -9771,13 +9460,11 @@ var
 begin
   ASchema := ParseNameToken(AName);
   if Length(ASchema) > 0 then
-    ACmdText :=
-      'select * from information_schema.routines where routine_schema=' +
-      QuotedStrW(ASchema, '''') + ' and routine_name=' + QuotedStrW(AName, '''')
-      + ' and routine_type=''PROCEDURE'';'
+    ACmdText := 'select * from information_schema.routines where routine_schema=' + QuotedStrW(ASchema, '''') +
+      ' and routine_name=' + QuotedStrW(AName, '''') + ' and routine_type=''PROCEDURE'';'
   else
-    ACmdText := 'select * from information_schema.routines where routine_name='
-      + QuotedStrW(AName, '''') + ' and routine_type=''PROCEDURE'';';
+    ACmdText := 'select * from information_schema.routines where routine_name=' + QuotedStrW(AName, '''') +
+      ' and routine_type=''PROCEDURE'';';
   Result := RecordExists(ACmdText);
 
 end;
@@ -9913,12 +9600,11 @@ var
 begin
   ASchema := ParseNameToken(ATableName);
   if Length(ASchema) > 0 then
-    ACmdText := 'select * from information_schema.tables where table_schema=' +
-      QuotedStrW(ASchema, '''') + ' and table_name=' + QuotedStrW(ATableName,
-      '''') + ' and table_type=''BASE TABLE'''
+    ACmdText := 'select * from information_schema.tables where table_schema=' + QuotedStrW(ASchema, '''') + ' and table_name=' +
+      QuotedStrW(ATableName, '''') + ' and table_type=''BASE TABLE'''
   else
-    ACmdText := 'select * from information_schema.tables where table_name=' +
-      QuotedStrW(ATableName, '''') + ' and table_type=''BASE TABLE''';
+    ACmdText := 'select * from information_schema.tables where table_name=' + QuotedStrW(ATableName, '''') +
+      ' and table_type=''BASE TABLE''';
   Result := RecordExists(ACmdText);
 end;
 
@@ -9929,13 +9615,10 @@ var
 begin
   ASchema := ParseNameToken(AName);
   if Length(ASchema) > 0 then
-    ACmdText :=
-      'select * from information_schema.triggers where trigger_schema=' +
-      QuotedStrW(ASchema, '''') + ' and trigger_name=' +
-      QuotedStrW(AName, '''') + ';'
+    ACmdText := 'select * from information_schema.triggers where trigger_schema=' + QuotedStrW(ASchema, '''') +
+      ' and trigger_name=' + QuotedStrW(AName, '''') + ';'
   else
-    ACmdText := 'select * from information_schema.triggers where trigger_name='
-      + QuotedStrW(AName, '''') + ';';
+    ACmdText := 'select * from information_schema.triggers where trigger_name=' + QuotedStrW(AName, '''') + ';';
   Result := RecordExists(ACmdText);
 end;
 
@@ -9966,12 +9649,10 @@ var
 begin
   ASchema := ParseNameToken(AName);
   if Length(ASchema) > 0 then
-    ACmdText := 'select * from information_schema.views where table_schema=' +
-      QuotedStrW(ASchema, '''') + ' and table_name=' +
+    ACmdText := 'select * from information_schema.views where table_schema=' + QuotedStrW(ASchema, '''') + ' and table_name=' +
       QuotedStrW(AName, '''') + ';'
   else
-    ACmdText := 'select * from information_schema.views where table_name=' +
-      QuotedStrW(AName, '''') + ';';
+    ACmdText := 'select * from information_schema.views where table_name=' + QuotedStrW(AName, '''') + ';';
   Result := RecordExists(ACmdText);
 end;
 
@@ -10016,16 +9697,14 @@ begin
       if not FOriginValue.IsNull then
       begin
         if FOriginValue.ValueType = vdtStream then
-          TMemoryStream(FData.Value.AsStream)
-            .CopyFrom(FOriginValue.Value.AsStream, 0)
+          TMemoryStream(FData.Value.AsStream).CopyFrom(FOriginValue.Value.AsStream, 0)
         else if FOriginValue.ValueType = vdtString then
         begin
           if FField.DataType in [ftFixedChar, ftString, ftMemo] then
             // Ansi编码
             AnsiStringToStream
           else
-            TMemoryStream(FData.Value.AsStream).
-              Write(PQCharW(FOriginValue.Value.AsString^)^,
+            TMemoryStream(FData.Value.AsStream).Write(PQCharW(FOriginValue.Value.AsString^)^,
               Length(FOriginValue.Value.AsString^) shl 1)
         end
         else
@@ -10050,8 +9729,7 @@ begin
     else if FData.AsStream.Size <> FOriginValue.AsStream.Size then
       AModified := True
     else
-      AModified := not CompareMem(FData.AsStream.Memory,
-        FOriginValue.AsStream.Memory, FData.AsStream.Size);
+      AModified := not CompareMem(FData.AsStream.Memory, FOriginValue.AsStream.Memory, FData.AsStream.Size);
     if AModified then
     begin
       try
@@ -10075,18 +9753,15 @@ begin
         else
         begin
           AValues.NewValue.TypeNeeded(vdtStream);
-          TQValueStream(AValues.NewValue.Value.AsStream).Size :=
-            TMemoryStream(FData.Value.AsStream).Size;
-          Move(TQValueStream(FData.Value.AsStream).Memory^,
-            TQValueStream(AValues.NewValue.Value.AsStream).Memory^,
+          TQValueStream(AValues.NewValue.Value.AsStream).Size := TMemoryStream(FData.Value.AsStream).Size;
+          Move(TQValueStream(FData.Value.AsStream).Memory^, TQValueStream(AValues.NewValue.Value.AsStream).Memory^,
             TQValueStream(FData.Value.AsStream).Size);
           TQValueStream(AValues.NewValue.Value.AsStream).Position := 0;
         end;
         FField.Modified := True;
         ADataSet.DataEvent(deFieldChange, Longint(FField));
       except
-        RunInMainThread(TQDataSet(FField.DataSet)
-          .HandleExceptionInMainThread, Self);
+        RunInMainThread(TQDataSet(FField.DataSet).HandleExceptionInMainThread, Self);
       end;
     end;
   end;
@@ -10358,8 +10033,7 @@ begin
 end;
 {$ENDIF}
 
-procedure TQFieldDefs.Notify(Item: TCollectionItem;
-  Action: classes.TCollectionNotification);
+procedure TQFieldDefs.Notify(Item: TCollectionItem; Action: classes.TCollectionNotification);
 var
   ADataSet: TQDataSet;
   AList: TQRecords;
@@ -10381,8 +10055,7 @@ begin
         ARec.Values[Item.Index].OldValue.Reset;
         ARec.Values[Item.Index].NewValue.Reset;
         if AMoveNeeded > 0 then
-          Move(ARec.FValues[Item.Index + 1], ARec.FValues[Item.Index],
-            AMoveNeeded * SizeOf(TQColumnValue));
+          Move(ARec.FValues[Item.Index + 1], ARec.FValues[Item.Index], AMoveNeeded * SizeOf(TQColumnValue));
         SetLength(ARec.FValues, ACount);
       end;
     end
@@ -10393,8 +10066,7 @@ begin
         ARec := AList[I];
         SetLength(ARec.FValues, Count);
         if AMoveNeeded > 0 then
-          Move(ARec.FValues[Item.Index], ARec.FValues[Item.Index + 1],
-            AMoveNeeded * SizeOf(TQColumnValue));
+          Move(ARec.FValues[Item.Index], ARec.FValues[Item.Index + 1], AMoveNeeded * SizeOf(TQColumnValue));
       end;
     end;
   end;
@@ -10505,8 +10177,7 @@ end;
 constructor TQConverter.Create(AOwner: TComponent);
 begin
   inherited;
-  FExportRanges := [merMeta, merUnmodified, merInserted, merDeleted,
-    merModified];
+  FExportRanges := [merMeta, merUnmodified, merInserted, merDeleted, merModified];
   FStreamProcessors := TQStreamProcessors.Create;
 end;
 
@@ -10516,8 +10187,7 @@ begin
   inherited;
 end;
 
-procedure TQConverter.DoProgress(AStep: TQConvertStep;
-  AProgress, ATotal: Integer);
+procedure TQConverter.DoProgress(AStep: TQConvertStep; AProgress, ATotal: Integer);
 begin
   if Assigned(FOnProgress) then
     FOnProgress(Self, AStep, AProgress, ATotal);
@@ -10538,8 +10208,7 @@ begin
   Result := -1;
 end;
 
-procedure TQConverter.LoadFromConverter(AConverter: TQConverterClass;
-  ASourceFile, ATargetFile: QStringW);
+procedure TQConverter.LoadFromConverter(AConverter: TQConverterClass; ASourceFile, ATargetFile: QStringW);
 var
   ACvt: TQConverter;
 begin
@@ -10551,13 +10220,11 @@ begin
   end;
 end;
 
-procedure TQConverter.LoadFromConverter(AConverter: TQConverter;
-  ASourceFile, ATargetFile: QStringW);
+procedure TQConverter.LoadFromConverter(AConverter: TQConverter; ASourceFile, ATargetFile: QStringW);
 var
   ASourceStream, ATargetStream: TStream;
 begin
-  ASourceStream := TFileStream.Create(ASourceFile, fmOpenRead or
-    fmShareDenyWrite);
+  ASourceStream := TFileStream.Create(ASourceFile, fmOpenRead or fmShareDenyWrite);
   try
     ATargetStream := TFileStream.Create(ATargetFile, fmCreate);
     try
@@ -10580,8 +10247,7 @@ begin
   ADataSet.LoadFromStream(AStream, Self);
 end;
 
-procedure TQConverter.LoadFromConverter(AConverter: TQConverter;
-  ASourceStream, ATargetStream: TStream);
+procedure TQConverter.LoadFromConverter(AConverter: TQConverter; ASourceStream, ATargetStream: TStream);
 var
   ADataSet: TQDataSet;
   ARecords: TQRecords;
@@ -10600,11 +10266,13 @@ begin
   if merDeleted in ExportRanges then
     AcceptStatus := AcceptStatus + [usDeleted];
   AConverter.FDataSet := nil;
-  AConverter.FStream := ASourceStream;
+  if Assigned(ASourceStream) then
+    AConverter.FStream := ASourceStream;
   AConverter.BeforeImport;
   ADataSet := TQProvider.AcquireDataSet; // 只是临时借来用的
   ARecords := TQRecords.Create(ditOrigin);
-  FStream := ATargetStream;
+  if Assigned(ATargetStream) then
+    FStream := ATargetStream;
   try
     BeforeExport; // 自己
     I := 0;
@@ -10643,8 +10311,7 @@ begin
   end;
 end;
 
-procedure TQConverter.LoadFromConverter(AConverter: TQConverterClass;
-  ASourceStream, ATargetStream: TStream);
+procedure TQConverter.LoadFromConverter(AConverter: TQConverterClass; ASourceStream, ATargetStream: TStream);
 var
   ACvt: TQConverter;
 begin
@@ -10675,13 +10342,11 @@ begin
   ADataSet.SaveToFile(AFileName, Self);
 end;
 
-procedure TQConverter.SaveToConverter(AConverter: TQConverter;
-  ASourceFile, ATargetFile: QStringW);
+procedure TQConverter.SaveToConverter(AConverter: TQConverter; ASourceFile, ATargetFile: QStringW);
 var
   ASourceStream, ATargetStream: TStream;
 begin
-  ASourceStream := TFileStream.Create(ASourceFile, fmOpenRead or
-    fmShareDenyWrite);
+  ASourceStream := TFileStream.Create(ASourceFile, fmOpenRead or fmShareDenyWrite);
   try
     ATargetStream := TFileStream.Create(ATargetFile, fmCreate);
     try
@@ -10694,8 +10359,7 @@ begin
   end;
 end;
 
-procedure TQConverter.SaveToConverter(AConverter: TQConverterClass;
-  ASourceFile, ATargetFile: QStringW);
+procedure TQConverter.SaveToConverter(AConverter: TQConverterClass; ASourceFile, ATargetFile: QStringW);
 var
   ACvt: TQConverter;
 begin
@@ -10707,8 +10371,7 @@ begin
   end;
 end;
 
-procedure TQConverter.SaveToConverter(AConverter: TQConverterClass;
-  ASourceStream, ATargetStream: TStream);
+procedure TQConverter.SaveToConverter(AConverter: TQConverterClass; ASourceStream, ATargetStream: TStream);
 var
   ACvt: TQConverter;
 begin
@@ -10720,8 +10383,7 @@ begin
   end;
 end;
 
-procedure TQConverter.SaveToConverter(AConverter: TQConverter;
-  ASourceStream, ATargetStream: TStream);
+procedure TQConverter.SaveToConverter(AConverter: TQConverter; ASourceStream, ATargetStream: TStream);
 begin
   AConverter.LoadFromConverter(Self, ASourceStream, ATargetStream);
 end;
@@ -10773,8 +10435,7 @@ begin
   Result := inherited Items[Index] as TQStreamProcessorItem;
 end;
 
-procedure TQStreamProcessors.SetProcessor(Index: Integer;
-  const Value: TQStreamProcessorItem);
+procedure TQStreamProcessors.SetProcessor(Index: Integer; const Value: TQStreamProcessorItem);
 begin
   inherited Items[Index] := Value;
 end;
@@ -11010,8 +10671,7 @@ begin
   Result := FItems[AIndex];
 end;
 
-function TQSList.InternalFind(const AId: Cardinal; var AIndex: Integer)
-  : Boolean;
+function TQSList.InternalFind(const AId: Cardinal; var AIndex: Integer): Boolean;
 var
   L, H, I, C: Integer;
 begin
@@ -11164,8 +10824,7 @@ end;
 
 { TQSTypes }
 
-function TQSTypes.Add(AName: QStringW; const ATypeId, ABaseId,
-  ASQLType: Cardinal; ASize: Smallint): TQSType;
+function TQSTypes.Add(AName: QStringW; const ATypeId, ABaseId, ASQLType: Cardinal; ASize: Smallint): TQSType;
 begin
   Result := inherited Add(ATypeId, AName) as TQSType;
   Result.BaseId := ABaseId;
@@ -11263,8 +10922,7 @@ begin
   if AInterval.TryFromString(AValue) then
     SetValue(AInterval)
   else
-    raise EConvertError.CreateFmt(SConvertError,
-      [Value, FieldTypeNames[DataType]]);
+    raise EConvertError.CreateFmt(SConvertError, [Value, FieldTypeNames[DataType]]);
 end;
 
 procedure TQIntervalField.SetSize(Value: Integer);
@@ -11292,8 +10950,7 @@ end;
 procedure TQMasterDataLink.ActiveChanged;
 begin
   inherited;
-  if not(GetDetailDataSet.Active or (csDestroying in DataSet.ComponentState))
-  then
+  if not(GetDetailDataSet.Active or (csDestroying in DataSet.ComponentState)) then
   begin
     if Assigned(OnMasterChange) then
       OnMasterChange(Self);
@@ -11303,8 +10960,7 @@ end;
 procedure TQMasterDataLink.RecordChanged(Field: TField);
 begin
   inherited;
-  if (not GetDetailDataSet.Active) or (Fields.Count = 0) and
-    Assigned(OnMasterChange) then
+  if (not GetDetailDataSet.Active) or (Fields.Count = 0) and Assigned(OnMasterChange) then
     OnMasterChange(Self);
 end;
 
@@ -11404,8 +11060,7 @@ begin
         begin
           AToRead := 0;
           AReaded := 0;
-          if {$IFDEF MSWINDOWS}ioctlsocket{$ELSE}ioctl{$ENDIF}(FHandle,
-            FIONREAD, AToRead) = 0 then
+          if {$IFDEF MSWINDOWS}ioctlsocket{$ELSE}ioctl{$ENDIF}(FHandle, FIONREAD, AToRead) = 0 then
           // 得到缓冲区内容长度
           begin
             FRecvBuf.Capacity := FRecvBuf.Position + AToRead;
@@ -11478,8 +11133,7 @@ begin
     Addr.sin_addr := AHost;
     PInt64(@Addr.sin_zero[0])^ := 0;
     if connect(FHandle,
-{$IFDEF POSIX}sockaddr{$ELSE}sockaddr_in{$ENDIF}(Addr), SizeOf(TSockAddrIn)) = SOCKET_ERROR
-    then
+{$IFDEF POSIX}sockaddr{$ELSE}sockaddr_in{$ENDIF}(Addr), SizeOf(TSockAddrIn)) = SOCKET_ERROR then
     begin
       SetError(GetLastError, SysErrorMessage(GetLastError));
 {$IFDEF POSIX}

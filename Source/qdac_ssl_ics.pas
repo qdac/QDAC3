@@ -308,7 +308,10 @@ end;
 
 function TQICSSSLFactory.NewItem: IQSSLItem;
 begin
-  Result := TQICSItem.Create(Self);
+  if Assigned(f_ssl_read) then
+    Result := TQICSItem.Create(Self)
+  else
+    Result:=nil;
 end;
 
 procedure TQICSSSLFactory.SetRootCAPath(const Value: String);
@@ -608,7 +611,10 @@ end;
 
 function TQICSItem.Read(var ABuf; ACount: Integer): Integer;
 begin
-  Result := f_ssl_read(FSSL, @ABuf, ACount);
+  if Assigned(f_ssl_read) then
+    Result := f_ssl_read(FSSL, @ABuf, ACount)
+  else
+    Result:=0;
 end;
 
 class procedure TQICSItem.InfoCallBack(const ssl: PSSL; Where: Integer; Ret: Integer);
@@ -741,7 +747,10 @@ end;
 
 function TQICSItem.Write(const ABuf; ACount: Integer): Integer;
 begin
-  Result := f_ssl_write(FSSL, @ABuf, ACount);
+  if Assigned(f_ssl_write) then
+    Result := f_ssl_write(FSSL, @ABuf, ACount)
+  else
+    Result:=0;
 end;
 
 initialization

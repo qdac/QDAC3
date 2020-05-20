@@ -1,4 +1,4 @@
-unit qlog;
+unit QLog;
 
 interface
 
@@ -174,7 +174,8 @@ type
     7       Debug: debug-level messages
   }
 
-  TQLogLevel = (llEmergency, llAlert, llFatal, llError, llWarning, llHint, llMessage, llDebug);
+  TQLogLevel = (llEmergency, llAlert, llFatal, llError, llWarning, llHint,
+    llMessage, llDebug);
   TQLogLevels = set of TQLogLevel;
   TQLog = class;
   TQLogCastor = class;
@@ -241,8 +242,10 @@ type
   public
     constructor Create; overload;
     destructor Destroy; override;
-    procedure Post(ALevel: TQLogLevel; const AMsg:QStringW;const ATag: QStringW=''); overload;
-    procedure Post(ALevel: TQLogLevel; const AFormat: QStringW; Args: array of const; const ATag: QStringW=''); overload;
+    procedure Post(ALevel: TQLogLevel; const AMsg: QStringW;
+      const ATag: QStringW = ''); overload;
+    procedure Post(ALevel: TQLogLevel; const AFormat: QStringW;
+      Args: array of const; const ATag: QStringW = ''); overload;
     property Mode: TQLogMode read FMode write SetMode;
     property Castor: TQLogCastor read GetCastor;
     property Count: Integer read FCount;
@@ -251,7 +254,8 @@ type
     property AcceptLevels: TQLogLevels read FAcceptLevels write FAcceptLevels;
   end;
 
-  TQLogItemAcceptEvent = procedure(Sender: TQLogWriter; AItem: PQLogItem; var Accept: Boolean) of object;
+  TQLogItemAcceptEvent = procedure(Sender: TQLogWriter; AItem: PQLogItem;
+    var Accept: Boolean) of object;
 
   // 日志写入对象
   TQLogWriter = class
@@ -260,6 +264,7 @@ type
     FAcceptLevels: TQLogLevels;
     FLazyList: TQLogList;
     FOnAccept: TQLogItemAcceptEvent;
+    FAcceptTags: array of QStringW;
     FTag: IntPtr;
     FLazyMode: Boolean;
     FEnabled: Boolean;
@@ -269,6 +274,8 @@ type
     procedure SetLazyMode(const Value: Boolean);
     function Accept(AItem: PQLogItem): Boolean; virtual;
     function ItemToText(AItem: PQLogItem): String; virtual;
+    function GetAcceptTags: QStringW;
+    procedure SetAcceptTags(const Value: QStringW);
     property LazyMode: Boolean read FLazyMode write SetLazyMode;
   public
     constructor Create; overload;
@@ -279,6 +286,7 @@ type
     property Enabled: Boolean read FEnabled write FEnabled;
     property OnAccept: TQLogItemAcceptEvent read FOnAccept write FOnAccept;
     property Tag: IntPtr read FTag write FTag;
+    property AcceptTags: QStringW read GetAcceptTags write SetAcceptTags;
   end;
 
   // 日志读取对象
@@ -320,6 +328,7 @@ type
     FWriters: PLogWriterItem;
     FActiveWriter: PLogWriterItem;
     FActiveLog: PQLogItem;
+    FDoLazyCheck: Boolean;
     procedure Execute; override;
     procedure LogAdded;
     function WaitForLog: Boolean; virtual;
@@ -349,8 +358,9 @@ type
 
   TQLogFileWriter = class(TQLogWriter)
   private
-    FCreateMode: TQLogFileCreateMode;
     FMaxLogHistories: Integer;
+    FEncoding: TTextEncoding;
+    FCreateMode: TQLogFileCreateMode;
     procedure SetMaxLogHistories(const Value: Integer);
   protected
     // 索引和日志文件句柄
@@ -376,8 +386,9 @@ type
     /// <remarks>
     /// 创建索引文件有利于检索日志时快速定位日志的起始位置，也可以不创建索引日志。
     /// 如果不创建索引，则定位到某一特定日志时，将需要更多的IO操作
-    constructor Create(const AFileName: QStringW; AWithIndex: Boolean = False); overload;
-    constructor Create; overload;
+    constructor Create(const AFileName: QStringW; AWithIndex: Boolean = False;
+      AEncoding: TTextEncoding = teUnicode16LE); overload;
+    constructor Create(AEncoding: TTextEncoding = teUnicode16LE); overload;
     destructor Destroy; override;
     function WriteItem(AItem: PQLogItem): Boolean; override;
     procedure EndWrite; override;
@@ -386,7 +397,9 @@ type
     property MaxSize: Int64 read FMaxSize write FMaxSize;
     property CreateMode: TQLogFileCreateMode read FCreateMode write FCreateMode;
     property OneFilePerDay: Boolean read FOneFilePerDay write FOneFilePerDay;
-    property MaxLogHistories: Integer read FMaxLogHistories write SetMaxLogHistories;
+    property MaxLogHistories: Integer read FMaxLogHistories
+      write SetMaxLogHistories;
+    property LazyMode;
   end;
 
   TQLogConsoleWriter = class(TQLogWriter)
@@ -401,7 +414,8 @@ type
   private
     FUseDebugConsole: Boolean;
   public
-    property UseDebugConsole: Boolean read FUseDebugConsole write FUseDebugConsole;
+    property UseDebugConsole: Boolean read FUseDebugConsole
+      write FUseDebugConsole;
 {$ENDIF}
   end;
 
@@ -421,13 +435,15 @@ type
     function LookupServer: Boolean;
   public
     constructor Create; overload;
-    constructor Create(const AHost: String; APort: Word; AUseTcp: Boolean); overload;
+    constructor Create(const AHost: String; APort: Word;
+      AUseTcp: Boolean); overload;
     destructor Destroy; override;
     function WriteItem(AItem: PQLogItem): Boolean; override;
     procedure HandleNeeded; override;
     property ServerHost: String read FServerHost write FServerHost;
     property ServerPort: Word read FServerPort write FServerPort;
-    property TextEncoding: TTextEncoding read FTextEncoding write SetTextEncoding;
+    property TextEncoding: TTextEncoding read FTextEncoding
+      write SetTextEncoding;
     property UseTCP: Boolean read FUseTCP write FUseTCP;
   end;
 
@@ -459,17 +475,22 @@ type
     procedure MarkEscape(const ATag: String);
   end;
 
-procedure PostLog(ALevel: TQLogLevel; const AMsg: QStringW; const ATag: QStringW = ''); overload;
-procedure PostLog(ALevel: TQLogLevel; const fmt: PWideChar; Args: array of const; const ATag: QStringW = ''); overload;
-function CalcPerf(const ATag: QStringW; const ALogToConsole: Boolean = true): IPerfCounter;
+procedure PostLog(ALevel: TQLogLevel; const AMsg: QStringW;
+  const ATag: QStringW = ''); overload;
+procedure PostLog(ALevel: TQLogLevel; const fmt: PWideChar;
+  Args: array of const; const ATag: QStringW = ''); overload;
+function CalcPerf(const ATag: QStringW; const ALogToConsole: Boolean = true)
+  : IPerfCounter;
 {$IFDEF POSIX}
 function GetCurrentProcessId: Integer;
 {$ENDIF}
 {$IFDEF ANDROID}
 function GetExtSDDir: String;
 {$ENDIF}
-function SetDefaultLogFile(const AFileName: QStringW = ''; AMaxSize: Int64 = 2097152; // 2MB
-  ARenameHistory: Boolean = true; AOneFilePerDay: Boolean = False): TQLogFileWriter;
+function SetDefaultLogFile(const AFileName: QStringW = '';
+  AMaxSize: Int64 = 2097152; // 2MB
+  ARenameHistory: Boolean = true; AOneFilePerDay: Boolean = False;
+  AEncoding: TTextEncoding = teUnicode16LE): TQLogFileWriter;
 
 const
   ELOG_WRITE_FAILURE = $80000001;
@@ -492,8 +513,8 @@ resourcestring
 
 const
   SItemBreak: array [0 .. 2] of WideChar = (#$3000, #13, #10);
-  LogLevelText: array [llEmergency .. llDebug] of QStringW = ('[EMG]', '[ALERT]', '[FATAL]', '[ERROR]', '[WARN]', '[HINT]',
-    '[MSG]', '[DEBUG]');
+  LogLevelText: array [llEmergency .. llDebug] of QStringW = ('[EMG]',
+    '[ALERT]', '[FATAL]', '[ERROR]', '[WARN]', '[HINT]', '[MSG]', '[DEBUG]');
 
 var
   DefaultLogWriter: TQLogFileWriter;
@@ -545,7 +566,8 @@ begin
 end;
 {$ENDIF}
 
-function CalcPerf(const ATag: QStringW; const ALogToConsole: Boolean): IPerfCounter;
+function CalcPerf(const ATag: QStringW; const ALogToConsole: Boolean)
+  : IPerfCounter;
 begin
   Result := TQPerfCounter.Create(ATag, ALogToConsole);
 end;
@@ -554,8 +576,8 @@ function FormatSyslogTime(ATimeStamp: TDateTime): QStringW;
 var
   Y, M, D: Word;
 const
-  LinuxMonth: array [0 .. 11] of QStringW = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct',
-    'Nov', 'Dec');
+  LinuxMonth: array [0 .. 11] of QStringW = ('Jan', 'Feb', 'Mar', 'Apr', 'May',
+    'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
 begin
   DecodeDate(ATimeStamp, Y, M, D);
   // Aug 24 05:34:00 CST 1987
@@ -584,8 +606,9 @@ var
   S: String;
   I, J, ALastNo, ANo: Integer;
 const
-  ExtSDCardNames: array [0 .. 7] of String = ('/mnt/ext_sdcard', '/mnt/extsd', '/mnt/ext_card', '/mnt/external_sd',
-    '/mnt/ext_sd', '/mnt/external', '/mnt/extSdCard', '/mnt/externalSdCard');
+  ExtSDCardNames: array [0 .. 7] of String = ('/mnt/ext_sdcard', '/mnt/extsd',
+    '/mnt/ext_card', '/mnt/external_sd', '/mnt/ext_sd', '/mnt/external',
+    '/mnt/extSdCard', '/mnt/externalSdCard');
 begin
   Result := '';
   AList := TDirectory.GetDirectories('/mnt');
@@ -603,7 +626,8 @@ begin
     end;
     if StartWithW(PWideChar(S), '/mnt/sdcard', False) then
     begin
-      if TryStrToInt(RightStrW(AList[I], Length(AList[I]) - 11, False), ANo) then
+      if TryStrToInt(RightStrW(AList[I], Length(AList[I]) - 11, False), ANo)
+      then
       begin
         if ANo > ALastNo then
         begin
@@ -616,7 +640,8 @@ begin
 end;
 {$ENDIF}
 
-function SetDefaultLogFile(const AFileName: QStringW; AMaxSize: Int64; ARenameHistory: Boolean; AOneFilePerDay: Boolean)
+function SetDefaultLogFile(const AFileName: QStringW; AMaxSize: Int64;
+  ARenameHistory: Boolean; AOneFilePerDay: Boolean; AEncoding: TTextEncoding)
   : TQLogFileWriter;
 var
   AWriter: TQLogFileWriter;
@@ -624,16 +649,17 @@ begin
   if DefaultLogWriter = nil then
   begin
     if Length(AFileName) > 0 then
-      AWriter := TQLogFileWriter.Create(AFileName)
+      AWriter := TQLogFileWriter.Create(AFileName, False, AEncoding)
     else
-      AWriter := TQLogFileWriter.Create;
+      AWriter := TQLogFileWriter.Create(AEncoding);
     AWriter.MaxSize := AMaxSize;
     if ARenameHistory then
       AWriter.CreateMode := lcmRename
     else
       AWriter.CreateMode := lcmAppend;
     AWriter.OneFilePerDay := AOneFilePerDay;
-    if AtomicCmpExchange(Pointer(DefaultLogWriter), Pointer(AWriter), nil) <> nil then
+    if AtomicCmpExchange(Pointer(DefaultLogWriter), Pointer(AWriter), nil) <> nil
+    then
       FreeAndNil(AWriter)
     else
       Logs.Castor.AddWriter(DefaultLogWriter);
@@ -646,12 +672,14 @@ begin
   Logs.Post(ALevel, AMsg, ATag);
 end;
 
-procedure PostLog(ALevel: TQLogLevel; const fmt: PWideChar; Args: array of const; const ATag: QStringW);
+procedure PostLog(ALevel: TQLogLevel; const fmt: PWideChar;
+  Args: array of const; const ATag: QStringW);
 begin
   Logs.Post(ALevel, fmt, Args, ATag);
 end;
 
-function CreateItemBuffer(ALevel: TQLogLevel; AMsgLen, ATagLen: Integer): PQLogItem;
+function CreateItemBuffer(ALevel: TQLogLevel; AMsgLen, ATagLen: Integer)
+  : PQLogItem;
 begin
   AMsgLen := AMsgLen shl 1;
   ATagLen := ATagLen shl 1;
@@ -743,14 +771,28 @@ begin
   if FItemIndex <> Value then
   begin
     if not MoveTo(Value) then
-      raise EXCEPTIOn.Create(Format(SLogSeekError, [Value]));
+      raise Exception.Create(Format(SLogSeekError, [Value]));
   end;
 end;
 
 // TQLogWriter
 function TQLogWriter.Accept(AItem: PQLogItem): Boolean;
+var
+  I: Integer;
 begin
   Result := Enabled and (AItem.Level in AcceptLevels);
+  if Result and (Length(FAcceptTags) > 0) then
+  begin
+    Result := False;
+    for I := 0 to High(FAcceptTags) do
+    begin
+      if CompareText(FAcceptTags[I], AItem.Tag) = 0 then
+      begin
+        Result := true;
+        break;
+      end;
+    end;
+  end;
   if Assigned(OnAccept) then
     OnAccept(Self, AItem, Result);
 end;
@@ -765,7 +807,8 @@ begin
   inherited;
   FEnabled := true;
   // 默认记录所有日志
-  FAcceptLevels := [llEmergency, llAlert, llFatal, llError, llWarning, llHint, llMessage, llDebug];
+  FAcceptLevels := [llEmergency, llAlert, llFatal, llError, llWarning, llHint,
+    llMessage, llDebug];
 end;
 
 destructor TQLogWriter.Destroy;
@@ -778,20 +821,62 @@ begin
 
 end;
 
+function TQLogWriter.GetAcceptTags: QStringW;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 0 to High(FAcceptTags) do
+  begin
+    if I = 0 then
+      Result := FAcceptTags[0]
+    else
+      Result := Result + ',' + FAcceptTags[I];
+  end;
+end;
+
 procedure TQLogWriter.HandleNeeded;
 begin
-  raise EXCEPTIOn.Create(SHandleNeeded);
+  raise Exception.Create(SHandleNeeded);
 end;
 
 function TQLogWriter.ItemToText(AItem: PQLogItem): String;
 begin
-  Result := '[' + IntToStr(AItem.ThreadId) + ']' + FormatDateTime('hh:nn:ss.zz', AItem.TimeStamp) + ' ' +
-    LogLevelText[AItem.Level] + ':' + StrDupX(@AItem.Text[0], AItem.MsgLen shr 1);
+  Result := '[' + IntToStr(AItem.ThreadId) + ']' + FormatDateTime('hh:nn:ss.zz',
+    AItem.TimeStamp) + ' ' + LogLevelText[AItem.Level] + ':' +
+    StrDupX(@AItem.Text[0], AItem.MsgLen shr 1);
 end;
 
 procedure TQLogWriter.LazyWrite;
 begin
   // 啥也不干，反正我也不知道该干啥
+end;
+
+procedure TQLogWriter.SetAcceptTags(const Value: QStringW);
+var
+  p: PQCharW;
+  ACount: Integer;
+begin
+  p := PQCharW(Value);
+  ACount := 0;
+  SkipCharW(p, ',');
+  while p^ <> #0 do
+  begin
+    if p^ = ',' then
+    begin
+      Inc(ACount);
+      SkipCharW(p, ',');
+    end
+    else
+      Inc(p);
+  end;
+  SetLength(FAcceptTags, ACount);
+  p := PQCharW(Value);
+  while p^ <> #0 do
+  begin
+    FAcceptTags[ACount - 1] := DecodeTokenW(p, ',', #0, true);
+    Dec(ACount);
+  end;
 end;
 
 procedure TQLogWriter.SetLazyMode(const Value: Boolean);
@@ -811,9 +896,11 @@ end;
 
 { TQLogFile }
 
-constructor TQLogFileWriter.Create(const AFileName: QStringW; AWithIndex: Boolean);
+constructor TQLogFileWriter.Create(const AFileName: QStringW;
+  AWithIndex: Boolean; AEncoding: TTextEncoding);
 begin
   inherited Create;
+  FEncoding := AEncoding;
   FFileName := AFileName;
   FLogHandle := nil;
   FBuilder := TQStringCatHelperW.Create;
@@ -839,24 +926,28 @@ begin
   end;
 end;
 
-constructor TQLogFileWriter.Create;
+constructor TQLogFileWriter.Create(AEncoding: TTextEncoding);
 var
   APath: QStringW;
 begin
   inherited Create;
+  FEncoding := AEncoding;
   FBuilder := TQStringCatHelperW.Create;
   FFileName := ParamStr(0);
 {$IFDEF MSWINDOWS}
   APath := ExtractFilePath(FFileName) + 'Logs\';;
   ForceDirectories(APath);
-  FFileName := APath + DeleteRightW(ExtractFileName(FFileName), ExtractFileExt(FFileName), true, 1) + '.log';
+  FFileName := APath + DeleteRightW(ExtractFileName(FFileName),
+    ExtractFileExt(FFileName), true, 1) + '.log';
 {$ELSE}
   APath := TPath.GetSharedDocumentsPath;
   if Length(APath) = 0 then
-    APath := ExtractFilePath(FFileName) + TPath.DirectorySeparatorChar + 'Logs/';
+    APath := ExtractFilePath(FFileName) + TPath.DirectorySeparatorChar
+      + 'Logs/';
   ForceDirectories(APath);
   FFileName := ExtractFileName(ParamStr(0));
-  FFileName := APath + DeleteRightW(FFileName, ExtractFileExt(FFileName), true, 1) + '.log';
+  FFileName := APath + DeleteRightW(FFileName, ExtractFileExt(FFileName), true,
+    1) + '.log';
 {$ENDIF}
 {$IF RTLVersion>=31}
   // Berlin 以后的版本强制启用懒汉模式
@@ -875,16 +966,19 @@ begin
   if FindFirst(APath + '*.*', faAnyFile, sr) = 0 then
   begin
     AFileName := ExtractFileName(FFileName);
-    AFileName := LeftStrW(AFileName, Length(AFileName) - Length(ExtractFileExt(AFileName)), False);
+    AFileName := LeftStrW(AFileName, Length(AFileName) -
+      Length(ExtractFileExt(AFileName)), False);
     AList := TStringList.Create;
     try
       // 查找所有的日志文件并按文件名排序，由于文件名是按日期自动排序的，所以理论上不需要比较时间
       AList.Sorted := true;
       repeat
         ASearchedFile := sr.Name;
-        if ((sr.Attr and faDirectory) = 0) and (strcmpW(PQCharW(ASearchedFile), PQCharW(AFileName), true) <> 0) and
+        if ((sr.Attr and faDirectory) = 0) and
+          (strcmpW(PQCharW(ASearchedFile), PQCharW(AFileName), true) <> 0) and
           StartWithW(PQCharW(ASearchedFile), PQCharW(AFileName), true) and
-          (EndWithW(ASearchedFile, '.log', true) or EndWithW(ASearchedFile, '.gz', true)) then
+          (EndWithW(ASearchedFile, '.log', true) or EndWithW(ASearchedFile,
+          '.gz', true)) then
           AList.Add(sr.Name);
       until FindNext(sr) <> 0;
       SysUtils.FindClose(sr);
@@ -911,28 +1005,24 @@ end;
 procedure TQLogFileWriter.EndWrite;
 begin
   inherited;
-  FlushBuffer;
+  if not LazyMode then
+    FlushBuffer;
 end;
 
 function TQLogFileWriter.FlushBuffer: Boolean;
 var
   AWriteBytes: Cardinal;
-  ps: PByte;
-  l: Integer;
-begin
-  Result := true;
-  l := FBuilder.Position shl 1;
-  if l > 0 then
+  ATemp: QStringA;
+  procedure DoFlush(ps: PByte; l: Integer);
   begin
-    ps := PByte(FBuilder.Start);
     repeat
-      AWriteBytes := FLogHandle.Write(ps^, l);
+      AWriteBytes := FLogHandle.Write(PQCharA(ps)^, l);
       if AWriteBytes = 0 then
       begin
         FCastor.SetLastError(ELOG_WRITE_FAILURE, SysErrorMessage(GetLastError));
         DebugOut('无法写入日志数据：%s', [FCastor.FLastErrorMsg]);
         Result := False;
-        Break
+        break
       end
       else
       begin
@@ -943,6 +1033,27 @@ begin
     until l = 0;
     FBuilder.Position := 0;
   end;
+
+begin
+  Result := true;
+  case FEncoding of
+    teAnsi, teUTF8:
+      begin
+        if FEncoding = teAnsi then
+          ATemp := qstring.AnsiEncode(FBuilder.Start, FBuilder.Position)
+        else
+          ATemp := qstring.Utf8Encode(FBuilder.Start, FBuilder.Position);
+        if ATemp.Length > 0 then
+          DoFlush(ATemp.Data, ATemp.Length);
+      end;
+    teUnicode16LE, teUnicode16BE:
+      begin
+        if FEncoding = teUnicode16BE then
+          ExchangeByteOrder(PQCharA(FBuilder.Start), FBuilder.Position shl 1);
+        if FBuilder.Position > 0 then
+          DoFlush(PByte(FBuilder.Start), FBuilder.Position shl 1);
+      end;
+  end;
 end;
 
 procedure TQLogFileWriter.HandleNeeded;
@@ -951,7 +1062,9 @@ var
   AIndex: Cardinal;
   ACreateMode: TQLogFileCreateMode;
 const
-  UTF16BOM: Word = $FEFF;
+  Utf8BOM: array [0 .. 2] of Byte = ($EF, $BB, $BF);
+  Utf16LEBom: Word = $FEFF;
+  Utf16BEBom: Word = $FFFE;
   function CanAccess(AFileName: QStringW): Boolean;
   var
     AHandle: THandle;
@@ -967,7 +1080,8 @@ const
   end;
   procedure NextFileName;
   begin
-    FFileName := ALogFileName + '_' + IntToStr(GetCurrentProcessId) + '_' + IntToStr(AIndex) + AExt;
+    FFileName := ALogFileName + '_' + IntToStr(GetCurrentProcessId) + '_' +
+      IntToStr(AIndex) + AExt;
     Inc(AIndex);
   end;
   procedure CheckPath;
@@ -976,7 +1090,7 @@ const
   begin
     ADir := ExtractFilePath(ExpandFileName(FFileName));
     if not ForceDirectories(ADir) then
-      raise EXCEPTIOn.CreateFmt(SCantCreateLogFile, [FFileName]);
+      raise Exception.CreateFmt(SCantCreateLogFile, [FFileName]);
   end;
   function DayChanged: Boolean;
   var
@@ -988,7 +1102,8 @@ const
 
 begin
   CheckPath;
-  if (CreateMode = lcmRename) and FileExists(FFileName) and CanAccess(FFileName) and (not OneFilePerDay) then
+  if (CreateMode = lcmRename) and FileExists(FFileName) and CanAccess(FFileName)
+    and (not OneFilePerDay) then
     RenameHistory
   else
   begin
@@ -1008,10 +1123,21 @@ begin
                 if (not FileExists(FFileName)) or CanAccess(FFileName) then
                 begin
                   FLogHandle := TQLogFileStream.Create(FFileName, fmCreate);
-                  FLogHandle.WriteBuffer(UTF16BOM, SizeOf(UTF16BOM));
+                  case FEncoding of
+                    teAnsi:
+                      ; // do nothing
+                    teUnicode16LE:
+                      FLogHandle.WriteBuffer(Utf16LEBom, SizeOf(Utf16LEBom));
+                    teUnicode16BE:
+                      FLogHandle.WriteBuffer(Utf16BEBom, SizeOf(Utf16BEBom));
+                    teUTF8:
+                      FLogHandle.WriteBuffer(Utf8BOM, SizeOf(Utf8BOM));
+                  end;
+
                   // 好吧，创建的禁止他人读，我创建再打开还不行嘛
                   FreeObject(FLogHandle);
-                  FLogHandle := TQLogFileStream.Create(FFileName, fmOpenWrite or fmShareDenyWrite);
+                  FLogHandle := TQLogFileStream.Create(FFileName,
+                    fmOpenWrite or fmShareDenyWrite);
                 end
                 else
                   NextFileName;
@@ -1028,7 +1154,8 @@ begin
                   end
                   else
                   begin
-                    FLogHandle := TQLogFileStream.Create(FFileName, fmOpenWrite or fmShareDenyWrite);
+                    FLogHandle := TQLogFileStream.Create(FFileName,
+                      fmOpenWrite or fmShareDenyWrite);
                   end;
                 end
                 else
@@ -1041,7 +1168,7 @@ begin
         end;
       until Assigned(FLogHandle) or (AIndex = 100);
       if not Assigned(FLogHandle) then
-        raise EXCEPTIOn.CreateFmt(SCantCreateLogFile, [FFileName]);
+        raise Exception.CreateFmt(SCantCreateLogFile, [FFileName]);
       FLogHandle.Seek(0, soEnd);
       FPosition := FLogHandle.Position;
     end;
@@ -1051,7 +1178,8 @@ end;
 procedure TQLogFileWriter.LazyWrite;
 begin
   inherited;
-  FlushBuffer;
+  if FBuilder.Position > 0 then
+    FlushBuffer;
 end;
 
 procedure TQLogFileWriter.RenameHistory;
@@ -1074,7 +1202,8 @@ begin
     begin
       AExt := ExtractFileExt(AOldName);
       ATimeStamp := FormatDateTime('yyyymmddhhnnsszzz', Now);
-      ALogFileName := StrDupX(PQCharW(AOldName), Length(AOldName) - Length(AExt)) + '_' + ATimeStamp + AExt;
+      ALogFileName := StrDupX(PQCharW(AOldName), Length(AOldName) - Length(AExt)
+        ) + '_' + ATimeStamp + AExt;
       if RenameFile(FFileName, ALogFileName) then
       begin
         // 创建线程压缩日志文件
@@ -1114,7 +1243,8 @@ function TQLogFileWriter.WriteItem(AItem: PQLogItem): Boolean;
       begin
         if OneFilePerDay and (FLastTime > 0) then
           RenameHistory;
-        FBuilder.Cat(FormatDateTime('[yyyy-mm-dd]', AItem.TimeStamp)).Cat(SLineBreak);
+        FBuilder.Cat(FormatDateTime('[yyyy-mm-dd]', AItem.TimeStamp))
+          .Cat(SLineBreak);
       end;
       FLastTime := AItem.TimeStamp;
     end;
@@ -1132,8 +1262,8 @@ begin
       FLastThreadId := AItem.ThreadId;
       FLastThread := '[' + IntToStr(FLastThreadId) + ']';
     end;
-    FBuilder.Cat(FLastTimeStamp).Cat(FLastThread).Cat(LogLevelText[AItem.Level]).Cat(':')
-      .Cat(@AItem.Text[0], AItem.MsgLen shr 1);
+    FBuilder.Cat(FLastTimeStamp).Cat(FLastThread).Cat(LogLevelText[AItem.Level])
+      .Cat(':').Cat(@AItem.Text[0], AItem.MsgLen shr 1);
     FBuilder.Cat(SLineBreak);
     if (MaxSize > 0) and (FPosition + FBuilder.Position >= MaxSize) then
     begin
@@ -1171,16 +1301,14 @@ begin
   AItem := FWriters;
   FWriters := nil;
   FCS.Leave;
-  try
-    while Assigned(AItem) do
-    begin
-      ANext := AItem.Next;
-      FreeAndNil(AItem.Writer);
-      Dispose(AItem);
-      AItem := ANext;
-    end;
-  finally
-    FCS.Leave;
+  while Assigned(AItem) do
+  begin
+    ANext := AItem.Next;
+    if AItem.Writer.LazyMode then
+      AItem.Writer.LazyWrite;
+    FreeAndNil(AItem.Writer);
+    Dispose(AItem);
+    AItem := ANext;
   end;
 end;
 
@@ -1282,10 +1410,11 @@ function TQLogCastor.GetFinished: Boolean;
       begin
         AProcessId := GetCurrentProcessId;
         repeat
-          if ((AEntry.th32OwnerProcessID = AProcessId) or (AProcessId = $FFFFFFFF)) and (AEntry.th32ThreadID = ThreadId) then
+          if ((AEntry.th32OwnerProcessID = AProcessId) or
+            (AProcessId = $FFFFFFFF)) and (AEntry.th32ThreadID = ThreadId) then
           begin
             Result := true;
-            Break;
+            break;
           end;
         until not Thread32Next(ASnapshot, AEntry);
       end;
@@ -1337,10 +1466,10 @@ begin
               AItem.Prior.Next := AItem.Next;
             if Assigned(AItem.Next) then
               AItem.Next.Prior := AItem.Prior;
-            Break;
+            break;
           end;
         end;
-        Break;
+        break;
       end
     finally
       FCS.Leave;
@@ -1362,26 +1491,28 @@ var
   AResult: TWaitResult;
   AInterval: Cardinal;
 begin
-  if LazyInterval > 0 then
+  if (LazyInterval > 0) and FDoLazyCheck then
   begin
     AInterval := LazyInterval;
-    repeat
-      AResult := FNotifyHandle.WaitFor(AInterval);
-      if AResult = wrTimeout then
+    AResult := FNotifyHandle.WaitFor(AInterval);
+    if AResult = wrTimeout then
+    begin
+      // AInterval := INFINITE;
+      FirstWriter;
+      while Assigned(FActiveWriter) do
       begin
-        // AInterval := INFINITE;
-        FirstWriter;
-        while Assigned(FActiveWriter) do
-        begin
-          FActiveWriter.Writer.LazyWrite;
-          NextWriter;
-        end;
+        FActiveWriter.Writer.LazyWrite;
+        NextWriter;
       end;
-    until (AResult = wrSignaled) or Terminated;
-    Result := AResult = wrSignaled;
+    end;
+    FDoLazyCheck := False;
+    Result := (FNotifyHandle.WaitFor(AInterval) = wrSignaled);
   end
   else
+  begin
     Result := (FNotifyHandle.WaitFor(INFINITE) = wrSignaled);
+    FDoLazyCheck := Result;
+  end;
 end;
 
 { TQLog }
@@ -1394,7 +1525,8 @@ begin
   Unlock;
 end;
 
-procedure TQLog.Post(ALevel: TQLogLevel; const AFormat: QStringW; Args: array of const; const ATag: QStringW);
+procedure TQLog.Post(ALevel: TQLogLevel; const AFormat: QStringW;
+  Args: array of const; const ATag: QStringW);
 begin
   if Enabled and (not FInFree) and (ALevel in AcceptLevels) then
   begin
@@ -1466,7 +1598,8 @@ begin
   FMode := lmAsyn;
   FEnabled := true;
   // 默认输出全部日志
-  FAcceptLevels := [llEmergency, llAlert, llFatal, llError, llWarning, llHint, llMessage, llDebug];
+  FAcceptLevels := [llEmergency, llAlert, llFatal, llError, llWarning, llHint,
+    llMessage, llDebug];
 end;
 
 function TQLog.CreateCastor: TQLogCastor;
@@ -1478,11 +1611,9 @@ destructor TQLog.Destroy;
 begin
   FInFree := true;
   // 等待日志全部写入完成
-  while Assigned(FList.First) do
-    Sleep(10);
   FCastor.Terminate;
   FCastor.FNotifyHandle.SetEvent;
-  while not FCastor.Finished do
+  while (not FCastor.Finished) or Assigned(FList.First) do
     Sleep(10);
   FreeObject(FCastor);
   FreeObject(FCS);
@@ -1564,19 +1695,26 @@ begin
 {$IFDEF ANDROID}
   case AItem.Level of
     llEmergency:
-      __android_log_write(ANDROID_LOG_WARN, 'emerg', Pointer(PQCharA(qstring.Utf8Encode(S))));
+      __android_log_write(ANDROID_LOG_WARN, 'emerg',
+        Pointer(PQCharA(qstring.Utf8Encode(S))));
     llAlert:
-      __android_log_write(ANDROID_LOG_WARN, 'alert', Pointer(PQCharA(qstring.Utf8Encode(S))));
+      __android_log_write(ANDROID_LOG_WARN, 'alert',
+        Pointer(PQCharA(qstring.Utf8Encode(S))));
     llFatal:
-      __android_log_write(ANDROID_LOG_FATAL, 'fatal', Pointer(PQCharA(qstring.Utf8Encode(S))));
+      __android_log_write(ANDROID_LOG_FATAL, 'fatal',
+        Pointer(PQCharA(qstring.Utf8Encode(S))));
     llError:
-      __android_log_write(ANDROID_LOG_ERROR, 'error', Pointer(PQCharA(qstring.Utf8Encode(S))));
+      __android_log_write(ANDROID_LOG_ERROR, 'error',
+        Pointer(PQCharA(qstring.Utf8Encode(S))));
     llWarning:
-      __android_log_write(ANDROID_LOG_WARN, 'warn', Pointer(PQCharA(qstring.Utf8Encode(S))));
+      __android_log_write(ANDROID_LOG_WARN, 'warn',
+        Pointer(PQCharA(qstring.Utf8Encode(S))));
     llHint, llMessage:
-      __android_log_write(ANDROID_LOG_INFO, 'info', Pointer(PQCharA(qstring.Utf8Encode(S))));
+      __android_log_write(ANDROID_LOG_INFO, 'info',
+        Pointer(PQCharA(qstring.Utf8Encode(S))));
     llDebug:
-      __android_log_write(ANDROID_LOG_DEBUG, 'debug', Pointer(PQCharA(qstring.Utf8Encode(S))));
+      __android_log_write(ANDROID_LOG_DEBUG, 'debug',
+        Pointer(PQCharA(qstring.Utf8Encode(S))));
   end;
 {$ENDIF}
 {$IFDEF MACOS}
@@ -1602,7 +1740,8 @@ begin
       // 失败时间间隔大于2分钟，重试
       begin
         if connect(FSocket,
-{$IFNDEF MSWINDOWS}sockaddr({$ENDIF}FReaderAddr{$IFNDEF MSWINDOWS}){$ENDIF}, SizeOf(sockaddr_in)) = 0 then
+{$IFNDEF MSWINDOWS}sockaddr({$ENDIF}FReaderAddr{$IFNDEF MSWINDOWS}){$ENDIF},
+          SizeOf(sockaddr_in)) = 0 then
         begin
           Result := true;
           FLastConnectTryTime := -1;
@@ -1623,15 +1762,16 @@ begin
   inherited;
   FServerPort := 514;
   // Syslog端口
-  FTextEncoding := teUtf8;
+  FTextEncoding := teUTF8;
   FBuilder := TQStringCatHelperW.Create(1024);
   // Syslog默认不超过1024字节
 end;
 
-constructor TQLogSocketWriter.Create(const AHost: String; APort: Word; AUseTcp: Boolean);
+constructor TQLogSocketWriter.Create(const AHost: String; APort: Word;
+  AUseTcp: Boolean);
 begin
   inherited Create;
-  FTextEncoding := teUtf8;
+  FTextEncoding := teUTF8;
   FBuilder := TQStringCatHelperW.Create(1024); // Syslog默认不超过1024字节
   FServerPort := APort;
   FServerHost := AHost;
@@ -1668,7 +1808,8 @@ begin
 {$ENDIF}
     FReaderAddr.sin_family := AF_INET;
     FReaderAddr.sin_port := htons(ServerPort);
-    FReaderAddr.sin_addr.s_addr := inet_addr(Pointer(PQCharA(qstring.AnsiEncode(ServerHost))));
+    FReaderAddr.sin_addr.s_addr :=
+      inet_addr(Pointer(PQCharA(qstring.AnsiEncode(ServerHost))));
     PInt64(@FReaderAddr.sin_zero[0])^ := 0;
     if UseTCP then
       FSocket := socket(AF_INET, SOCK_STREAM, 6)
@@ -1714,14 +1855,16 @@ var
   fdread:
 {$IFDEF MSWINDOWS}TFdSet{$ELSE}FD_SET{$ENDIF};
 begin
-  AMsg := qstring.Utf8Encode('<9>' + FormatSyslogTime(Now) + ' ' + HostName + ' ~Who~Is~QLog~SysD~Server~');
+  AMsg := qstring.Utf8Encode('<9>' + FormatSyslogTime(Now) + ' ' + HostName +
+    ' ~Who~Is~QLog~SysD~Server~');
   // 广播查找谁是QLogServer
   I := 1;
   setsockopt(FSocket, SOL_SOCKET, SO_BROADCAST,
 {$IFDEF MSWINDOWS}PAnsiChar(@I){$ELSE}I{$ENDIF}, SizeOf(I));
   AHost.sin_family := AF_INET;
   AHost.sin_port := htons(ServerPort);
-  AHost.sin_addr.s_addr := Longint(INADDR_BROADCAST);
+  AHost.sin_addr.s_addr :=
+  {$IFDEF MSWINDOWS}Longint(INADDR_BROADCAST){$ELSE}INADDR_BROADCAST{$ENDIF};
   PInt64(@AHost.sin_zero[0])^ := 0;
   tv.tv_sec := 0;
   tv.tv_usec := 500 * 1000; // 50ms
@@ -1733,19 +1876,21 @@ begin
 {$ENDIF}
   Result := False;
   repeat
-    sendto(FSocket, PQCharA(AMsg)^, AMsg.Length, 0, PSockAddr(@AHost)^, SizeOf(sockaddr_in));
+    sendto(FSocket, PQCharA(AMsg)^, AMsg.Length, 0, PSockAddr(@AHost)^,
+      SizeOf(sockaddr_in));
     sr := select(FSocket + 1, @fdread, nil, nil, @tv);
     if sr > 0 then
     begin
       l := SizeOf(sockaddr_in);
-      ALen := recvfrom(FSocket, ABuf[0], 4096, MSG_PEEK, PSockAddr(@FReaderAddr)^, l);
+      ALen := recvfrom(FSocket, ABuf[0], 4096, MSG_PEEK,
+        PSockAddr(@FReaderAddr)^, l);
       if ALen <> -1 then
       begin
         recvfrom(FSocket, ABuf[0], ALen, 0, PSockAddr(@FReaderAddr)^, l);
         if qstring.Utf8Decode(@ABuf[0], ALen) = '~I~am~QLog~SysD~Server~' then
         begin
           FServerHost := String(inet_ntoa(FReaderAddr.sin_addr));
-          Break;
+          break;
         end;
       end;
     end;
@@ -1756,13 +1901,13 @@ end;
 
 procedure TQLogSocketWriter.SetTextEncoding(const Value: TTextEncoding);
 begin
-  if Value in [teAnsi, teUtf8] then
+  if Value in [teAnsi, teUTF8] then
   begin
     if FTextEncoding <> Value then
       FTextEncoding := Value;
   end
   else
-    raise EXCEPTIOn(SUnsupportSysLogEncoding);
+    raise Exception.Create(SUnsupportSysLogEncoding);
 end;
 
 function TQLogSocketWriter.WriteItem(AItem: PQLogItem): Boolean;
@@ -1824,7 +1969,7 @@ var
         begin
           Result := IntPtr(pd) - IntPtr(ps);
           Dec(ALen, Result - AHeader.Length);
-          Break;
+          break;
         end;
       end;
     end;
@@ -1859,7 +2004,8 @@ begin
   repeat
     Move(PQCharA(AHeader)^, ABuf[0], AHeader.Length);
     ASize := CopyText;
-    sendto(FSocket, ABuf[0], ASize, 0, PSockAddr(@FReaderAddr)^, SizeOf(sockaddr_in));
+    sendto(FSocket, ABuf[0], ASize, 0, PSockAddr(@FReaderAddr)^,
+      SizeOf(sockaddr_in));
   until ALen <= 0;
 end;
 
@@ -1945,7 +2091,8 @@ begin
   if FLogToConsole then
     DebugOut(PQCharW('  ' + PerfTagStopFormat), [ATag, ATick - FLastTick])
   else
-    PostLog(llDebug, PQCharW('  ' + PerfTagStopFormat), [ATag, ATick - FLastTick]);
+    PostLog(llDebug, PQCharW('  ' + PerfTagStopFormat),
+      [ATag, ATick - FLastTick]);
   FLastTick := ATick;
 end;
 
@@ -2030,10 +2177,10 @@ begin
             for I := ADelta to FItems.Count - 1 do
               ATemp.Add(FItems[I]);
           end
-          else // 目标就是 TStringsList 类型，则直接移动数据
+          else if ADelta > 0 then // 目标就是 TStringsList 类型，则直接移动数据
           begin
             for I := ADelta to FItems.Count - 1 do
-              ATemp.Exchange(I, ADelta - I);
+              ATemp.Exchange(I, I - ADelta);
             while ADelta > 0 do
               FItems.Delete(FItems.Count - 1);
           end;
@@ -2052,7 +2199,9 @@ begin
         // 一次性赋值
         FItems.Text := ATemp.Text;
         FreeAndNil(ATemp);
-      end;
+      end
+      else
+        ATemp.EndUpdate;
     end;
     AtomicDecrement(FFlushRefCount);
     // {$IFDEF DEBUG}
@@ -2075,7 +2224,7 @@ procedure TQLogStringsWriter.LazyWrite;
 var
   T: Cardinal;
 begin
-  T := GetTickCount;
+  T := {$IF RTLVersion>=23}TThread.{$IFEND} GetTickCount;
   if FBuffered > 0 then
   begin
     if LazyMode then

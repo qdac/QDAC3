@@ -1045,7 +1045,12 @@ end;
 function TQParam.GetAsStream: IQStream;
 begin
   if FType = ptStream then
-    Result := NewStream(TStream(FValue.value.AsStream),false)
+  begin
+    if FValue.ValueType = vdtStream then
+      Result := NewStream(TStream(FValue.value.AsStream), false)
+    else
+      Result := IQStream(FValue.value.AsPointer);
+  end
   else
     raise QException.CreateFmt(SCantConvert, [ParamTypeNames[FType],
       ParamTypeNames[ptInt64]]);
@@ -1240,7 +1245,7 @@ end;
 
 procedure TQParam.SetAsStream(AStream: IQStream);
 begin
-  FValue.TypeNeeded(vdtInt64);
+  SetNull;
   IQStream(FValue.value.AsPointer) := AStream;
 end;
 
@@ -1264,7 +1269,14 @@ begin
     ptInterface:
       IInterface(FValue.value.AsPointer) := nil;
     ptArray:
-      IQParams(FValue.value.AsPointer) := nil
+      IQParams(FValue.value.AsPointer) := nil;
+    ptStream:
+      begin
+      if FValue.ValueType<>vdtStream then
+        IQStream(FValue.value.AsPointer) := nil
+      else
+        FValue.Reset;
+      end
   else
     FValue.Reset;
   end;

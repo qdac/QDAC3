@@ -87,7 +87,10 @@ type
 
 implementation
 
-{ TQCDSXMLConverter }
+resourcestring
+  SBadXMLFormat = '指定的 XML 文件格式无效。';
+  SUnsupportType = '不支持的数据类型 %s 。';
+  { TQCDSXMLConverter }
 
 procedure TQCDSXMLConverter.AfterExport;
 begin
@@ -110,7 +113,18 @@ end;
 procedure TQCDSXMLConverter.BeforeImport;
 begin
   inherited;
-
+  FXML := TQXMLNode.Create;
+  FXML.LoadFromStream(FStream);
+  FFieldIndexes := TStringList.Create;
+  FFieldIndexes.Sorted := True;
+  if FXML.HasChild('xml', FRootNode) then
+  begin
+    if (FRootNode.Attrs.ValueByName('xmlns:s', '') <> 'uuid:BDC6E3F0-6DA3-11d1-A2A3-00AA00C14882') or
+      (FRootNode.Attrs.ValueByName('xmlns:z', '') <> '#RowsetSchema') then
+      raise QException.Create(SBadXMLFormat);
+  end
+  else
+    raise QException.Create(SBadXMLFormat);
 end;
 
 procedure TQCDSXMLConverter.BeginExport(AIndex: Integer);
@@ -121,7 +135,6 @@ end;
 
 procedure TQCDSXMLConverter.BeginImport(AIndex: Integer);
 begin
-  inherited;
 
 end;
 
@@ -140,7 +153,6 @@ end;
 procedure TQCDSXMLConverter.LoadFieldDefs(ADefs: TQFieldDefs);
 begin
   inherited;
-
 end;
 
 function TQCDSXMLConverter.ReadRecord(ARec: TQRecord): Boolean;

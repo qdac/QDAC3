@@ -432,6 +432,7 @@ var
     J: Integer;
     ARec: TQRecord;
     AFieldItem: TQJson;
+
   begin
     for I := 0 to ARowsRoot.Count - 1 do
     begin

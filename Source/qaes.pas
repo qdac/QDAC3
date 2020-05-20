@@ -4130,19 +4130,6 @@ end;
 function TQAES.Decrypt(const S: String; AHexBeforeBase64: Boolean): String;
 var
   ABytes: TBytes;
-  procedure Base64ToBytes;
-  var
-    ASource,ATarget:TMemoryStream;
-  begin
-    ASource:=TMemoryStream.Create;
-    ATarget:=TMemoryStream.Create;
-    try
-//      ASource
-    finally
-      FreeAndNil(ASource);
-      FreeAndNil(ATarget);
-    end;
-  end;
 begin
   if Length(S) > 0 then
   begin

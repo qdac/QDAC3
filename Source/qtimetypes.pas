@@ -206,9 +206,9 @@ type
   private
     FLimits: TQTimeLimits;
     FStartTime: TDateTime; // 计划生效起始时间
+    FFirstTime: TDateTime; // 首次执行时间
     FLastTime: TDateTime; // 末次执行时间
     FStopTime: TDateTime; // 计划生效截止时间
-    FNextTime: TDateTime;
     FContent: QStringW;
     FOnTimeAccept: TQPlanTimeAcceptEvent;
     procedure SetAsString(const S: QStringW);
@@ -229,6 +229,7 @@ type
     property NextTime: TDateTime read GetNextTime;
     property StartTime: TDateTime read FStartTime write FStartTime;
     property StopTime: TDateTime read FStopTime write FStopTime;
+    property FirstTime: TDateTime read FFirstTime write FFirstTime;
     property LastTime: TDateTime read FLastTime write FLastTime;
     property Content: QStringW read FContent write FContent;
     property Limits: PQTimeLimits read GetLimits;
@@ -1727,7 +1728,7 @@ begin
     ((Int64(AStamp.Hour) shl 32) and $1F00000000) + // 时
     ((Int64(AStamp.Day) shl 37) and $3E000000000) + // 日
     ((Int64(AStamp.Month) shl 42) and $3C0000000000) + // 月
-    ((Int64(AStamp.Year) shl 48) and $FFFF000000000000); // 年
+    ((Int64(AStamp.Year) shl 48) and Int64($FFFF000000000000)); // 年
 end;
 
 class operator TQTimestamp.Implicit(const AStamp: TQTimestamp): TSQLTimeStamp;
@@ -1952,7 +1953,7 @@ begin
     ((Int64(H) shl 32) and $0000001F00000000) + // 时
     ((Int64(D) shl 37) and $000003E000000000) + // 日
     ((Int64(M) shl 42) and $00003C0000000000) + // 月
-    ((Int64(Y) shl 48) and $FFFF000000000000); // 年
+    ((Int64(Y) shl 48) and Int64($FFFF000000000000)); // 年
 end;
 
 procedure TQTimestamp.Encode(const Y: Smallint; const M, D: Byte);
@@ -2182,7 +2183,8 @@ var
 begin
   if Assigned(FOnTimeAccept) then
     FOnTimeAccept(@Self, ATime, Result)
-  else if (ATime > FStartTime) and (ATime < FStopTime) and (ATime>FLastTime) then
+  else if (ATime > FStartTime) and (ATime < FStopTime) and (ATime > FLastTime)
+  then
   begin
     DecodeDateTime(ATime, Y, M, D, H, N, S, MS);
     Result := Accept(@FLimits[tlpYear], Y) and Accept(@FLimits[tlpMonthOfYear],
@@ -2456,8 +2458,8 @@ var
 
 begin
   Result := IncSecond(FLastTime);
-//  if (Result>FLastTime) and ((Result-FLastTime)<1/86400) then//如果秒数与当前时间相同，则触发必需在下1秒之后
-//    Result := IncSecond(FLastTime);
+  // if (Result>FLastTime) and ((Result-FLastTime)<1/86400) then//如果秒数与当前时间相同，则触发必需在下1秒之后
+  // Result := IncSecond(FLastTime);
   if Assigned(FOnTimeAccept) then // 用户自己定义的，现在不清楚
     Result := 0
   else if (Result >= FStartTime) and (Result < FStopTime) then

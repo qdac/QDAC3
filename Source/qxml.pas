@@ -2113,8 +2113,11 @@ var
         FItems.Clear;
         FItems.Capacity := AItem.Count;
         // 复制子结点的数据到根结点
-        while AItem.FItems.Count > 0 do
-          AItem[0].MoveTo(Self, FItems.Count);
+        if Assigned(AItem.FItems) then
+        begin
+          while AItem.FItems.Count > 0 do
+            AItem[0].MoveTo(Self, FItems.Count);
+        end;
         Attrs.Assign(AItem.Attrs);
         FreeAndNil(AItem);
       end;

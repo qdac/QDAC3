@@ -16,6 +16,16 @@ uses classes, sysutils, variants, math;
   FreeAndNil(AExpr);
   end;
   注册自定义函数的方法请参考Max/Min等函数的实现
+  2020-1-14
+  =========
+  * 修改实现，以便能够在多线程中同时调用一个表达式（注意自定义的函数必需自行保证线程安全）
+  2020-1-13                                            。
+  =========
+  + 增加对 ==、or、and、shl、shr、<<、>> 运算符的支持
+  2020-1-12
+  =========
+  + 增加逻辑运算符(与&&,或||,非!)和位运算符(位于&,位或|,位非~,位异或^)的支持
+  * 字符串与其它类型相加的结果，结果类型改为字符串
 }
 const
   ENotMathExpr = -1;
@@ -33,19 +43,39 @@ type
   TQMathExpr = class;
   TQMathExpression = class;
   IQMathExpression = interface;
+  PQEvalData = ^TQEvalData;
+
+  TQEvalData = record
+    Expression: TQMathExpression;
+    PassCount: Integer;
+    Params: Pointer;
+    Next: PQEvalData;
+  end;
+
   TQMathFunction = function(const ALeft, ARight: Variant): Variant;
-  TQMathValueEvent = procedure(Sender: TObject; AVar: TQMathVar);
+  TQMathValueEvent = procedure(Sender: TObject; AVar: TQMathVar;
+    const ACallParams: PQEvalData; var AResult: Variant) of object;
+  TQMathValueEventG = procedure(Sender: TObject; AVar: TQMathVar;
+    const ACallParams: PQEvalData; var AResult: Variant);
+  TQMathValueEventA = reference to procedure(Sender: TObject; AVar: TQMathVar;
+    const ACallParams: PQEvalData; var AResult: Variant);
   TQMathExpressVarLookupEvent = procedure(Sender: IQMathExpression;
     const AVarName: String; var AVar: TQMathVar) of object;
+  TQMathExpressVarLookupEventA = reference to procedure
+    (Sender: IQMathExpression; const AVarName: String; var AVar: TQMathVar);
+  TQMathExpressVarLookupEventG = procedure(Sender: IQMathExpression;
+    const AVarName: String; var AVar: TQMathVar);
   { 三种类型值，以便优化：固定不变，本次调用不变，易变 }
   TQMathVolatile = (mvImmutable, mvStable, mvVolatile);
   // 操作符的优先级，有些实际上没有用，只是做个标记
-  TQMathOprPriority = (moNone, moGroupBegin, moCompare, moBitAndOrXor, moList,
-    moAddSub, moMulDivMod, moNeg, moNot, moGroupEnd);
+  TQMathOprPriority = (moNone, moGroupBegin, moLogistic, moCompare, moBit,
+    moList, moAddSub, moMulDivMod, moNeg, moNot, moGroupEnd);
   TQErrorHandler = (ehException, ehNull, ehAbort);
   TQMathParams = array of TQMathVar;
 
   TQMathVar = class
+  private
+
   protected
     FName: String;
     FValue: Variant;
@@ -62,7 +92,11 @@ type
     FTag: Pointer;
     FVolatile: TQMathVolatile;
     function GetValue: Variant; virtual;
-    procedure DoGetValue;
+    function GetValueEx(const ACallParams: PQEvalData): Variant; virtual;
+    procedure SetValue(const Value: Variant); virtual;
+    function DoGetValue(const ACallParams: PQEvalData): Variant;
+    procedure SetValueEx(const ACallParams: PQEvalData; const Value: Variant);
+    function GetCurrentEvalParams: PQEvalData;
     property RefVar: TQMathVar read FRefVar;
   public
     constructor Create(AOwner: TQMathExpression); overload;
@@ -72,12 +106,16 @@ type
     procedure Clear; virtual;
     property Name: String read FName;
     property Volatile: TQMathVolatile read FVolatile;
-    property Value: Variant read GetValue write FValue;
+    property Value: Variant read GetValue write SetValue;
+    property ValueEx[const ACallParams: PQEvalData]: Variant read GetValueEx
+      write SetValueEx;
     property OnGetValue: TQMathValueEvent read FOnGetValue write FOnGetValue;
     property MinParams: Integer read FMinParams;
     property MaxParams: Integer read FMaxParams;
     property Params: TQMathParams read FParams;
     property Tag: Pointer read FTag write FTag;
+    property Owner: TQMathExpression read FOwner;
+    property CurrentEvalParams: PQEvalData read GetCurrentEvalParams;
   end;
 
   TQVarStackItem = record
@@ -93,23 +131,36 @@ type
   TQMathExpr = class(TQMathVar)
   protected
     FStacks: array of TQVarStackItem;
-    function GetValue: Variant; override;
+    FPasscount: Integer;
+    function GetValueEx(const ACallParams: PQEvalData): Variant; override;
     procedure Parse(p: PChar);
   public
+    constructor Create(AOwner: TQMathExpression; AName: String;
+      const AValue: Variant); overload;
     destructor Destroy; override;
     procedure Clear; override;
   end;
 
   IQMathExpression = interface
     ['{AF0C22C3-05B5-43DA-8C55-25A633DBC7DE}']
-    function Eval(const AExpr: String): Variant; overload;
-    function Eval(const AExpr: String; var AResult: Variant): Boolean; overload;
-    function Eval: Variant; overload;
+    function Eval(const AExpr: String; AParams: Pointer = nil)
+      : Variant; overload;
+    function Eval(const AExpr: String; var AResult: Variant;
+      AParams: Pointer = nil): Boolean; overload;
+    function Eval(const AParams: Pointer = nil): Variant; overload;
     function Parse(const AExpr: String): Boolean;
+    function Add(const AVarName: String; const AValue: Variant)
+      : TQMathVar; overload;
     function Add(const AVarName: String; AVolatile: TQMathVolatile = mvVolatile)
       : TQMathVar; overload;
     function Add(const AFuncName: String; AMinParams, AMaxParams: Integer;
       ACallback: TQMathValueEvent; AVolatile: TQMathVolatile = mvVolatile)
+      : TQMathVar; overload;
+    function Add(const AFuncName: String; AMinParams, AMaxParams: Integer;
+      ACallback: TQMathValueEventG; AVolatile: TQMathVolatile = mvVolatile)
+      : TQMathVar; overload;
+    function Add(const AFuncName: String; AMinParams, AMaxParams: Integer;
+      ACallback: TQMathValueEventA; AVolatile: TQMathVolatile = mvVolatile)
       : TQMathVar; overload;
     procedure Delete(const AVarName: String); overload;
     procedure Delete(const AIndex: Integer); overload;
@@ -130,8 +181,14 @@ type
     procedure SetErrorHandler(const AValue: TQErrorHandler);
     function GetOnLookupMissed: TQMathExpressVarLookupEvent;
     procedure SetOnLookupMissed(const AValue: TQMathExpressVarLookupEvent);
+    function GetOnLookupMissedA: TQMathExpressVarLookupEventA;
+    procedure SetOnLookupMissedA(const AValue: TQMathExpressVarLookupEventA);
+    function GetOnLookupMissedG: TQMathExpressVarLookupEventG;
+    procedure SetOnLookupMissedG(const AValue: TQMathExpressVarLookupEventG);
+
     function GetTag: Pointer;
     procedure SetTag(const ATag: Pointer);
+
     property UseStdDiv: Boolean read GetUseStdDiv write SetUseStdDiv;
     property NumIdentAsMultiply: Boolean read GetNumIdentAsMultiply
       write SetNumIdentAsMultiply;
@@ -144,6 +201,10 @@ type
       write SetErrorHandler;
     property OnLookupMissed: TQMathExpressVarLookupEvent read GetOnLookupMissed
       write SetOnLookupMissed;
+    property OnLookupMissedA: TQMathExpressVarLookupEventA
+      read GetOnLookupMissedA write SetOnLookupMissedA;
+    property OnLookupMissedG: TQMathExpressVarLookupEventG
+      read GetOnLookupMissedG write SetOnLookupMissedG;
   end;
 
   EQMathExpr = class(Exception)
@@ -154,8 +215,8 @@ type
   private
     FRoot: TQMathExpr;
     FVars: TStringList;
-    FPasscount: Integer;
     FTag: Pointer;
+    FPasscount: Integer;
     FUseStdDiv: Boolean;
     FNumIdentAsMultiply: Boolean;
     FSavePoint: Integer;
@@ -185,33 +246,66 @@ type
     class function DoBitAnd(const ALeft, ARight: Variant): Variant; static;
     class function DoBitOr(const ALeft, ARight: Variant): Variant; static;
     class function DoBitNot(const ALeft, ARight: Variant): Variant; static;
+    class function DoBitLeftShift(const ALeft, ARight: Variant)
+      : Variant; static;
+    class function DoBitRightShift(const ALeft, ARight: Variant)
+      : Variant; static;
+    class function DoSmartAnd(const ALeft, ARight: Variant): Variant; static;
+    class function DoSmartOr(const ALeft, ARight: Variant): Variant; static;
+
     // 默认提供的函数
-    class procedure DoMax(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoMin(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoAvg(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoSum(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoStdDev(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoRand(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoPow(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoIIf(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoSin(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoCos(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoTan(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoAcrSin(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoArcCos(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoArcTan(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoArcTan2(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoAbs(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoTrunc(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoFrac(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoRound(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoCeil(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoFloor(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoLog(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoLn(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoSqrt(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoFactorial(Sender: TObject; AExpr: TQMathVar); static;
-    class procedure DoExp(Sender: TObject; AExpr: TQMathVar); static;
+    class procedure DoMax(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoMin(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoAvg(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoSum(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoStdDev(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoRand(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoPow(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoIIf(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoSin(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoCos(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoTan(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoAcrSin(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoArcCos(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoArcTan(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoArcTan2(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoAbs(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoTrunc(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoFrac(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoRound(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoCeil(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoFloor(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoLog(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoLn(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoSqrt(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoFactorial(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
+    class procedure DoExp(Sender: TObject; AExpr: TQMathVar;
+      const ACallParams: PQEvalData; var AResult: Variant); static;
     function GetUseStdDiv: Boolean;
     procedure SetUseStdDiv(const AValue: Boolean);
     function GetNumIdentAsMultiply: Boolean;
@@ -227,17 +321,32 @@ type
     procedure SetOnLookupMissed(const AValue: TQMathExpressVarLookupEvent);
     function GetTag: Pointer;
     procedure SetTag(const ATag: Pointer);
+    function GetOnLookupMissedA: TQMathExpressVarLookupEventA;
+    procedure SetOnLookupMissedA(const AValue: TQMathExpressVarLookupEventA);
+    function GetOnLookupMissedG: TQMathExpressVarLookupEventG;
+    procedure SetOnLookupMissedG(const AValue: TQMathExpressVarLookupEventG);
+    function DoLookupVar(const AVarName: String): TQMathVar;
   public
     constructor Create;
     destructor Destroy; override;
-    function Eval(const AExpr: String; var AResult: Variant): Boolean; overload;
-    function Eval(const AExpr: String): Variant; overload;
-    function Eval: Variant; overload;
+    function Eval(const AExpr: String; AParams: Pointer = nil)
+      : Variant; overload;
+    function Eval(const AExpr: String; var AResult: Variant;
+      AParams: Pointer = nil): Boolean; overload;
+    function Eval(const AParams: Pointer = nil): Variant; overload;
     function Parse(const AExpr: String): Boolean;
+    function Add(const AVarName: String; const AValue: Variant)
+      : TQMathVar; overload;
     function Add(const AVarName: String; AVolatile: TQMathVolatile = mvVolatile)
       : TQMathVar; overload;
     function Add(const AFuncName: String; AMinParams, AMaxParams: Integer;
       ACallback: TQMathValueEvent; AVolatile: TQMathVolatile = mvVolatile)
+      : TQMathVar; overload;
+    function Add(const AFuncName: String; AMinParams, AMaxParams: Integer;
+      ACallback: TQMathValueEventG; AVolatile: TQMathVolatile = mvVolatile)
+      : TQMathVar; overload;
+    function Add(const AFuncName: String; AMinParams, AMaxParams: Integer;
+      ACallback: TQMathValueEventA; AVolatile: TQMathVolatile = mvVolatile)
       : TQMathVar; overload;
     procedure Delete(const AVarName: String); overload;
     procedure Delete(const AIndex: Integer); overload;
@@ -273,6 +382,8 @@ type
     Op: Char;
     Pri: TQMathOprPriority;
   end;
+
+threadvar ThreadEvalData: PQEvalData;
 
 const
   // %&'()*+,-./
@@ -323,7 +434,40 @@ const
     (Method: nil; Op: '='; Pri: moCompare), // ==
     (Method: nil; Op: '>'; Pri: moCompare) // >
     );
-  { TQMathExpression }
+
+type
+  TProcA = reference to procedure;
+  TProcG = procedure;
+  TProcE = procedure of object;
+
+function CopyMethod(const AMethod: TMethod): TMethod;
+begin
+  Result.Code := nil;
+  Result.Data := nil;
+  if AMethod.Data = Pointer(-1) then
+  begin
+    TProcA(Result.Code) := TProcA(AMethod.Code);
+    Result.Data := Pointer(-1);
+  end
+  else if AMethod.Data = nil then
+  begin
+    Result.Data := nil;
+    Result.Code := AMethod.Code
+  end
+  else
+    TProcE(Result) := TProcE(AMethod);
+end;
+
+procedure ClearMethod(var AMethod: TMethod);
+begin
+  if AMethod.Data = Pointer(-1) then
+    TProcA(AMethod.Code) := nil
+  else if AMethod.Data = nil then
+    TProcG(AMethod.Code) := nil
+  else
+    TProcE(AMethod) := nil;
+end;
+{ TQMathExpression }
 
 function TQMathExpression.Add(const AVarName: String; AVolatile: TQMathVolatile)
   : TQMathVar;
@@ -353,7 +497,7 @@ begin
   begin
     Result := Add(AFuncName, AVolatile);
     if Assigned(ACallback) then
-      ACallback(Self, Result);
+      ACallback(Self, Result, nil, Result.FValue);
   end
   else if FVars.Find(AFuncName, AIdx) then
   begin
@@ -371,6 +515,49 @@ begin
     Result.FOnGetValue := ACallback;
     FVars.InsertObject(AIdx, AFuncName, Result);
   end;
+end;
+
+function TQMathExpression.Add(const AFuncName: String;
+  AMinParams, AMaxParams: Integer; ACallback: TQMathValueEventA;
+  AVolatile: TQMathVolatile): TQMathVar;
+var
+  AEvent: TQMathValueEvent;
+  AMethod: TMethod absolute AEvent;
+begin
+  AMethod.Data := Pointer(-1);
+  AMethod.Code := nil;
+  TQMathValueEventA(AMethod.Code) := ACallback;
+  Result := Add(AFuncName, AMinParams, AMaxParams, AEvent, AVolatile);
+end;
+
+function TQMathExpression.Add(const AFuncName: String;
+  AMinParams, AMaxParams: Integer; ACallback: TQMathValueEventG;
+  AVolatile: TQMathVolatile): TQMathVar;
+var
+  AEvent: TQMathValueEvent;
+  AMethod: TMethod absolute AEvent;
+begin
+  AMethod.Data := nil;
+  AMethod.Code := nil;
+  TQMathValueEventG(AMethod.Code) := ACallback;
+  Result := Add(AFuncName, AMinParams, AMaxParams, AEvent, AVolatile);
+end;
+
+function TQMathExpression.Add(const AVarName: String; const AValue: Variant)
+  : TQMathVar;
+var
+  AIdx: Integer;
+begin
+  if FVars.Find(AVarName, AIdx) then
+    Result := TQMathVar(FVars.Objects[AIdx])
+  else
+  begin
+    Result := TQMathVar.Create(Self);
+    Result.FName := AVarName;
+    Result.FVolatile := mvImmutable;
+    FVars.InsertObject(AIdx, AVarName, Result);
+  end;
+  Result.Value := AValue;
 end;
 
 procedure TQMathExpression.Clear;
@@ -444,45 +631,55 @@ end;
 
 destructor TQMathExpression.Destroy;
 begin
+  ClearMethod(TMethod(FOnVarLookup));
   Clear;
   FreeAndNil(FVars);
   FreeAndNil(FRoot);
   inherited;
 end;
 
-class procedure TQMathExpression.DoAbs(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoAbs(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
-  AExpr.Value := abs(AExpr.Params[0].Value);
+  AResult := abs(AExpr.Params[0].GetValueEx(ACallParams));
 end;
 
-class procedure TQMathExpression.DoAcrSin(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoAcrSin(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
-  AExpr.Value := arcsin(AExpr.Params[0].Value);
+  AResult := arcsin(AExpr.Params[0].GetValueEx(ACallParams));
 end;
 
 class function TQMathExpression.DoAdd(const ALeft, ARight: Variant): Variant;
 begin
-  Result := ALeft + ARight;
+  if VarIsStr(ALeft) or VarIsStr(ARight) then
+    Result := VarToStr(ALeft) + VarToStr(ARight)
+  else
+    Result := ALeft + ARight;
 end;
 
 class function TQMathExpression.DoAnd(const ALeft, ARight: Variant): Variant;
 begin
-  Result := ALeft and ARight;
+  Result := (ALeft <> 0) and (ARight <> 0);
 end;
 
-class procedure TQMathExpression.DoArcCos(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoArcCos(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
-  AExpr.Value := arccos(AExpr.Params[0].Value);
+  AResult := arccos(AExpr.Params[0].GetValueEx(ACallParams));
 end;
 
-class procedure TQMathExpression.DoArcTan(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoArcTan(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
-  AExpr.Value := arctan(AExpr.Params[0].Value);
+  AResult := arctan(AExpr.Params[0].GetValueEx(ACallParams));
 end;
 
-class procedure TQMathExpression.DoArcTan2(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoArcTan2(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
-  AExpr.Value := arctan2(AExpr.Params[0].Value, AExpr.Params[1].Value);
+  AResult := arctan2(AExpr.Params[0].GetValueEx(ACallParams),
+    AExpr.Params[1].GetValueEx(ACallParams));
 end;
 
 class function TQMathExpression.DoDiv(const ALeft, ARight: Variant): Variant;
@@ -499,16 +696,18 @@ begin
   Result := ALeft = ARight;
 end;
 
-class procedure TQMathExpression.DoExp(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoExp(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
-  AExpr.Value := Exp(AExpr.Params[0].Value);
+  AResult := Exp(AExpr.Params[0].GetValueEx(ACallParams));
 end;
 
-class procedure TQMathExpression.DoFactorial(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoFactorial(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 var
   V, R: Int64;
 begin
-  V := AExpr.Params[0].Value;
+  V := AExpr.Params[0].GetValueEx(ACallParams);
   if V < 0 then
     AExpr.FOwner.SetLastError(EParamMustGeZero, SParamMustGEZero);
   if V = 0 then
@@ -522,17 +721,19 @@ begin
       R := R * V;
     end;
   end;
-  AExpr.Value := R;
+  AResult := R;
 end;
 
-class procedure TQMathExpression.DoFloor(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoFloor(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
-  AExpr.Value := Floor(AExpr.Params[0].Value);
+  AResult := Floor(AExpr.Params[0].GetValueEx(ACallParams));
 end;
 
-class procedure TQMathExpression.DoFrac(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoFrac(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
-  AExpr.Value := Frac(AExpr.Params[0].Value);
+  AResult := Frac(AExpr.Params[0].GetValueEx(ACallParams));
 end;
 
 class function TQMathExpression.DoGE(const ALeft, ARight: Variant): Variant;
@@ -546,12 +747,13 @@ begin
   Result := ALeft > ARight;
 end;
 
-class procedure TQMathExpression.DoIIf(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoIIf(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
   if AExpr.Params[0].Value <> 0 then
-    AExpr.Value := AExpr.Params[1].Value
+    AResult := AExpr.Params[1].GetValueEx(ACallParams)
   else
-    AExpr.Value := AExpr.Params[2].Value;
+    AResult := AExpr.Params[2].GetValueEx(ACallParams);
 end;
 
 class function TQMathExpression.DoLE(const ALeft, ARight: Variant): Variant;
@@ -565,17 +767,38 @@ begin
   Result := ALeft < ARight;
 end;
 
-class procedure TQMathExpression.DoLn(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoLn(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
-  AExpr.Value := Ln(AExpr.Params[0].Value);
+  AResult := Ln(AExpr.Params[0].GetValueEx(ACallParams));
 end;
 
-class procedure TQMathExpression.DoLog(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoLog(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
   if Length(AExpr.Params) = 2 then
-    AExpr.Value := LogN(AExpr.Params[0].Value, AExpr.Params[1].Value)
+    AResult := LogN(AExpr.Params[0].GetValueEx(ACallParams),
+      AExpr.Params[1].GetValueEx(ACallParams))
   else
-    AExpr.Value := Log10(AExpr.Params[0].Value);
+    AResult := Log10(AExpr.Params[0].GetValueEx(ACallParams));
+end;
+
+function TQMathExpression.DoLookupVar(const AVarName: String): TQMathVar;
+begin
+  Result := nil;
+  if Assigned(FOnVarLookup) then
+  begin
+    case IntPtr(TMethod(FOnVarLookup).Data) of
+      0:
+        TQMathExpressVarLookupEventG(TMethod(FOnVarLookup).Code)
+          (Self, AVarName, Result);
+      -1:
+        TQMathExpressVarLookupEventA(TMethod(FOnVarLookup).Code)
+          (Self, AVarName, Result)
+    else
+      FOnVarLookup(Self, AVarName, Result);
+    end;
+  end;
 end;
 
 class function TQMathExpression.DoMul(const ALeft, ARight: Variant): Variant;
@@ -596,49 +819,75 @@ end;
 
 class function TQMathExpression.DoOr(const ALeft, ARight: Variant): Variant;
 begin
-  Result := ALeft or ARight;
+  Result := (ALeft <> 0) or (ARight <> 0);
 end;
 
-class procedure TQMathExpression.DoPow(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoPow(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
-  AExpr.Value := Power(AExpr.Params[0].Value, AExpr.Params[1].Value);
+  AResult := Power(AExpr.Params[0].GetValueEx(ACallParams),
+    AExpr.Params[1].GetValueEx(ACallParams));
 end;
 
-class procedure TQMathExpression.DoRand(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoRand(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
   if Length(AExpr.Params) = 1 then
-    AExpr.Value := Random(AExpr.Params[0].Value)
+    AResult := Random(AExpr.Params[0].GetValueEx(ACallParams))
   else
-    AExpr.Value := Random(MaxInt);
+    AResult := Random(MaxInt);
 end;
 
-class procedure TQMathExpression.DoRound(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoRound(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
   if Length(AExpr.Params) = 2 then
-    AExpr.Value := SimpleRoundTo(AExpr.Params[0].Value, AExpr.Params[1].Value)
+    AResult := SimpleRoundTo(AExpr.Params[0].GetValueEx(ACallParams),
+      AExpr.Params[1].GetValueEx(ACallParams))
   else
-    AExpr.Value := SimpleRoundTo(AExpr.Params[0].Value, 0);
+    AResult := SimpleRoundTo(AExpr.Params[0].GetValueEx(ACallParams), 0);
 end;
 
-class procedure TQMathExpression.DoSin(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoSin(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
-  AExpr.Value := sin(AExpr.Params[0].Value);
+  AResult := sin(AExpr.Params[0].GetValueEx(ACallParams));
 end;
 
-class procedure TQMathExpression.DoSqrt(Sender: TObject; AExpr: TQMathVar);
+class function TQMathExpression.DoSmartAnd(const ALeft,
+  ARight: Variant): Variant;
 begin
-  AExpr.Value := sqrt(AExpr.Params[0].Value);
+  if VarIsType(ALeft, varBoolean) and VarIsType(ARight, varBoolean) then
+    Result := (ALeft = True) and (ARight = True)
+  else
+    Result := ALeft and ARight;
 end;
 
-class procedure TQMathExpression.DoStdDev(Sender: TObject; AExpr: TQMathVar);
+class function TQMathExpression.DoSmartOr(const ALeft, ARight: Variant)
+  : Variant;
+begin
+  if VarIsType(ALeft, varBoolean) and VarIsType(ARight, varBoolean) then
+    Result := (ALeft = True) or (ARight = True)
+  else
+    Result := ALeft or ARight;
+end;
+
+class procedure TQMathExpression.DoSqrt(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
+begin
+  AResult := sqrt(AExpr.Params[0].GetValueEx(ACallParams));
+end;
+
+class procedure TQMathExpression.DoStdDev(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 var
   AValues: array of Double;
   I: Integer;
 begin
   SetLength(AValues, Length(AExpr.Params));
   for I := 0 to High(AExpr.Params) do
-    AValues[I] := AExpr.Params[I].Value;
-  AExpr.Value := StdDev(AValues);
+    AValues[I] := AExpr.Params[I].GetValueEx(ACallParams);
+  AResult := StdDev(AValues);
 end;
 
 class function TQMathExpression.DoStdDiv(const ALeft, ARight: Variant): Variant;
@@ -651,10 +900,38 @@ begin
   Result := ALeft - ARight;
 end;
 
-function TQMathExpression.Eval: Variant;
+function TQMathExpression.Eval(const AParams: Pointer): Variant;
+var
+  ACallParams: TQEvalData;
+  procedure RemoveLink;
+  var
+    AItem, APrior: PQEvalData;
+  begin
+    AItem := ThreadEvalData;
+    APrior := nil;
+    while Assigned(AItem) do
+    begin
+      if AItem = @ACallParams then
+      begin
+        if Assigned(APrior) then
+          APrior.Next := AItem.Next
+        else
+          ThreadEvalData := AItem.Next;
+        Break;
+      end;
+      APrior := AItem;
+      AItem := AItem.Next;
+    end;
+  end;
+
 begin
-  Inc(FPasscount);
-  Result := FRoot.Value;
+  ACallParams.PassCount := AtomicIncrement(FPasscount);
+  ACallParams.Params := AParams;
+  ACallParams.Expression := Self;
+  ACallParams.Next := ThreadEvalData;
+  ThreadEvalData := @ACallParams;
+  Result := FRoot.GetValueEx(@ACallParams);
+  RemoveLink;
 end;
 
 function TQMathExpression.Find(const AVarName: String): TQMathVar;
@@ -664,11 +941,7 @@ begin
   if FVars.Find(AVarName, AIdx) then
     Result := FVars.Objects[AIdx] as TQMathVar
   else
-  begin
-    Result := nil;
-    if Assigned(FOnVarLookup) then
-      FOnVarLookup(Self, AVarName, Result);
-  end;
+    Result := DoLookupVar(AVarName);
 end;
 
 function TQMathExpression.GetErrorCode: Integer;
@@ -696,6 +969,22 @@ begin
   Result := FOnVarLookup;
 end;
 
+function TQMathExpression.GetOnLookupMissedA: TQMathExpressVarLookupEventA;
+begin
+  if TMethod(FOnVarLookup).Data = Pointer(-1) then
+    Result := TQMathExpressVarLookupEventA(TMethod(FOnVarLookup).Code)
+  else
+    Result := nil;
+end;
+
+function TQMathExpression.GetOnLookupMissedG: TQMathExpressVarLookupEventG;
+begin
+  if TMethod(FOnVarLookup).Data = nil then
+    Result := TQMathExpressVarLookupEventG(TMethod(FOnVarLookup).Code)
+  else
+    Result := nil;
+end;
+
 function TQMathExpression.GetTag: Pointer;
 begin
   Result := FTag;
@@ -716,11 +1005,11 @@ begin
   Result := TQMathVar(FVars.Objects[AIndex]);
 end;
 
-function TQMathExpression.Eval(const AExpr: String): Variant;
+function TQMathExpression.Eval(const AExpr: String; AParams: Pointer): Variant;
 begin
   try
     FRoot.Parse(PChar(AExpr));
-    Result := Eval;
+    Result := Eval(AParams);
   except
     on E: EAbort do
     begin
@@ -816,6 +1105,21 @@ begin
   FOnVarLookup := AValue;
 end;
 
+procedure TQMathExpression.SetOnLookupMissedA(const AValue
+  : TQMathExpressVarLookupEventA);
+begin
+  ClearMethod(TMethod(FOnVarLookup));
+  TQMathExpressVarLookupEventA(TMethod(FOnVarLookup).Code) := AValue;
+  Pointer(TMethod(FOnVarLookup).Data) := Pointer(-1);
+end;
+
+procedure TQMathExpression.SetOnLookupMissedG(const AValue
+  : TQMathExpressVarLookupEventG);
+begin
+  ClearMethod(TMethod(FOnVarLookup));
+  TQMathExpressVarLookupEventG(TMethod(FOnVarLookup).Code) := AValue;
+end;
+
 procedure TQMathExpression.SetTag(const ATag: Pointer);
 begin
   FTag := ATag;
@@ -826,15 +1130,15 @@ begin
   FUseStdDiv := AValue;
 end;
 
-class procedure TQMathExpression.DoAvg(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoAvg(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 var
   I: Integer;
-  AResult: Variant;
 begin
   AResult := 0;
   for I := 0 to High(AExpr.Params) do
-    AResult := AResult + AExpr.Params[I].Value;
-  AExpr.Value := AResult / Length(AExpr.Params);
+    AResult := AResult + AExpr.Params[I].GetValueEx(ACallParams);
+  AResult := AResult / Length(AExpr.Params);
 end;
 
 class function TQMathExpression.DoBitAnd(const ALeft, ARight: Variant): Variant;
@@ -844,6 +1148,12 @@ begin
   VL := ALeft;
   VR := ARight;
   Result := VL and VR;
+end;
+
+class function TQMathExpression.DoBitLeftShift(const ALeft,
+  ARight: Variant): Variant;
+begin
+  Result := ALeft shl ARight;
 end;
 
 class function TQMathExpression.DoBitNot(const ALeft, ARight: Variant): Variant;
@@ -863,20 +1173,29 @@ begin
   Result := VL or VR;
 end;
 
-class procedure TQMathExpression.DoCeil(Sender: TObject; AExpr: TQMathVar);
+class function TQMathExpression.DoBitRightShift(const ALeft,
+  ARight: Variant): Variant;
 begin
-  AExpr.Value := Ceil(AExpr.Params[0].Value);
+  Result := ALeft shr ARight;
 end;
 
-class procedure TQMathExpression.DoCos(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoCeil(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
-  AExpr.Value := cos(AExpr.Params[0].Value);
+  AResult := Ceil(AExpr.Params[0].Value);
 end;
 
-class procedure TQMathExpression.DoMax(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoCos(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
+begin
+  AResult := cos(AExpr.Params[0].Value);
+end;
+
+class procedure TQMathExpression.DoMax(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 var
   I: Integer;
-  AValue, AResult: Variant;
+  AValue: Variant;
 begin
   AResult := AExpr.Params[0].Value;
   for I := 1 to High(AExpr.Params) do
@@ -885,22 +1204,21 @@ begin
     if AValue > AResult then
       AResult := AValue;
   end;
-  AExpr.Value := AResult;
 end;
 
-class procedure TQMathExpression.DoMin(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoMin(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 var
   I: Integer;
-  AValue, AResult: Variant;
+  AValue: Variant;
 begin
   AResult := AExpr.Params[0].Value;
   for I := 1 to High(AExpr.Params) do
   begin
-    AValue := AExpr.Params[I].Value;
+    AValue := AExpr.Params[I].GetValueEx(ACallParams);
     if AValue < AResult then
       AResult := AValue;
   end;
-  AExpr.Value := AResult;
 end;
 
 class function TQMathExpression.DoMod(const ALeft, ARight: Variant): Variant;
@@ -908,25 +1226,26 @@ begin
   Result := ALeft mod ARight;
 end;
 
-class procedure TQMathExpression.DoSum(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoSum(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 var
   I: Integer;
-  AResult: Variant;
 begin
   AResult := 0;
   for I := 0 to High(AExpr.Params) do
-    AResult := AResult + AExpr.Params[I].Value;
-  AExpr.Value := AResult;
+    AResult := AResult + AExpr.Params[I].GetValueEx(ACallParams);
 end;
 
-class procedure TQMathExpression.DoTan(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoTan(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
-  AExpr.Value := tan(AExpr.Params[0].Value);
+  AResult := tan(AExpr.Params[0].GetValueEx(ACallParams));
 end;
 
-class procedure TQMathExpression.DoTrunc(Sender: TObject; AExpr: TQMathVar);
+class procedure TQMathExpression.DoTrunc(Sender: TObject; AExpr: TQMathVar;
+  const ACallParams: PQEvalData; var AResult: Variant);
 begin
-  AExpr.Value := Trunc(AExpr.Params[0].Value);
+  AResult := Trunc(AExpr.Params[0].GetValueEx(ACallParams));
 end;
 
 class function TQMathExpression.DoXor(const ALeft, ARight: Variant): Variant;
@@ -938,12 +1257,12 @@ begin
   Result := VL xor VR;
 end;
 
-function TQMathExpression.Eval(const AExpr: String;
-  var AResult: Variant): Boolean;
+function TQMathExpression.Eval(const AExpr: String; var AResult: Variant;
+  AParams: Pointer): Boolean;
 begin
   try
     FRoot.Parse(PChar(AExpr));
-    AResult := Eval;
+    AResult := Eval(AParams);
     Result := True;
   except
     on E: Exception do
@@ -966,7 +1285,7 @@ begin
   FName := ASource.Name;
   FValue := ASource.FValue;
   FPasscount := ASource.FPasscount;
-  FOnGetValue := ASource.OnGetValue;
+  FOnGetValue := TQMathValueEvent(CopyMethod(TMethod(ASource.OnGetValue)));
   FVolatile := ASource.Volatile;
   FMinParams := ASource.FMinParams;
   FMaxParams := ASource.FMaxParams;
@@ -1016,57 +1335,92 @@ end;
 
 destructor TQMathVar.Destroy;
 begin
+  ClearMethod(TMethod(FOnGetValue));
   Clear;
   inherited;
 end;
 
-procedure TQMathVar.DoGetValue;
+function TQMathVar.DoGetValue(const ACallParams: PQEvalData): Variant;
 begin
-  if Assigned(OnGetValue) then
-    OnGetValue(FOwner, TQMathVar(Self));
+  Result := Unassigned;
+  if Assigned(FOnGetValue) then
+  begin
+    case IntPtr(TMethod(FOnGetValue).Data) of
+      0:
+        TQMathValueEventG(TMethod(FOnGetValue).Code)
+          (FOwner, Self, ACallParams, Result);
+      -1:
+        TQMathValueEventA(TMethod(FOnGetValue).Code)
+          (FOwner, Self, ACallParams, Result)
+    else
+      FOnGetValue(FOwner, Self, ACallParams, Result);
+    end;
+  end;
+end;
+
+function TQMathVar.GetCurrentEvalParams: PQEvalData;
+begin
+  Result := ThreadEvalData;
+  while Assigned(Result) do
+  begin
+    if Result.Expression = Owner then
+      Break
+    else
+      Result := Result.Next;
+  end;
 end;
 
 function TQMathVar.GetValue: Variant;
+begin
+  Result := GetValueEx(CurrentEvalParams);
+end;
+
+function TQMathVar.GetValueEx(const ACallParams: PQEvalData): Variant;
 var
   AParams: TQMathParams;
 begin
   case FVolatile of
     mvStable: // Stable 在一次计算中值是不变的，所以用引用的原始变量调用一次
       begin
-        if Assigned(FRefVar) then
+        if FPasscount <> ACallParams.PassCount then
         begin
-          if FRefVar.FPasscount <> FOwner.FPasscount then
+          FPasscount := ACallParams.PassCount;
+          if Assigned(FRefVar) then
           begin
-            FRefVar.FPasscount := FOwner.FPasscount;
             AParams := FRefVar.Params;
             FRefVar.FParams := FParams;
             try
-              FRefVar.DoGetValue;
+              Result := FRefVar.DoGetValue(ACallParams);
             finally
               FRefVar.FParams := AParams;
             end;
-          end;
-          Result := FRefVar.Value;
+          end
+          else
+            Result := DoGetValue(ACallParams);
+          // 缓存末次计算的值
+          FValue := Result;
         end
         else
-        begin
-          if FPasscount <> FOwner.FPasscount then
-          begin
-            FPasscount := FOwner.FPasscount;
-            DoGetValue;
-          end;
           Result := FValue;
-        end;
       end;
     mvVolatile:
       begin
-        DoGetValue;
-        Result := FValue;
+        Result := DoGetValue(ACallParams);
       end
   else
     Result := FValue;
   end;
+end;
 
+procedure TQMathVar.SetValue(const Value: Variant);
+begin
+  FValue := Value;
+end;
+
+procedure TQMathVar.SetValueEx(const ACallParams: PQEvalData;
+  const Value: Variant);
+begin
+  FValue := Value;
 end;
 
 { TQMathExpr }
@@ -1083,13 +1437,22 @@ begin
   SetLength(FStacks, 0);
 end;
 
+constructor TQMathExpr.Create(AOwner: TQMathExpression; AName: String;
+  const AValue: Variant);
+begin
+  inherited Create(AOwner);
+  FName := AName;
+  FValue := AValue;
+  FVolatile := mvImmutable;
+end;
+
 destructor TQMathExpr.Destroy;
 begin
   Clear;
   inherited;
 end;
 
-function TQMathExpr.GetValue: Variant;
+function TQMathExpr.GetValueEx(const ACallParams: PQEvalData): Variant;
 var
   AStacks: array of Variant;
   ATop, I: Integer;
@@ -1134,7 +1497,36 @@ begin
                 AStacks[ATop - 1] := TQMathExpression.DoNotEqual
                   (AStacks[ATop - 1], AStacks[ATop]);
               '!': // 单目操作
-                AStacks[ATop] := TQMathExpression.DoNot(Null, AStacks[ATop])
+                AStacks[ATop] := TQMathExpression.DoNot(Null, AStacks[ATop]);
+              '|': // 或
+                AStacks[ATop - 1] := (AStacks[ATop - 1] <> 0) or
+                  (AStacks[ATop] <> 0);
+              '\': // 位或
+                AStacks[ATop - 1] := TQMathExpression.DoBitOr(AStacks[ATop - 1],
+                  AStacks[ATop]);
+              '&': // 与
+                AStacks[ATop - 1] := (AStacks[ATop - 1] <> 0) and
+                  (AStacks[ATop] <> 0);
+              '@': // 位与
+                AStacks[ATop - 1] := TQMathExpression.DoBitAnd
+                  (AStacks[ATop - 1], AStacks[ATop]);
+              '~':
+                AStacks[ATop] := TQMathExpression.DoBitNot(Null, AStacks[ATop]);
+              '^':
+                AStacks[ATop - 1] := TQMathExpression.DoXor(AStacks[ATop - 1],
+                  AStacks[ATop]);
+              ':': // 或，逻辑或智能检测，用于支持 or
+                AStacks[ATop - 1] := TQMathExpression.DoSmartOr
+                  (AStacks[ATop - 1], AStacks[ATop]);
+              '$': // 与，逻辑与智能检查，用于支持 and
+                AStacks[ATop - 1] := TQMathExpression.DoSmartAnd
+                  (AStacks[ATop - 1], AStacks[ATop]);
+              '<': // 左移位操作符
+                AStacks[ATop - 1] := TQMathExpression.DoBitLeftShift
+                  (AStacks[ATop - 1], AStacks[ATop]);
+              '>': // 右移位操作符
+                AStacks[ATop - 1] := TQMathExpression.DoBitRightShift
+                  (AStacks[ATop - 1], AStacks[ATop])
             else
               AStacks[ATop - 1] := MathFunctions[OpCode]
                 .Method(AStacks[ATop - 1], AStacks[ATop]);
@@ -1145,7 +1537,7 @@ begin
         else
         begin
           Inc(ATop);
-          AStacks[ATop] := Expr.Value;
+          AStacks[ATop] := Expr.GetValueEx(ACallParams);
         end;
       end;
     end;
@@ -1165,7 +1557,7 @@ var
   AOprTop: Integer;
 const
   SpaceChars: PChar = #9#10#13#32;
-
+function ProcessOpToken(const AToken: String): Boolean; forward;
   function CharIn(c: Char; ASet: PChar): Boolean;
   begin
     Result := false;
@@ -1178,11 +1570,10 @@ const
     end;
   end;
 
-  procedure DetectToken(AVar: TQMathVar; AToken: String);
+  function DetectToken(AToken: String): TQMathExpr;
   var
     pt, pe: PChar;
-    vInt: Int64;
-    vFloat: Double;
+    AValue: TVarData;
     ATemp: TQMathVar;
   begin
     pt := PChar(AToken);
@@ -1191,34 +1582,31 @@ const
       Dec(pe);
     SetLength(AToken, pe - pt + 1);
     pt := PChar(AToken);
+    AValue.VInt64 := 0;
     if (pt^ = '"') or (pt^ = '''') then
-    begin
-      AVar.FVolatile := TQMathVolatile.mvImmutable;
-      AVar.Value := AnsiExtractQuotedStr(pt, pt^);
-    end
-    else if TryStrToInt64(AToken, vInt) then
-    begin
-      AVar.FVolatile := TQMathVolatile.mvImmutable;
-      AVar.Value := vInt;
-    end
-    else if TryStrToFloat(AToken, vFloat) then
-    begin
-      AVar.FVolatile := TQMathVolatile.mvImmutable;
-      AVar.Value := vFloat;
-    end
+      Result := TQMathExpr.Create(FOwner, AToken, AnsiExtractQuotedStr(pt, pt^))
+    else if TryStrToInt64(AToken, AValue.VInt64) then
+      Result := TQMathExpr.Create(FOwner, AToken, AValue.VInt64)
+    else if TryStrToFloat(AToken, AValue.VDouble) then
+      Result := TQMathExpr.Create(FOwner, AToken, AValue.VDouble)
+    else if TryStrToBool(AToken, PBoolean(@AValue.VBoolean)^) then
+      Result := TQMathExpr.Create(FOwner, AToken, AValue.VBoolean)
     else if Length(AToken) > 0 then
     begin
-      ATemp := FOwner.Find(AToken);
-      if not Assigned(ATemp) then
-        FOwner.SetLastError(EVarNotFound, Format(SVarNotFound, [AToken]));
-      AVar.Assign(ATemp);
-      AVar.FRefVar := ATemp;
+      if not ProcessOpToken(AToken) then
+      begin
+        ATemp := FOwner.Find(AToken);
+        if not Assigned(ATemp) then
+          FOwner.SetLastError(EVarNotFound, Format(SVarNotFound, [AToken]));
+        Result := TQMathExpr.Create(FOwner);
+        Result.Assign(ATemp);
+        Result.FRefVar := ATemp;
+      end
+      else
+        Result := nil;
     end
     else
-    begin
-      AVar.FVolatile := TQMathVolatile.mvVolatile;
-      AVar.Value := Unassigned;
-    end;
+      Result := TQMathExpr.Create(FOwner, AToken, Unassigned)
   end;
 
   function SkipSpace(var p: PChar): PChar;
@@ -1247,7 +1635,7 @@ const
     case AOpCode of
       '(':
         ;
-      '!', '#':
+      '!', '#', '~':
         Inc(AExpectStackSize, 2)
     else
       Inc(AExpectStackSize, 3);
@@ -1326,9 +1714,9 @@ const
 
   function NextIsOperator: Boolean;
   begin
-    Result := (p^ >= MathFunctions[Low(MathFunctions)].Op) and
+    Result := ((p^ >= MathFunctions[Low(MathFunctions)].Op) and
       (p^ <= MathFunctions[High(MathFunctions)].Op) and
-      (MathFunctions[p^].Pri <> moNone);
+      (MathFunctions[p^].Pri <> moNone)) or CharIn(p^, '|&~^');
   end;
 
   procedure DecodeParams(AExpr: TQMathExpr);
@@ -1362,10 +1750,26 @@ const
     SetLength(AExpr.FParams, I);
     AExpr.CheckParamCount;
   end;
-
+  function ProcessOpToken(const AToken: String): Boolean;
+  begin
+    Result := True;
+    if CompareText(AToken, 'or') = 0 then
+      PushOp(':', moBit) // 智能检查，这里按位运算的优先级处理
+    else if CompareText(AToken, 'xor') = 0 then
+      PushOp('^', moBit)
+    else if CompareText(AToken, 'and') = 0 then
+      PushOp('$', moBit)
+    else if CompareText(AToken, 'shl') = 0 then
+      PushOp('<', moBit)
+    else if CompareText(AToken, 'shr') = 0 then
+      PushOp('>', moBit)
+    else
+      Result := false;
+  end;
   procedure ProcessOpCode;
   var
     AOp: Char;
+    APri: TQMathOprPriority;
   begin
     if (p^ = '+') or (p^ = '-') then
     begin
@@ -1378,8 +1782,49 @@ const
         Exit;
       end;
     end;
+    if p^ = '|' then
+    begin
+      Inc(p);
+      if p^ = '|' then
+      begin
+        PushOp('|', moLogistic);
+        Inc(p);
+      end
+      else // 位或
+        PushOp('\', moBit);
+      ps := SkipSpace(p);
+      Exit;
+    end
+    else if p^ = '&' then
+    begin
+      Inc(p);
+      if p^ = '&' then
+      begin
+        PushOp('&', moLogistic);
+        Inc(p);
+      end
+      else
+        PushOp('@', moBit);
+      ps := SkipSpace(p);
+      Exit;
+    end
+    else if p^ = '^' then // 位异或
+    begin
+      Inc(p);
+      PushOp('^', moBit);
+      ps := SkipSpace(p);
+      Exit;
+    end
+    else if p^ = '~' then
+    begin
+      Inc(p);
+      PushOp('~', moBit);
+      ps := SkipSpace(p);
+      Exit;
+    end;
     with MathFunctions[p^] do
     begin
+      APri := Pri;
       if Pri = moCompare then // 比较操作符
       begin
         if p^ = '<' then
@@ -1395,6 +1840,12 @@ const
             AOp := 'n';
             Inc(p);
           end
+          else if p^ = '<' then
+          begin
+            APri := moBit;
+            AOp := '<';
+            Inc(p);
+          end
           else
             AOp := 'l';
         end
@@ -1406,6 +1857,12 @@ const
             AOp := 'G';
             Inc(p);
           end
+          else if p^ = '>' then
+          begin
+            AOp := '>';
+            Inc(p);
+            APri := moBit;
+          end
           else
             AOp := 'g';
         end
@@ -1413,6 +1870,9 @@ const
         begin
           AOp := '=';
           Inc(p);
+          // 将 = 和 == 都解释成等于
+          if p^ = '=' then
+            Inc(p);
         end;
       end
       else if p^ = '!' then
@@ -1439,18 +1899,18 @@ const
         end;
         Dec(AOprTop);
       end
-      else if (Pri > AOprStacks[AOprTop].Pri) or (AOp = '(') then
+      else if (APri > AOprStacks[AOprTop].Pri) or (AOp = '(') then
       begin
-        PushOp(AOp, Pri);
+        PushOp(AOp, APri);
       end
       else
       begin
-        while AOprStacks[AOprTop].Pri >= Pri do
+        while AOprStacks[AOprTop].Pri >= APri do
         begin
           PushVar(nil, AOprStacks[AOprTop].OpCode);
           Dec(AOprTop);
         end;
-        PushOp(AOp, Pri);
+        PushOp(AOp, APri);
       end;
       ps := SkipSpace(p);
       // 一个运算符后面跟+-肯定是正负号，直接处理
@@ -1492,8 +1952,32 @@ const
         FOwner.SetLastError(ENotMathExpr, Format(SNotQMathExpr, [os]));
     end;
   end;
-
+  procedure SkipText(var p: PChar);
+  var
+    ps: PChar;
+  begin
+    if CharIn(p^, '''"') then
+    begin
+      ps := p;
+      Inc(p);
+      while p^ <> #0 do
+      begin
+        if p^ = ps^ then
+        begin
+          Inc(p);
+          if p^ = ps^ then
+            Inc(p)
+          else
+            Break;
+        end;
+        Inc(p);
+      end;
+    end;
+  end;
   procedure DirectParse;
+  var
+    AToken: String;
+    AExpr: TQMathExpr;
   begin
     Clear;
     SetLength(FStacks, 32);
@@ -1501,32 +1985,60 @@ const
     AVarTop := -1;
     AOprTop := 0;
     ps := SkipSpace(p);
+    SkipText(p);
     while p^ <> #0 do
     begin
       if NextIsOperator then
       begin
         if ps < p then
         begin
-          ALastExpr := TQMathExpr.Create(FOwner);
-          PushVar(ALastExpr, #0);
-          DetectToken(ALastExpr, Copy(ps, 0, p - ps));
-          if (ALastExpr.Volatile <> mvImmutable) and (p^ = '(') then
+          AToken := Copy(ps, 0, p - ps);
+          AExpr := DetectToken(AToken);
+          if Assigned(AExpr) then
           begin
-            DecodeParams(ALastExpr);
+            ALastExpr := AExpr;
+            PushVar(ALastExpr, #0);
+            if (ALastExpr.Volatile <> mvImmutable) and (p^ = '(') then
+            begin
+              DecodeParams(ALastExpr);
+              ps := SkipSpace(p);
+              SkipText(p);
+              continue;
+            end;
+          end
+          else
+          begin
             ps := SkipSpace(p);
+            SkipText(p);
             continue;
           end;
         end;
         ProcessOpCode;
+      end
+      else if CharIn(p^, ' '#9#10#13) then
+      begin
+        AToken := Copy(ps, 0, p - ps);
+        AExpr := DetectToken(AToken);
+        if Assigned(AExpr) then
+        begin
+          ALastExpr := AExpr;
+          PushVar(ALastExpr, #0);
+        end;
+        ps := SkipSpace(p);
+        SkipText(p);
       end
       else
         Inc(p);
     end;
     if p > ps then
     begin
-      ALastExpr := TQMathExpr.Create(FOwner);
-      PushVar(ALastExpr, #0);
-      DetectToken(ALastExpr, Copy(ps, 0, p - ps));
+      AToken := Copy(ps, 0, p - ps);
+      AExpr := DetectToken(AToken);
+      if Assigned(AExpr) then
+      begin
+        ALastExpr := AExpr;
+        PushVar(ALastExpr, #0);
+      end;
     end;
     if AOprTop < 0 then
       FOwner.SetLastError(EBracketMismatch, SBracketMismatch);
